@@ -1,9 +1,9 @@
 'use strict'
-const Productos = require('../models/Producto');
+const Producto = require('../models/Producto');
 
 function get(req, res) {
 	
-	Productos.find({}, (error,producto) => {
+	Producto.find({statusReg:"ACTIVO"}, (error,producto) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -17,7 +17,7 @@ function getByIDClienteFiscal(req, res) {
 
 	console.log(_idClienteFiscal);
 
-	Productos.find({idClienteFiscal:_idClienteFiscal}, (error,producto) => {
+	Producto.find({idClienteFiscal:_idClienteFiscal, statusReg:"ACTIVO"}, (error,producto) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -26,7 +26,51 @@ function getByIDClienteFiscal(req, res) {
 
 }
 
+function save(req,res) {
+	let nProducto = new Producto();
+
+	nProducto.idClienteFiscal = req.body.idClienteFiscal;
+	nProducto.idProducto = req.body.idProducto;
+	nProducto.statusReg = "ACTIVO";
+	nProducto.fechaAlta = new Date();
+
+	nProducto.clave = req.body.clave;
+	nProducto.descripcion = req.body.descripcion;
+	nProducto.existencia = req.body.existencia;
+	nProducto.peso = req.body.peso;
+	nProducto.stockMaximo = req.body.stockMaximo;
+	nProducto.stockMinimo = req.body.stockMinimo;
+
+	nProducto.save((error, productoStored)=>{
+		if(error)
+			res.status(500).send({message:`Error al guardar${error}`});
+
+		res.status(200).send({productoStored});
+	});
+}
+
+function _delete(req,res) {
+	let _idProducto = req.params.idProducto;
+
+	console.log(`INSIDE DELETE ${_idProducto}`);
+
+	Producto.findOne({idProducto:_idProducto, statusReg:"ACTIVO"}) 
+	.then((producto)=>{
+		console.log(producto);
+		producto.statusReg = "BAJA";
+
+		producto.save().then(()=>{
+			res.status(200).send(producto);
+		})
+	}).catch((error)=>{
+		res.status(500).send(error);
+	});
+
+}
+
 module.exports = {
 	get,
-	getByIDClienteFiscal
+	getByIDClienteFiscal,
+	save,
+	_delete
 }
