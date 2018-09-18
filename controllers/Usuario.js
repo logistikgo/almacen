@@ -1,5 +1,6 @@
 'use strict'
 const Usuarios = require('../models/Usuario');
+const Helpers = require('../helpers');
 
 function get(req, res) {
 	
@@ -13,7 +14,7 @@ function get(req, res) {
 }
 
 function getByIDUsuario(req, res) {
-	let _idUsuario = req.params.idUsuario;
+	let _idUsuario = req.params.idusuario;
 
 	console.log(_idUsuario);
 
@@ -26,11 +27,12 @@ function getByIDUsuario(req, res) {
 
 }
 
-function save(req,res){
-	let nUsuario = new Usuario();
 
-	let lastID = nUsuario.find().sort({age:-1}).limit(1);
-	nUsuario.IDUsuario = lastID + 1;
+async function save(req,res){
+	let nUsuario = new Usuarios();
+	let max = 0;
+
+	nUsuario.IDUsuario = await Helpers.getNextID(Usuarios,"IDUsuario");
 	nUsuario.Nombre = req.body.Nombre;
 	nUsuario.NombreUsuario = req.body.NombreUsuario;
 	nUsuario.Correo = req.body.Correo;
@@ -44,9 +46,53 @@ function save(req,res){
 
 		res.status(200).send({usuarioStored});
 	});
+
+
+	/*
+	let query = Usuarios.find();
+	let orderedUsuarios = await query.sort({IDUsuario:-1}).exec();
+	max = orderedUsuarios[0].IDUsuario;*/
+	/* Version 8
+	Usuarios.find().sort({IDUsuario:-1}).exec((err,usuarios)=>{
+		if(err){
+			res.send(500);
+		}
+		max = usuarios[0].IDUsuario;
+		nUsuario.IDUsuario = max + 1;
+		nUsuario.Nombre = req.body.Nombre;
+		nUsuario.NombreUsuario = req.body.NombreUsuario;
+		nUsuario.Correo = req.body.Correo;
+		nUsuario.TipoUsuario = req.body.TipoUsuario;
+		nUsuario.IsBloqueado = 0;
+		nUsuario.StatusReg = "ACTIVO";
+
+		nUsuario.save((error, usuarioStored)=>{
+			if(error)
+				res.status(500).send({message:`Error al guardar${error}`});
+
+			res.status(200).send({usuarioStored});
+		});
+	});*/
+/*
+	nUsuario.IDUsuario = max + 1;
+	nUsuario.Nombre = req.body.Nombre;
+	nUsuario.NombreUsuario = req.body.NombreUsuario;
+	nUsuario.Correo = req.body.Correo;
+	nUsuario.TipoUsuario = req.body.TipoUsuario;
+	nUsuario.IsBloqueado = 0;
+	nUsuario.StatusReg = "ACTIVO";
+
+	nUsuario.save((error, usuarioStored)=>{
+		if(error)
+			res.status(500).send({message:`Error al guardar${error}`});
+
+		res.status(200).send({usuarioStored});
+	});*/
+
+		
 }
 
-function delete(req,res){
+function _delete(req,res){
 	let _idUsuario = req.params.IDUsuario;
 
 	Usuarios.findOne({IDUsuario:_idUsuario, StatusReg : "ACTIVO"})
@@ -70,5 +116,5 @@ module.exports = {
 	get,
 	getByIDUsuario,
 	save,
-	delete
+	_delete
 }
