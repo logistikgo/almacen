@@ -9,6 +9,7 @@ const Usuario = Schema({
 	NombreUsuario:String,
 	Correo:String,
 	TipoUsuario:String,
+	IsBloqueado : Number,
 	StatusReg:String
 },
 {collection:'Usuarios'}
