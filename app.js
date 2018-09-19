@@ -22,6 +22,7 @@ app.get('/api/productos', Producto.get);
 app.get('/api/productos/:idClienteFiscal',Producto.getByIDClienteFiscal);
 app.post('/api/productos',Producto.save);
 app.delete('/api/productos/:idProducto',Producto._delete);
+
 app.get('/api/getUsuarios',Usuario.get);
 app.get('/api/getUsuario/:idusuario',Usuario.getByIDUsuario);
 app.post('/api/saveUsuario',Usuario.save);

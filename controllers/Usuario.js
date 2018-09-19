@@ -31,13 +31,16 @@ async function save(req,res){
 	let nUsuario = new Usuario.model();
 	let max = 0;
 
-	nUsuario.IDUsuario = await Usuarios.getNextID();
+	nUsuario.IDUsuario = await Usuario.getNextID();
 	nUsuario.Nombre = req.body.Nombre;
 	nUsuario.NombreUsuario = req.body.NombreUsuario;
 	nUsuario.Correo = req.body.Correo;
 	nUsuario.TipoUsuario = req.body.TipoUsuario;
 	nUsuario.IsBloqueado = 0;
 	nUsuario.StatusReg = "ACTIVO";
+	nUsuario.IDUsuarioAlta = req.body.IDUsuarioAlta;
+	nUsuario.IDUsuarioEdicion = 0;
+	nUsuario.FechaAlta = new Date();
 
 	nUsuario.save((error, usuarioStored)=>{
 		if(error)
@@ -80,7 +83,8 @@ function update(req,res){
 		Nombre : req.body.Nombre,
 		NombreUsuario : req.body.NombreUsuario,
 		Correo: req.body.Correo,
-		TipoUsuario: req.body.TipoUsuario
+		TipoUsuario: req.body.TipoUsuario,
+		IDUsuarioEdicion:req.body.IDUsuarioEdicion
 	}
 	Usuario.model.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
 		if(error)

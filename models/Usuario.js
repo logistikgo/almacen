@@ -11,7 +11,10 @@ const Usuario = Schema({
 	Correo:String,
 	TipoUsuario:String,
 	IsBloqueado : Number,
-	StatusReg:String
+	StatusReg:String,
+	IDUsuarioAlta: Number,
+	IDUsuarioEdicion:Number,
+	FechaAlta: Date
 },
 {collection:'Usuarios'}
 );
