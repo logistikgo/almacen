@@ -1,6 +1,5 @@
 'use strict'
 const Usuarios = require('../models/Usuario');
-const Helpers = require('../helpers');
 
 function get(req, res) {
 	
@@ -29,10 +28,10 @@ function getByIDUsuario(req, res) {
 
 
 async function save(req,res){
-	let nUsuario = new Usuarios();
+	let nUsuario = new Usuarios.model;
 	let max = 0;
 
-	nUsuario.IDUsuario = await Helpers.getNextID(Usuarios,"IDUsuario");
+	nUsuario.IDUsuario = await Usuarios.getNextID();
 	nUsuario.Nombre = req.body.Nombre;
 	nUsuario.NombreUsuario = req.body.NombreUsuario;
 	nUsuario.Correo = req.body.Correo;
