@@ -94,7 +94,7 @@ async function save(req,res){
 function _delete(req,res){
 	let _idUsuario = req.params.IDUsuario;
 
-	Usuarios.findOne({IDUsuario:_idUsuario, StatusReg : "ACTIVO"})
+	Usuarios.model.findOne({IDUsuario:_idUsuario, StatusReg : "ACTIVO"})
 	.then((usuario)=>{
 		console.log(usuario);
 		usuario.StatusReg = "BAJA";

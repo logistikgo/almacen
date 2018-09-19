@@ -54,7 +54,7 @@ function _delete(req,res) {
 
 	console.log(`INSIDE DELETE ${_idProducto}`);
 
-	Producto.findOne({idProducto:_idProducto, statusReg:"ACTIVO"}) 
+	Producto.model.findOne({idProducto:_idProducto, statusReg:"ACTIVO"}) 
 	.then((producto)=>{
 		console.log(producto);
 		producto.statusReg = "BAJA";
