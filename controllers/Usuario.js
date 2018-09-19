@@ -41,6 +41,7 @@ async function save(req,res){
 	nUsuario.IDUsuarioAlta = req.body.IDUsuarioAlta;
 	nUsuario.IDUsuarioEdicion = 0;
 	nUsuario.FechaAlta = new Date();
+	nUsuario.Contrasena = req.body.Contrasena;
 
 	nUsuario.save((error, usuarioStored)=>{
 		if(error)
@@ -84,7 +85,8 @@ function update(req,res){
 		NombreUsuario : req.body.NombreUsuario,
 		Correo: req.body.Correo,
 		TipoUsuario: req.body.TipoUsuario,
-		IDUsuarioEdicion:req.body.IDUsuarioEdicion
+		IDUsuarioEdicion:req.body.IDUsuarioEdicion,
+		Contrasena:req.body.Contrasena
 	}
 	Usuario.model.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
 		if(error)

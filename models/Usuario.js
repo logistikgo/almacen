@@ -14,7 +14,8 @@ const Usuario = Schema({
 	StatusReg:String,
 	IDUsuarioAlta: Number,
 	IDUsuarioEdicion:Number,
-	FechaAlta: Date
+	FechaAlta: Date,
+	Contrasena : String
 },
 {collection:'Usuarios'}
 );
