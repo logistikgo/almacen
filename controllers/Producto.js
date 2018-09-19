@@ -3,7 +3,7 @@ const Producto = require('../models/Producto');
 
 function get(req, res) {
 	
-	Producto.find({statusReg:"ACTIVO"}, (error,producto) => {
+	Producto.model.find({statusReg:"ACTIVO"}, (error,producto) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -17,7 +17,7 @@ function getByIDClienteFiscal(req, res) {
 
 	console.log(_idClienteFiscal);
 
-	Producto.find({idClienteFiscal:_idClienteFiscal, statusReg:"ACTIVO"}, (error,producto) => {
+	Producto.model.find({idClienteFiscal:_idClienteFiscal, statusReg:"ACTIVO"}, (error,producto) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
