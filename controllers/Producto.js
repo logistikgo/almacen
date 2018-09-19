@@ -25,12 +25,12 @@ function getByIDClienteFiscal(req, res) {
 	});
 
 }
-
+//async
 function save(req,res) {
-	let nProducto = new Producto();
+	let nProducto = new Producto.model();
 
 	nProducto.idClienteFiscal = req.body.idClienteFiscal;
-	nProducto.idProducto = req.body.idProducto;
+	nProducto.idProducto = req.body.idProducto; //await Producto.getNextID();
 	nProducto.statusReg = "ACTIVO";
 	nProducto.fechaAlta = new Date();
 

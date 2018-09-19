@@ -28,7 +28,7 @@ function getByIDUsuario(req, res) {
 
 
 async function save(req,res){
-	let nUsuario = new Usuarios.model;
+	let nUsuario = new Usuarios.model();
 	let max = 0;
 
 	nUsuario.IDUsuario = await Usuarios.getNextID();
