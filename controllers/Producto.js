@@ -1,5 +1,6 @@
 'use strict'
 const Producto = require('../models/Producto');
+const Helpers = require('../helpers');
 
 function get(req, res) {
 	
@@ -26,11 +27,11 @@ function getByIDClienteFiscal(req, res) {
 
 }
 
-function save(req,res) {
+async function save(req,res) {
 	let nProducto = new Producto();
 
 	nProducto.idClienteFiscal = req.body.idClienteFiscal;
-	nProducto.idProducto = req.body.idProducto;
+	nProducto.idProducto = await Helpers.getNextID(Producto, "idProducto");
 	nProducto.statusReg = "ACTIVO";
 	nProducto.fechaAlta = new Date();
 
@@ -43,7 +44,7 @@ function save(req,res) {
 
 	nProducto.save((error, productoStored)=>{
 		if(error)
-			res.status(500).send({message:`Error al guardar${error}`});
+			return res.status(500).send({"message":"Error al guardar", "error":error});
 
 		res.status(200).send({productoStored});
 	});

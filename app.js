@@ -7,6 +7,7 @@ const app = express();
 
 const Producto = require('./controllers/Producto');
 const Usuario = require('./controllers/Usuario');
+const Entrada = require('./controllers/Entrada');
 
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
@@ -26,5 +27,7 @@ app.get('/api/usuarios',Usuario.get);
 app.get('/api/usuarios/:idusuario',Usuario.getByIDUsuario);
 app.post('/api/usuarios',Usuario.save);
 app.delete('/api/usuarios/:idusuario',Usuario._delete);
+
+app.get('/api/entradas',Entrada.get);
 
 module.exports = app;
