@@ -1,10 +1,9 @@
 'use strict'
-const Usuarios = require('../models/Usuario');
-const Helpers = require('../helpers');
+const Usuario = require('../models/Usuario');
 
 function get(req, res) {
 	
-	Usuarios.find({}, (error,usuario) => {
+	Usuario.model.find({StatusReg:"ACTIVO"}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -18,27 +17,31 @@ function getByIDUsuario(req, res) {
 
 	console.log(_idUsuario);
 
-	Usuarios.find({IDUsuario:_idUsuario}, (error,usuario) => {
+	Usuario.model.find({IDUsuario:_idUsuario}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
-		res.status(200).send(usuario);
+		res.status(200).send(usuario[0]);
 	});
 
 }
 
 
 async function save(req,res){
-	let nUsuario = new Usuarios();
+	let nUsuario = new Usuario.model();
 	let max = 0;
 
-	nUsuario.IDUsuario = await Helpers.getNextID(Usuarios,"IDUsuario");
+	nUsuario.IDUsuario = await Usuario.getNextID();
 	nUsuario.Nombre = req.body.Nombre;
 	nUsuario.NombreUsuario = req.body.NombreUsuario;
 	nUsuario.Correo = req.body.Correo;
 	nUsuario.TipoUsuario = req.body.TipoUsuario;
 	nUsuario.IsBloqueado = 0;
 	nUsuario.StatusReg = "ACTIVO";
+	nUsuario.IDUsuarioAlta = req.body.IDUsuarioAlta;
+	nUsuario.IDUsuarioEdicion = 0;
+	nUsuario.FechaAlta = new Date();
+	nUsuario.Contrasena = req.body.Contrasena;
 
 	nUsuario.save((error, usuarioStored)=>{
 		if(error)
@@ -73,48 +76,43 @@ async function save(req,res){
 			res.status(200).send({usuarioStored});
 		});
 	});*/
-/*
-	nUsuario.IDUsuario = max + 1;
-	nUsuario.Nombre = req.body.Nombre;
-	nUsuario.NombreUsuario = req.body.NombreUsuario;
-	nUsuario.Correo = req.body.Correo;
-	nUsuario.TipoUsuario = req.body.TipoUsuario;
-	nUsuario.IsBloqueado = 0;
-	nUsuario.StatusReg = "ACTIVO";
+}
 
-	nUsuario.save((error, usuarioStored)=>{
+function update(req,res){
+	let _idUsuario = req.body.IDUsuario;
+	let item = {
+		Nombre : req.body.Nombre,
+		NombreUsuario : req.body.NombreUsuario,
+		Correo: req.body.Correo,
+		TipoUsuario: req.body.TipoUsuario,
+		IDUsuarioEdicion:req.body.IDUsuarioEdicion
+	}
+	Usuario.model.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
 		if(error)
-			res.status(500).send({message:`Error al guardar${error}`});
-
-		res.status(200).send({usuarioStored});
-	});*/
-
-		
+			return res.status(500).send({message:"Error"});
+		res.status(200).send(item);
+		console.log(item);
+	});
 }
 
 function _delete(req,res){
-	let _idUsuario = req.params.IDUsuario;
+	let _idUsuario = req.body.IDUsuario;
 
-	Usuarios.findOne({IDUsuario:_idUsuario, StatusReg : "ACTIVO"})
-	.then((usuario)=>{
-		console.log(usuario);
-		usuario.StatusReg = "BAJA";
-
-		usuario.save().then(()=>{
-
-			res.status(200).send(usuario);
-
-		}).catch((error)=>{
-
-			res.status(500).send(error);
-
-		});
+	let item = {
+		StatusReg:"BAJA"
+	}
+	Usuario.model.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
+		if(error)
+			return res.status(500).send({message:"Error"});
+		res.status(200).send(item);
 	});
+	
 }
 
 module.exports = {
 	get,
 	getByIDUsuario,
 	save,
-	_delete
+	_delete,
+	update
 }

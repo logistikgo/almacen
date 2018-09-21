@@ -23,10 +23,12 @@ app.get('/api/productos', Producto.get);
 app.get('/api/productos/:idClienteFiscal',Producto.getByIDClienteFiscal);
 app.post('/api/productos',Producto.save);
 app.delete('/api/productos/:idProducto',Producto._delete);
-app.get('/api/usuarios',Usuario.get);
-app.get('/api/usuarios/:idusuario',Usuario.getByIDUsuario);
-app.post('/api/usuarios',Usuario.save);
-app.delete('/api/usuarios/:idusuario',Usuario._delete);
+
+app.get('/api/getUsuarios',Usuario.get);
+app.get('/api/getUsuario/:idusuario',Usuario.getByIDUsuario);
+app.post('/api/saveUsuario',Usuario.save);
+app.post('/api/deleteUsuario',Usuario._delete);
+app.post('/api/updateUsuario',Usuario.update);
 
 app.get('/api/entradas',Entrada.get);
 

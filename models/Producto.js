@@ -2,6 +2,7 @@
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+const Helper = require('../helpers');
 
 const Producto = Schema({
 	idClienteFiscal:Number,
@@ -18,4 +19,13 @@ const Producto = Schema({
 {collection:'Productos'}
 );
 
-module.exports = mongoose.model('Productos',Producto);
+var model = mongoose.model('Productos',Producto);
+
+function getNextID(){
+	return Helper.getNextID(model,"idProducto");
+}
+
+module.exports = {
+	model,
+	getNextID
+}
