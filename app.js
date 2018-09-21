@@ -31,5 +31,6 @@ app.post('/api/deleteUsuario',Usuario._delete);
 app.post('/api/updateUsuario',Usuario.update);
 
 app.get('/api/entradas',Entrada.get);
+app.get('/api/entradaByID/:idEntrada',Entrada.getEntradaByID);
 
 module.exports = app;
