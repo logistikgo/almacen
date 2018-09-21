@@ -26,7 +26,7 @@ app.delete('/api/productos/:idProducto',Producto._delete);
 app.get('/api/getUsuarios',Usuario.get);
 app.get('/api/getUsuario/:idusuario',Usuario.getByIDUsuario);
 app.post('/api/saveUsuario',Usuario.save);
-app.delete('/api/deleteUsuario/:idusuario',Usuario._delete);
+app.post('/api/deleteUsuario',Usuario._delete);
 app.post('/api/updateUsuario',Usuario.update);
 
 module.exports = app;

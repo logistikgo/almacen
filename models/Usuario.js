@@ -22,9 +22,9 @@ const Usuario = Schema({
 
 var model = mongoose.model('Usuarios',Usuario);
 
-function getNextID(){
+async function getNextID(){
 	
-	return Helper.getNextID(model,"IDUsuario");
+	return await Helper.getNextID(model,"IDUsuario");
 }
 
 module.exports = {

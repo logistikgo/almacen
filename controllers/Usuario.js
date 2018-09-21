@@ -3,7 +3,7 @@ const Usuario = require('../models/Usuario');
 
 function get(req, res) {
 	
-	Usuario.model.find({}, (error,usuario) => {
+	Usuario.model.find({StatusReg:"ACTIVO"}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -21,7 +21,7 @@ function getByIDUsuario(req, res) {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
-		res.status(200).send(usuario);
+		res.status(200).send(usuario[0]);
 	});
 
 }
@@ -85,34 +85,28 @@ function update(req,res){
 		NombreUsuario : req.body.NombreUsuario,
 		Correo: req.body.Correo,
 		TipoUsuario: req.body.TipoUsuario,
-		IDUsuarioEdicion:req.body.IDUsuarioEdicion,
-		Contrasena:req.body.Contrasena
+		IDUsuarioEdicion:req.body.IDUsuarioEdicion
+	}
+	Usuario.model.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
+		if(error)
+			return res.status(500).send({message:"Error"});
+		res.status(200).send(item);
+		console.log(item);
+	});
+}
+
+function _delete(req,res){
+	let _idUsuario = req.body.IDUsuario;
+
+	let item = {
+		StatusReg:"BAJA"
 	}
 	Usuario.model.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(item);
 	});
-}
-
-function _delete(req,res){
-	let _idUsuario = req.params.IDUsuario;
-
-	Usuario.model.findOne({IDUsuario:_idUsuario, StatusReg : "ACTIVO"})
-	.then((usuario)=>{
-		console.log(usuario);
-		usuario.StatusReg = "BAJA";
-
-		usuario.save().then(()=>{
-
-			res.status(200).send(usuario);
-
-		}).catch((error)=>{
-
-			res.status(500).send(error);
-
-		});
-	});
+	
 }
 
 module.exports = {
