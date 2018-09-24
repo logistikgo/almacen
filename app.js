@@ -32,5 +32,6 @@ app.post('/api/updateUsuario',Usuario.update);
 
 app.get('/api/entradas',Entrada.get);
 app.get('/api/entradaByID/:idEntrada',Entrada.getEntradaByID);
+app.post('/api/entrada',Entrada.save);
 
 module.exports = app;
