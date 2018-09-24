@@ -9,6 +9,7 @@ const Producto = require('./controllers/Producto');
 const Usuario = require('./controllers/Usuario');
 const Entrada = require('./controllers/Entrada');
 const CteFiscal = require('./controllers/ClienteFiscal');
+
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
 
@@ -33,5 +34,11 @@ app.post('/api/updateUsuario',Usuario.update);
 app.get('/api/entradas',Entrada.get);
 app.get('/api/entradaByID/:idEntrada',Entrada.getEntradaByID);
 app.post('/api/entrada',Entrada.save);
+
+app.get('/api/getCtesFiscales',CteFiscal.get);
+app.get('/api/getCteFiscal/:idCteFiscal',CteFiscal.getByIDCteFiscal);
+app.post('/api/saveCteFiscal',CteFiscal.save);
+app.post('/api/deleteCteFiscal',CteFiscal._delete);
+app.post('/api/updateCteFiscal',CteFiscal.update);
 
 module.exports = app;
