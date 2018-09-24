@@ -39,4 +39,4 @@ module.exports = {
 	getNextID
 }*/
 
-module.exports = mongoose.model('ClientesFiscales',ClientesFiscales);
+module.exports = mongoose.model('ClientesFiscales',ClienteFiscal);

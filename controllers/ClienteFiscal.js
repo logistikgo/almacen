@@ -105,7 +105,7 @@ function _delete(req,res){
 
 module.exports = {
 	get,
-	getByIDUsuario,
+	getByIDCteFiscal,
 	save,
 	_delete,
 	update
