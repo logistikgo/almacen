@@ -1,9 +1,15 @@
 'use strict'
 const Usuario = require('../models/Usuario');
+const Helper = require('../helpers');
+
+async function getNextID(){
+	
+	return await Helper.getNextID(Usuario,"IDUsuario");
+}
 
 function get(req, res) {
 	
-	Usuario.model.find({StatusReg:"ACTIVO"}, (error,usuario) => {
+	Usuario.find({StatusReg:"ACTIVO"}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -17,7 +23,7 @@ function getByIDUsuario(req, res) {
 
 	console.log(_idUsuario);
 
-	Usuario.model.find({IDUsuario:_idUsuario}, (error,usuario) => {
+	Usuario.find({IDUsuario:_idUsuario}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -28,10 +34,10 @@ function getByIDUsuario(req, res) {
 
 
 async function save(req,res){
-	let nUsuario = new Usuario.model();
+	let nUsuario = new Usuario();
 	let max = 0;
 
-	nUsuario.IDUsuario = await Usuario.getNextID();
+	nUsuario.IDUsuario = await getNextID();
 	nUsuario.Nombre = req.body.Nombre;
 	nUsuario.NombreUsuario = req.body.NombreUsuario;
 	nUsuario.Correo = req.body.Correo;
@@ -87,7 +93,7 @@ function update(req,res){
 		TipoUsuario: req.body.TipoUsuario,
 		IDUsuarioEdicion:req.body.IDUsuarioEdicion
 	}
-	Usuario.model.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
+	Usuario.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(item);
@@ -101,7 +107,7 @@ function _delete(req,res){
 	let item = {
 		StatusReg:"BAJA"
 	}
-	Usuario.model.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
+	Usuario.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(item);

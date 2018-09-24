@@ -1,9 +1,15 @@
 'use strict'
-const ClienteFiscal = require('../models/ClienteFiscal');
+const CteFiscal = require('../models/ClienteFiscal');
+const Helper = require('../helpers');
+
+async function getNextID(){
+	
+	return await Helper.getNextID(CteFiscal,"IDCliente");
+}
 
 function get(req, res) {
 	
-	ClienteFiscal.model.find({StatusReg:"ACTIVO"}, (error,cliente) => {
+	CteFiscal.find({StatusReg:"ACTIVO"}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -16,7 +22,7 @@ function getByIDCteFiscal(req, res) {
 
 	console.log(_idCliente);
 
-	ClienteFiscal.model.find({IDCliente:_idCliente}, (error,cliente) => {
+	CteFiscal.find({IDCliente:_idCliente}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -27,9 +33,9 @@ function getByIDCteFiscal(req, res) {
 
 
 async function save(req,res){
-	let nCliente = new ClienteFiscal.model();
+	let nCliente = new CteFiscal();
 
-	nCliente.IDCliente = await ClienteFiscal.getNextID();
+	nCliente.IDCliente = await getNextID();
 	nCliente.IDUsuarioAlta = req.body.IDUsuarioAlta;
 	nCliente.IDSucursal = 1;
 	nCliente.FechaAlta = new Date();
@@ -75,7 +81,7 @@ function update(req,res){
 		Estado:req.body.Estado,
 		Pais:req.body.Pais
 	}
-	ClienteFiscal.model.updateOne({IDCliente:_idCliente},{$set:item}, (error,cliente) => {
+	CteFiscal.updateOne({IDCliente:_idCliente},{$set:item}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(cliente);
@@ -89,7 +95,7 @@ function _delete(req,res){
 	let item = {
 		StatusReg:"BAJA"
 	}
-	ClienteFiscal.model.updateOne({IDCliente:_idCliente},{$set:item}, (error,cliente) => {
+	CteFiscal.updateOne({IDCliente:_idCliente},{$set:item}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(cliente);

@@ -2,7 +2,6 @@
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-const Helper = require('../helpers');
 
 const ClienteFiscal = Schema({
 	IDCliente:Number,
@@ -27,7 +26,7 @@ const ClienteFiscal = Schema({
 },
 {collection:'ClientesFiscales'}
 );
-
+/*
 var model = mongoose.model('ClientesFiscales',Usuario);
 
 async function getNextID(){
@@ -38,4 +37,6 @@ async function getNextID(){
 module.exports = {
 	model,
 	getNextID
-}
+}*/
+
+module.exports = mongoose.model('ClientesFiscales',ClientesFiscales);
