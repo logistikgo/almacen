@@ -4,7 +4,7 @@ const Helpers = require('../helpers');
 
 function get(req, res) {
 	
-	Producto.model.find({statusReg:"ACTIVO"}, (error,producto) => {
+	Producto.find({statusReg:"ACTIVO"}, (error,producto) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -18,7 +18,7 @@ function getByIDClienteFiscal(req, res) {
 
 	console.log(_idClienteFiscal);
 
-	Producto.model.find({idClienteFiscal:_idClienteFiscal, statusReg:"ACTIVO"}, (error,producto) => {
+	Producto.find({idClienteFiscal:_idClienteFiscal, statusReg:"ACTIVO"}, (error,producto) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -26,21 +26,15 @@ function getByIDClienteFiscal(req, res) {
 	});
 
 }
-<<<<<<< HEAD
 
+
+//async
 async function save(req,res) {
 	let nProducto = new Producto();
 
 	nProducto.idClienteFiscal = req.body.idClienteFiscal;
 	nProducto.idProducto = await Helpers.getNextID(Producto, "idProducto");
-=======
-//async
-function save(req,res) {
-	let nProducto = new Producto.model();
 
-	nProducto.idClienteFiscal = req.body.idClienteFiscal;
-	nProducto.idProducto = req.body.idProducto; //await Producto.getNextID();
->>>>>>> 5e295b7a6805176a4f3bd8fbf8ad72394eb3dd67
 	nProducto.statusReg = "ACTIVO";
 	nProducto.fechaAlta = new Date();
 
@@ -64,7 +58,7 @@ function _delete(req,res) {
 
 	console.log(`INSIDE DELETE ${_idProducto}`);
 
-	Producto.model.findOne({idProducto:_idProducto, statusReg:"ACTIVO"}) 
+	Producto.findOne({idProducto:_idProducto, statusReg:"ACTIVO"}) 
 	.then((producto)=>{
 		console.log(producto);
 		producto.statusReg = "BAJA";
