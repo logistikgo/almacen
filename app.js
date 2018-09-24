@@ -7,7 +7,11 @@ const app = express();
 
 const Producto = require('./controllers/Producto');
 const Usuario = require('./controllers/Usuario');
+<<<<<<< HEAD
 const CteFiscal = require('./controllers/ClienteFiscal');
+=======
+const Entrada = require('./controllers/Entrada');
+>>>>>>> 47d0c4facbb96a637c05e9c9eacefcf1d1e8400f
 
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
@@ -30,10 +34,14 @@ app.post('/api/saveUsuario',Usuario.save);
 app.post('/api/deleteUsuario',Usuario._delete);
 app.post('/api/updateUsuario',Usuario.update);
 
+<<<<<<< HEAD
 app.get('/api/getCtesFiscales',CteFiscal.get);
 app.get('/api/getCteFiscal/:idCteFiscal',CteFiscal.getByIDCteFiscal);
 app.post('/api/saveCteFiscal',CteFiscal.save);
 app.post('/api/deleteCteFiscal',CteFiscal._delete);
 app.post('/api/updateCteFiscal',CteFiscal.update);
+=======
+app.get('/api/entradas',Entrada.get);
+>>>>>>> 47d0c4facbb96a637c05e9c9eacefcf1d1e8400f
 
 module.exports = app;
