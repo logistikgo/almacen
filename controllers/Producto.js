@@ -1,6 +1,7 @@
 'use strict'
 const Producto = require('../models/Producto');
 const Helpers = require('../helpers');
+const MovimientoInventario = require('../controllers/MovimientoInventario')
 
 function get(req, res) {
 	
@@ -45,12 +46,18 @@ async function save(req,res) {
 	nProducto.stockMaximo = req.body.stockMaximo;
 	nProducto.stockMinimo = req.body.stockMinimo;
 
-	nProducto.save((error, productoStored)=>{
-		if(error)
-			return res.status(500).send({"message":"Error al guardar", "error":error});
+	nProducto.save()
+	.then((productoStored)=>{		
+		MovimientoInventario.saveExistenciaInicial(productoStored._id, productoStored.existencia)
+		.then(()=>{
+			res.status(200).send({productoStored});
+		})
+	})
+	.catch((err)=>{
+		return res.status(500).send({"message":"Error al guardar", "error":err});
 
-		res.status(200).send({productoStored});
-	});
+	})
+	;
 }
 
 function _delete(req,res) {

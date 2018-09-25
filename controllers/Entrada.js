@@ -3,6 +3,7 @@
 const Entrada = require('../models/Entrada');
 const Helper = require('../helpers');
 const Producto = require('../models/Producto');
+const MovimientoInventario = require('../controllers/MovimientoInventario');
 
 function getNextID(){
 	return Helper.getNextID(Entrada,"idEntrada");
@@ -53,6 +54,11 @@ async function save(req, res){
 
 	nEntrada.save()
 	.then((data)=>{
+
+		for(let itemPartida of data.partidas){
+			MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas);
+		}
+
 		res.status(200).send(data);
 	})
 	.catch((err)=>{
