@@ -9,7 +9,7 @@ async function getNextID(){
 
 function get(req, res) {
 	
-	CteFiscal.find({StatusReg:"ACTIVO"}, (error,cliente) => {
+	CteFiscal.find({statusReg:"ACTIVO"}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -22,7 +22,7 @@ function getByIDCteFiscal(req, res) {
 
 	console.log(_idCliente);
 
-	CteFiscal.find({IDCliente:_idCliente}, (error,cliente) => {
+	CteFiscal.find({idCliente:_idCliente}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -35,25 +35,23 @@ function getByIDCteFiscal(req, res) {
 async function save(req,res){
 	let nCliente = new CteFiscal();
 
-	nCliente.IDCliente = await getNextID();
-	nCliente.IDUsuarioAlta = req.body.IDUsuarioAlta;
-	nCliente.IDSucursal = 1;
-	nCliente.FechaAlta = new Date();
-	nCliente.FechaElimina = new Date("0000-00-00");
-	nCliente.FechaEdita = new Date("0000-00-00");
-	nCliente.NombreCorto = req.body.NombreCorto;
-	nCliente.NombreComercial = req.body.NombreComercial;
-	nCliente.RazonSocial = req.body.RazonSocial;
-	nCliente.RFC = req.body.RFC;
-	nCliente.Calle = req.body.Calle;
-	nCliente.NumExt = req.body.NumExt;
-	nCliente.NumInt = req.body.NumInt;
-	nCliente.CP = req.body.CP;
-	nCliente.Colonia = req.body.Colonia;
-	nCliente.Municipio = req.body.Municipio;
-	nCliente.Estado = req.body.Estado;
-	nCliente.Pais = req.body.Pais;
-	nCliente.StatusReg = "ACTIVO";
+	nCliente.idCliente = await getNextID();
+	nCliente.idUsuarioAlta = req.body.idUsuarioAlta;
+	nCliente.idSucursal = 1;
+	nCliente.fechaAlta = new Date();
+	nCliente.nombreCorto = req.body.nombreCorto;
+	nCliente.nombreComercial = req.body.nombreComercial;
+	nCliente.razonSocial = req.body.razonSocial;
+	nCliente.rfc = req.body.rfc;
+	nCliente.calle = req.body.calle;
+	nCliente.numExt = req.body.numExt;
+	nCliente.numInt = req.body.numInt;
+	nCliente.cp = req.body.cp;
+	nCliente.colonia = req.body.colonia;
+	nCliente.municipio = req.body.municipio;
+	nCliente.estado = req.body.estado;
+	nCliente.pais = req.body.pais;
+	nCliente.statusReg = "ACTIVO";
 
 	nCliente.save((error, clienteStored)=>{
 		if(error)
@@ -64,24 +62,24 @@ async function save(req,res){
 }
 
 function update(req,res){
-	let _idCliente = req.body.IDCliente;
+	let _idCliente = req.body.idCliente;
 
 	let item = {
-		FechaEdita:new Date(),
-		NombreCorto : req.body.NombreCorto,
-		NombreComercial : req.body.NombreComercial,
-		RazonSocial: req.body.RazonSocial,
-		RFC: req.body.RFC,
-		Calle:req.body.Calle,
-		NumInt:req.body.NumInt,
-		NumExt:req.body.NumExt,
-		CP:req.body.CP,
-		Colonia:req.body.Colonia,
-		Municipio:req.body.Municipio,
-		Estado:req.body.Estado,
-		Pais:req.body.Pais
+		fechaEdita:new Date(),
+		nombreCorto : req.body.nombreCorto,
+		nombreComercial : req.body.nombreComercial,
+		razonSocial: req.body.razonSocial,
+		rfc: req.body.rfc,
+		calle:req.body.calle,
+		numInt:req.body.numInt,
+		numExt:req.body.numExt,
+		cp:req.body.cp,
+		colonia:req.body.colonia,
+		municipio:req.body.municipio,
+		estado:req.body.estado,
+		pais:req.body.pais
 	}
-	CteFiscal.updateOne({IDCliente:_idCliente},{$set:item}, (error,cliente) => {
+	CteFiscal.updateOne({idCliente:_idCliente},{$set:item}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(cliente);
@@ -90,12 +88,13 @@ function update(req,res){
 }
 
 function _delete(req,res){
-	let _idCliente = req.body.IDCliente;
+	let _idCliente = req.body.idCliente;
 
 	let item = {
-		StatusReg:"BAJA"
+		statusReg:"BAJA",
+		fechaElimina : new Date()
 	}
-	CteFiscal.updateOne({IDCliente:_idCliente},{$set:item}, (error,cliente) => {
+	CteFiscal.updateOne({idCliente:_idCliente},{$set:item}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(cliente);

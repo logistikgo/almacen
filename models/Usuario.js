@@ -4,17 +4,17 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const Usuario = Schema({
-	IDUsuario : Number,
-	Nombre: String,
-	NombreUsuario:String,
-	Correo:String,
-	TipoUsuario:String,
-	IsBloqueado : Number,
-	StatusReg:String,
-	IDUsuarioAlta: Number,
-	IDUsuarioEdicion:Number,
-	FechaAlta: Date,
-	Contrasena : String
+	idUsuario : Number,
+	nombre: String,
+	nombreUsuario:String,
+	correo:String,
+	tipoUsuario:String,
+	isBloqueado : Number,
+	statusReg:String,
+	idUsuarioAlta: Number,
+	idUsuarioEdicion:Number,
+	fechaAlta: Date,
+	contrasena : String
 },
 {collection:'Usuarios'}
 );

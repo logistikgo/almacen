@@ -4,12 +4,12 @@ const Helper = require('../helpers');
 
 async function getNextID(){
 	
-	return await Helper.getNextID(Usuario,"IDUsuario");
+	return await Helper.getNextID(Usuario,"idUsuario");
 }
 
 function get(req, res) {
 	
-	Usuario.find({StatusReg:"ACTIVO"}, (error,usuario) => {
+	Usuario.find({statusReg:"ACTIVO"}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -23,7 +23,7 @@ function getByIDUsuario(req, res) {
 
 	console.log(_idUsuario);
 
-	Usuario.find({IDUsuario:_idUsuario}, (error,usuario) => {
+	Usuario.find({idUsuario:_idUsuario}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
@@ -37,17 +37,17 @@ async function save(req,res){
 	let nUsuario = new Usuario();
 	let max = 0;
 
-	nUsuario.IDUsuario = await getNextID();
-	nUsuario.Nombre = req.body.Nombre;
-	nUsuario.NombreUsuario = req.body.NombreUsuario;
-	nUsuario.Correo = req.body.Correo;
-	nUsuario.TipoUsuario = req.body.TipoUsuario;
-	nUsuario.IsBloqueado = 0;
-	nUsuario.StatusReg = "ACTIVO";
-	nUsuario.IDUsuarioAlta = req.body.IDUsuarioAlta;
-	nUsuario.IDUsuarioEdicion = 0;
-	nUsuario.FechaAlta = new Date();
-	nUsuario.Contrasena = req.body.Contrasena;
+	nUsuario.idUsuario = await getNextID();
+	nUsuario.nombre = req.body.nombre;
+	nUsuario.nombreUsuario = req.body.nombreUsuario;
+	nUsuario.correo = req.body.correo;
+	nUsuario.tipoUsuario = req.body.tipoUsuario;
+	nUsuario.isBloqueado = 0;
+	nUsuario.statusReg = "ACTIVO";
+	nUsuario.idUsuarioAlta = req.body.idUsuarioAlta;
+	nUsuario.idUsuarioEdicion = 0;
+	nUsuario.fechaAlta = new Date();
+	nUsuario.contrasena = req.body.contrasena;
 
 	nUsuario.save((error, usuarioStored)=>{
 		if(error)
@@ -87,13 +87,13 @@ async function save(req,res){
 function update(req,res){
 	let _idUsuario = req.body.IDUsuario;
 	let item = {
-		Nombre : req.body.Nombre,
-		NombreUsuario : req.body.NombreUsuario,
-		Correo: req.body.Correo,
-		TipoUsuario: req.body.TipoUsuario,
-		IDUsuarioEdicion:req.body.IDUsuarioEdicion
+		nombre : req.body.nombre,
+		nombreUsuario : req.body.nombreUsuario,
+		correo: req.body.Correo,
+		tipoUsuario: req.body.tipoUsuario,
+		idUsuarioEdicion:req.body.idUsuarioEdicion
 	}
-	Usuario.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
+	Usuario.updateOne({idUsuario:_idUsuario},{$set:item}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(item);
@@ -105,9 +105,9 @@ function _delete(req,res){
 	let _idUsuario = req.body.IDUsuario;
 
 	let item = {
-		StatusReg:"BAJA"
+		statusReg:"BAJA"
 	}
-	Usuario.updateOne({IDUsuario:_idUsuario},{$set:item}, (error,usuario) => {
+	Usuario.updateOne({idUsuario:_idUsuario},{$set:item}, (error,usuario) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(item);
