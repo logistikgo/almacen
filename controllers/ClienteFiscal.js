@@ -18,7 +18,7 @@ function get(req, res) {
 }
 
 function getByIDCteFiscal(req, res) {
-	let _idCliente = req.params.idCliente;
+	let _idCliente = req.params.idCteFiscal;
 
 	console.log(_idCliente);
 
