@@ -33,6 +33,8 @@ function getByIDClienteFiscal(req, res) {
 async function save(req,res) {
 	let nProducto = new Producto();
 
+	console.log(req.body);
+	
 	nProducto.idClienteFiscal = req.body.idClienteFiscal;
 	nProducto.idProducto = await Helpers.getNextID(Producto, "idProducto");
 

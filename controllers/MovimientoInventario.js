@@ -54,16 +54,42 @@ async function saveExistenciaInicial(producto_id, cantidad) {
 }
 
 function updateExistencia(producto_id, signo, cantidad) {
-	Producto.findOne({_id:producto_id}).then((producto)=>{
-		console.log(producto);
+	Producto.findOne({_id:producto_id})
+	.then((producto)=>{
+		
 		producto.existencia += (signo*cantidad);
+
+		if(signo == 1){
+			producto.fechaUltimaEntrada = new Date();
+		}
+		else{
+			producto.fechaUltimaSalida = new Date();
+		}
+
 		producto.save()
-		.then(()=>{console.log('then');})
+		.then(()=>{})
 		.catch(err=>console.log(err));
 	});
 }
 
+function get(req, res){
+	let _producto_id = req.params.producto_id;
+
+	MovimientoInventario.find({producto_id:_producto_id})
+	.populate({
+		path:'producto_id'
+	})
+	.populate({
+		path:'entrada_id'
+	})
+	.then((movimientos)=>{
+		res.status(200).send(movimientos);
+	})
+	.catch(err=>console.log(err));
+}
+
 module.exports={
+	get,
 	saveSalida,
 	saveEntrada,
 	saveExistenciaInicial

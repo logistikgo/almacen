@@ -13,7 +13,7 @@ const Entrada = Schema({
 	transportista:String,
 	remision:String,
 	factura:String,
-	producto:{ type: Schema.ObjectId, ref: "Productos" },
+	producto:{ type: Schema.ObjectId, ref: "Producto" },
 	partidas:[
 		{
 			producto_id:{ type: Schema.ObjectId, ref: "Productos" },

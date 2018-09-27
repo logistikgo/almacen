@@ -9,6 +9,8 @@ const Producto = require('./controllers/Producto');
 const Usuario = require('./controllers/Usuario');
 const Entrada = require('./controllers/Entrada');
 const CteFiscal = require('./controllers/ClienteFiscal');
+const MovimientosInventario = require('./controllers/MovimientoInventario');
+const Salida = require('./controllers/Salida');
 
 app.use(bodyParser.urlencoded({extended:false}));
 app.use(bodyParser.json());
@@ -22,8 +24,10 @@ app.use(function(req, res, next) {
 
 app.get('/api/productos', Producto.get);
 app.get('/api/productos/:idClienteFiscal',Producto.getByIDClienteFiscal);
-app.post('/api/productos',Producto.save);
+app.post('/api/producto',Producto.save);
 app.delete('/api/productos/:idProducto',Producto._delete);
+
+app.get('/api/movimientosInventario/:producto_id',MovimientosInventario.get)
 
 app.get('/api/getUsuarios',Usuario.get);
 app.get('/api/getUsuario/:idusuario',Usuario.getByIDUsuario);
@@ -34,6 +38,10 @@ app.post('/api/updateUsuario',Usuario.update);
 app.get('/api/entradas',Entrada.get);
 app.get('/api/entradaByID/:idEntrada',Entrada.getEntradaByID);
 app.post('/api/entrada',Entrada.save);
+
+app.get('/api/salidas',Salida.get);
+app.get('api/salidaByID/:salida_id',Salida.get);
+app.post('api/salida',Salida.save);
 
 app.get('/api/getCtesFiscales',CteFiscal.get);
 app.get('/api/getCteFiscal/:idCteFiscal',CteFiscal.getByIDCteFiscal);

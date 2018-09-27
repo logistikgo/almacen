@@ -10,7 +10,8 @@ const MovimientoInventario = Schema({
 	fechaMovimiento:Date,
 	cantidad:Number,
 	signo:Number,
-	tipo:String
+	tipo:String,
+	referencia:String,
 },
 {collection:"MovimientosInventario"});
 

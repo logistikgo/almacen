@@ -10,6 +10,8 @@ const Producto = Schema({
 	idClienteFiscal:Number,
 	idProducto:Number,
 	fechaAlta:Date,
+	fechaUltimaEntrada:Date,
+	fechaUltimaSalida:Date,
 	fechaBaja:Date,
 	clave:String,
 	descripcion:String,
@@ -17,18 +19,7 @@ const Producto = Schema({
 	peso:Number,
 	stockMaximo:Number,
 	stockMinimo:Number,
-	statusReg:String,
-	movimientosInventario:[
-		{
-			Entrada_id:{type:Schema.ObjectId, ref:"Entrada"},
-			folio:Number,
-			fechaMovimiento:Number,
-			signo:Number,
-			cantidad:Number,
-			tarimas:Number,
-			piezas:Number,
-		}
-	]
+	statusReg:String,	
 },
 {collection:'Productos'}
 );
@@ -45,4 +36,4 @@ const Producto = Schema({
 // }
 
 
-module.exports = mongoose.model('Productos',Producto);
+module.exports = mongoose.model('Producto',Producto);
