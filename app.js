@@ -40,8 +40,8 @@ app.get('/api/entradaByID/:idEntrada',Entrada.getEntradaByID);
 app.post('/api/entrada',Entrada.save);
 
 app.get('/api/salidas',Salida.get);
-app.get('api/salidaByID/:salida_id',Salida.get);
-app.post('api/salida',Salida.save);
+app.get('/api/salidaByID/:salida_id',Salida.get);
+app.post('/api/salida',Salida.save);
 
 app.get('/api/getCtesFiscales',CteFiscal.get);
 app.get('/api/getCteFiscal/:idCteFiscal',CteFiscal.getByIDCteFiscal);

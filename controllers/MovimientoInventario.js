@@ -11,10 +11,11 @@ function saveSalida(producto_id, salida_id, cantidad) {
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = -1;
+	nMovimiento.tipo = "SALIDA",
 
 	nMovimiento.save()
 	.then((data)=>{
-		console.log(data);
+		updateExistencia(producto_id,nMovimiento.signo,cantidad);
 	})
 	.catch((err)=>{
 		console.log(err);
@@ -81,6 +82,9 @@ function get(req, res){
 	})
 	.populate({
 		path:'entrada_id'
+	})
+	.populate({
+		path:'salida_id'
 	})
 	.then((movimientos)=>{
 		res.status(200).send(movimientos);
