@@ -27,6 +27,16 @@ function getAlmacen(req,res){
 	});
 }
 
+function getAlmacenesByIDSucursal(req,res){
+	let _idSucursal = req.params.idSucursal;
+
+	Almacen.find({idSucursal:_idSucursal},(err,almacenes)=>{
+		if(err)
+			return res.status(500).send({message:"Error"});
+		res.status(200).send(almacenes);
+	});
+}
+
 async function saveAlmacen(req,res){
 	let nAlmacen = new Almacen();
 
@@ -76,6 +86,7 @@ function deleteAlmacen(req,res){
 module.exports = {
 	getAlmacenes,
 	getAlmacen,
+	getAlmacenesByIDSucursal,
 	saveAlmacen,
 	updateAlmacen,
 	deleteAlmacen
