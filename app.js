@@ -12,6 +12,7 @@ const CteFiscal = require('./controllers/ClienteFiscal');
 const MovimientosInventario = require('./controllers/MovimientoInventario');
 const Salida = require('./controllers/Salida');
 const Sucursal = require("./controllers/Sucursal");
+const Almacen = require('./controllers/Almacen');
 
 app.use(bodyParser.urlencoded({
     extended: false
@@ -56,5 +57,11 @@ app.get("/api/sucursales", Sucursal.get);
 app.post("api/sucursales", Sucursal.save);
 app.post("api/sucursales", Sucursal.update);
 app.post("api/sucursales", Sucursal._delete);
+
+app.get('/api/getAlmacenes',Almacen.getAlmacenes);
+app.get('/api/getAlmacen/:idAlmacen',Almacen.getAlmacen);
+app.post('/api/saveAlmacen',Almacen.saveAlmacen);
+app.post('/api/updateAlmacen',Almacen.updateAlmacen);
+app.post('/api/deleteAlmacen',Almacen.deleteAlmacen);
 
 module.exports = app;

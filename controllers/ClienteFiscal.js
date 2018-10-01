@@ -4,7 +4,7 @@ const Helper = require('../helpers');
 
 async function getNextID(){
 	
-	return await Helper.getNextID(CteFiscal,"IDCliente");
+	return await Helper.getNextID(CteFiscal,"idCliente");
 }
 
 function get(req, res) {

@@ -85,11 +85,11 @@ async function save(req,res){
 }
 
 function update(req,res){
-	let _idUsuario = req.body.IDUsuario;
+	let _idUsuario = req.body.idUsuario;
 	let item = {
 		nombre : req.body.nombre,
 		nombreUsuario : req.body.nombreUsuario,
-		correo: req.body.Correo,
+		correo: req.body.correo,
 		tipoUsuario: req.body.tipoUsuario,
 		idUsuarioEdicion:req.body.idUsuarioEdicion
 	}
@@ -102,7 +102,7 @@ function update(req,res){
 }
 
 function _delete(req,res){
-	let _idUsuario = req.body.IDUsuario;
+	let _idUsuario = req.body.idUsuario;
 
 	let item = {
 		statusReg:"BAJA"
