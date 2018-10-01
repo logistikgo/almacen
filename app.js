@@ -53,5 +53,8 @@ app.post('/api/deleteCteFiscal', CteFiscal._delete);
 app.post('/api/updateCteFiscal', CteFiscal.update);
 
 app.get("/api/sucursales", Sucursal.get);
+app.post("api/sucursales", Sucursal.save);
+app.post("api/sucursales", Sucursal.update);
+app.post("api/sucursales", Sucursal._delete);
 
 module.exports = app;
