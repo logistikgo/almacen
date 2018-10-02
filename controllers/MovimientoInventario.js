@@ -73,7 +73,7 @@ function updateExistencia(producto_id, signo, cantidad) {
 	});
 }
 
-function get(req, res){
+function getByProducto(req, res){
 	let _producto_id = req.params.producto_id;
 
 	MovimientoInventario.find({producto_id:_producto_id})
@@ -92,8 +92,28 @@ function get(req, res){
 	.catch(err=>console.log(err));
 }
 
+function get(req, res){
+
+	MovimientoInventario.find({})
+	.populate({
+		path:'producto_id'
+	})
+	.populate({
+		path:'entrada_id'
+	})
+	.populate({
+		path:'salida_id'
+	})
+	.then((movimientos)=>{
+		res.status(200).send(movimientos);
+	})
+	.catch(err=>console.log(err));
+}
+
+
 module.exports={
 	get,
+	getByProducto,
 	saveSalida,
 	saveEntrada,
 	saveExistenciaInicial

@@ -29,6 +29,10 @@ async function save(req, res) {
 	nSalida.fechaSalida = new Date();
 	nSalida.folio = await getNextID();
 	nSalida.partidas = req.body.partidas;	
+	nSalida.transportista = req.body.transportista;
+	nSalida.placasRemolque = req.body.placasRemolque;
+	nSalida.operador = req.body.operador;
+	nSalida.placasTrailer = req.body.placasTrailer;
 
 	nSalida.save()
 	.then((data)=>{
