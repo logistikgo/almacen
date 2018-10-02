@@ -13,23 +13,15 @@ const Entrada = Schema({
 	transportista:String,
 	remision:String,
 	factura:String,
-	producto:{ type: Schema.ObjectId, ref: "Producto" },
+	embarque:String,
 	partidas:[
 		{
-			producto_id:{ type: Schema.ObjectId, ref: "Productos" },
+			producto_id:{ type: Schema.ObjectId, ref: "Producto" },
 			piezas:Number,
 			tarimas:Number,
 			cajas:Number
 		}
 	]
-	// partidas:[
-	// 	{
-	// 		producto:{ type: Schema.ObjectId, ref: "Productos" },
-	// 		piezas:Number,
-	// 		tarimas:Number,
-	// 		cajas:Number
-	// 	}
-	// ]
 },
 {collection:'Entradas'}
 );

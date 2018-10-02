@@ -26,7 +26,7 @@ function getEntradaByID(req, res) {
 	Entrada.findOne({idEntrada: _idEntrada})
 	.populate({
 		path:'partidas.producto_id',
-		model:'Productos'
+		model:'Producto'
 	})
 	.exec(function(err,entrada){
 		if(err)
@@ -46,11 +46,14 @@ async function save(req, res){
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
 	nEntrada.usuarioEntrada = bodyParams.usuarioEntrada;
-	nEntrada.ordenCompra = bodyParams.ordenCompra;
+	nEntrada.embarque = bodyParams.embarque;
 	nEntrada.transportista = bodyParams.transportista;
 	nEntrada.remision = bodyParams.remision;
 	nEntrada.factura = bodyParams.factura;
 	nEntrada.partidas = bodyParams.partidas;
+
+	console.log(bodyParams);
+	console.log(nEntrada);
 
 	nEntrada.save()
 	.then((data)=>{
