@@ -31,7 +31,8 @@ app.get('/api/productos/:idClienteFiscal', Producto.getByIDClienteFiscal);
 app.post('/api/producto', Producto.save);
 app.delete('/api/productos/:idProducto', Producto._delete);
 
-app.get('/api/movimientosInventario/:producto_id', MovimientosInventario.get)
+app.get('/api/movimientosInventario/:producto_id', MovimientosInventario.getByProducto);
+app.get('/api/movimientosInventario', MovimientosInventario.get);
 
 app.get('/api/getUsuarios', Usuario.get);
 app.get('/api/getUsuario/:idusuario', Usuario.getByIDUsuario);
