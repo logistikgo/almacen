@@ -16,6 +16,18 @@ function get(req,res) {
 	.catch(error=>console.log(error));
 }
 
+function getSalidasByIDs(req,res){
+	let _idCteFiscal = req.params.idCteFiscal;
+	let _idSucursal = req.params.idSucursal;
+	let _idAlmacen = req.params.idAlmacen;
+
+	Salida.find({idCteFiscal: _idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},(err,salidas)=>{
+		if(err)
+			return res.status(500).send({message:"Error"});
+		res.status(200).send(salidas);
+	});
+}
+
 function getByID(req,res) {
 
 }
@@ -33,6 +45,9 @@ async function save(req, res) {
 	nSalida.placasRemolque = req.body.placasRemolque;
 	nSalida.operador = req.body.operador;
 	nSalida.placasTrailer = req.body.placasTrailer;
+	nSalida.idCteFiscal = req.body.idCteFiscal;
+	nSalida.idSucursal = req.body.idSucursal;
+	nSalida.idAlmacen = req.body.idAlmacen;
 
 	nSalida.save()
 	.then((data)=>{
@@ -50,5 +65,6 @@ async function save(req, res) {
 module.exports = {
 	get, 
 	getByID,
-	save
+	save,
+	getSalidasByIDs
 }

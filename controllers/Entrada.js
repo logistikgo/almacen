@@ -19,6 +19,18 @@ function get( req,res){
 	});
 };
 
+function getEntradasByIDs(req,res){
+	let _idCteFiscal = req.params.idCteFiscal;
+	let _idSucursal = req.params.idSucursal;
+	let _idAlmacen = req.params.idAlmacen;
+
+	Entrada.find({idCteFiscal: _idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},(err,entradas)=>{
+		if(err)
+			return res.status(500).send({message:"Error"});
+		res.status(200).send(entradas);
+	});
+}
+
 function getEntradaByID(req, res) {
 
 	let _idEntrada = req.params.idEntrada;
@@ -50,6 +62,9 @@ async function save(req, res){
 	nEntrada.transportista = bodyParams.transportista;
 	nEntrada.remision = bodyParams.remision;
 	nEntrada.factura = bodyParams.factura;
+	nEntrada.idCteFiscal = bodyParams.idCteFiscal;
+	nEntrada.idSucursal = bodyParams.idSucursal;
+	nEntrada.idAlmacen = bodyParams.idAlmacen;
 	nEntrada.partidas = bodyParams.partidas;
 
 	console.log(bodyParams);
@@ -73,5 +88,6 @@ async function save(req, res){
 module.exports = {
 	get,
 	getEntradaByID,
-	save
+	save,
+	getEntradasByIDs
 }

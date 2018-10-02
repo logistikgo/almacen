@@ -14,6 +14,9 @@ const Entrada = Schema({
 	remision:String,
 	factura:String,
 	embarque:String,
+	idCteFiscal:Number,
+	idSucursal:Number,
+	idAlmacen:Number,
 	partidas:[
 		{
 			producto_id:{ type: Schema.ObjectId, ref: "Producto" },

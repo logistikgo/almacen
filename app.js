@@ -42,10 +42,12 @@ app.post('/api/updateUsuario', Usuario.update);
 
 app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID/:idEntrada', Entrada.getEntradaByID);
+app.get('/api/getEntradasByIDs/:idCteFiscal/:idSucursal/:idAlmacen',Entrada.getEntradasByIDs);
 app.post('/api/entrada', Entrada.save);
 
 app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.get);
+app.get('/api/getSalidasByIDs/:idCteFiscal/:idSucursal/:idAlmacen',Salida.getSalidasByIDs);
 app.post('/api/salida', Salida.save);
 
 app.get('/api/getCtesFiscales', CteFiscal.get);
