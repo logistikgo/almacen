@@ -26,17 +26,5 @@ const ClienteFiscal = Schema({
 },
 {collection:'ClientesFiscales'}
 );
-/*
-var model = mongoose.model('ClientesFiscales',Usuario);
-
-async function getNextID(){
-	
-	return await Helper.getNextID(model,"IDCliente");
-}
-
-module.exports = {
-	model,
-	getNextID
-}*/
 
 module.exports = mongoose.model('ClientesFiscales',ClienteFiscal);

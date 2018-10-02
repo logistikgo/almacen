@@ -18,17 +18,5 @@ const Usuario = Schema({
 },
 {collection:'Usuarios'}
 );
-/*
-var model = mongoose.model('Usuarios',Usuario);
-
-async function getNextID(){
-	
-	return await Helper.getNextID(model,"IDUsuario");
-}
-
-module.exports = {
-	model,
-	getNextID
-}*/
 
 module.exports = mongoose.model('Usuarios',Usuario);
