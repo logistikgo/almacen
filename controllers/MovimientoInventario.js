@@ -3,7 +3,7 @@
 const MovimientoInventario = require('../models/MovimientoInventario');
 const Producto = require('../models/Producto');
 
-function saveSalida(producto_id, salida_id, cantidad) {
+function saveSalida(producto_id, salida_id, cantidad,idCteFiscal,idSucursal,idAlmacen) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -11,7 +11,10 @@ function saveSalida(producto_id, salida_id, cantidad) {
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = -1;
-	nMovimiento.tipo = "SALIDA",
+	nMovimiento.tipo = "SALIDA";
+	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idSucursal = idSucursal;
+	nMovimiento.idAlmacen = idAlmacen;
 
 	nMovimiento.save()
 	.then((data)=>{
@@ -23,7 +26,7 @@ function saveSalida(producto_id, salida_id, cantidad) {
 }
 
 
-function saveEntrada(producto_id, entrada_id, cantidad) {
+function saveEntrada(producto_id, entrada_id, cantidad,idCteFiscal,idSucursal,idAlmacen) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -32,6 +35,9 @@ function saveEntrada(producto_id, entrada_id, cantidad) {
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "ENTRADA",
+	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idSucursal = idSucursal;
+	nMovimiento.idAlmacen = idAlmacen;
 
 	nMovimiento.save()
 	.then((data)=>{
@@ -42,14 +48,17 @@ function saveEntrada(producto_id, entrada_id, cantidad) {
 	})
 }
 
-async function saveExistenciaInicial(producto_id, cantidad) {
+async function saveExistenciaInicial(producto_id, cantidad,idCteFiscal,idSucursal,idAlmacen) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = 1;
-	nMovimiento.tipo = "EXISTENCIA_INICIAL",
+	nMovimiento.tipo = "EXISTENCIA_INICIAL";
+	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idSucursal = idSucursal;
+	nMovimiento.idAlmacen = idAlmacen;
 
 	await nMovimiento.save();
 }

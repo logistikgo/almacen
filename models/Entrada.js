@@ -22,7 +22,9 @@ const Entrada = Schema({
 			producto_id:{ type: Schema.ObjectId, ref: "Producto" },
 			piezas:Number,
 			tarimas:Number,
-			cajas:Number
+			cajas:Number,
+			posicion: String,
+			nivel:String
 		}
 	]
 },

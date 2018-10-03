@@ -12,6 +12,9 @@ const MovimientoInventario = Schema({
 	signo:Number,
 	tipo:String,
 	referencia:String,
+	idCteFiscal:Number,
+	idSucursal:Number,
+	idAlmacen:Number
 },
 {collection:"MovimientosInventario"});
 

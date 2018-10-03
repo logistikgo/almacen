@@ -19,7 +19,9 @@ const Producto = Schema({
 	peso:Number,
 	stockMaximo:Number,
 	stockMinimo:Number,
-	statusReg:String,	
+	statusReg:String,
+	idSucursal:Number,
+	idAlmacen: Number
 },
 {collection:'Productos'}
 );
