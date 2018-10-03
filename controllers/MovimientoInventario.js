@@ -119,23 +119,31 @@ function get(req, res){
 	.catch(err=>console.log(err));
 }
 
-function getByIDs(req, res){
-	let _idCteFiscal = req.body.idCteFiscal;
-	let _idSucursal = req.body.idSucursal;
-	let _idAlmacen = req.body.idAlmacen;
+function getByIDs_cte_suc_alm(req, res){
+	let _idCteFiscal = req.params.idCteFiscal;
+	let _idSucursal = req.params.idSucursal;
+	let _idAlmacen = req.params.idAlmacen;
 
-	MovimientoInventario.find({idCteFiscal:_idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},
-		(err,movimientos)=>{
-			if(err)
-				return res.status(500).send({message:"ERROR"});
-			res.status(200).send(movimientos);
-	});
+	MovimientoInventario.find({idCteFiscal:_idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen})
+	.populate({
+		path:'producto_id'
+	})
+	.populate({
+		path:'entrada_id'
+	})
+	.populate({
+		path:'salida_id'
+	})
+	.then((movimientos)=>{
+		res.status(200).send(movimientos);
+	})
+	.catch(err=>console.log(err));
 }
 
 
 module.exports={
 	get,
-	getByIDs,
+	getByIDs_cte_suc_alm,
 	getByProducto,
 	saveSalida,
 	saveEntrada,
