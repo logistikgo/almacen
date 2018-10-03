@@ -17,8 +17,6 @@ function get(req, res) {
 function getByIDClienteFiscal(req, res) {
 	let _idClienteFiscal = req.params.idClienteFiscal;
 
-	console.log(_idClienteFiscal);
-
 	Producto.find({idClienteFiscal:_idClienteFiscal, statusReg:"ACTIVO"}, (error,producto) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
@@ -67,8 +65,6 @@ async function save(req,res) {
 
 function _delete(req,res) {
 	let _idProducto = req.params.idProducto;
-
-	console.log(`INSIDE DELETE ${_idProducto}`);
 
 	Producto.findOne({idProducto:_idProducto, statusReg:"ACTIVO"}) 
 	.then((producto)=>{
