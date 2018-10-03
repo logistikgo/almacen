@@ -119,9 +119,23 @@ function get(req, res){
 	.catch(err=>console.log(err));
 }
 
+function getByIDs(req, res){
+	let _idCteFiscal = req.body.idCteFiscal;
+	let _idSucursal = req.body.idSucursal;
+	let _idAlmacen = req.body.idAlmacen;
+
+	MovimientoInventario.find({idCteFiscal:_idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},
+		(err,movimientos)=>{
+			if(err)
+				return res.status(500).send({message:"ERROR"});
+			res.status(200).send(movimientos);
+	});
+}
+
 
 module.exports={
 	get,
+	getByIDs,
 	getByProducto,
 	saveSalida,
 	saveEntrada,
