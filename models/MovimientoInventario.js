@@ -15,8 +15,14 @@ const MovimientoInventario = Schema({
 	signo:Number,
 	tipo:String,
 	referencia:String,
+<<<<<<< HEAD
 	posicion:String,
 	nivel:String
+=======
+	idClienteFiscal:Number,
+	idSucursal:Number,
+	idAlmacen:Number
+>>>>>>> 9706afeab67c8df79b4476fe4960805d6ff13b79
 },
 {collection:"MovimientosInventario"});
 

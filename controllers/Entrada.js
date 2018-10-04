@@ -20,11 +20,11 @@ function get( req,res){
 };
 
 function getEntradasByIDs(req,res){
-	let _idCteFiscal = req.params.idCteFiscal;
+	let _idClienteFiscal = req.params.idClienteFiscal;
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
 
-	Entrada.find({idCteFiscal: _idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},(err,entradas)=>{
+	Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},(err,entradas)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(entradas);
@@ -62,7 +62,7 @@ async function save(req, res){
 	nEntrada.transportista = bodyParams.transportista;
 	nEntrada.remision = bodyParams.remision;
 	nEntrada.factura = bodyParams.factura;
-	nEntrada.idCteFiscal = bodyParams.idCteFiscal;
+	nEntrada.idClienteFiscal = bodyParams.idClienteFiscal;
 	nEntrada.idSucursal = bodyParams.idSucursal;
 	nEntrada.idAlmacen = bodyParams.idAlmacen;
 	nEntrada.partidas = bodyParams.partidas;
@@ -75,7 +75,11 @@ async function save(req, res){
 
 		for(let itemPartida of data.partidas){
 			MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas,
+<<<<<<< HEAD
 				bodyParams.idCteFiscal,bodyParams.idSucursal,bodyParams.idAlmacen, itemPartida.posicion, itemPartida.nivel);
+=======
+				bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.idAlmacen);
+>>>>>>> 9706afeab67c8df79b4476fe4960805d6ff13b79
 		}
 
 		res.status(200).send(data);

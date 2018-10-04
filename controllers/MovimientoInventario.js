@@ -12,7 +12,7 @@ function saveSalida(producto_id, salida_id, cantidad,idCteFiscal,idSucursal,idAl
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = -1;
 	nMovimiento.tipo = "SALIDA";
-	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
 
@@ -31,7 +31,15 @@ function saveEntrada(producto_id, entrada_id, cantidad, idCteFiscal, idSucursal,
 
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.entrada_id = entrada_id;
+<<<<<<< HEAD
 	nMovimiento.idCteFiscal = idCteFiscal;
+=======
+	nMovimiento.fechaMovimiento = new Date();
+	nMovimiento.cantidad = cantidad;
+	nMovimiento.signo = 1;
+	nMovimiento.tipo = "ENTRADA",
+	nMovimiento.idClienteFiscal = idClienteFiscal;
+>>>>>>> 9706afeab67c8df79b4476fe4960805d6ff13b79
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
 	nMovimiento.fechaMovimiento = new Date();
@@ -58,7 +66,7 @@ async function saveExistenciaInicial(producto_id, cantidad,idCteFiscal,idSucursa
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "EXISTENCIA_INICIAL";
-	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
 
@@ -122,10 +130,11 @@ function get(req, res){
 }
 
 function getByIDs_cte_suc_alm(req, res){
-	let _idCteFiscal = req.params.idCteFiscal;
+	let _idClienteFiscal = req.params.idClienteFiscal;
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
 
+<<<<<<< HEAD
 	console.log(req.params);
 
 	if(_idCteFiscal != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
@@ -150,6 +159,22 @@ function getByIDs_cte_suc_alm(req, res){
 		res.status(500).send({message:"Error en la petición, parametros incorrectos"});
 	}
 
+=======
+	MovimientoInventario.find({idClienteFiscal:_idClienteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen})
+	.populate({
+		path:'producto_id'
+	})
+	.populate({
+		path:'entrada_id'
+	})
+	.populate({
+		path:'salida_id'
+	})
+	.then((movimientos)=>{
+		res.status(200).send(movimientos);
+	})
+	.catch(err=>console.log(err));
+>>>>>>> 9706afeab67c8df79b4476fe4960805d6ff13b79
 }
 
 
