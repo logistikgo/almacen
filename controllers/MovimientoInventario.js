@@ -3,7 +3,7 @@
 const MovimientoInventario = require('../models/MovimientoInventario');
 const Producto = require('../models/Producto');
 
-function saveSalida(producto_id, salida_id, cantidad,idCteFiscal,idSucursal,idAlmacen) {
+function saveSalida(producto_id, salida_id, cantidad,idClienteFiscal,idSucursal,idAlmacen) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -26,7 +26,7 @@ function saveSalida(producto_id, salida_id, cantidad,idCteFiscal,idSucursal,idAl
 }
 
 
-function saveEntrada(producto_id, entrada_id, cantidad,idCteFiscal,idSucursal,idAlmacen) {
+function saveEntrada(producto_id, entrada_id, cantidad,idClienteFiscal,idSucursal,idAlmacen) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -48,7 +48,7 @@ function saveEntrada(producto_id, entrada_id, cantidad,idCteFiscal,idSucursal,id
 	})
 }
 
-async function saveExistenciaInicial(producto_id, cantidad,idCteFiscal,idSucursal,idAlmacen) {
+async function saveExistenciaInicial(producto_id, cantidad,idClienteFiscal,idSucursal,idAlmacen) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;

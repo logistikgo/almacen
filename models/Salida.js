@@ -12,6 +12,7 @@ const Salida = Schema({
 	referencia:String,
 	cliente:String,
 	transportista:String,
+	operador:String,
 	idClienteFiscal:Number,
 	idSucursal:Number,
 	idAlmacen:Number,
