@@ -75,11 +75,7 @@ async function save(req, res){
 
 		for(let itemPartida of data.partidas){
 			MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas,
-<<<<<<< HEAD
 				bodyParams.idCteFiscal,bodyParams.idSucursal,bodyParams.idAlmacen, itemPartida.posicion, itemPartida.nivel);
-=======
-				bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.idAlmacen);
->>>>>>> 9706afeab67c8df79b4476fe4960805d6ff13b79
 		}
 
 		res.status(200).send(data);
