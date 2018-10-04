@@ -5,16 +5,19 @@ const Schema = mongoose.Schema;
 
 const Salida = Schema({
 	salida_id:Number,
-	fechaAlta:Date,
-	fechaSalida:Date,
-	folio:String,
 	usuarioSalida_id:Number,
-	referencia:String,
-	cliente:String,
-	transportista:String,
 	idCteFiscal:Number,
 	idSucursal:Number,
 	idAlmacen:Number,
+	fechaAlta:Date,
+	fechaSalida:Date,
+	folio:String,
+	referencia:String,
+	cliente:String,
+	transportista:String,
+	placasRemolque:String,
+	placasTrailer:String,
+	operador:String,
 	partidas:[
 		{
 			producto_id:{type:Schema.ObjectId, ref:"Producto"},

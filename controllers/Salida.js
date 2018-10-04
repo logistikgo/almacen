@@ -43,6 +43,7 @@ async function save(req, res) {
 	nSalida.partidas = req.body.partidas;	
 	nSalida.transportista = req.body.transportista;
 	nSalida.placasRemolque = req.body.placasRemolque;
+	nSalida.placasTrailer = req.body.placasTrailer;
 	nSalida.operador = req.body.operador;
 	nSalida.placasTrailer = req.body.placasTrailer;
 	nSalida.idCteFiscal = req.body.idCteFiscal;

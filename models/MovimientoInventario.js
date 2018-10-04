@@ -7,14 +7,16 @@ const MovimientoInventario = Schema({
 	producto_id:{type:Schema.ObjectId, ref:"Producto"},
 	entrada_id:{type:Schema.ObjectId, ref:"Entrada"},
 	salida_id:{type:Schema.ObjectId, ref:"Salida"},
+	idCteFiscal:Number,
+	idSucursal:Number,
+	idAlmacen:Number,
 	fechaMovimiento:Date,
 	cantidad:Number,
 	signo:Number,
 	tipo:String,
 	referencia:String,
-	idCteFiscal:Number,
-	idSucursal:Number,
-	idAlmacen:Number
+	posicion:String,
+	nivel:String
 },
 {collection:"MovimientosInventario"});
 

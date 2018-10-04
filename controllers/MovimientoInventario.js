@@ -26,18 +26,20 @@ function saveSalida(producto_id, salida_id, cantidad,idCteFiscal,idSucursal,idAl
 }
 
 
-function saveEntrada(producto_id, entrada_id, cantidad,idCteFiscal,idSucursal,idAlmacen) {
+function saveEntrada(producto_id, entrada_id, cantidad, idCteFiscal, idSucursal, idAlmacen, posicion, nivel) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.entrada_id = entrada_id;
-	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.cantidad = cantidad;
-	nMovimiento.signo = 1;
-	nMovimiento.tipo = "ENTRADA",
 	nMovimiento.idCteFiscal = idCteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
+	nMovimiento.fechaMovimiento = new Date();
+	nMovimiento.cantidad = cantidad;
+	nMovimiento.signo = 1;
+	nMovimiento.tipo = "ENTRADA";
+	nMovimiento.posicion = posicion;
+	nMovimiento.nivel = nivel;
 
 	nMovimiento.save()
 	.then((data)=>{
@@ -124,20 +126,30 @@ function getByIDs_cte_suc_alm(req, res){
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
 
-	MovimientoInventario.find({idCteFiscal:_idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen})
-	.populate({
-		path:'producto_id'
-	})
-	.populate({
-		path:'entrada_id'
-	})
-	.populate({
-		path:'salida_id'
-	})
-	.then((movimientos)=>{
-		res.status(200).send(movimientos);
-	})
-	.catch(err=>console.log(err));
+	console.log(req.params);
+
+	if(_idCteFiscal != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
+
+		MovimientoInventario.find({idCteFiscal:_idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen})
+		.populate({
+			path:'producto_id'
+		})
+		.populate({
+			path:'entrada_id'
+		})
+		.populate({
+			path:'salida_id'
+		})
+		.then((movimientos)=>{
+			res.status(200).send(movimientos);
+		})
+		.catch(err=>console.log(err));
+
+	}
+	else{
+		res.status(500).send({message:"Error en la petición, parametros incorrectos"});
+	}
+
 }
 
 
