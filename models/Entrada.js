@@ -14,7 +14,7 @@ const Entrada = Schema({
 	remision:String,
 	factura:String,
 	embarque:String,
-	idCteFiscal:Number,
+	idClienteFiscal:Number,
 	idSucursal:Number,
 	idAlmacen:Number,
 	partidas:[

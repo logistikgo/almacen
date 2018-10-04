@@ -17,11 +17,11 @@ function get(req,res) {
 }
 
 function getSalidasByIDs(req,res){
-	let _idCteFiscal = req.params.idCteFiscal;
+	let _idClienteFiscal = req.params.idClienteFiscal;
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
 
-	Salida.find({idCteFiscal: _idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},(err,salidas)=>{
+	Salida.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},(err,salidas)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(salidas);
@@ -45,7 +45,7 @@ async function save(req, res) {
 	nSalida.placasRemolque = req.body.placasRemolque;
 	nSalida.operador = req.body.operador;
 	nSalida.placasTrailer = req.body.placasTrailer;
-	nSalida.idCteFiscal = req.body.idCteFiscal;
+	nSalida.idClienteFiscal = req.body.idClienteFiscal;
 	nSalida.idSucursal = req.body.idSucursal;
 	nSalida.idAlmacen = req.body.idAlmacen;
 
@@ -53,7 +53,7 @@ async function save(req, res) {
 	.then((data)=>{
 		for(let itemPartida of data.partidas){
 			MovimientoInventario.saveSalida(itemPartida.producto_id,nSalida._id,itemPartida.piezas,
-				req.body.idCteFiscal,req.body.idSucursal,req.body.idAlmacen);
+				req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen);
 		}
 		res.status(200).send(data);
 	})

@@ -33,7 +33,7 @@ app.delete('/api/productos/:idProducto', Producto._delete);
 
 app.get('/api/movimientosInventario/:producto_id', MovimientosInventario.getByProducto);
 app.get('/api/movimientosInventario', MovimientosInventario.get);
-app.get('/api/movimientosInventarioByIDs/:idCteFiscal/:idSucursal/:idAlmacen', MovimientosInventario.getByIDs_cte_suc_alm);
+app.get('/api/movimientosInventarioByIDs/:idClienteFiscal/:idSucursal/:idAlmacen', MovimientosInventario.getByIDs_cte_suc_alm);
 
 app.get('/api/getUsuarios', Usuario.get);
 app.get('/api/getUsuario/:idusuario', Usuario.getByIDUsuario);
@@ -43,12 +43,12 @@ app.post('/api/updateUsuario', Usuario.update);
 
 app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID/:idEntrada', Entrada.getEntradaByID);
-app.get('/api/getEntradasByIDs/:idCteFiscal/:idSucursal/:idAlmacen',Entrada.getEntradasByIDs);
+app.get('/api/getEntradasByIDs/:idClienteFiscal/:idSucursal/:idAlmacen',Entrada.getEntradasByIDs);
 app.post('/api/entrada', Entrada.save);
 
 app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.get);
-app.get('/api/getSalidasByIDs/:idCteFiscal/:idSucursal/:idAlmacen',Salida.getSalidasByIDs);
+app.get('/api/getSalidasByIDs/:idClienteFiscal/:idSucursal/:idAlmacen',Salida.getSalidasByIDs);
 app.post('/api/salida', Salida.save);
 
 app.get('/api/getCtesFiscales', CteFiscal.get);

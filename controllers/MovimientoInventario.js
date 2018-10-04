@@ -12,7 +12,7 @@ function saveSalida(producto_id, salida_id, cantidad,idCteFiscal,idSucursal,idAl
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = -1;
 	nMovimiento.tipo = "SALIDA";
-	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
 
@@ -35,7 +35,7 @@ function saveEntrada(producto_id, entrada_id, cantidad,idCteFiscal,idSucursal,id
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "ENTRADA",
-	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
 
@@ -56,7 +56,7 @@ async function saveExistenciaInicial(producto_id, cantidad,idCteFiscal,idSucursa
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "EXISTENCIA_INICIAL";
-	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
 
@@ -120,11 +120,11 @@ function get(req, res){
 }
 
 function getByIDs_cte_suc_alm(req, res){
-	let _idCteFiscal = req.params.idCteFiscal;
+	let _idClienteFiscal = req.params.idClienteFiscal;
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
 
-	MovimientoInventario.find({idCteFiscal:_idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen})
+	MovimientoInventario.find({idClienteFiscal:_idClienteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen})
 	.populate({
 		path:'producto_id'
 	})

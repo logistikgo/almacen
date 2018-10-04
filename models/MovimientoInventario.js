@@ -12,7 +12,7 @@ const MovimientoInventario = Schema({
 	signo:Number,
 	tipo:String,
 	referencia:String,
-	idCteFiscal:Number,
+	idClienteFiscal:Number,
 	idSucursal:Number,
 	idAlmacen:Number
 },
