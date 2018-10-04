@@ -12,7 +12,7 @@ function saveSalida(producto_id, salida_id, cantidad,idClienteFiscal,idSucursal,
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = -1;
 	nMovimiento.tipo = "SALIDA";
-	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
 
@@ -25,12 +25,12 @@ function saveSalida(producto_id, salida_id, cantidad,idClienteFiscal,idSucursal,
 	})
 }
 
-function saveEntrada(producto_id, entrada_id, cantidad, idCteFiscal, idSucursal, idAlmacen, posicion, nivel) {
+function saveEntrada(producto_id, entrada_id, cantidad, idClienteFiscal, idSucursal, idAlmacen, posicion, nivel) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.entrada_id = entrada_id;
-	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
 	nMovimiento.fechaMovimiento = new Date();
@@ -57,7 +57,7 @@ async function saveExistenciaInicial(producto_id, cantidad,idClienteFiscal,idSuc
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "EXISTENCIA_INICIAL";
-	nMovimiento.idCteFiscal = idCteFiscal;
+	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.idAlmacen = idAlmacen;
 
@@ -121,15 +121,15 @@ function get(req, res){
 }
 
 function getByIDs_cte_suc_alm(req, res){
-	let _idCteFiscal = req.params.idCteFiscal;
+	let _idClienteFiscal = req.params.idClienteFiscal;
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
 
 	console.log(req.params);
 
-	if(_idCteFiscal != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
+	if(_idClienteFiscal != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
 
-		MovimientoInventario.find({idCteFiscal:_idCteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen})
+		MovimientoInventario.find({idClienteFiscal:_idClienteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen})
 		.populate({
 			path:'producto_id'
 		})

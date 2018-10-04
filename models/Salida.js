@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const Salida = Schema({
 	salida_id:Number,
 	usuarioSalida_id:Number,
-	idCteFiscal:Number,
+	idClienteFiscal:Number,
 	idSucursal:Number,
 	idAlmacen:Number,
 	fechaAlta:Date,
