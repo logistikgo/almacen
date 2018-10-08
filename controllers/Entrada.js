@@ -73,7 +73,7 @@ async function save(req, res){
 
 	nEntrada.save()
 	.then((data)=>{
-		
+
 		if(data.idAlmacen != 1){
 			for(let itemPartida of data.partidas){
 				MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas,
