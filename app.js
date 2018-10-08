@@ -48,7 +48,7 @@ app.post('/api/entrada', Entrada.save);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
 
 app.get('/api/salidas', Salida.get);
-app.get('/api/salidaByID/:salida_id', Salida.get);
+app.get('/api/salidaByID/:salida_id', Salida.getByID);
 app.get('/api/getSalidasByIDs/:idClienteFiscal/:idSucursal/:idAlmacen',Salida.getSalidasByIDs);
 app.post('/api/salida', Salida.save);
 
