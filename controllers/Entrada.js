@@ -73,11 +73,13 @@ async function save(req, res){
 
 	nEntrada.save()
 	.then((data)=>{
-
-		for(let itemPartida of data.partidas){
-			MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas,
-				bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.idAlmacen, itemPartida.posicion, itemPartida.nivel);
+		if(data.idAlmacen != 1){
+			for(let itemPartida of data.partidas){
+				MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas,
+					bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.idAlmacen, itemPartida.posicion, itemPartida.nivel);
+			}
 		}
+			
 
 		res.status(200).send(data);
 	})
@@ -87,9 +89,58 @@ async function save(req, res){
 
 }
 
+async function valEntrada(req,res){
+	let bodyParams = req.body;
+	let _idEntrada = bodyParams.idEntrada;
+	let _partidas = bodyParams.partidas;
+	var arrPartidas = [];
+	let entrada = await Entrada.findOne({idEntrada:_idEntrada})
+	.populate({
+		path:'partidas.producto_id',
+		model:'Producto'
+	}).exec();
+	
+	for(let itemPartida of entrada.partidas){
+		for(let itemParam of _partidas){
+
+			let producto = await Producto.findOne({clave : itemParam.clave}).exec();
+			if((itemPartida.producto_id._id).toString() == (producto._id).toString())
+			{
+				let part = {
+					_id : itemPartida.id,
+					producto_id:itemPartida.producto_id,
+					tarimas : itemPartida.tarimas,
+					piezas : itemParam.cantidad,
+					cajas : itemPartida.cajas,
+					posicion : itemParam.posicion,
+					nivel : itemParam.nivel
+
+				}
+				
+				arrPartidas.push(part);
+			}
+		}
+	}
+
+	let item = {
+		status : "APLICADA",
+		partidas : arrPartidas
+	}
+	Entrada.updateOne({idEntrada:_idEntrada},{$set:item},(err,entrada)=>{
+		if(err)
+			return res.status(500).send({message:"Error"});
+		for(let itemPartida of arrPartidas){
+			MovimientoInventario.saveEntrada(itemPartida.producto_id, entrada.id, itemPartida.piezas,
+				entrada.idClienteFiscal,entrada.idSucursal,entrada.idAlmacen, itemPartida.posicion, itemPartida.nivel);
+		}
+		res.status(200).send(entrada);
+	});
+}
+
 module.exports = {
 	get,
 	getEntradaByID,
 	save,
-	getEntradasByIDs
+	getEntradasByIDs,
+	valEntrada
 }
