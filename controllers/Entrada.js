@@ -73,6 +73,7 @@ async function save(req, res){
 
 	nEntrada.save()
 	.then((data)=>{
+		
 		if(data.idAlmacen != 1){
 			for(let itemPartida of data.partidas){
 				MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas,
@@ -89,7 +90,7 @@ async function save(req, res){
 
 }
 
-async function valEntrada(req,res){
+async function validaEntrada(req,res){
 	let bodyParams = req.body;
 	let _idEntrada = bodyParams.idEntrada;
 	let _partidas = bodyParams.partidas;
@@ -101,32 +102,32 @@ async function valEntrada(req,res){
 	}).exec();
 	
 	for(let itemPartida of entrada.partidas){
-		for(let itemParam of _partidas){
+		for(let itemBodyPartidas of _partidas){
 
-			let producto = await Producto.findOne({clave : itemParam.clave}).exec();
+			let producto = await Producto.findOne({clave : itemBodyPartidas.clave}).exec();
 			if((itemPartida.producto_id._id).toString() == (producto._id).toString())
 			{
-				let part = {
+				let newPartida = {
 					_id : itemPartida.id,
 					producto_id:itemPartida.producto_id,
 					tarimas : itemPartida.tarimas,
-					piezas : itemParam.cantidad,
+					piezas : itemBodyPartidas.cantidad,
 					cajas : itemPartida.cajas,
-					posicion : itemParam.posicion,
-					nivel : itemParam.nivel
+					posicion : itemBodyPartidas.posicion,
+					nivel : itemBodyPartidas.nivel
 
 				}
 				
-				arrPartidas.push(part);
+				arrPartidas.push(newPartida);
 			}
 		}
 	}
 
-	let item = {
+	let cambios = {
 		status : "APLICADA",
 		partidas : arrPartidas
 	}
-	Entrada.updateOne({idEntrada:_idEntrada},{$set:item},(err,entrada)=>{
+	Entrada.updateOne({idEntrada:_idEntrada},{$set:cambios},(err,entrada)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		for(let itemPartida of arrPartidas){
@@ -142,5 +143,5 @@ module.exports = {
 	getEntradaByID,
 	save,
 	getEntradasByIDs,
-	valEntrada
+	validaEntrada
 }
