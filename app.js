@@ -58,10 +58,10 @@ app.post('/api/saveCteFiscal', CteFiscal.save);
 app.post('/api/deleteCteFiscal', CteFiscal._delete);
 app.post('/api/updateCteFiscal', CteFiscal.update);
 
-app.get("/api/sucursales", Sucursal.get);
-app.post("api/sucursales", Sucursal.save);
-app.post("api/sucursales", Sucursal.update);
-app.post("api/sucursales", Sucursal._delete);
+app.get('/api/sucursales', Sucursal.get);
+app.post('/api/sucursal', Sucursal.save);
+app.put('/api/sucursal', Sucursal.update);
+app.delete('/api/sucursales', Sucursal._delete);
 
 app.get('/api/getAlmacenes',Almacen.getAlmacenes);
 app.get('/api/getAlmacen/:idAlmacen',Almacen.getAlmacen);
