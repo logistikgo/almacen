@@ -62,7 +62,7 @@ app.get('/api/sucursales', Sucursal.get);
 app.get('/api/sucursal', Sucursal.getById);
 app.post('/api/sucursal', Sucursal.save);
 app.put('/api/sucursal', Sucursal.update);
-app.del('/api/sucursal', Sucursal._delete);
+app.delete('/api/sucursal', Sucursal._delete);
 
 app.get('/api/getAlmacenes',Almacen.getAlmacenes);
 app.get('/api/getAlmacen/:idAlmacen',Almacen.getAlmacen);
