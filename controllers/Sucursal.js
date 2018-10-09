@@ -7,7 +7,8 @@ function get(req, res) {
     let idCteFiscal = parseInt(req.query.idCteFiscal);
 
     Sucursal.find({
-            arrClienteFiscales: idCteFiscal
+            arrClienteFiscales: idCteFiscal,
+            statusReg: "ACTIVO"
         })
         .then((sucursales) => {
             res.status(200).send(sucursales);
