@@ -20,6 +20,22 @@ function get(req, res) {
         });
 }
 
+function getById(req, res) {
+    let idSucursal = parseInt(req.query.idSucursal);
+
+    Sucursal.findOne({
+            idSucursal: idSucursal
+        })
+        .then((sucursal) => {
+            res.status(200).send(sucursal);
+        })
+        .catch((error) => {
+            return res.status(500).send({
+                message: error
+            });
+        });
+}
+
 async function save(req, res){
     let nSucursal = new Sucursal();
     let params = req.body;
@@ -91,6 +107,7 @@ function _delete(req, res){
 
 module.exports = {
     get,
+    getById,
     save,
     update,
     _delete
