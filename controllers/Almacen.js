@@ -2,6 +2,7 @@
 
 const Almacen = require('../models/Almacen');
 const Helpers = require('../helpers');
+const MovimientoInventario = require('../models/MovimientoInventario');
 
 
 async function getNextID(){
@@ -82,6 +83,26 @@ function deleteAlmacen(req,res){
 	});
 }
 
+function validaPosicion(req, res) {
+	let _posicion = req.params.posicion;
+	let _nivel= req.params.nivel;
+
+	console.log(_posicion);
+	console.log(_nivel);
+
+	MovimientoInventario.find({posicion:_posicion,nivel:_nivel})
+	.then((data)=>{
+		console.log(data);
+		if(data.length === 0){
+			return res.status(200).send(false);
+		}
+		else
+			return res.status(200).send(true);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	})
+}
 
 module.exports = {
 	getAlmacenes,
@@ -89,5 +110,6 @@ module.exports = {
 	getAlmacenesByIDSucursal,
 	saveAlmacen,
 	updateAlmacen,
-	deleteAlmacen
+	deleteAlmacen,
+	validaPosicion
 }

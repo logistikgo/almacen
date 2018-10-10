@@ -3,7 +3,7 @@
 const MovimientoInventario = require('../models/MovimientoInventario');
 const Producto = require('../models/Producto');
 
-function saveSalida(producto_id, salida_id, cantidad,idClienteFiscal,idSucursal,idAlmacen) {
+function saveSalida(producto_id, salida_id, cantidad,idClienteFiscal,idSucursal,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -14,7 +14,7 @@ function saveSalida(producto_id, salida_id, cantidad,idClienteFiscal,idSucursal,
 	nMovimiento.tipo = "SALIDA";
 	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
-	nMovimiento.idAlmacen = idAlmacen;
+	nMovimiento.almacen_id = almacen_id;
 
 	nMovimiento.save()
 	.then((data)=>{
@@ -49,7 +49,7 @@ function saveEntrada(producto_id, entrada_id, cantidad, idClienteFiscal, idSucur
 	})
 }
 
-async function saveExistenciaInicial(producto_id, cantidad,idClienteFiscal,idSucursal,idAlmacen) {
+async function saveExistenciaInicial(producto_id, cantidad,idClienteFiscal,idSucursal,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -59,7 +59,7 @@ async function saveExistenciaInicial(producto_id, cantidad,idClienteFiscal,idSuc
 	nMovimiento.tipo = "EXISTENCIA_INICIAL";
 	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
-	nMovimiento.idAlmacen = idAlmacen;
+	nMovimiento.almacen_id = almacen_id;
 
 	await nMovimiento.save();
 }
@@ -114,6 +114,9 @@ function get(req, res){
 	.populate({
 		path:'salida_id'
 	})
+	.populate({
+		path:'almacen_id'
+	})
 	.then((movimientos)=>{
 		res.status(200).send(movimientos);
 	})
@@ -129,7 +132,7 @@ function getByIDs_cte_suc_alm(req, res){
 
 	if(_idClienteFiscal != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
 
-		MovimientoInventario.find({idClienteFiscal:_idClienteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen})
+		MovimientoInventario.find({idClienteFiscal:_idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen})
 		.populate({
 			path:'producto_id'
 		})
@@ -138,6 +141,9 @@ function getByIDs_cte_suc_alm(req, res){
 		})
 		.populate({
 			path:'salida_id'
+		})
+		.populate({
+		path:'almacen_id'
 		})
 		.then((movimientos)=>{
 			res.status(200).send(movimientos);
