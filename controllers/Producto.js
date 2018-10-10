@@ -66,8 +66,26 @@ async function save(req,res) {
 	.catch((err)=>{
 		return res.status(500).send({"message":"Error al guardar", "error":err});
 
+	});
+}
+
+function validaProducto(req,res){
+	let _clave = req.params.clave;
+
+	Producto.find({clave:_clave})
+	.then((producto)=>{
+		console.log(producto.length);
+		if(producto.length===0){
+			return res.status(200).send(true);
+		}
+		else
+		{
+			return res.status(200).send(false);
+		}
 	})
-	;
+	.catch((err)=>{
+		res.status(500).send({message:"Error en validaProducto","error":err});
+	});
 }
 
 function _delete(req,res) {
@@ -91,5 +109,6 @@ module.exports = {
 	get,
 	getByIDClienteFiscal,
 	save,
-	_delete
+	_delete,
+	validaProducto
 }

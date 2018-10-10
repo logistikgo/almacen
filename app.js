@@ -30,6 +30,7 @@ app.get('/api/productos', Producto.get);
 app.get('/api/productos/:idClienteFiscal', Producto.getByIDClienteFiscal);
 app.post('/api/producto', Producto.save);
 app.delete('/api/productos/:idProducto', Producto._delete);
+app.get('/api/validaProducto/:clave',Producto.validaProducto);
 
 app.get('/api/movimientosInventario/:producto_id', MovimientosInventario.getByProducto);
 app.get('/api/movimientosInventario', MovimientosInventario.get);
