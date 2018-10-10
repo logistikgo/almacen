@@ -86,11 +86,12 @@ function deleteAlmacen(req,res){
 function validaPosicion(req, res) {
 	let _posicion = req.params.posicion;
 	let _nivel= req.params.nivel;
+	let _almacen = req.params.idAlmacen;
 
 	console.log(_posicion);
 	console.log(_nivel);
 
-	MovimientoInventario.find({posicion:_posicion,nivel:_nivel})
+	MovimientoInventario.find({posicion:_posicion,nivel:_nivel,almacen_id:_almacen})
 	.then((data)=>{
 		console.log(data);
 		if(data.length === 0){
