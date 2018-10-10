@@ -37,7 +37,7 @@ async function save(req,res){
 
 	nCliente.idCliente = await getNextID();
 	nCliente.idUsuarioAlta = req.body.idUsuarioAlta;
-	nCliente.idSucursal = 1;
+	nCliente.idSucursal = req.body.idSucursal;
 	nCliente.fechaAlta = new Date();
 	nCliente.nombreCorto = req.body.nombreCorto;
 	nCliente.nombreComercial = req.body.nombreComercial;

@@ -95,13 +95,13 @@ async function validaEntrada(req,res){
 	let _idEntrada = bodyParams.idEntrada;
 	let _partidas = bodyParams.partidas;
 	var arrPartidas = [];
-	let entrada = await Entrada.findOne({idEntrada:_idEntrada})
+	let _entrada = await Entrada.findOne({idEntrada:_idEntrada})
 	.populate({
 		path:'partidas.producto_id',
 		model:'Producto'
 	}).exec();
 	
-	for(let itemPartida of entrada.partidas){
+	for(let itemPartida of _entrada.partidas){
 		for(let itemBodyPartidas of _partidas){
 
 			let producto = await Producto.findOne({clave : itemBodyPartidas.clave}).exec();
@@ -132,7 +132,7 @@ async function validaEntrada(req,res){
 			return res.status(500).send({message:"Error"});
 		for(let itemPartida of arrPartidas){
 			MovimientoInventario.saveEntrada(itemPartida.producto_id, entrada.id, itemPartida.piezas,
-				entrada.idClienteFiscal,entrada.idSucursal,entrada.idAlmacen, itemPartida.posicion, itemPartida.nivel);
+				_entrada.idClienteFiscal,_entrada.idSucursal,_entrada.idAlmacen, itemPartida.posicion, itemPartida.nivel);
 		}
 		res.status(200).send(entrada);
 	});
