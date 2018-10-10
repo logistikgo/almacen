@@ -21,7 +21,7 @@ function getSalidasByIDs(req,res){
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
 
-	Salida.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},(err,salidas)=>{
+	Salida.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen},(err,salidas)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(salidas);
@@ -60,7 +60,7 @@ async function save(req, res) {
 	nSalida.placasTrailer = req.body.placasTrailer;
 	nSalida.idClienteFiscal = req.body.idClienteFiscal;
 	nSalida.idSucursal = req.body.idSucursal;
-	nSalida.idAlmacen = req.body.idAlmacen;
+	nSalida.almacen_id = req.body.idAlmacen;
 
 	nSalida.save()
 	.then((data)=>{
