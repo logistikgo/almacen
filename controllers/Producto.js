@@ -38,6 +38,8 @@ async function save(req,res) {
 
 	nProducto.statusReg = "ACTIVO";
 	nProducto.fechaAlta = new Date();
+	nProducto.usuarioAlta_id = req.body.usuarioAlta_id;
+	nProducto.nombreUsuario = req.body.nombreUsuario;
 
 	nProducto.clave = req.body.clave;
 	nProducto.descripcion = req.body.descripcion;

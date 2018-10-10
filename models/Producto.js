@@ -9,6 +9,8 @@ const Entrada = require('./Entrada');
 const Producto = Schema({
 	idClienteFiscal:Number,
 	idProducto:Number,
+	usuarioAlta_id : Number,
+	nombreUsuario:String,
 	fechaAlta:Date,
 	fechaUltimaEntrada:Date,
 	fechaUltimaSalida:Date,
