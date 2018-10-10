@@ -9,7 +9,7 @@ function saveSalida(producto_id, salida_id, cantidad,idClienteFiscal,idSucursal,
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.salida_id = salida_id;
 	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.cantidad = cantidad;
+	nMovimiento.cantidad = cantidad;	
 	nMovimiento.signo = -1;
 	nMovimiento.tipo = "SALIDA";
 	nMovimiento.idClienteFiscal = idClienteFiscal;
@@ -25,16 +25,18 @@ function saveSalida(producto_id, salida_id, cantidad,idClienteFiscal,idSucursal,
 	})
 }
 
-function saveEntrada(producto_id, entrada_id, cantidad, idClienteFiscal, idSucursal, idAlmacen, posicion, nivel) {
+function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas, idClienteFiscal, idSucursal, almacen_id, posicion, nivel) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.entrada_id = entrada_id;
 	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
-	nMovimiento.idAlmacen = idAlmacen;
+	nMovimiento.almacen_id = almacen_id;
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.cantidad = cantidad;
+	nMovimiento.cajas = cajas;
+	nMovimiento.tarimas = tarimas;
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "ENTRADA";
 	nMovimiento.posicion = posicion;
@@ -128,8 +130,6 @@ function getByIDs_cte_suc_alm(req, res){
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
 
-	console.log(req.params);
-
 	if(_idClienteFiscal != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
 
 		MovimientoInventario.find({idClienteFiscal:_idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen})
@@ -143,7 +143,7 @@ function getByIDs_cte_suc_alm(req, res){
 			path:'salida_id'
 		})
 		.populate({
-		path:'almacen_id'
+			path:'almacen_id'
 		})
 		.then((movimientos)=>{
 			res.status(200).send(movimientos);

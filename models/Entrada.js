@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 
 const Entrada = Schema({
 	idEntrada:Number,
+	almacen_id:{type:Schema.ObjectId, ref:"Almacen"},
 	fechaAlta:Date,
 	fechaEntrada:Date,
 	folio:String,

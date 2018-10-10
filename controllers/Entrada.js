@@ -24,7 +24,7 @@ function getEntradasByIDs(req,res){
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
 
-	Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,idAlmacen:_idAlmacen},(err,entradas)=>{
+	Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen},(err,entradas)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(entradas);
@@ -64,20 +64,17 @@ async function save(req, res){
 	nEntrada.factura = bodyParams.factura;
 	nEntrada.idClienteFiscal = bodyParams.idClienteFiscal;
 	nEntrada.idSucursal = bodyParams.idSucursal;
-	nEntrada.idAlmacen = bodyParams.idAlmacen;
+	nEntrada.almacen_id = bodyParams.almacen_id;
 	nEntrada.status = bodyParams.status;
 	nEntrada.partidas = bodyParams.partidas;
-
-	console.log(bodyParams);
-	console.log(nEntrada);
 
 	nEntrada.save()
 	.then((data)=>{
 
 		if(data.idAlmacen != 1){
 			for(let itemPartida of data.partidas){
-				MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas,
-					bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.idAlmacen, itemPartida.posicion, itemPartida.nivel);
+				MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas, itemPartida.cajas, itemPartida.tarimas,
+					bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.almacen_id, itemPartida.posicion, itemPartida.nivel);
 			}
 		}
 			
