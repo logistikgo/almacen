@@ -41,17 +41,24 @@ async function save(req,res) {
 
 	nProducto.clave = req.body.clave;
 	nProducto.descripcion = req.body.descripcion;
-	nProducto.existencia = req.body.existencia;
+	
+	if(req.body.existencia){
+ 		nProducto.existencia = req.body.existencia;
+	}
+	else{
+		nProducto.existencia = 0;	
+	}
+
 	nProducto.peso = req.body.peso;
 	nProducto.stockMaximo = req.body.stockMaximo;
 	nProducto.stockMinimo = req.body.stockMinimo;
 	nProducto.idSucursal = req.body.idSucursal;
-	nProducto.idAlmacen = req.body.idAlmacen;
+	nProducto.almacen_id = req.body.almacen_id;
 
 	nProducto.save()
 	.then((productoStored)=>{		
 		MovimientoInventario.saveExistenciaInicial(productoStored._id, productoStored.existencia,
-			req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen)
+			req.body.idClienteFiscal,req.body.idSucursal,req.body.almacen_id)
 		.then(()=>{
 			res.status(200).send({productoStored});
 		})

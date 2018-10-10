@@ -13,4 +13,4 @@ const Almacen = Schema(
 	{collection:'Almacenes'}
 );
 
-module.exports = mongoose.model('Almacenes',Almacen);
+module.exports = mongoose.model('Almacen',Almacen);
