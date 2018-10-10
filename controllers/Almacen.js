@@ -94,10 +94,10 @@ function validaPosicion(req, res) {
 	.then((data)=>{
 		console.log(data);
 		if(data.length === 0){
-			return res.status(200).send(false);
+			return res.status(200).send(true);
 		}
 		else
-			return res.status(200).send(true);
+			return res.status(200).send(false);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);
