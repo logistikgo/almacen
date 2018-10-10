@@ -129,7 +129,7 @@ async function validaEntrada(req,res){
 			return res.status(500).send({message:"Error"});
 		for(let itemPartida of arrPartidas){
 			MovimientoInventario.saveEntrada(itemPartida.producto_id, entrada.id, itemPartida.piezas,
-				_entrada.idClienteFiscal,_entrada.idSucursal,_entrada.idAlmacen, itemPartida.posicion, itemPartida.nivel);
+				_entrada.idClienteFiscal,_entrada.idSucursal,_entrada.almacen_id, itemPartida.posicion, itemPartida.nivel);
 		}
 		res.status(200).send(entrada);
 	});

@@ -23,7 +23,7 @@ const Producto = Schema({
 	stockMinimo:Number,
 	statusReg:String,
 	idSucursal:Number,
-	idAlmacen: Number
+	almacen_id: {type:Schema.ObjectId, ref:"Almacen"}
 },
 {collection:'Productos'}
 );
