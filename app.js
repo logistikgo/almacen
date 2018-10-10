@@ -71,6 +71,6 @@ app.get('/api/getAlmacenes/:idSucursal',Almacen.getAlmacenesByIDSucursal);
 app.post('/api/saveAlmacen',Almacen.saveAlmacen);
 app.post('/api/updateAlmacen',Almacen.updateAlmacen);
 app.post('/api/deleteAlmacen',Almacen.deleteAlmacen);
-app.get('/api/validaPosicion/:posicion/:nivel/:idAlmacen', Almacen.validaPosicion);
+app.get('/api/validaPosicion/:posicion/:nivel/:almacen_id', Almacen.validaPosicion);
 
 module.exports = app;

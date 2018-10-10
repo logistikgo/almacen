@@ -86,7 +86,7 @@ function deleteAlmacen(req,res){
 function validaPosicion(req, res) {
 	let _posicion = req.params.posicion;
 	let _nivel= req.params.nivel;
-	let _almacen = req.params.idAlmacen;
+	let _almacen = req.params.almacen_id;
 
 	console.log(_posicion);
 	console.log(_nivel);
