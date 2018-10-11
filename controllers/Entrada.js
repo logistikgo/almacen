@@ -71,7 +71,8 @@ async function save(req, res){
 	nEntrada.save()
 	.then((data)=>{
 
-		if(data.idAlmacen != 1){
+		if(data.almacen_id != "5bbd218e7dbb370763c8d388"){
+			console.log(data.almacen_id);
 			for(let itemPartida of data.partidas){
 				MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas, itemPartida.cajas, itemPartida.tarimas,
 					bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.almacen_id, itemPartida.posicion, itemPartida.nivel);
@@ -98,11 +99,12 @@ async function validaEntrada(req,res){
 		model:'Producto'
 	}).exec();
 	
-	for(let itemPartida of _entrada.partidas){
+	/*for(let itemPartida of _entrada.partidas){
 		for(let itemBodyPartidas of _partidas){
 
 			let producto = await Producto.findOne({clave : itemBodyPartidas.clave}).exec();
-			if((itemPartida.producto_id._id).toString() == (producto._id).toString())
+
+			if(producto!=null && (itemPartida.producto_id._id).toString() == (producto._id).toString())
 			{
 				let newPartida = {
 					_id : itemPartida.id,
@@ -118,21 +120,57 @@ async function validaEntrada(req,res){
 				arrPartidas.push(newPartida);
 			}
 		}
+	}*/
+
+	_entrada.partidas.forEach((itemPartida)=>{
+		let itemBodyPartidas = _partidas.find(async function(itemBodyPartidas){
+			let producto = await Producto.findOne({clave : itemBodyPartidas.clave}).exec();
+			if(producto._id == itemPartida.producto_id._id){
+				return itemBodyPartidas;
+			}else{
+				return null;
+			}
+		});
+
+		if(itemBodyPartidas!=null){
+			let newPartida = {
+					_id : itemPartida.id,
+					producto_id:itemPartida.producto_id,
+					tarimas : itemPartida.tarimas,
+					piezas : itemBodyPartidas.cantidad,
+					cajas : itemPartida.cajas,
+					posicion : itemBodyPartidas.posicion,
+					nivel : itemBodyPartidas.nivel
+
+				}
+				
+				arrPartidas.push(newPartida);
+		}
+	});
+	//-----------------------------------------------
+
+	let cambios = {}
+
+	if(arrPartidas.length>0)
+	{
+		cambios = {
+			status : "APLICADA",
+			partidas : arrPartidas
+		}
+	}else{
+		cambios = {status:"ERROR"}
 	}
 
-	let cambios = {
-		status : "APLICADA",
-		partidas : arrPartidas
-	}
 	Entrada.updateOne({idEntrada:_idEntrada},{$set:cambios},(err,entrada)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		for(let itemPartida of arrPartidas){
-			MovimientoInventario.saveEntrada(itemPartida.producto_id, entrada.id, itemPartida.piezas,
+			MovimientoInventario.saveEntrada(itemPartida.producto_id, entrada.id, itemPartida.piezas,itemPartida.cajas,itemPartida.tarimas,
 				_entrada.idClienteFiscal,_entrada.idSucursal,_entrada.almacen_id, itemPartida.posicion, itemPartida.nivel);
 		}
 		res.status(200).send(entrada);
 	});
+	
 }
 
 module.exports = {
