@@ -11,6 +11,7 @@ const Entrada = Schema({
 	folio:String,
 	usuarioAlta_id:Number,
 	nombreUsuario:String,
+	usuarioEdita_id:Number,
 	ordenCompra:String,
 	transportista:String,
 	remision:String,
