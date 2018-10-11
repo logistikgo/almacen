@@ -164,7 +164,6 @@ async function validaEntrada(req,res){
 		let itemBodyPartidas = _partidas.find(function(itemBodyPartidas){
 			return itemBodyPartidas.clave === itemPartida.producto_id.clave;
 		});
-		console.log(itemBodyPartidas);
 		if(itemBodyPartidas!=null){
 			let newPartida = {
 					_id : itemPartida.id,
