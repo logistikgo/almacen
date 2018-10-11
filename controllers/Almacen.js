@@ -38,6 +38,30 @@ function getAlmacenesByIDSucursal(req,res){
 	});
 }
 
+function getUbicaciones(req,res){
+	let _almacen_id = req.params.almacen_id;
+
+	MovimientoInventario.find( {posicion: { $ne: null } })
+	.populate({
+		path:'producto_id'
+	})
+	.then((data)=>{
+		let arrPosiciones = data.map((x)=>{return (
+			{
+				posicion:x.posicion,
+				nivel: x.nivel,
+				clave:x.producto_id.clave,
+				descripcion:x.producto_id.descripcion
+			}
+			)});
+
+		res.status(200).send(arrPosiciones);
+	})
+	.catch((error)=>{
+
+	});
+}
+
 async function saveAlmacen(req,res){
 	let nAlmacen = new Almacen();
 
@@ -112,5 +136,6 @@ module.exports = {
 	saveAlmacen,
 	updateAlmacen,
 	deleteAlmacen,
-	validaPosicion
+	validaPosicion,
+	getUbicaciones
 }
