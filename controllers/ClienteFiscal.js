@@ -36,7 +36,8 @@ async function save(req,res){
 	let nCliente = new CteFiscal();
 
 	nCliente.idCliente = await getNextID();
-	nCliente.idUsuarioAlta = req.body.idUsuarioAlta;
+	nCliente.usuarioAlta_id = req.body.usuarioAlta_id;
+	nCliente.nombreUsuario = req.body.nombreUsuario;
 	nCliente.idSucursal = req.body.idSucursal;
 	nCliente.fechaAlta = new Date();
 	nCliente.nombreCorto = req.body.nombreCorto;

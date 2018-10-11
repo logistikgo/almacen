@@ -5,7 +5,8 @@ const Schema = mongoose.Schema;
 
 const ClienteFiscal = Schema({
 	idCliente:Number,
-	idUsuarioAlta : Number,
+	usuarioAlta_id : Number,
+	nombreUsuario : String,
 	idSucursal : Number,
 	fechaAlta:Date,
 	fechaElimina:Date,

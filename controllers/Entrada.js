@@ -85,7 +85,6 @@ async function save(req, res){
 	.catch((err)=>{
 		console.log(err);
 	});
-
 }
 
 async function validaEntrada(req,res){
