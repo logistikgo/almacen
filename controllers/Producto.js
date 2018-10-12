@@ -74,7 +74,7 @@ async function save(req,res) {
 function validaProducto(req,res){
 	let _clave = req.params.clave;
 
-	Producto.find({clave:_clave})
+	Producto.find({clave:_clave,statusReg:"ACTIVO"})
 	.then((producto)=>{
 		console.log(producto.length);
 		if(producto.length===0){
