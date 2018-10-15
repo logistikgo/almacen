@@ -17,6 +17,7 @@ const Salida = Schema({
 	transportista:String,
 	placasRemolque:String,
 	placasTrailer:String,
+	embarco:String,
 	operador:String,
 	idClienteFiscal:Number,
 	idSucursal:Number,

@@ -61,6 +61,7 @@ async function save(req, res) {
 	nSalida.idClienteFiscal = req.body.idClienteFiscal;
 	nSalida.idSucursal = req.body.idSucursal;
 	nSalida.almacen_id = req.body.idAlmacen;
+	nSalida.embarco = req.body.embarco;
 
 	nSalida.save()
 	.then((data)=>{
