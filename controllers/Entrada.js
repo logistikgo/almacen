@@ -68,6 +68,9 @@ async function save(req, res){
 	nEntrada.almacen_id = bodyParams.almacen_id;
 	nEntrada.status = bodyParams.status;
 	nEntrada.partidas = bodyParams.partidas;
+	nEntrada.ordenCompra = bodyParams.ordenCompra;
+	nEntrada.referencia = bodyParams.referencia;
+	nEntrada.valor = bodyParams.valor;
 
 	nEntrada.save()
 	.then((data)=>{

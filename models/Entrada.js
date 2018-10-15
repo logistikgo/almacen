@@ -13,6 +13,8 @@ const Entrada = Schema({
 	nombreUsuario:String,
 	usuarioEdita_id:Number,
 	ordenCompra:String,
+	referencia:String,
+	valor:Number,
 	transportista:String,
 	remision:String,
 	factura:String,
@@ -27,6 +29,8 @@ const Entrada = Schema({
 			piezas:Number,
 			tarimas:Number,
 			cajas:Number,
+			pesoBruto:Number,
+			pesoNeto:Number,
 			posicion: String,
 			nivel:String
 		}
