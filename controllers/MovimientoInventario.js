@@ -166,3 +166,4 @@ module.exports={
 	saveEntrada,
 	saveExistenciaInicial
 }
+//linea 169
