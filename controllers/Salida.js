@@ -67,7 +67,7 @@ async function save(req, res) {
 	.then((data)=>{
 		for(let itemPartida of data.partidas){
 			MovimientoInventario.saveSalida(itemPartida.producto_id,nSalida._id,itemPartida.piezas,
-				req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen);
+				itemPartida.cajas,itemPartida.tarimas,req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen);
 		}
 		res.status(200).send(data);
 	})
