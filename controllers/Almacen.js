@@ -67,6 +67,11 @@ async function saveAlmacen(req,res){
 
 	nAlmacen.idAlmacen = await getNextID();
 	nAlmacen.nombre = req.body.nombre;
+	nAlmacen.cp = req.body.cp;
+	nAlmacen.colonia = req.body.colonia;
+	nAlmacen.calle = req.body.calle;
+	nAlmacen.numExt = req.body.numExt;
+	nAlmacen.numInt = req.body.numInt;
 	nAlmacen.idSucursal = req.body.idSucursal;
 	nAlmacen.status = "ACTIVO";
 
