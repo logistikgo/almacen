@@ -53,6 +53,8 @@ async function save(req,res) {
 
 	nProducto.existenciaTarimas = req.body.existenciaTarimas;
 	nProducto.existenciaCajas = req.body.existenciaCajas;
+	nProducto.existenciaPesoBruto = req.body.existenciaPesoBruto;
+	nProducto.existenciaPesoNeto = req.body.existenciaPesoNeto;
 
 	nProducto.peso = req.body.peso;
 	nProducto.stockMaximo = req.body.stockMaximo;
@@ -63,7 +65,8 @@ async function save(req,res) {
 	nProducto.save()
 	.then((productoStored)=>{		
 		MovimientoInventario.saveExistenciaInicial(productoStored._id, productoStored.existencia,
-			productoStored.existenciaCajas,productoStored.existenciaTarimas,req.body.idClienteFiscal,req.body.idSucursal,req.body.almacen_id)
+			productoStored.existenciaCajas,productoStored.existenciaTarimas,productoStored.existenciaPesoBruto,productoStored.existenciaPesoNeto,
+			req.body.idClienteFiscal,req.body.idSucursal,req.body.almacen_id)
 		.then(()=>{
 			res.status(200).send({productoStored});
 		})

@@ -3,7 +3,7 @@
 const MovimientoInventario = require('../models/MovimientoInventario');
 const Producto = require('../models/Producto');
 
-function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,idClienteFiscal,idSucursal,almacen_id) {
+function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -12,6 +12,8 @@ function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,idClienteFisc
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.cajas = cajas;
 	nMovimiento.tarimas = tarimas;	
+	nMovimiento.pesoBruto = pesoBruto;
+	nMovimiento.pesoNeto = pesoNeto;
 	nMovimiento.signo = -1;
 	nMovimiento.tipo = "SALIDA";
 	nMovimiento.idClienteFiscal = idClienteFiscal;
@@ -20,14 +22,14 @@ function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,idClienteFisc
 
 	nMovimiento.save()
 	.then((data)=>{
-		updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas);
+		updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto);
 	})
 	.catch((err)=>{
 		console.log(err);
 	})
 }
 
-function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas, idClienteFiscal, idSucursal, almacen_id, posicion, nivel) {
+function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pesoBruto,pesoNeto, idClienteFiscal, idSucursal, almacen_id, posicion, nivel) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -39,6 +41,8 @@ function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas, idClient
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.cajas = cajas;
 	nMovimiento.tarimas = tarimas;
+	nMovimiento.pesoBruto = pesoBruto;
+	nMovimiento.pesoNeto = pesoNeto;
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "ENTRADA";
 	nMovimiento.posicion = posicion;
@@ -46,20 +50,22 @@ function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas, idClient
 
 	nMovimiento.save()
 	.then((data)=>{
-		updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas);
+		updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto);
 	})
 	.catch((err)=>{
 		console.log(err);
 	})
 }
 
-async function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,idClienteFiscal,idSucursal,almacen_id) {
+async function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.cantidad = cantidad;
 	nMovimiento.tarimas = tarimas;
 	nMovimiento.cajas = cajas;
+	nMovimiento.pesoBruto = pesoBruto;
+	nMovimiento.pesoNeto = pesoNeto;
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "EXISTENCIA_INICIAL";
 	nMovimiento.idClienteFiscal = idClienteFiscal;
@@ -69,13 +75,15 @@ async function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,idClien
 	await nMovimiento.save();
 }
 
-function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadCajas) {
+function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadCajas,cantidadPesoBruto,cantidadPesoNeto) {
 	Producto.findOne({_id:producto_id})
 	.then((producto)=>{
 		
 		producto.existencia += (signo*cantidad);
 		producto.existenciaTarimas += (signo*cantidadTarimas);
 		producto.existenciaCajas += (signo*cantidadCajas);
+		producto.existenciaPesoBruto += (signo*cantidadPesoBruto);
+		producto.existenciaPesoNeto += (signo*cantidadPesoNeto);
 
 		if(signo == 1){
 			producto.fechaUltimaEntrada = new Date();

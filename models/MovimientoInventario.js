@@ -14,6 +14,8 @@ const MovimientoInventario = Schema({
 	cantidad:Number,
 	cajas:Number,
 	tarimas:Number,
+	pesoBruto:Number,
+	pesoNeto:Number,
 	signo:Number,
 	tipo:String,
 	referencia:String,

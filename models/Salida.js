@@ -27,7 +27,10 @@ const Salida = Schema({
 			producto_id:{type:Schema.ObjectId, ref:"Producto"},
 			piezas:Number,
 			tarimas:Number,
-			cajas:Number
+			cajas:Number,
+			pesoBruto:Number,
+			pesoNeto:Number,
+			lote:String
 		}
 	]
 },{collection:'Salidas'});

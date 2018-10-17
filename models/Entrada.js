@@ -31,6 +31,7 @@ const Entrada = Schema({
 			cajas:Number,
 			pesoBruto:Number,
 			pesoNeto:Number,
+			lote:String,
 			posicion: String,
 			nivel:String
 		}

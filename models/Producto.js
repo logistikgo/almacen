@@ -20,6 +20,8 @@ const Producto = Schema({
 	existencia:Number,
 	existenciaTarimas:Number,
 	existenciaCajas:Number,
+	existenciaPesoBruto:Number,
+	existenciaPesoNeto:Number,
 	peso:Number,
 	stockMaximo:Number,
 	stockMinimo:Number,

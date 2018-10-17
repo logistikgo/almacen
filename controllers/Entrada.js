@@ -79,7 +79,7 @@ async function save(req, res){
 			console.log(data.almacen_id);
 			for(let itemPartida of data.partidas){
 				MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas, itemPartida.cajas, itemPartida.tarimas,
-					bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.almacen_id, itemPartida.posicion, itemPartida.nivel);
+					itemPartida.pesoBruto,itemPartida.pesoNeto,bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.almacen_id, itemPartida.posicion, itemPartida.nivel);
 			}
 		}
 			
