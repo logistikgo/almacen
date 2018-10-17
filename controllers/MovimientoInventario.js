@@ -49,15 +49,15 @@ function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pesoBruto
 	nMovimiento.nivel = nivel;
 
 	nMovimiento.save()
-	.then((data)=>{
-		updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto);
+	.then(async (data)=>{
+		await updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto);
 	})
 	.catch((err)=>{
 		console.log(err);
 	})
 }
 
-async function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
+function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.fechaMovimiento = new Date();
@@ -72,11 +72,44 @@ async function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBru
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.almacen_id = almacen_id;
 
-	await nMovimiento.save();
+	nMovimiento.save();
 }
 
-function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadCajas,cantidadPesoBruto,cantidadPesoNeto) {
-	Producto.findOne({_id:producto_id})
+async function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadCajas,cantidadPesoBruto,cantidadPesoNeto) {
+	let existencia;
+	let existenciaTarimas;
+	let existenciaCajas;
+	let existenciaPesoBruto;
+	let existenciaPesoNeto;	
+	await Producto.findOne({_id:producto_id})
+	.then(async(producto)=>{
+		
+		existencia = producto.existencia += (signo*cantidad);
+		existenciaTarimas = producto.existenciaTarimas += (signo*cantidadTarimas);
+		existenciaCajas= producto.existenciaCajas += (signo*cantidadCajas);
+		existenciaPesoBruto=producto.existenciaPesoBruto += (signo*cantidadPesoBruto);
+		existenciaPesoNeto=producto.existenciaPesoNeto += (signo*cantidadPesoNeto);
+
+		console.log(producto.existencia);
+
+		//producto.save()
+
+		//.then(()=>{})
+		//.catch(err=>console.log(err));
+		let item = {
+			existencia:existencia,
+			existenciaTarimas:existenciaTarimas,
+			existenciaCajas:existenciaCajas,
+			existenciaPesoBruto:existenciaPesoBruto,
+			existenciaPesoNeto:existenciaPesoNeto
+		};
+		await Producto.updateOne({_id:producto_id},{$set:item})
+		.then((x)=>{})
+		.catch((y)=>{});
+	});
+
+	
+	/*Producto.findOne({_id:producto_id})
 	.then((producto)=>{
 		
 		producto.existencia += (signo*cantidad);
@@ -85,6 +118,7 @@ function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadC
 		producto.existenciaPesoBruto += (signo*cantidadPesoBruto);
 		producto.existenciaPesoNeto += (signo*cantidadPesoNeto);
 
+		console.log(producto.existencia);
 		if(signo == 1){
 			producto.fechaUltimaEntrada = new Date();
 		}
@@ -92,10 +126,14 @@ function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadC
 			producto.fechaUltimaSalida = new Date();
 		}
 
-		producto.save()
-		.then(()=>{})
-		.catch(err=>console.log(err));
-	});
+		//producto.save()
+
+		//.then(()=>{})
+		//.catch(err=>console.log(err));
+
+	});*/
+
+	
 }
 
 function getByProducto(req, res){
