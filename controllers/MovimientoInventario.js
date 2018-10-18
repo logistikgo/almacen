@@ -3,7 +3,7 @@
 const MovimientoInventario = require('../models/MovimientoInventario');
 const Producto = require('../models/Producto');
 
-function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
+async function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -20,9 +20,9 @@ function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pes
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.almacen_id = almacen_id;
 
-	nMovimiento.save()
-	.then((data)=>{
-		updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto);
+	await nMovimiento.save()
+	.then(async(data)=>{
+		await updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto);
 	})
 	.catch((err)=>{
 		console.log(err);

@@ -50,7 +50,7 @@ async function save(req, res) {
 	let nSalida = new Salida();
 	nSalida.salida_id = await getNextID();
 	nSalida.fechaAlta = new Date();
-	nSalida.fechaSalida = new Date();
+	nSalida.fechaSalida = new Date(req.body.fechaSalida);
 	nSalida.folio = await getNextID();
 	nSalida.partidas = req.body.partidas;	
 	nSalida.transportista = req.body.transportista;
@@ -64,9 +64,9 @@ async function save(req, res) {
 	nSalida.embarco = req.body.embarco;
 
 	nSalida.save()
-	.then((data)=>{
+	.then(async(data)=>{
 		for(let itemPartida of data.partidas){
-			MovimientoInventario.saveSalida(itemPartida.producto_id,nSalida._id,itemPartida.piezas,
+			await MovimientoInventario.saveSalida(itemPartida.producto_id,nSalida._id,itemPartida.piezas,
 				itemPartida.cajas,itemPartida.tarimas,itemPartida.pesoBruto,itemPartida.pesoNeto,
 				req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen);
 		}
