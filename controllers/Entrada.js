@@ -60,6 +60,7 @@ async function save(req, res){
 	nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id;
 	nEntrada.nombreUsuario = bodyParams.nombreUsuario;
 	nEntrada.embarque = bodyParams.embarque;
+	nEntrada.unidad = bodyParams.unidad;
 	nEntrada.transportista = bodyParams.transportista;
 	nEntrada.remision = bodyParams.remision;
 	nEntrada.factura = bodyParams.factura;
