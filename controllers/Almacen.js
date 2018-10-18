@@ -40,8 +40,10 @@ function getAlmacenesByIDSucursal(req,res){
 
 function getUbicaciones(req,res){
 	let _almacen_id = req.params.almacen_id;
+	let _idClienteFiscal = req.params.idClienteFiscal;
+	let _idSucursal = req.params.idSucursal;
 
-	MovimientoInventario.find( {posicion: { $ne: null } })
+	MovimientoInventario.find( {almacen_id:_almacen_id,idSucursal:_idSucursal,idClienteFiscal:_idClienteFiscal,posicion: { $ne: null } })
 	.populate({
 		path:'producto_id'
 	})
