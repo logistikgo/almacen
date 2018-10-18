@@ -55,6 +55,7 @@ async function save(req, res){
 	let nEntrada = new Entrada();
 
 	nEntrada.fechaAlta = new Date();
+	nEntrada.fechaEntrada = new Date(bodyParams.strFechaIngreso);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
 	nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id;
