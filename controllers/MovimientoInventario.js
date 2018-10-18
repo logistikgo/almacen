@@ -29,7 +29,7 @@ function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pes
 	})
 }
 
-function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pesoBruto,pesoNeto, idClienteFiscal, idSucursal, almacen_id, posicion, nivel) {
+async function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pesoBruto,pesoNeto, idClienteFiscal, idSucursal, almacen_id, posicion, nivel) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -48,8 +48,8 @@ function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pesoBruto
 	nMovimiento.posicion = posicion;
 	nMovimiento.nivel = nivel;
 
-	nMovimiento.save()
-	.then(async (data)=>{
+	await nMovimiento.save()
+	.then(async(data)=>{
 		await updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto);
 	})
 	.catch((err)=>{
@@ -81,34 +81,17 @@ async function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,can
 	let existenciaCajas;
 	let existenciaPesoBruto;
 	let existenciaPesoNeto;	
-	await Producto.findOne({_id:producto_id})
-	.then(async(producto)=>{
-		
-		existencia = producto.existencia += (signo*cantidad);
-		existenciaTarimas = producto.existenciaTarimas += (signo*cantidadTarimas);
-		existenciaCajas= producto.existenciaCajas += (signo*cantidadCajas);
-		existenciaPesoBruto=producto.existenciaPesoBruto += (signo*cantidadPesoBruto);
-		existenciaPesoNeto=producto.existenciaPesoNeto += (signo*cantidadPesoNeto);
+	let producto = await Producto.findOne({_id:producto_id}).exec();
 
-		console.log(producto.existencia);
+	producto.existencia += (signo*cantidad);
+	producto.existenciaTarimas += (signo*cantidadTarimas);
+	producto.existenciaCajas += (signo*cantidadCajas);
+	producto.existenciaPesoBruto += (signo*cantidadPesoBruto);
+	producto.existenciaPesoNeto += (signo*cantidadPesoNeto);
 
-		//producto.save()
-
-		//.then(()=>{})
-		//.catch(err=>console.log(err));
-		let item = {
-			existencia:existencia,
-			existenciaTarimas:existenciaTarimas,
-			existenciaCajas:existenciaCajas,
-			existenciaPesoBruto:existenciaPesoBruto,
-			existenciaPesoNeto:existenciaPesoNeto
-		};
-		await Producto.updateOne({_id:producto_id},{$set:item})
-		.then((x)=>{})
-		.catch((y)=>{});
-	});
-
+	await producto.save();
 	
+
 	/*Producto.findOne({_id:producto_id})
 	.then((producto)=>{
 		

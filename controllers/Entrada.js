@@ -77,15 +77,12 @@ async function save(req, res){
 	.then(async(data)=>{
 
 		if(data.almacen_id != "5bbd218e7dbb370763c8d388"){
-
-			console.log(data.almacen_id);
 			for(let itemPartida of data.partidas){
 				await MovimientoInventario.saveEntrada(itemPartida.producto_id, data.id, itemPartida.piezas, itemPartida.cajas, itemPartida.tarimas,
 					itemPartida.pesoBruto,itemPartida.pesoNeto,bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.almacen_id, itemPartida.posicion, itemPartida.nivel);
 			}
 		}
 			
-
 		res.status(200).send(data);
 	})
 	.catch((err)=>{
