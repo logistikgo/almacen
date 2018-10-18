@@ -89,6 +89,13 @@ async function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,can
 	producto.existenciaPesoBruto += (signo*cantidadPesoBruto);
 	producto.existenciaPesoNeto += (signo*cantidadPesoNeto);
 
+	if(signo == 1){
+		producto.fechaUltimaEntrada = new Date();
+	}
+	else{
+		producto.fechaUltimaSalida = new Date();
+	}
+
 	await producto.save();
 	
 
