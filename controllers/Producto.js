@@ -11,7 +11,6 @@ function get(req, res) {
 
 		res.status(200).send(producto);
 	});
-
 }
 
 function getByIDClienteFiscal(req, res) {
@@ -112,6 +111,8 @@ function _delete(req,res) {
 	});
 
 }
+
+
 
 module.exports = {
 	get,

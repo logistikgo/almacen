@@ -11,6 +11,8 @@ const Salida = Schema({
 	almacen_id: {type:Schema.ObjectId, ref:"Almacen"},
 	fechaAlta:Date,
 	fechaSalida:Date,
+	usuarioAlta_id:Number,
+	nombreUsuario:String,
 	folio:String,
 	referencia:String,
 	cliente:String,

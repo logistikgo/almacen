@@ -203,9 +203,7 @@ async function validaEntrada(req,res){
 
 	}else{
 		res.status(500).send({message:"Error en Json EndPoint"});
-	}
-
-		
+	}	
 	
 }
 
