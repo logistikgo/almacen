@@ -3,7 +3,7 @@
 const MovimientoInventario = require('../models/MovimientoInventario');
 const Producto = require('../models/Producto');
 
-async function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
+async function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id,fechaMovimiento) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -22,14 +22,14 @@ async function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBru
 
 	await nMovimiento.save()
 	.then(async(data)=>{
-		await updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto);
+		await updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto,fechaMovimiento);
 	})
 	.catch((err)=>{
 		console.log(err);
 	})
 }
 
-async function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pesoBruto,pesoNeto, idClienteFiscal, idSucursal, almacen_id, posicion, nivel) {
+async function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pesoBruto,pesoNeto, idClienteFiscal, idSucursal, almacen_id, posicion, nivel,fechaMovimiento) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = producto_id;
@@ -50,7 +50,7 @@ async function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pes
 
 	await nMovimiento.save()
 	.then(async(data)=>{
-		await updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto);
+		await updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto,fechaMovimiento);
 	})
 	.catch((err)=>{
 		console.log(err);
@@ -75,7 +75,7 @@ function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBruto,pes
 	nMovimiento.save();
 }
 
-async function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadCajas,cantidadPesoBruto,cantidadPesoNeto) {
+async function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadCajas,cantidadPesoBruto,cantidadPesoNeto,fechaMovimiento) {
 	let existencia;
 	let existenciaTarimas;
 	let existenciaCajas;
@@ -90,10 +90,10 @@ async function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,can
 	producto.existenciaPesoNeto += (signo*cantidadPesoNeto);
 
 	if(signo == 1){
-		producto.fechaUltimaEntrada = new Date();
+		producto.fechaUltimaEntrada = new Date(fechaMovimiento);
 	}
 	else{
-		producto.fechaUltimaSalida = new Date();
+		producto.fechaUltimaSalida = new Date(fechaMovimiento);
 	}
 
 	await producto.save();

@@ -71,7 +71,7 @@ async function save(req, res) {
 		for(let itemPartida of data.partidas){
 			await MovimientoInventario.saveSalida(itemPartida.producto_id,nSalida._id,itemPartida.piezas,
 				itemPartida.cajas,itemPartida.tarimas,itemPartida.pesoBruto,itemPartida.pesoNeto,
-				req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen);
+				req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen,req.body.fechaSalida);
 		}
 		res.status(200).send(data);
 	})
