@@ -8,12 +8,20 @@ async function getNextID(){
 }
 
 function get(req, res) {
-	
+	/*
 	CteFiscal.find({statusReg:"ACTIVO"}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
 		res.status(200).send(cliente);
+	});*/
+
+	CteFiscal.find({statusReg:"ACTIVO"}).sort({nombreCorto: -1})
+	.then((cliente)=>{
+		res.status(200).send(cliente);	
+	})
+	.catch((err)=>{
+		return res.status(500).send({message:"Error"});
 	});
 }
 
