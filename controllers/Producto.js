@@ -42,7 +42,7 @@ async function save(req,res) {
 
 	nProducto.clave = req.body.clave;
 	nProducto.descripcion = req.body.descripcion;
-	
+
 	if(req.body.existencia){
  		nProducto.existencia = req.body.existencia;
 	}
@@ -60,6 +60,9 @@ async function save(req,res) {
 	nProducto.stockMinimo = req.body.stockMinimo;
 	nProducto.idSucursal = req.body.idSucursal;
 	nProducto.almacen_id = req.body.almacen_id;
+
+	nProducto.presentacion = req.body.presentacion;
+	console.log(req.body.presentacion);
 
 	nProducto.save()
 	.then((productoStored)=>{		
