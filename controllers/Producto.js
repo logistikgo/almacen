@@ -43,17 +43,11 @@ async function save(req,res) {
 	nProducto.clave = req.body.clave;
 	nProducto.descripcion = req.body.descripcion;
 	
-	if(req.body.existencia){
- 		nProducto.existencia = req.body.existencia;
-	}
-	else{
-		nProducto.existencia = 0;	
-	}
-
-	nProducto.existenciaTarimas = req.body.existenciaTarimas;
-	nProducto.existenciaCajas = req.body.existenciaCajas;
-	nProducto.existenciaPesoBruto = req.body.existenciaPesoBruto;
-	nProducto.existenciaPesoNeto = req.body.existenciaPesoNeto;
+	nProducto.existencia = req.body.existencia ? req.body.existencia : 0;
+	nProducto.existenciaTarimas = req.body.existenciaTarimas ? req.body.existenciaTarimas : 0;
+	nProducto.existenciaCajas = req.body.existenciaCajas ? req.body.existenciaCajas : 0;
+	nProducto.existenciaPesoBruto = req.body.existenciaPesoBruto ? req.body.existenciaPesoBruto : 0;
+	nProducto.existenciaPesoNeto = req.body.existenciaPesoNeto ? req.body.existenciaPesoNeto : 0;
 
 	nProducto.peso = req.body.peso;
 	nProducto.stockMaximo = req.body.stockMaximo;

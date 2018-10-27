@@ -16,7 +16,7 @@ function get(req, res) {
 		res.status(200).send(cliente);
 	});*/
 
-	CteFiscal.find({statusReg:"ACTIVO"}).sort({nombreCorto: -1})
+	CteFiscal.find({statusReg:"ACTIVO"}).sort({nombreCorto: 1})
 	.then((cliente)=>{
 		res.status(200).send(cliente);	
 	})
