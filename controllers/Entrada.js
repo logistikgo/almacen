@@ -63,7 +63,7 @@ async function save(req, res){
 	nEntrada.embarque = bodyParams.embarque;
 	nEntrada.unidad = bodyParams.unidad;
 	nEntrada.transportista = bodyParams.transportista;
-	nEntrada.remision = bodyParams.remision;
+	nEntrada.acuse = bodyParams.acuse;
 	nEntrada.factura = bodyParams.factura;
 	nEntrada.idClienteFiscal = bodyParams.idClienteFiscal;
 	nEntrada.idSucursal = bodyParams.idSucursal;
