@@ -48,6 +48,7 @@ async function save(req,res) {
 	nProducto.existenciaCajas = req.body.existenciaCajas ? req.body.existenciaCajas : 0;
 	nProducto.existenciaPesoBruto = req.body.existenciaPesoBruto ? req.body.existenciaPesoBruto : 0;
 	nProducto.existenciaPesoNeto = req.body.existenciaPesoNeto ? req.body.existenciaPesoNeto : 0;
+	nProducto.valor = req.body.valor ? req.body.valor : 0;
 
 	nProducto.peso = req.body.peso;
 	nProducto.stockMaximo = req.body.stockMaximo;

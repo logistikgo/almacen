@@ -28,7 +28,8 @@ const Producto = Schema({
 	statusReg:String,
 	idSucursal:Number,
 	almacen_id: {type:Schema.ObjectId, ref:"Almacen"},
-	presentacion: String
+	presentacion: String,
+	valor:Number
 },
 {collection:'Productos'}
 );

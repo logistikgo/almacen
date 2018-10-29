@@ -32,7 +32,8 @@ const Salida = Schema({
 			cajas:Number,
 			pesoBruto:Number,
 			pesoNeto:Number,
-			lote:String
+			lote:String,
+			valor:Number
 		}
 	]
 },{collection:'Salidas'});
