@@ -37,16 +37,4 @@ const Producto = Schema({
 {collection:'Productos'}
 );
 
-// var model = mongoose.model('Productos',Producto);
-
-// function getNextID(){
-// 	return Helper.getNextID(model,"idProducto");
-// }
-
-// module.exports = {
-// 	model,
-// 	getNextID
-// }
-
-
 module.exports = mongoose.model('Producto',Producto);
