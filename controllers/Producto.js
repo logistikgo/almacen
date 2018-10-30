@@ -13,6 +13,18 @@ function get(req, res) {
 	});
 }
 
+function getByIDsClientesFiscales(req,res){
+    let _arrClienteFiscales = req.query.arrClientesFiscales;
+    Producto.find({arrClientesFiscales_id:{$in:_arrClienteFiscales}})
+    .then((productos)=>{
+    	res.status(200).send(productos);
+    })
+    .catch((err)=>{
+    	res.status(500).send({message:"Error", error:err});
+    });
+    
+}
+
 function getByIDClienteFiscal(req, res) {
 	let _idClienteFiscal = req.params.idClienteFiscal;
 
@@ -25,7 +37,6 @@ function getByIDClienteFiscal(req, res) {
 
 }
 
-
 //async
 async function save(req,res) {
 	let nProducto = new Producto();
@@ -33,6 +44,7 @@ async function save(req,res) {
 	console.log(req.body);
 	
 	nProducto.idClienteFiscal = req.body.idClienteFiscal;
+	nProducto.arrClientesFiscales_id = req.body.idClientesFiscales;
 	nProducto.idProducto = await Helpers.getNextID(Producto, "idProducto");
 
 	nProducto.statusReg = "ACTIVO";
@@ -117,5 +129,6 @@ module.exports = {
 	getByIDClienteFiscal,
 	save,
 	_delete,
-	validaProducto
+	validaProducto,
+	getByIDsClientesFiscales
 }
