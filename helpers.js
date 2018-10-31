@@ -2,6 +2,7 @@ const PDF = require('pdfkit');
 const Entrada = require('./models/Entrada');
 const ClienteFiscal = require('./models/ClienteFiscal');
 const fs = require('fs');
+const moment = require('moment');
 
 async function getNextID(dataContext, field){
 	let max = 0;
@@ -17,7 +18,7 @@ async function getNextID(dataContext, field){
 
 async function PDFEntrada(entrada_id){
 
-	let entrada = await Entrada.findOne({_id:"5bc80e8dc7f79c42b86e2664"})
+	let entrada = await Entrada.findOne({_id:entrada_id})
 		.populate({
 			path:'partidas.producto_id',
 			model:'Producto'
@@ -26,7 +27,7 @@ async function PDFEntrada(entrada_id){
 	let clienteFiscal = await ClienteFiscal.findOne({idCliente:entrada.idClienteFiscal}).exec();
 
 	let doc = new PDF();
-	doc.pipe(fs.createWriteStream(`example.pdf`));
+	doc.pipe(fs.createWriteStream(`${entrada.folio}.pdf`));
 
 	//LOGO
 	doc.image('logo1.PNG',20,20);
@@ -56,7 +57,7 @@ async function PDFEntrada(entrada_id){
 	doc.font('Helvetica')
 	.fontSize(10)
 	.fill('black')
-	.text(`${entrada.fechaEntrada}`,440,50)
+	.text(`${moment(entrada.fechaEntrada).format("DD/MM/YYYY")}`,440,50)
 	.text(`${clienteFiscal.nombreCorto}`,440,65);
 
 	//Rectangulo Datos Generales
@@ -81,7 +82,8 @@ async function PDFEntrada(entrada_id){
 	.text('Acuse pedimento',25,165)
 	.text('Transportista',25,180)
 	.text('Operador',25,195)
-	.text('Unidad',25,210);
+	.text('Unidad',25,210)
+	.text('Tipo',25,235);
 
 	//Datos generales
 	doc.font('Helvetica')
@@ -91,7 +93,8 @@ async function PDFEntrada(entrada_id){
 	.text(`${entrada.acuse}`,130,165)
 	.text(`${entrada.transportista}`,130,180)
 	.text(`${entrada.status}`,130,195)
-	.text(`${entrada.unidad}`,130,210);
+	.text(`${entrada.unidad}`,130,210)
+	.text('ENTRADA',130,235);
 
 	//Rectangulo informacion entrada
 	doc.rect(20,260,570,20)
@@ -149,14 +152,14 @@ async function PDFEntrada(entrada_id){
 		doc.font('Helvetica')
 		.fontSize(10)
 		.fill('black')
-		.text(`${partida.lote}`,30,356)
-		.text(`${partida.producto_id.clave}`,70,356)
-		.text(`${partida.producto_id.descripcion}`,140,356)
-		.text(`${partida.piezas}`,250,356)
-		.text(`${partida.tarimas}`,310,356)
-		.text(`${partida.cajas}`,370,356)
-		.text(`${partida.pesoBruto}`,430,356)
-		.text(`${partida.pesoNeto}`,500,356);
+		.text(`${partida.lote}`,30,anchoRectangle+5)
+		.text(`${partida.producto_id.clave}`,70,anchoRectangle+5)
+		.text(`${partida.producto_id.descripcion}`,140,anchoRectangle+5)
+		.text(`${partida.piezas}`,250,anchoRectangle+5)
+		.text(`${partida.tarimas}`,310,anchoRectangle+5)
+		.text(`${partida.cajas}`,370,anchoRectangle+5)
+		.text(`${partida.pesoBruto}`,430,anchoRectangle+5)
+		.text(`${partida.pesoNeto}`,500,anchoRectangle+5);
 		anchoRectangle+=20;
 	});
 
