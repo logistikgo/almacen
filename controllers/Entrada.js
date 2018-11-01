@@ -83,7 +83,7 @@ async function save(req, res){
 					itemPartida.pesoBruto,itemPartida.pesoNeto,itemPartida.valor,bodyParams.idClienteFiscal,bodyParams.idSucursal,bodyParams.almacen_id, itemPartida.posicion, itemPartida.nivel,bodyParams.strFechaIngreso);
 			}
 		}
-		await Helper.PDFEntrada(data._id);
+		//await Helper.PDFEntrada(data._id);
 		res.status(200).send(data);
 	})
 	.catch((err)=>{
