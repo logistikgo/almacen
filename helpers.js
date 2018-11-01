@@ -3,6 +3,7 @@ const Entrada = require('./models/Entrada');
 const ClienteFiscal = require('./models/ClienteFiscal');
 const fs = require('fs');
 const moment = require('moment');
+const blobstream = require('blob-stream');
 
 async function getNextID(dataContext, field){
 	let max = 0;
@@ -28,6 +29,7 @@ async function PDFEntrada(entrada_id){
 
 	let doc = new PDF();
 	doc.pipe(fs.createWriteStream(`${entrada.folio}.pdf`));
+	//doc.pipe(blobstream());
 
 	//LOGO
 	doc.image('logo1.PNG',20,20);

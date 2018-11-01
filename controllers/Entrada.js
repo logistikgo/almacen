@@ -150,8 +150,6 @@ async function updatePosicion_Partida(req,res){
 
 }
 
-
-
 async function validaEntrada(req,res){
 	let bodyParams = req.body;
 	let _idEntrada = bodyParams.idEntrada;
