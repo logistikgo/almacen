@@ -2,9 +2,13 @@
 
 const MovimientoInventario = require('../models/MovimientoInventario');
 const Producto = require('../models/Producto');
+const Entrada = require('../models/Entrada');
+const Salida = require('../models/Salida');
 
 async function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,valor,idClienteFiscal,idSucursal,almacen_id,fechaMovimiento) {
 	let nMovimiento = new MovimientoInventario();
+
+	let salida = await Salida.findOne({_id:salida_id}).exec();
 
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.salida_id = salida_id;
@@ -19,6 +23,7 @@ async function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBru
 	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.idSucursal = idSucursal;
 	nMovimiento.almacen_id = almacen_id;
+	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
 
 	await nMovimiento.save()
 	.then(async(data)=>{
@@ -31,6 +36,8 @@ async function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBru
 
 async function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pesoBruto,pesoNeto,valor,idClienteFiscal, idSucursal, almacen_id, posicion, nivel,fechaMovimiento) {
 	let nMovimiento = new MovimientoInventario();
+
+	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
 
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.entrada_id = entrada_id;
@@ -47,6 +54,7 @@ async function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pes
 	nMovimiento.tipo = "ENTRADA";
 	nMovimiento.posicion = posicion;
 	nMovimiento.nivel = nivel;
+	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
 
 	await nMovimiento.save()
 	.then(async(data)=>{
