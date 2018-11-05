@@ -5,10 +5,10 @@ const Schema = mongoose.Schema;
 
 const MovimientoInventario = Schema({
 	producto_id:{type:Schema.ObjectId, ref:"Producto"},
+	clienteFiscal_id:{type:Schema.ObjectId, ref:"ClienteFiscal"},
 	entrada_id:{type:Schema.ObjectId, ref:"Entrada"},
 	salida_id:{type:Schema.ObjectId, ref:"Salida"},
 	almacen_id:{type:Schema.ObjectId, ref:"Almacen"},
-	clienteFiscal_id:{type:Schema.ObjectId, ref:"ClienteFiscal"},
 	idClienteFiscal:Number,
 	idSucursal:Number,
 	fechaMovimiento:Date,

@@ -195,6 +195,9 @@ function getByIDs_cte_suc_alm(req, res){
 		.populate({
 			path:'almacen_id'
 		})
+		.populate({
+			path:'clienteFiscal_id'
+		})
 		.then((movimientos)=>{
 			res.status(200).send(movimientos);
 		})
@@ -217,6 +220,9 @@ function getByIDs_ctes_suc_alm(req, res){
 		MovimientoInventario.find({clienteFiscal_id:{$in:_arrClientesFiscales},idSucursal:_idSucursal,almacen_id:_idAlmacen})
 		.populate({
 			path:'producto_id'
+		})
+		.populate({
+			path:'clienteFiscal_id'
 		})
 		.populate({
 			path:'entrada_id'

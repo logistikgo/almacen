@@ -28,4 +28,4 @@ const ClienteFiscal = Schema({
 {collection:'ClientesFiscales'}
 );
 
-module.exports = mongoose.model('ClientesFiscales',ClienteFiscal);
+module.exports = mongoose.model('ClienteFiscal',ClienteFiscal);
