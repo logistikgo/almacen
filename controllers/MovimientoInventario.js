@@ -204,6 +204,38 @@ function getByIDs_cte_suc_alm(req, res){
 	else{
 		res.status(500).send({message:"Error en la petición, parametros incorrectos"});
 	}
+}
+
+
+function getByIDs_ctes_suc_alm(req, res){
+	let _arrClientesFiscales = req.query.arrClientesFiscales;
+	let _idSucursal = req.query.idSucursal;
+	let _idAlmacen = req.query.idAlmacen;
+
+	if(_arrClientesFiscales != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
+
+		MovimientoInventario.find({clienteFiscal_id:{$in:_arrClientesFiscales},idSucursal:_idSucursal,almacen_id:_idAlmacen})
+		.populate({
+			path:'producto_id'
+		})
+		.populate({
+			path:'entrada_id'
+		})
+		.populate({
+			path:'salida_id'
+		})
+		.populate({
+			path:'almacen_id'
+		})
+		.then((movimientos)=>{
+			res.status(200).send(movimientos);
+		})
+		.catch(err=>console.log(err));
+
+	}
+	else{
+		res.status(500).send({message:"Error en la petición, parametros incorrectos"});
+	}
 
 }
 
@@ -211,6 +243,7 @@ function getByIDs_cte_suc_alm(req, res){
 module.exports={
 	get,
 	getByIDs_cte_suc_alm,
+	getByIDs_ctes_suc_alm,
 	getByProducto,
 	saveSalida,
 	saveEntrada,

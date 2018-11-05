@@ -8,6 +8,7 @@ const MovimientoInventario = Schema({
 	entrada_id:{type:Schema.ObjectId, ref:"Entrada"},
 	salida_id:{type:Schema.ObjectId, ref:"Salida"},
 	almacen_id:{type:Schema.ObjectId, ref:"Almacen"},
+	clienteFiscal_id:{type:Schema.ObjectId, ref:"ClienteFiscal"},
 	idClienteFiscal:Number,
 	idSucursal:Number,
 	fechaMovimiento:Date,
@@ -21,7 +22,6 @@ const MovimientoInventario = Schema({
 	referencia:String,
 	posicion:String,
 	nivel:String,
-	idClienteFiscal:Number,
 	idSucursal:Number
 },
 {collection:"MovimientosInventario"});
