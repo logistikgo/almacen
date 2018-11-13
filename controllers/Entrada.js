@@ -58,6 +58,11 @@ async function save(req, res){
 	nEntrada.fechaEntrada = new Date(bodyParams.strFechaIngreso);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
+	nEntrada.item = bodyParams.item;
+	nEntrada.proveedor = bodyParams.proveedor;
+	nEntrada.tracto = bodyParams.tracto;
+	nEntrada.recibio = bodyParams.recibio;
+	nEntrada.remolque = bodyParams.remolque;
 	nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id;
 	nEntrada.nombreUsuario = bodyParams.nombreUsuario;
 	nEntrada.embarque = bodyParams.embarque;
