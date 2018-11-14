@@ -47,6 +47,7 @@ app.post('/api/updateUsuario', Usuario.update);
 app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID/:idEntrada', Entrada.getEntradaByID);
 app.get('/api/getEntradasByIDs/:idClienteFiscal/:idSucursal/:idAlmacen',Entrada.getEntradasByIDs);
+app.get('/api/partidasByIDs/:idClienteFiscal/:idSucursal/:idAlmacen',Entrada.getPartidasByIDs);
 app.post('/api/entrada', Entrada.save);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
 

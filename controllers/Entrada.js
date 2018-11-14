@@ -23,11 +23,41 @@ function getEntradasByIDs(req,res){
 	let _idClienteFiscal = req.params.idClienteFiscal;
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
-
-	Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen},(err,entradas)=>{
-		if(err)
-			return res.status(500).send({message:"Error"});
+	
+	Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
+		path:'partidas.producto_id',
+		model:'Producto'
+	}).then((entradas)=>{
 		res.status(200).send(entradas);
+	}).catch((err)=>{
+		return res.status(500).send({message:"Error"});
+	});
+}
+
+function getPartidasByIDs(req,res){
+	
+	let _idClienteFiscal = req.params.idClienteFiscal;
+	let _idSucursal = req.params.idSucursal;
+	let _idAlmacen = req.params.idAlmacen;
+
+	Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
+		path:'partidas.producto_id',
+		model:'Producto'
+	}).then((entradas)=>{
+		let infoPartidas = [];
+		entradas.forEach(function(entrada){
+			let entry = entrada;
+			entrada.partidas.forEach(function(partida){
+				let json = {
+					infoPartida:partida,
+					infoEntrada:entry
+				}
+				infoPartidas.push(json);
+			});
+		});
+		res.status(200).send(infoPartidas);
+	}).catch((err)=>{
+		return res.status(500).send({message:"Error"});
 	});
 }
 
@@ -54,30 +84,32 @@ async function save(req, res){
 
 	let nEntrada = new Entrada();
 
-	nEntrada.fechaAlta = new Date();
-	nEntrada.fechaEntrada = new Date(bodyParams.strFechaIngreso);
-	nEntrada.idEntrada = await getNextID();
-	nEntrada.folio = await getNextID();
-	nEntrada.item = bodyParams.item;
-	nEntrada.proveedor = bodyParams.proveedor;
-	nEntrada.tracto = bodyParams.tracto;
-	nEntrada.recibio = bodyParams.recibio;
-	nEntrada.remolque = bodyParams.remolque;
 	nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id;
 	nEntrada.nombreUsuario = bodyParams.nombreUsuario;
+	nEntrada.item = bodyParams.item;
 	nEntrada.embarque = bodyParams.embarque;
+	nEntrada.referencia = bodyParams.referencia;
+	nEntrada.fechaEntrada = new Date(bodyParams.strFechaIngreso);
+	nEntrada.acuse = bodyParams.acuse;
+	nEntrada.recibio = bodyParams.recibio;
+	nEntrada.proveedor = bodyParams.proveedor;
+	nEntrada.ordenCompra = bodyParams.ordenCompra;
+	nEntrada.factura = bodyParams.factura;
+	nEntrada.tracto = bodyParams.tracto;
+	nEntrada.remolque = bodyParams.remolque;
 	nEntrada.unidad = bodyParams.unidad;
 	nEntrada.transportista = bodyParams.transportista;
-	nEntrada.acuse = bodyParams.acuse;
-	nEntrada.factura = bodyParams.factura;
+	nEntrada.valor = bodyParams.valor;
+
 	nEntrada.idClienteFiscal = bodyParams.idClienteFiscal;
 	nEntrada.idSucursal = bodyParams.idSucursal;
 	nEntrada.almacen_id = bodyParams.almacen_id;
 	nEntrada.status = bodyParams.status;
 	nEntrada.partidas = bodyParams.partidas;
-	nEntrada.ordenCompra = bodyParams.ordenCompra;
-	nEntrada.referencia = bodyParams.referencia;
-	nEntrada.valor = bodyParams.valor;
+
+	nEntrada.fechaAlta = new Date();
+	nEntrada.idEntrada = await getNextID();
+	nEntrada.folio = await getNextID();
 
 	nEntrada.save()
 	.then(async(data)=>{
@@ -215,5 +247,6 @@ module.exports = {
 	getEntradaByID,
 	save,
 	getEntradasByIDs,
+	getPartidasByIDs,
 	validaEntrada
 }
