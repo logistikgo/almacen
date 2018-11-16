@@ -169,6 +169,7 @@ async function PDFEntrada(entrada_id){
 	doc.end();
 }
 
+
 module.exports = {
 	getNextID,
 	PDFEntrada
