@@ -63,6 +63,7 @@ async function save(req,res) {
 	nProducto.valor = req.body.valor ? req.body.valor : 0;
 
 	nProducto.peso = req.body.peso;
+	nProducto.embalajes = req.body.embalajes;
 	nProducto.stockMaximo = req.body.stockMaximo;
 	nProducto.stockMinimo = req.body.stockMinimo;
 	nProducto.idSucursal = req.body.idSucursal;

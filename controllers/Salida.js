@@ -70,9 +70,10 @@ async function save(req, res) {
 	nSalida.save()
 	.then(async(data)=>{
 		for(let itemPartida of data.partidas){
-			await MovimientoInventario.saveSalida(itemPartida.producto_id,nSalida._id,itemPartida.piezas,
+			/*await MovimientoInventario.saveSalida(itemPartida.producto_id,nSalida._id,itemPartida.piezas,
 				itemPartida.cajas,itemPartida.tarimas,itemPartida.pesoBruto,itemPartida.pesoNeto,itemPartida.valor,
-				req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen,req.body.fechaSalida);
+				req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen,req.body.fechaSalida);*/
+				await MovimientoInventario.saveSalida(itemPartida,data.id)
 		}
 		res.status(200).send(data);
 	})

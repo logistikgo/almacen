@@ -11,6 +11,7 @@ const MovimientoInventario = Schema({
 	almacen_id:{type:Schema.ObjectId, ref:"Almacen"},
 	idClienteFiscal:Number,
 	idSucursal:Number,
+	idSucursal:Number,
 	fechaMovimiento:Date,
 	cantidad:Number,
 	cajas:Number,
@@ -22,7 +23,8 @@ const MovimientoInventario = Schema({
 	referencia:String,
 	posicion:String,
 	nivel:String,
-	idSucursal:Number
+	embalajes:{}
+	
 },
 {collection:"MovimientosInventario"});
 

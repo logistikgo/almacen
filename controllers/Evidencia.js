@@ -4,10 +4,10 @@ const Evidencia = require('../models/Evidencia');
 
 
 function getEvidenciasByID(req,res){
-	let _tipo = req.params.tipo;
-	let field_id = req.params._id;
-
-	Evidencia.find({tipo:_tipo,[field_id]:_id})
+	let _tipo = req.query.tipo;
+	let field = req.query.field;
+	let _id = req.query.id;
+	Evidencia.find({tipo:_tipo,[field]:_id})
 	.then((evidencias)=>{
 		res.status(200).send(evidencias);
 	})
@@ -44,5 +44,6 @@ function saveEvidencia(req,res){
 }
 
 module.exports = {
-	saveEvidencia
+	saveEvidencia,
+	getEvidenciasByID
 }

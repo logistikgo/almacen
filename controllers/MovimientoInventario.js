@@ -4,7 +4,7 @@ const MovimientoInventario = require('../models/MovimientoInventario');
 const Producto = require('../models/Producto');
 const Entrada = require('../models/Entrada');
 const Salida = require('../models/Salida');
-
+/*
 async function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,valor,idClienteFiscal,idSucursal,almacen_id,fechaMovimiento) {
 	let nMovimiento = new MovimientoInventario();
 
@@ -63,15 +63,73 @@ async function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pes
 	.catch((err)=>{
 		console.log(err);
 	})
+}*/
+
+
+
+async function saveSalida(itemPartida,salida_id) {
+	let nMovimiento = new MovimientoInventario();
+
+	let salida = await Salida.findOne({_id:salida_id}).exec();
+
+	nMovimiento.producto_id = itemPartida.producto_id;
+	nMovimiento.salida_id = salida_id;
+	nMovimiento.fechaMovimiento = new Date();
+	nMovimiento.pesoBruto = itemPartida.pesoBruto;
+	nMovimiento.pesoNeto = itemPartida.pesoNeto;
+	nMovimiento.embalajes = itemPartida.embalajes;
+	nMovimiento.signo = -1;
+	nMovimiento.tipo = "SALIDA";
+	nMovimiento.idClienteFiscal = salida.idClienteFiscal;
+	nMovimiento.idSucursal = salida.idSucursal;
+	nMovimiento.almacen_id = salida.almacen_id;
+	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
+
+	await nMovimiento.save()
+	.then(async(data)=>{
+		await updateExistencia(-1,itemPartida,salida.fechaSalida);
+	})
+	.catch((err)=>{
+		console.log(err);
+	})
+}
+
+
+
+async function saveEntrada(itemPartida,entrada_id) {
+	let nMovimiento = new MovimientoInventario();
+
+	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
+
+	nMovimiento.producto_id = itemPartida.producto_id;
+	nMovimiento.entrada_id = entrada_id;
+	nMovimiento.idClienteFiscal = entrada.idClienteFiscal;
+	nMovimiento.idSucursal = entrada.idSucursal;
+	nMovimiento.almacen_id = entrada.almacen_id;
+	nMovimiento.fechaMovimiento = new Date();
+	nMovimiento.embalajes= itemPartida.embalajes;
+	nMovimiento.pesoBruto = itemPartida.pesoBruto;
+	nMovimiento.pesoNeto = itemPartida.pesoNeto;
+	nMovimiento.signo = 1;
+	nMovimiento.tipo = "ENTRADA";
+	nMovimiento.posicion = itemPartida.posicion;
+	nMovimiento.nivel = itemPartida.nivel;
+	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
+
+	await nMovimiento.save()
+	.then(async(data)=>{
+		await updateExistencia(1,itemPartida,entrada.fechaEntrada);
+	})
+	.catch((err)=>{
+		console.log(err);
+	});
 }
 
 function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.cantidad = cantidad;
-	nMovimiento.tarimas = tarimas;
-	nMovimiento.cajas = cajas;
+	nMovimiento.embalajes = embalajes;
 	nMovimiento.pesoBruto = pesoBruto;
 	nMovimiento.pesoNeto = pesoNeto;
 	nMovimiento.signo = 1;
@@ -82,7 +140,7 @@ function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBruto,pes
 
 	nMovimiento.save();
 }
-
+/*
 async function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadCajas,cantidadPesoBruto,cantidadPesoNeto,valor,fechaMovimiento) {
 	let existencia;
 	let existenciaTarimas;
@@ -107,32 +165,45 @@ async function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,can
 
 	await producto.save();
 	
+}*/
 
-	/*Producto.findOne({_id:producto_id})
-	.then((producto)=>{
+async function updateExistencia(signo,itemPartida,fechaMovimiento) {
+	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
+
+	for(let embajalePartida in itemPartida.embalajes){
 		
-		producto.existencia += (signo*cantidad);
-		producto.existenciaTarimas += (signo*cantidadTarimas);
-		producto.existenciaCajas += (signo*cantidadCajas);
-		producto.existenciaPesoBruto += (signo*cantidadPesoBruto);
-		producto.existenciaPesoNeto += (signo*cantidadPesoNeto);
-
-		console.log(producto.existencia);
-		if(signo == 1){
-			producto.fechaUltimaEntrada = new Date();
+		if(producto.embalajes[embajalePartida]){
+			producto.embalajes[embajalePartida] += (signo*itemPartida.embalajes[embajalePartida]);
+		}else if(signo>0){
+			producto.embalajes[embajalePartida] = (signo*itemPartida.embalajes[embajalePartida]);
 		}
-		else{
-			producto.fechaUltimaSalida = new Date();
-		}
+		
+	}
+	producto.valor += (signo*itemPartida.valor);
 
-		//producto.save()
+	if(signo == 1){
+		producto.fechaUltimaEntrada = new Date(fechaMovimiento);
+	}
+	else{
+		producto.fechaUltimaSalida = new Date(fechaMovimiento);
+	}
 
-		//.then(()=>{})
-		//.catch(err=>console.log(err));
+	let item = {
+		embalajes:producto.embalajes,
+		valor:producto.valor,
+		fechaUltimaEntrada:producto.fechaUltimaEntrada,
+		fechaUltimaSalida:producto.fechaUltimaSalida
+	};
 
-	});*/
+	producto.save();
 
-	
+	await Producto.updateOne({_id:itemPartida.producto_id},{$set:item})
+	.then((productoUpdated)=>{
+
+	})
+	.catch((err)=>{
+		
+	});
 }
 
 function getByProducto(req, res){
