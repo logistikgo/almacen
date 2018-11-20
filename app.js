@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
+const Helper = require('./helpers');
 const Producto = require('./controllers/Producto');
 const Usuario = require('./controllers/Usuario');
 const Entrada = require('./controllers/Entrada');
@@ -26,6 +27,8 @@ app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
+
+app.post('/api/formatEmbalajes',Helper.formatEmbalajes);
 
 app.get('/api/productos', Producto.get);
 app.get('/api/productos/:idClienteFiscal', Producto.getByIDClienteFiscal);

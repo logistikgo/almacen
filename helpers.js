@@ -1,9 +1,115 @@
 const PDF = require('pdfkit');
 const Entrada = require('./models/Entrada');
+const Salida = require('./models/Salida');
+const MovimientoInventario = require('./models/MovimientoInventario');
 const ClienteFiscal = require('./models/ClienteFiscal');
 const fs = require('fs');
 const moment = require('moment');
 const blobstream = require('blob-stream');
+
+
+async function formatEmbalajes(req,res){
+	let isEntrada = req.body.isEntrada;
+	let isSalida = req.body.isSalida;
+
+	if(isEntrada == 1){
+
+		Entrada.find({})
+		.then((entradas)=>{
+			entradas.forEach(function(entrada){
+				
+				entrada.partidas.forEach(
+					function(partida){
+						let embalajes = {
+							tarimas:partida.tarimas,
+							piezas:partida.piezas,
+							cajas:partida.cajas
+						};
+
+						partida['embalajes'] = embalajes;
+					}
+				);
+
+				
+				
+				let partidas = entrada.partidas;
+
+				Entrada.updateOne({folio:entrada.folio},{$set:{partidas}})
+				.then((updated)=>{
+					console.log("Alright");
+				})
+				.catch((err)=>{
+					console.log("error",err);
+				});
+
+			});
+			
+			res.status(200).send("Finished");
+		})
+		.catch((err)=>{
+			res.status(500).send("Error en el find");
+		});
+	} else if (isSalida == 1){
+		Salida.find({})
+		.then((salidas)=>{
+			salidas.forEach(function(salida){
+				
+				salida.partidas.forEach(
+					function(partida){
+						let embalajes = {
+							tarimas:partida.tarimas,
+							piezas:partida.piezas,
+							cajas:partida.cajas
+						};
+
+						partida['embalajes'] = embalajes;
+					}
+				);				
+				
+				let partidas = salida.partidas;
+
+				Salida.updateOne({folio:salida.folio},{$set:{partidas}})
+				.then((updated)=>{
+					console.log("Alright");
+				})
+				.catch((err)=>{
+					console.log("error",err);
+				});
+
+			});
+			
+			res.status(200).send("Finished");
+		})
+		.catch((err)=>{
+			res.status(500).send("Error en el find");
+		});
+	} else {
+		MovimientoInventario.find({})
+		.then((movimientos)=>{
+
+			movimientos.forEach(function(movimiento){
+				
+				let embalajes = {
+					tarimas:movimiento.tarimas,
+					piezas:movimiento.cantidad,
+					cajas:movimiento.cajas
+				};
+				
+				MovimientoInventario.updateOne({_id:movimiento._id},{$set:{embalajes}})
+				.then((updated)=>{
+					console.log("Alright");
+				})
+				.catch((err)=>{
+					console.log("Error en el update");
+				});
+			});
+			res.status(200).send("Finished");
+		})
+		.catch((err)=>{
+			res.status(500).send("Error en find");
+		});
+	}
+}
 
 async function getNextID(dataContext, field){
 	let max = 0;
@@ -172,7 +278,8 @@ async function PDFEntrada(entrada_id){
 
 module.exports = {
 	getNextID,
-	PDFEntrada
+	PDFEntrada,
+	formatEmbalajes
 }
 
 

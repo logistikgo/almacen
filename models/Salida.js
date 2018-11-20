@@ -26,7 +26,7 @@ const Salida = Schema({
 	idAlmacen:Number,
 	valor: Number,
 	partidas:[
-		{
+		/*{
 			producto_id:{type:Schema.ObjectId, ref:"Producto"},
 			piezas:Number,
 			tarimas:Number,
@@ -35,7 +35,7 @@ const Salida = Schema({
 			pesoNeto:Number,
 			lote:String,
 			valor:Number
-		}
+		}*/
 	]
 },{collection:'Salidas'});
 
