@@ -7,14 +7,14 @@ const Posicion = Schema(
 	{
 		nombre: String,
 		niveles: [String],
-		estatus: String
+		estatus: String,
 		almacen_id: {
-			type:Schema.ObjectID, 
+			type:Schema.ObjectId, 
 			ref:'Almacen'
 		},
 		fechaAlta: Date,
 		usuario_id: Number,
-		strtusReg: String
+		statusReg: String
 	},
 	{
 		collection: 'Posiciones'

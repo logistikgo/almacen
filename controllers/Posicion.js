@@ -3,7 +3,20 @@
 const Posicion = require('../models/Posicion');
 
 function get(req, res){
+	let almacen_id = req.query.almacen_id;
 
+	Posicion.find({
+		almacen_id: almacen_id,
+		statusReg: "ACTIVO"
+	})
+	.then((posiciones)=>{
+		res.status(200).send(posiciones);
+	})
+	.catch((error)=>{
+		return res.status(500).send({
+                message: error
+            });
+	})
 }
 
 function getById(req, res){
@@ -23,8 +36,8 @@ async function save(req, res){
 	nPosicion.statusReg = "ACTIVO";
 
 	nPosicion.save()
-	.then((sucursal)=>{
-		res.status(200).send({sucursal});
+	.then((posicion)=>{
+		res.status(200).send({posicion});
 	})
 	.catch(err=>console.log(err));
 }

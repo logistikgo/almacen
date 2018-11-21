@@ -15,6 +15,7 @@ const Salida = require('./controllers/Salida');
 const Sucursal = require("./controllers/Sucursal");
 const Almacen = require('./controllers/Almacen');
 const Evidencia = require('./controllers/Evidencia');
+const Posicion = require('./controllers/Posicion');
 
 app.use(bodyParser.urlencoded({
     extended: false
@@ -81,8 +82,12 @@ app.post('/api/deleteAlmacen',Almacen.deleteAlmacen);
 app.get('/api/validaPosicion/:posicion/:nivel/:almacen_id', Almacen.validaPosicion);
 app.get('/api/ubicaciones/:almacen_id/:idClienteFiscal/:idSucursal',Almacen.getUbicaciones);
 
-
 app.post('/api/evidencia',Evidencia.saveEvidencia);
 app.get('/api/evidencias',Evidencia.getEvidenciasByID);
+
+app.get('/api/posiciones', Posicion.get);
+app.get('/api/posicion', Posicion.getById);
+app.put('/api/posicion', Posicion.update);
+app.delete('/api/posicion', Posicion._delete);
 
 module.exports = app;
