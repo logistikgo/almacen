@@ -96,7 +96,7 @@ async function saveAlmacen(req,res){
 	nAlmacen.save()
 	.then(async(data)=>{
 			for(let posicion of posiciones){
-				await Posicion.save(data._id, posicion);
+				Posicion.save(data._id, posicion);
 			}
 		res.status(200).send(data);
 	})
