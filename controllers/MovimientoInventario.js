@@ -180,6 +180,8 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 		
 	}
 	producto.valor += (signo*itemPartida.valor);
+	producto.existenciaPesoNeto +=(signo*itemPartida.pesoNeto);
+	producto.existenciaPesoBruto +=(signo*itemPartida.pesoBruto);
 
 	if(signo == 1){
 		producto.fechaUltimaEntrada = new Date(fechaMovimiento);
@@ -192,7 +194,9 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 		embalajes:producto.embalajes,
 		valor:producto.valor,
 		fechaUltimaEntrada:producto.fechaUltimaEntrada,
-		fechaUltimaSalida:producto.fechaUltimaSalida
+		fechaUltimaSalida:producto.fechaUltimaSalida,
+		existenciaPesoBruto:producto.existenciaPesoBruto,
+		existenciaPesoNeto:producto.existenciaPesoNeto
 	};
 
 	producto.save();
