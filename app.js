@@ -75,6 +75,7 @@ app.delete('/api/sucursal', Sucursal._delete);
 
 app.get('/api/getAlmacenes',Almacen.getAlmacenes);
 app.get('/api/getAlmacen/:idAlmacen',Almacen.getAlmacen);
+app.get('/api/almacen', Almacen.getById);
 app.get('/api/getAlmacenes/:idSucursal',Almacen.getAlmacenesByIDSucursal);
 app.post('/api/saveAlmacen',Almacen.saveAlmacen);
 app.post('/api/updateAlmacen',Almacen.updateAlmacen);
