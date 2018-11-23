@@ -9,7 +9,7 @@ function get(req, res){
 	Posicion.find({
 		almacen_id: new ObjectId(almacen_id),
 		statusReg: "ACTIVO"
-	})
+	}).sort({nombre: 1})
 	.then((posiciones)=>{
 		res.status(200).send(posiciones);
 	})
