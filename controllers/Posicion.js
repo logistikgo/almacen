@@ -1,12 +1,13 @@
 'use strict'
 
 const Posicion = require('../models/Posicion');
+var ObjectId = (require('mongoose').Types.ObjectId);
 
 function get(req, res){
-	let almacen_id = req.query.almacen_id;
+	let almacen_id = req.query.idAlmacen;
 
 	Posicion.find({
-		almacen_id: almacen_id,
+		almacen_id: new ObjectId(almacen_id),
 		statusReg: "ACTIVO"
 	})
 	.then((posiciones)=>{
@@ -23,22 +24,17 @@ function getById(req, res){
 
 }
 
-async function save(req, res){
+function save(almacen_id, posicion){
 	let nPosicion = new Posicion();
-	let params = req.body;
 
-	nPosicion.nombre = params.nombre;
-	nPosicion.niveles = params.niveles;
+	nPosicion.nombre = posicion.nombre;
+	nPosicion.niveles = posicion.niveles;
 	nPosicion.estatus = "DISPONIBLE";
-	nPosicion.almacen_id = params.almacen_id;
+	nPosicion.almacen_id = almacen_id;
 	nPosicion.fechaAlta = new Date();
-	nPosicion.usuario_id = params.usuario_id;
 	nPosicion.statusReg = "ACTIVO";
 
 	nPosicion.save()
-	.then((posicion)=>{
-		res.status(200).send({posicion});
-	})
 	.catch(err=>console.log(err));
 }
 

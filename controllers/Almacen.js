@@ -3,7 +3,7 @@
 const Almacen = require('../models/Almacen');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../models/MovimientoInventario');
-
+const Posicion = require('../controllers/Posicion');
 
 async function getNextID(){
 	return await Helpers.getNextID(Almacen,"idAlmacen");
@@ -21,11 +21,25 @@ function getAlmacenes(req,res){
 function getAlmacen(req,res){
 	let _idAlmacen = req.params.idAlmacen;
 
-	Almacen.find({idAlmacen:_idAlmacen},(err,almacen)=>{
+	Almacen.find({idAlmacen:_idAlmacen, status:"ACTIVO"},(err,almacen)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(almacen);
 	});
+}
+
+function getById(req,res){
+	let _idAlmacen = req.query.idAlmacen;
+
+	Almacen.findOne({_id:_idAlmacen})
+	.then((almacen) => {
+            res.status(200).send(almacen);
+        })
+        .catch((error) => {
+            return res.status(500).send({
+                message: error
+            });
+        });
 }
 
 function getAlmacenesByIDSucursal(req,res){
@@ -77,10 +91,17 @@ async function saveAlmacen(req,res){
 	nAlmacen.idSucursal = req.body.idSucursal;
 	nAlmacen.status = "ACTIVO";
 
-	nAlmacen.save((err,almacenStored)=>{
-		if(err)
-			return res.status(500).send({message:`Error al guardar${error}`});
-		res.status(200).send(almacenStored);
+	let posiciones = req.body.posiciones;
+
+	nAlmacen.save()
+	.then(async(data)=>{
+			for(let posicion of posiciones){
+				Posicion.save(data._id, posicion);
+			}
+		res.status(200).send(data);
+	})
+	.catch((err)=>{
+		console.log(err);
 	});
 }
 
@@ -139,6 +160,7 @@ function validaPosicion(req, res) {
 module.exports = {
 	getAlmacenes,
 	getAlmacen,
+	getById,
 	getAlmacenesByIDSucursal,
 	saveAlmacen,
 	updateAlmacen,
