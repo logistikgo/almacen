@@ -15,7 +15,7 @@ function get(req, res) {
 
 function getByIDsClientesFiscales(req,res){
     let _arrClienteFiscales = req.query.arrClientesFiscales;
-    Producto.find({arrClientesFiscales_id:{$in:_arrClienteFiscales}})
+    Producto.find({arrClientesFiscales_id:{$in:_arrClienteFiscales},"statusReg":"ACTIVO"})
     .then((productos)=>{
     	res.status(200).send(productos);
     })

@@ -4,68 +4,6 @@ const MovimientoInventario = require('../models/MovimientoInventario');
 const Producto = require('../models/Producto');
 const Entrada = require('../models/Entrada');
 const Salida = require('../models/Salida');
-/*
-async function saveSalida(producto_id, salida_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,valor,idClienteFiscal,idSucursal,almacen_id,fechaMovimiento) {
-	let nMovimiento = new MovimientoInventario();
-
-	let salida = await Salida.findOne({_id:salida_id}).exec();
-
-	nMovimiento.producto_id = producto_id;
-	nMovimiento.salida_id = salida_id;
-	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.cantidad = cantidad;
-	nMovimiento.cajas = cajas;
-	nMovimiento.tarimas = tarimas;	
-	nMovimiento.pesoBruto = pesoBruto;
-	nMovimiento.pesoNeto = pesoNeto;
-	nMovimiento.signo = -1;
-	nMovimiento.tipo = "SALIDA";
-	nMovimiento.idClienteFiscal = idClienteFiscal;
-	nMovimiento.idSucursal = idSucursal;
-	nMovimiento.almacen_id = almacen_id;
-	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
-
-	await nMovimiento.save()
-	.then(async(data)=>{
-		await updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto,valor,fechaMovimiento);
-	})
-	.catch((err)=>{
-		console.log(err);
-	})
-}
-
-async function saveEntrada(producto_id, entrada_id, cantidad, cajas, tarimas,pesoBruto,pesoNeto,valor,idClienteFiscal, idSucursal, almacen_id, posicion, nivel,fechaMovimiento) {
-	let nMovimiento = new MovimientoInventario();
-
-	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
-
-	nMovimiento.producto_id = producto_id;
-	nMovimiento.entrada_id = entrada_id;
-	nMovimiento.idClienteFiscal = idClienteFiscal;
-	nMovimiento.idSucursal = idSucursal;
-	nMovimiento.almacen_id = almacen_id;
-	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.cantidad = cantidad;
-	nMovimiento.cajas = cajas;
-	nMovimiento.tarimas = tarimas;
-	nMovimiento.pesoBruto = pesoBruto;
-	nMovimiento.pesoNeto = pesoNeto;
-	nMovimiento.signo = 1;
-	nMovimiento.tipo = "ENTRADA";
-	nMovimiento.posicion = posicion;
-	nMovimiento.nivel = nivel;
-	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
-
-	await nMovimiento.save()
-	.then(async(data)=>{
-		await updateExistencia(producto_id,nMovimiento.signo,cantidad,tarimas,cajas,pesoBruto,pesoNeto,valor,fechaMovimiento);
-	})
-	.catch((err)=>{
-		console.log(err);
-	})
-}*/
-
-
 
 async function saveSalida(itemPartida,salida_id) {
 	let nMovimiento = new MovimientoInventario();
@@ -141,32 +79,7 @@ function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBruto,pes
 
 	nMovimiento.save();
 }
-/*
-async function updateExistencia(producto_id, signo, cantidad,cantidadTarimas,cantidadCajas,cantidadPesoBruto,cantidadPesoNeto,valor,fechaMovimiento) {
-	let existencia;
-	let existenciaTarimas;
-	let existenciaCajas;
-	let existenciaPesoBruto;
-	let existenciaPesoNeto;	
-	let producto = await Producto.findOne({_id:producto_id}).exec();
 
-	producto.existencia += (signo*cantidad);
-	producto.existenciaTarimas += (signo*cantidadTarimas);
-	producto.existenciaCajas += (signo*cantidadCajas);
-	producto.existenciaPesoBruto += (signo*cantidadPesoBruto);
-	producto.existenciaPesoNeto += (signo*cantidadPesoNeto);
-	producto.valor += (signo*valor);
-
-	if(signo == 1){
-		producto.fechaUltimaEntrada = new Date(fechaMovimiento);
-	}
-	else{
-		producto.fechaUltimaSalida = new Date(fechaMovimiento);
-	}
-
-	await producto.save();
-	
-}*/
 
 async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
@@ -264,7 +177,7 @@ function getByIDs_cte_suc_alm(req, res){
 
 	if(_idClienteFiscal != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
 
-		MovimientoInventario.find({idClienteFiscal:_idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen})
+		MovimientoInventario.find({clienteFiscal_id:_idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen})
 		.populate({
 			path:'producto_id'
 		})

@@ -22,7 +22,7 @@ const ClienteFiscal = Schema({
 	colonia:String,
 	municipio:String,
 	estado:String,
-	pais:String,
+	pais:String,	
 	statusReg:String	
 },
 {collection:'ClientesFiscales'}

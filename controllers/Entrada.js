@@ -23,8 +23,7 @@ function getEntradasByIDs(req,res){
 	let _idClienteFiscal = req.params.idClienteFiscal;
 	let _idSucursal = req.params.idSucursal;
 	let _idAlmacen = req.params.idAlmacen;
-	
-	Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
+	Entrada.find({clienteFiscal_id: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
 		path:'partidas.producto_id',
 		model:'Producto'
 	}).then((entradas)=>{
