@@ -25,6 +25,7 @@ const Salida = Schema({
 	idSucursal:Number,
 	idAlmacen:Number,
 	valor: Number,
+	item: String,
 	partidas:[
 		/*{
 			producto_id:{type:Schema.ObjectId, ref:"Producto"},
