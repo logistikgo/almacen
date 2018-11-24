@@ -22,7 +22,6 @@ function getByIDsClientesFiscales(req,res){
     .catch((err)=>{
     	res.status(500).send({message:"Error", error:err});
     });
-    
 }
 
 function getByIDClienteFiscal(req, res) {

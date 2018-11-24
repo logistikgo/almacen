@@ -21,7 +21,7 @@ const Salida = Schema({
 	placasTrailer:String,
 	embarco:String,
 	operador:String,
-	idClienteFiscal:Number,
+	clienteFiscal_id:{type:Schema.ObjectId,ref:'ClienteFiscal'},
 	idSucursal:Number,
 	idAlmacen:Number,
 	valor: Number,
