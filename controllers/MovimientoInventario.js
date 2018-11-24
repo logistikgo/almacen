@@ -18,6 +18,9 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.embalajes = itemPartida.embalajes;
 	nMovimiento.signo = -1;
 	nMovimiento.tipo = "SALIDA";
+	nMovimiento.posicion = itemPartida.posicion;
+	nMovimiento.posicion_id = itemPartida.posicion_id;
+	nMovimiento.nivel = itemPartida.nivel;
 	nMovimiento.idClienteFiscal = salida.idClienteFiscal;
 	nMovimiento.idSucursal = salida.idSucursal;
 	nMovimiento.almacen_id = salida.almacen_id;
@@ -146,6 +149,20 @@ function getByProducto(req, res){
 	.catch(err=>console.log(err));
 }
 
+function getPosicionesByProducto(req, res){
+	let _producto_id = req.params.producto_id;
+
+	MovimientoInventario.find({producto_id:_producto_id, tipo:"ENTRADA"}, {posicion_id:""})
+	.populate({
+		path:'posicion_id'
+	})
+	.then((posiciones)=>{
+		posiciones = Array.from(new Set(posiciones.map(x=>x.posicion_id)));
+		res.status(200).send(posiciones);
+	})
+	.catch(err=>console.log(err));
+}
+
 function get(req, res){
 
 	MovimientoInventario.find({})
@@ -252,6 +269,7 @@ module.exports={
 	getByIDs_cte_suc_alm,
 	getByIDs_ctes_suc_alm,
 	getByProducto,
+	getPosicionesByProducto,
 	saveSalida,
 	saveEntrada,
 	saveExistenciaInicial
