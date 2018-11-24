@@ -27,14 +27,14 @@ function getByIDsClientesFiscales(req,res){
 
 function getByIDClienteFiscal(req, res) {
 	let _idClienteFiscal = req.params.idClienteFiscal;
-
-	Producto.find({idClienteFiscal:_idClienteFiscal, statusReg:"ACTIVO"}, (error,producto) => {
+	Producto.find({arrClientesFiscales_id:{$in:[_idClienteFiscal]}, statusReg:"ACTIVO"}, (error,producto) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 
 		res.status(200).send(producto);
-	});
-
+	});	
+	
+		
 }
 
 //async
