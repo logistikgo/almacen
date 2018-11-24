@@ -21,7 +21,8 @@ const MovimientoInventario = Schema({
 	signo:Number,
 	tipo:String,
 	referencia:String,
-	posicion:String,
+	posicion: String,
+	posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
 	nivel:String,
 	embalajes:{}
 	

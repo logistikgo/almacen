@@ -113,6 +113,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "ENTRADA";
 	nMovimiento.posicion = itemPartida.posicion;
+	nMovimiento.posicion_id = itemPartida.posicion_id;
 	nMovimiento.nivel = itemPartida.nivel;
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
 
@@ -223,6 +224,9 @@ function getByProducto(req, res){
 	.populate({
 		path:'salida_id'
 	})
+	.populate({
+		path:'posicion_id'
+	})
 	.then((movimientos)=>{
 		res.status(200).send(movimientos);
 	})
@@ -243,6 +247,9 @@ function get(req, res){
 	})
 	.populate({
 		path:'almacen_id'
+	})
+	.populate({
+		path:'posicion_id'
 	})
 	.then((movimientos)=>{
 		res.status(200).send(movimientos);
@@ -272,6 +279,9 @@ function getByIDs_cte_suc_alm(req, res){
 		})
 		.populate({
 			path:'clienteFiscal_id'
+		})
+		.populate({
+			path:'posicion_id'
 		})
 		.then((movimientos)=>{
 			res.status(200).send(movimientos);
@@ -307,6 +317,9 @@ function getByIDs_ctes_suc_alm(req, res){
 		})
 		.populate({
 			path:'almacen_id'
+		})
+		.populate({
+			path:'posicion_id'
 		})
 		.then((movimientos)=>{
 			res.status(200).send(movimientos);
