@@ -99,6 +99,7 @@ async function save(req, res){
 	nEntrada.unidad = bodyParams.unidad;
 	nEntrada.transportista = bodyParams.transportista;
 	nEntrada.valor = bodyParams.valor;
+	nEntrada.clienteFiscal_id = clienteFiscal_id;
 
 	nEntrada.idClienteFiscal = bodyParams.idClienteFiscal;
 	nEntrada.idSucursal = bodyParams.idSucursal;
