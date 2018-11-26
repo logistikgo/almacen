@@ -111,6 +111,36 @@ async function formatEmbalajes(req,res){
 	}
 }
 
+async function FormatProduct(req,res){
+	let mainID = req.body.mainID;
+	let secondID = req.body.secondID;
+	let thirdID = req.body.thirdID;
+
+	Entrada.find({"folio":"6"})
+	.then((entradas)=>{
+		entradas.forEach(function(entrada){
+			entrada.partidas.forEach(function(partida){
+				if(partida.producto_id == secondID || partida.producto_id == thirdID){
+					partida.producto_id = mainID;
+				}
+			});
+			let partidas = {
+				partidas:entrada.partidas
+			};
+			Entrada.updateOne({_id:entrada._id},{$set:partidas})
+			.then((updated)=>{
+				console.log("Updateado");
+			})
+			.then((error)=>{
+				console.log("Error");
+			});
+		});
+	})
+	.catch((error)=>{
+
+	});
+}
+
 async function getNextID(dataContext, field){
 	let max = 0;
 	let lastUser = await dataContext.find().sort([[field,-1]]).exec();
