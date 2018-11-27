@@ -86,16 +86,18 @@ function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBruto,pes
 
 async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
-
-	for(let embajalePartida in itemPartida.embalajes){
-		
-		if(producto.embalajes[embajalePartida]){
-			producto.embalajes[embajalePartida] += (signo*itemPartida.embalajes[embajalePartida]);
-		}else if(signo>0){
-			producto.embalajes[embajalePartida] = (signo*itemPartida.embalajes[embajalePartida]);
+	if(itemPartida.embalajes){
+		for(let embajalePartida in itemPartida.embalajes){
+			
+			if(producto.embalajes[embajalePartida]){
+				producto.embalajes[embajalePartida] += (signo*itemPartida.embalajes[embajalePartida]);
+			}else if(signo>0){
+				producto.embalajes[embajalePartida] = (signo*itemPartida.embalajes[embajalePartida]);
+			}
+			
 		}
-		
 	}
+		
 	producto.valor += (signo*itemPartida.valor);
 	producto.existenciaPesoNeto +=(signo*itemPartida.pesoNeto);
 	producto.existenciaPesoBruto +=(signo*itemPartida.pesoBruto);
