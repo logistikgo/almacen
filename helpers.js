@@ -8,6 +8,48 @@ const moment = require('moment');
 const blobstream = require('blob-stream');
 
 
+async function getPartidasByIDs(req,res){
+	let _idClienteFiscal = req.params.idClienteFiscal;
+	let _idSucursal = req.params.idSucursal;
+	let _idAlmacen = req.params.idAlmacen;
+
+	let infoPartidasGrl = [];
+	let entradas = await Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
+		path:'partidas.producto_id',
+		model:'Producto'
+	}).exec();
+	
+	await entradas.forEach(function(entrada){
+		let entry = entrada;
+		entrada.partidas.forEach(function(partida){
+			let json = {
+				infoPartida:partida,
+				infoEntrada:entry
+			}
+			infoPartidasGrl.push(json);
+		});
+	});
+	let salidas = await Salida.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
+		path:'partidas.producto_id',
+		model:'Producto'
+	}).exec();
+	
+	
+	await salidas.forEach(function(salida){
+		let entry = salida;
+		salida.partidas.forEach(function(partida){
+			let json = {
+				infoPartida:partida,
+				infoSalida:entry
+			}
+			infoPartidasGrl.push(json);
+		});
+	});
+	
+	await res.status(200).send(infoPartidasGrl);
+
+}
+
 async function formatEmbalajes(req,res){
 	let isEntrada = req.body.isEntrada;
 	let isSalida = req.body.isSalida;
@@ -109,6 +151,36 @@ async function formatEmbalajes(req,res){
 			res.status(500).send("Error en find");
 		});
 	}
+}
+
+async function FormatItems(req,res){
+	let item = req.body.item;
+	let inicio = req.body.inicio;
+	let fin = req.body.fin;
+	
+	Entrada.find({})
+	.then((entradas)=>{
+		entradas.forEach(async function(entrada){
+			let folio = parseInt(entrada.folio);
+
+			if(folio>=inicio && folio<=fin){
+				console.log(item);
+				let itemString = item + "";
+				Entrada.updateOne({folio:entrada.folio},{$set:{item:itemString}})
+				.then((updated)=>{
+					
+					//console.log("Alright");
+				})		
+				.catch((error)=>{
+					console.log("Error");
+				});
+				item++;
+			}
+		});
+		res.status(200).send("Finished");
+	}).catch((error)=>{
+		res.status(500).send(error);
+	});
 }
 
 async function FormatProduct(req,res){
@@ -309,7 +381,9 @@ async function PDFEntrada(entrada_id){
 module.exports = {
 	getNextID,
 	PDFEntrada,
-	formatEmbalajes
+	formatEmbalajes,
+	FormatItems,
+	getPartidasByIDs
 }
 
 

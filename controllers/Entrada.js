@@ -58,6 +58,7 @@ function getPartidasByIDs(req,res){
 	}).catch((err)=>{
 		return res.status(500).send({message:"Error"});
 	});
+	
 }
 
 function getEntradaByID(req, res) {
