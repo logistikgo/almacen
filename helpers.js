@@ -153,34 +153,85 @@ async function formatEmbalajes(req,res){
 	}
 }
 
+async function formatItems1(req,res){
+	let arrFolio = req.body.arrFolio;
+	let arrItem = req.body.arrItem;
+	let entrada = req.body.entrada;
+
+	if(entrada == 1){
+		arrFolio.forEach(function(elem){
+
+		});
+
+		Entrada.find({folio:{$in:arrFolio}})
+		.then((entradas)=>{
+			entradas.forEach(function(entrada){
+				let index = arrFolio.indexOf(entrada.folio);
+				Entrada.updateOne({folio:entrada.folio},{$set:{item:arrItem[index]}});
+			});
+		})
+		.catch((error)=>{
+
+		});
+	}
+}
+
 async function FormatItems(req,res){
 	let item = req.body.item;
 	let inicio = req.body.inicio;
 	let fin = req.body.fin;
+	let entrada = req.body.entrada;
 	
-	Entrada.find({})
-	.then((entradas)=>{
-		entradas.forEach(async function(entrada){
-			let folio = parseInt(entrada.folio);
+	if(entrada==1){
+		Entrada.find({})
+		.then((entradas)=>{
+			entradas.forEach(async function(entrada){
+				let folio = parseInt(entrada.folio);
 
-			if(folio>=inicio && folio<=fin){
-				console.log(item);
-				let itemString = item + "";
-				Entrada.updateOne({folio:entrada.folio},{$set:{item:itemString}})
-				.then((updated)=>{
-					
-					//console.log("Alright");
-				})		
-				.catch((error)=>{
-					console.log("Error");
-				});
-				item++;
-			}
+				if(folio>=inicio && folio<=fin){
+					console.log(item);
+					let itemString = item + "";
+					Entrada.updateOne({folio:entrada.folio},{$set:{item:itemString}})
+					.then((updated)=>{
+						
+						//console.log("Alright");
+					})		
+					.catch((error)=>{
+						console.log("Error");
+					});
+					item++;
+				}
+			});
+			res.status(200).send("Finished");
+		}).catch((error)=>{
+			res.status(500).send(error);
 		});
-		res.status(200).send("Finished");
-	}).catch((error)=>{
-		res.status(500).send(error);
-	});
+	}else{
+		Salida.find({})
+		.then((salidas)=>{
+			salidas.forEach(async function(salida){
+				let folio = parseInt(salida.folio);
+
+				if(folio>=inicio && folio<=fin){
+					console.log(item);
+					let itemString = item + "";
+					Salida.updateOne({folio:salida.folio},{$set:{item:itemString}})
+					.then((updated)=>{
+						
+						//console.log("Alright");
+					})		
+					.catch((error)=>{
+						console.log("Error");
+					});
+					item++;
+				}
+			});
+			res.status(200).send("Finished");
+		}).catch((error)=>{
+			res.status(500).send(error);
+		});
+	}
+		
 }
 
 async function FormatProduct(req,res){
