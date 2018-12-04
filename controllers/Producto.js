@@ -33,7 +33,6 @@ function getByIDClienteFiscal(req, res) {
 		res.status(200).send(producto);
 	});	
 	
-		
 }
 
 //async
