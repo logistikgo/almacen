@@ -16,6 +16,7 @@ const Sucursal = require("./controllers/Sucursal");
 const Almacen = require('./controllers/Almacen');
 const Evidencia = require('./controllers/Evidencia');
 const Posicion = require('./controllers/Posicion');
+const Embalaje = require('./controllers/Embalaje');
 
 app.use(bodyParser.urlencoded({
     extended: false
@@ -92,5 +93,8 @@ app.get('/api/posiciones', Posicion.get);
 app.get('/api/posicion', Posicion.getById);
 app.put('/api/posicion', Posicion.update);
 app.delete('/api/posicion', Posicion._delete);
+
+app.get('/api/embalajes',Embalaje.getEmbalajes);
+app.post('/api/embalaje',Embalaje.saveEmbalaje);
 
 module.exports = app;
