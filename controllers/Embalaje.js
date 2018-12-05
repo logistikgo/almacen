@@ -18,8 +18,8 @@ function saveEmbalaje(req,res){
 
 	nEmbalaje.clave = req.body.clave;
 	nEmbalaje.nombre = req.body.nombre;
-	nEmbalaje.descricion = req.body.descricion;
-	nEmbalaje.fechaAlta = req.body.fechaAlta;
+	nEmbalaje.descripcion = req.body.descripcion;
+	nEmbalaje.fechaAlta = new Date();
 	nEmbalaje.usuarioAlta_id = req.body.usuarioAlta_id;
 	nEmbalaje.nombreUsuario = req.body.nombreUsuario;
 	nEmbalaje.status = "ACTIVO";
