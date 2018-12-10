@@ -70,6 +70,10 @@ function getEntradaByID(req, res) {
 		path:'partidas.producto_id',
 		model:'Producto'
 	})
+	.populate({
+		path:'clienteFiscal_id',
+		model:'ClienteFiscal'
+	})
 	.exec(function(err,entrada){
 		if(err)
 			return res.status(200).send(err);

@@ -37,7 +37,11 @@ function getByID(req,res) {
 	.populate({
 		path:'partidas.producto_id',
 		model:'Producto'
-	})	
+	})
+	.populate({
+		path:'clienteFiscal_id',
+		model:'ClienteFiscal'
+	})		
 	.then((data)=>{
 		res.status(200).send(data);
 	})
