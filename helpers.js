@@ -9,12 +9,15 @@ const blobstream = require('blob-stream');
 
 
 async function getPartidasByIDs(req,res){
-	let _idClienteFiscal = req.params.idClienteFiscal;
-	let _idSucursal = req.params.idSucursal;
-	let _idAlmacen = req.params.idAlmacen;
+	let _clienteFiscal_id = req.query.clienteFiscal_id;
+	let _idSucursal = req.query.idSucursal;
+	let _idAlmacen = req.query.idAlmacen;
+	let fechaInicio = req.query.fechaInicio;
+	let fechaFinal = req.query.fechaFinal;
+	let tipo = req.query.tipo;
 
 	let infoPartidasGrl = [];
-	let entradas = await Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
+	let entradas = await Entrada.find({clienteFiscal_id: _clienteFiscal_id,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
 		path:'partidas.producto_id',
 		model:'Producto'
 	}).exec();
@@ -29,7 +32,7 @@ async function getPartidasByIDs(req,res){
 			infoPartidasGrl.push(json);
 		});
 	});
-	let salidas = await Salida.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
+	let salidas = await Salida.find({clienteFiscal_id: _clienteFiscal_id,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
 		path:'partidas.producto_id',
 		model:'Producto'
 	}).exec();

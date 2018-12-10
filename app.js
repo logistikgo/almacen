@@ -30,8 +30,8 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.post('/api/formatEmbalajes',Helper.formatEmbalajes);
-app.post('/api/formatItems',Helper.FormatItems);
+//app.post('/api/formatEmbalajes',Helper.formatEmbalajes);
+//app.post('/api/formatItems',Helper.FormatItems);
 
 app.get('/api/productos', Producto.get);
 app.get('/api/productos/:idClienteFiscal', Producto.getByIDClienteFiscal);
@@ -55,7 +55,7 @@ app.post('/api/updateUsuario', Usuario.update);
 app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID/:idEntrada', Entrada.getEntradaByID);
 app.get('/api/getEntradasByIDs/:idClienteFiscal/:idSucursal/:idAlmacen',Entrada.getEntradasByIDs);
-app.get('/api/partidasByIDs/:idClienteFiscal/:idSucursal/:idAlmacen',Helper.getPartidasByIDs);
+app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
 app.post('/api/entrada', Entrada.save);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
 
