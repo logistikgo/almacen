@@ -15,7 +15,15 @@ function get(req, res) {
 }
 
 function getById(req, res) {
+	let idPresentacion = req.query.idPresentacion;
 
+	Presentacion.findOne({_id:idPresentacion})
+	.then((presentacion) => {
+		res.status(200).send(presentacion);
+	})
+	.catch((error) => {
+		return res.status(500).send({message: error});
+	});
 }
 
 async function save(req, res){
@@ -26,7 +34,7 @@ async function save(req, res){
 	nPresentacion.descripcion = params.descripcion;
 	nPresentacion.idUsuario = params.idUsuario;
 	nPresentacion.nombreUsuario = params.nombreUsuario;
-	nPresentacion.fechaAlta = new Date();;
+	nPresentacion.fechaAlta = new Date();
 	nPresentacion.statusReg = "ACTIVO";
 
 	nPresentacion.save()
@@ -39,17 +47,50 @@ async function save(req, res){
 }
 
 function update(req, res){
+	let params = req.body;
+	let idPresentacion = params.idPresentacion;
 
+	Presentacion.findOne({_id:idPresentacion})
+	.then((presentacion) => {
+		presentacion.nombre = params.nombre;
+		presentacion.descripcion = params.descripcion;
+		presentacion.idUsuario = params.idUsuario;
+		presentacion.nombreUsuario = params.nombreUsuario;
+		presentacion.fechaAlta = new Date();
+
+		presentacion.save()
+		.then(()=>{
+			res.status(200).send(presentacion);
+		})
+		.catch((error)=>{
+			res.status(500).send(error);
+		})
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	})
 }
 
 function _delete(req, res){
+	let idPresentacion = req.body.idPresentacion;
 
+	Presentacion.findOne({_id:idPresentacion})
+	.then((presentacion) => {
+		presentacion.statusReg = "BAJA";
+		presentacion.save()
+		.then(()=>{
+			res.status(200).send(presentacion);
+		})
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	})
 }
 
 module.exports = {
 	get,
 	getById,
-    save,
-    update,
-    _delete
+	save,
+	update,
+	_delete
 }

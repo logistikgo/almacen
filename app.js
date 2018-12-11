@@ -98,6 +98,10 @@ app.get('/api/embalajes',Embalaje.getEmbalajes);
 app.post('/api/embalaje',Embalaje.saveEmbalaje);
 
 app.get('/api/presentaciones',Presentacion.get);
+app.get('/api/presentacion', Presentacion.getById);
 app.post('/api/presentacion',Presentacion.save);
+app.put('/api/presentacion',Presentacion.update);
+app.delete('/api/presentacion', Presentacion._delete);
+
 
 module.exports = app;
