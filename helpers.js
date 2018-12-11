@@ -10,18 +10,88 @@ const blobstream = require('blob-stream');
 
 async function getPartidasByIDs(req,res){
 	let _clienteFiscal_id = req.query.clienteFiscal_id;
+	let _arrClientesFiscales = req.query.arrClientesFiscales;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
-	let fechaInicio = req.query.fechaInicio;
-	let fechaFinal = req.query.fechaFinal;
+	let fechaI = req.query.fechaInicio;
+	let fechaF = req.query.fechaFinal;
 	let tipo = req.query.tipo;
 
-	let infoPartidasGrl = [];
-	let entradas = await Entrada.find({clienteFiscal_id: _clienteFiscal_id,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
-		path:'partidas.producto_id',
-		model:'Producto'
-	}).exec();
 	
+	if(fechaI==null){
+		let infoPartidasGrl = await getPartidas(_clienteFiscal_id,_idSucursal,_idAlmacen);
+		await res.status(200).send(infoPartidasGrl);
+	}else{
+		let infoPartidasFiltro = await getPartidasFiltro(_arrClientesFiscales,_idSucursal,_idAlmacen,fechaI,fechaF,tipo);
+		await res.status(200).send(infoPartidasFiltro);
+	}
+
+}
+
+async function getPartidasFiltro(_arrClientesFiscales,_idSucursal,_idAlmacen,fechaI,fechaF,tipo){
+	let infoPartidasFiltro = [];
+	let boolFechas = fechaI==fechaF;
+	
+	let rango = {
+		$gte:new Date(fechaI),
+		$lt:new Date(fechaF)
+	};
+
+	let filtroEntrada = {
+		clienteFiscal_id: {$in:_arrClientesFiscales},
+		idSucursal:_idSucursal,
+		almacen_id:_idAlmacen
+	};
+	let filtroSalida = {
+		clienteFiscal_id: {$in:_arrClientesFiscales},
+		idSucursal:_idSucursal,
+		almacen_id:_idAlmacen
+	};
+	if(!boolFechas){
+		filtroEntrada["fechaEntrada"] = rango;
+		filtroSalida["fechaSalida"] = rango;
+	}
+	
+	if(tipo=="ENTRADA"){
+		let partidasEntrada = await getPartidasEntradas(filtroEntrada);
+		infoPartidasFiltro = partidasEntrada;
+	}else if(tipo == "SALIDA"){
+		let partidasSalida = await getPartidasSalidas(filtroSalida);
+		infoPartidasFiltro = partidasSalida;
+	}else{
+		let partidasEntrada = await getPartidasEntradas(filtroEntrada);
+		let partidasSalida = await getPartidasSalidas(filtroSalida);
+		infoPartidasFiltro = partidasEntrada.concat(partidasSalida);
+	}
+	
+		
+	return infoPartidasFiltro;
+}
+
+async function getPartidas(_clienteFiscal_id,_idSucursal,_idAlmacen){
+	let infoPartidasGrl = [];
+
+	let filtro = {
+		clienteFiscal_id: _clienteFiscal_id,
+		idSucursal:_idSucursal,
+		almacen_id:_idAlmacen
+	};
+
+	let partidasEntrada = await getPartidasEntradas(filtro);
+	let partidasSalida = await getPartidasSalidas(filtro);
+
+	infoPartidasGrl = partidasEntrada.concat(partidasSalida);
+	return infoPartidasGrl;
+}
+
+async function getPartidasEntradas(filtro){
+	let infoPartidasEntradas = [];
+	let entradas = await Entrada.find(filtro)
+		.populate({
+			path:'partidas.producto_id',
+			model:'Producto'
+		}).exec();
+		
 	await entradas.forEach(function(entrada){
 		let entry = entrada;
 		entrada.partidas.forEach(function(partida){
@@ -29,28 +99,34 @@ async function getPartidasByIDs(req,res){
 				infoPartida:partida,
 				infoEntrada:entry
 			}
-			infoPartidasGrl.push(json);
+			infoPartidasEntradas.push(json);
 		});
 	});
-	let salidas = await Salida.find({clienteFiscal_id: _clienteFiscal_id,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
-		path:'partidas.producto_id',
-		model:'Producto'
-	}).exec();
-	
-	
-	await salidas.forEach(function(salida){
-		let entry = salida;
-		salida.partidas.forEach(function(partida){
-			let json = {
-				infoPartida:partida,
-				infoSalida:entry
-			}
-			infoPartidasGrl.push(json);
-		});
-	});
-	
-	await res.status(200).send(infoPartidasGrl);
 
+	return infoPartidasEntradas;
+
+}
+async function getPartidasSalidas(filtro){
+	let infoPartidasSalidas = [];
+	let salidas = await Salida.find(filtro)
+		.populate({
+			path:'partidas.producto_id',
+			model:'Producto'
+		}).exec();
+		
+		
+		await salidas.forEach(function(salida){
+			let entry = salida;
+			salida.partidas.forEach(function(partida){
+				let json = {
+					infoPartida:partida,
+					infoSalida:entry
+				}
+				infoPartidasSalidas.push(json);
+			});
+		});
+		
+		return infoPartidasSalidas;
 }
 
 async function formatEmbalajes(req,res){

@@ -190,13 +190,19 @@ function get(req, res){
 }
 
 function getByIDs_cte_suc_alm(req, res){
-	let _idClienteFiscal = req.params.idClienteFiscal;
-	let _idSucursal = req.params.idSucursal;
-	let _idAlmacen = req.params.idAlmacen;
+	let _arrClientesFiscales = req.query.arrClientesFiscales;
+	let _idSucursal = req.query.idSucursal;
+	let _idAlmacen = req.query.idAlmacen;
 
-	if(_idClienteFiscal != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
 
-		MovimientoInventario.find({clienteFiscal_id:_idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen})
+	if(_idClienteFiscal != null && _idSucursal != null && _idAlmacen != null){
+
+		let filtro = {
+			clienteFiscal_id:{$in:_arrClientesFiscales},
+			idSucursal:_idSucursal,
+			almacen_id:_idAlmacen
+		};
+		MovimientoInventario.find(filtro)
 		.populate({
 			path:'producto_id'
 		})

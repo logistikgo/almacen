@@ -43,7 +43,7 @@ app.get('/api/getProductos',Producto.getByIDsClientesFiscales);
 app.get('/api/movimientosInventario/:producto_id', MovimientosInventario.getByProducto);
 app.get ('/api/posicionesxProducto/:producto_id', MovimientosInventario.getPosicionesByProducto);
 app.get('/api/movimientosInventario', MovimientosInventario.get);
-app.get('/api/movimientosInventarioByIDs/:idClienteFiscal/:idSucursal/:idAlmacen', MovimientosInventario.getByIDs_cte_suc_alm);
+app.get('/api/movimientosInventarioByIDs', MovimientosInventario.getByIDs_cte_suc_alm);
 app.get('/api/movimientosInventarioByCtes', MovimientosInventario.getByIDs_ctes_suc_alm);
 
 app.get('/api/getUsuarios', Usuario.get);
