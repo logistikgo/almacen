@@ -189,19 +189,69 @@ function get(req, res){
 	.catch(err=>console.log(err));
 }
 
-function getByIDs_cte_suc_alm(req, res){
+async function getByIDs_cte_suc_alm(req, res){
 	let _arrClientesFiscales = req.query.arrClientesFiscales;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
+	let fechaI = req.query.fechaInicio;
+	let fechaF = req.query.fechaFinal;
+	let tipo = req.query.tipo;
 
-
-	if(_idClienteFiscal != null && _idSucursal != null && _idAlmacen != null){
+	if(_arrClientesFiscales != null && _idSucursal != null && _idAlmacen != null){
 
 		let filtro = {
 			clienteFiscal_id:{$in:_arrClientesFiscales},
 			idSucursal:_idSucursal,
 			almacen_id:_idAlmacen
 		};
+		if(tipo!=null && tipo!="TODOS"){
+			filtro["tipo"] = tipo;
+		}
+		let filtroEntrada = {
+			clienteFiscal_id:{$in:_arrClientesFiscales},
+			idSucursal:_idSucursal,
+			almacen_id:_idAlmacen
+		};
+		let filtroSalida = {
+			clienteFiscal_id:{$in:_arrClientesFiscales},
+			idSucursal:_idSucursal,
+			almacen_id:_idAlmacen
+		};
+
+		if(fechaI!=null && fechaI!=fechaF){
+			let rango = {
+				$gte:new Date(fechaI), //grater than
+				$lt:new Date(fechaF) //less than
+			};
+			filtroEntrada["fechaEntrada"] = rango;
+			filtroSalida["fechaSalida"] = rango;
+			
+			let entradas = await Entrada.find(filtroEntrada).exec();
+			let salidas = await Salida.find(filtroSalida).exec();
+
+			let arrEntradas = entradas.map(x=>x._id);
+			let arrSalidas = salidas.map(x=>x._id);
+
+			if(tipo == "ENTRADA"){
+				filtro = {
+					entrada_id:{$in:arrEntradas}
+				};
+			}else if(tipo == "SALIDA"){
+				filtro = {
+					salida_id:{$in:arrSalidas}
+				};
+			}else{
+				filtro = {
+					$or:[
+						{entrada_id:{$in:arrEntradas}},
+						{salida_id:{$in:arrSalidas}}
+					]
+				};
+			}
+			
+		}
+		
+
 		MovimientoInventario.find(filtro)
 		.populate({
 			path:'producto_id'
@@ -222,6 +272,9 @@ function getByIDs_cte_suc_alm(req, res){
 			path:'posicion_id'
 		})
 		.then((movimientos)=>{
+
+
+
 			res.status(200).send(movimientos);
 		})
 		.catch(err=>console.log(err));
@@ -230,56 +283,15 @@ function getByIDs_cte_suc_alm(req, res){
 	else{
 		res.status(500).send({message:"Error en la petición, parametros incorrectos"});
 	}
-}
-
-
-function getByIDs_ctes_suc_alm(req, res){
-	let _arrClientesFiscales = req.query.arrClientesFiscales;
-	let _idSucursal = req.query.idSucursal;
-	let _idAlmacen = req.query.idAlmacen;
-
-	if(_arrClientesFiscales != 'null' && _idSucursal != 'null' && _idAlmacen != 'null'){
-
-		MovimientoInventario.find({clienteFiscal_id:{$in:_arrClientesFiscales},idSucursal:_idSucursal,almacen_id:_idAlmacen})
-		.populate({
-			path:'producto_id'
-		})
-		.populate({
-			path:'clienteFiscal_id'
-		})
-		.populate({
-			path:'entrada_id'
-		})
-		.populate({
-			path:'salida_id'
-		})
-		.populate({
-			path:'almacen_id'
-		})
-		.populate({
-			path:'posicion_id'
-		})
-		.then((movimientos)=>{
-			res.status(200).send(movimientos);
-		})
-		.catch(err=>console.log(err));
-
-	}
-	else{
-		res.status(500).send({message:"Error en la petición, parametros incorrectos"});
-	}
-
 }
 
 
 module.exports={
 	get,
 	getByIDs_cte_suc_alm,
-	getByIDs_ctes_suc_alm,
 	getByProducto,
 	getPosicionesByProducto,
 	saveSalida,
 	saveEntrada,
 	saveExistenciaInicial
 }
-//linea 169
