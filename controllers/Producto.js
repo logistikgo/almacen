@@ -42,7 +42,7 @@ async function save(req,res) {
 	console.log(req.body);
 	
 	nProducto.idClienteFiscal = req.body.idClienteFiscal;
-	nProducto.arrClientesFiscales_id = req.body.idClientesFiscales;
+	nProducto.arrClientesFiscales_id = req.body.arrClientesFiscales;
 	nProducto.idProducto = await Helpers.getNextID(Producto, "idProducto");
 
 	nProducto.statusReg = "ACTIVO";
@@ -65,13 +65,15 @@ async function save(req,res) {
 	nProducto.stockMaximo = req.body.stockMaximo;
 	nProducto.stockMinimo = req.body.stockMinimo;
 	nProducto.idSucursal = req.body.idSucursal;
-	nProducto.almacen_id = req.body.almacen_id;
+	nProducto.idAlmacen = req.body.almacen_id;
 
 	nProducto.presentacion = req.body.presentacion;
 	console.log(req.body.presentacion);
 
 	nProducto.save()
-	.then((productoStored)=>{		
+	.then((productoStored)=>{
+
+
 		MovimientoInventario.saveExistenciaInicial(productoStored._id, productoStored.existencia,
 			productoStored.existenciaCajas,productoStored.existenciaTarimas,productoStored.existenciaPesoBruto,productoStored.existenciaPesoNeto,
 			req.body.idClienteFiscal,req.body.idSucursal,req.body.almacen_id)
