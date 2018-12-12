@@ -76,10 +76,10 @@ app.post('/api/sucursal', Sucursal.save);
 app.put('/api/sucursal', Sucursal.update);
 app.delete('/api/sucursal', Sucursal._delete);
 
-app.get('/api/getAlmacenes',Almacen.getAlmacenes);
+//app.get('/api/getAlmacenes',Almacen.getAlmacenes);
 app.get('/api/getAlmacen/:idAlmacen',Almacen.getAlmacen);
 app.get('/api/almacen', Almacen.getById);
-app.get('/api/getAlmacenes/:idSucursal',Almacen.getAlmacenesByIDSucursal);
+app.get('/api/getAlmacenes',Almacen.getAlmacenesByIDSucursal);
 app.post('/api/saveAlmacen',Almacen.saveAlmacen);
 app.post('/api/updateAlmacen',Almacen.updateAlmacen);
 app.post('/api/deleteAlmacen',Almacen.deleteAlmacen);

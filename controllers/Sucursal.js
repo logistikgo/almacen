@@ -4,10 +4,10 @@ const Sucursal = require('../models/Sucursal');
 const Helpers = require('../helpers');
 
 function get(req, res) {
-    let idCteFiscal = parseInt(req.query.idCteFiscal);
-
+    let _arrClientesFiscales = req.query.arrClientesFiscales;
+    
     Sucursal.find({
-            arrClienteFiscales: idCteFiscal,
+            arrClienteFiscales: {$in:_arrClientesFiscales},
             statusReg: "ACTIVO"
         })
         .then((sucursales) => {

@@ -9,26 +9,26 @@ const blobstream = require('blob-stream');
 
 
 async function getPartidasByIDs(req,res){
-	let _clienteFiscal_id = req.query.clienteFiscal_id;
+	
 	let _arrClientesFiscales = req.query.arrClientesFiscales;
-	let _idSucursal = req.query.idSucursal;
-	let _idAlmacen = req.query.idAlmacen;
+	let _arrSucursales = req.query.arrSucursales;
+	let _arrAlmacenes = req.query.arrAlmacenes;
 	let fechaI = req.query.fechaInicio;
 	let fechaF = req.query.fechaFinal;
 	let tipo = req.query.tipo;
 
 	
 	if(fechaI==null){
-		let infoPartidasGrl = await getPartidas(_clienteFiscal_id,_idSucursal,_idAlmacen);
+		let infoPartidasGrl = await getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes);
 		await res.status(200).send(infoPartidasGrl);
 	}else{
-		let infoPartidasFiltro = await getPartidasFiltro(_arrClientesFiscales,_idSucursal,_idAlmacen,fechaI,fechaF,tipo);
+		let infoPartidasFiltro = await getPartidasFiltro(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,fechaI,fechaF,tipo);
 		await res.status(200).send(infoPartidasFiltro);
 	}
 
 }
 
-async function getPartidasFiltro(_arrClientesFiscales,_idSucursal,_idAlmacen,fechaI,fechaF,tipo){
+async function getPartidasFiltro(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,fechaI,fechaF,tipo){
 	let infoPartidasFiltro = [];
 	let boolFechas = fechaI==fechaF;
 	
@@ -39,8 +39,8 @@ async function getPartidasFiltro(_arrClientesFiscales,_idSucursal,_idAlmacen,fec
 
 	let filtroEntrada = {
 		clienteFiscal_id: {$in:_arrClientesFiscales},
-		idSucursal:_idSucursal,
-		almacen_id:_idAlmacen
+		idSucursal:{$in:_arrSucursales},
+		almacen_id:{$in:_arrAlmacenes}
 	};
 	let filtroSalida = {
 		clienteFiscal_id: {$in:_arrClientesFiscales},
@@ -68,13 +68,13 @@ async function getPartidasFiltro(_arrClientesFiscales,_idSucursal,_idAlmacen,fec
 	return infoPartidasFiltro;
 }
 
-async function getPartidas(_clienteFiscal_id,_idSucursal,_idAlmacen){
+async function getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes){
 	let infoPartidasGrl = [];
 
 	let filtro = {
-		clienteFiscal_id: _clienteFiscal_id,
-		idSucursal:_idSucursal,
-		almacen_id:_idAlmacen
+		clienteFiscal_id: {$in:_arrClientesFiscales},
+		idSucursal:{$in:_arrSucursales},
+		almacen_id:{$in:_arrAlmacenes}
 	};
 
 	let partidasEntrada = await getPartidasEntradas(filtro);
@@ -90,7 +90,12 @@ async function getPartidasEntradas(filtro){
 		.populate({
 			path:'partidas.producto_id',
 			model:'Producto'
-		}).exec();
+		})
+		.populate({
+			path:'clienteFiscal_id',
+			model:'ClienteFiscal'
+		})
+		.exec();
 		
 	await entradas.forEach(function(entrada){
 		let entry = entrada;
@@ -112,7 +117,12 @@ async function getPartidasSalidas(filtro){
 		.populate({
 			path:'partidas.producto_id',
 			model:'Producto'
-		}).exec();
+		})
+		.populate({
+			path:'clienteFiscal_id',
+			model:'ClienteFiscal'
+		})
+		.exec();
 		
 		
 		await salidas.forEach(function(salida){

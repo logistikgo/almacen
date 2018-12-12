@@ -43,9 +43,9 @@ function getById(req,res){
 }
 
 function getAlmacenesByIDSucursal(req,res){
-	let _idSucursal = req.params.idSucursal;
+	let _arrSucursales = req.query.arrSucursales;
 
-	Almacen.find({idSucursal:_idSucursal},(err,almacenes)=>{
+	Almacen.find({idSucursal:{$in:_arrSucursales}},(err,almacenes)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(almacenes);

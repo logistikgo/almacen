@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 
 const Sucursal = Schema({
     idSucursal: Number,
-    arrClienteFiscales: [Number],
+    arrClienteFiscales: [{type:Schema.ObjectId,ref:'ClienteFiscal'}],
     idUsuario: Number,
     fechaAlta: Date,
     nombre: String,
