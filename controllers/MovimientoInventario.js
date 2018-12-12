@@ -67,7 +67,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	});
 }
 
-function saveExistenciaInicial(producto_id, cantidad,cajas,tarimas,pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
+function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.fechaMovimiento = new Date();

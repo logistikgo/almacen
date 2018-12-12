@@ -1,7 +1,6 @@
 'use strict'
 
 const Presentacion = require('../models/Presentacion');
-const Helpers = require('../helpers');
 
 function get(req, res) {
 	
