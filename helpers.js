@@ -44,8 +44,8 @@ async function getPartidasFiltro(_arrClientesFiscales,_arrSucursales,_arrAlmacen
 	};
 	let filtroSalida = {
 		clienteFiscal_id: {$in:_arrClientesFiscales},
-		idSucursal:_idSucursal,
-		almacen_id:_idAlmacen
+		idSucursal:{$in:_arrSucursales},
+		almacen_id:{$in:_arrAlmacenes}
 	};
 	if(!boolFechas){
 		filtroEntrada["fechaEntrada"] = rango;
@@ -95,6 +95,10 @@ async function getPartidasEntradas(filtro){
 			path:'clienteFiscal_id',
 			model:'ClienteFiscal'
 		})
+		.populate({
+			path:'almacen_id',
+			model:'Almacen'
+		})
 		.exec();
 		
 	await entradas.forEach(function(entrada){
@@ -121,6 +125,10 @@ async function getPartidasSalidas(filtro){
 		.populate({
 			path:'clienteFiscal_id',
 			model:'ClienteFiscal'
+		})
+		.populate({
+			path:'almacen_id',
+			model:'Almacen'
 		})
 		.exec();
 		
