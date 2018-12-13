@@ -27,6 +27,7 @@ const Entrada = Schema({
 	embarque:String,
 	idClienteFiscal:Number,
 	idSucursal:Number,
+	sucursal_id:{type:Schema.ObjectId,ref:'Sucursal'},
 	idAlmacen:Number,
 	clienteFiscal_id:{type:Schema.ObjectId,ref:'ClienteFiscal'},
 	status: String,

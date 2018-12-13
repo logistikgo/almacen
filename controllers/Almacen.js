@@ -89,6 +89,7 @@ async function saveAlmacen(req,res){
 	nAlmacen.numExt = req.body.numExt;
 	nAlmacen.numInt = req.body.numInt;
 	nAlmacen.idSucursal = req.body.idSucursal;
+	nAlmacen.sucursal_id = req.body.sucursal_id,
 	nAlmacen.status = "ACTIVO";
 
 	let posiciones = req.body.posiciones;

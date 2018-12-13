@@ -8,6 +8,7 @@ const ClienteFiscal = Schema({
 	usuarioAlta_id : Number,
 	nombreUsuario : String,
 	idSucursal : Number,
+	sucursal_id:{type:Schema.ObjectId,ref:'Sucursal'},
 	fechaAlta:Date,
 	fechaElimina:Date,
 	fechaEdita:Date,

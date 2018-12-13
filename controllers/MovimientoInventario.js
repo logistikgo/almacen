@@ -23,6 +23,7 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.nivel = itemPartida.nivel;
 	nMovimiento.idClienteFiscal = salida.idClienteFiscal;
 	nMovimiento.idSucursal = salida.idSucursal;
+	nMovimiento.sucursal_id = salida.sucursal_id;
 	nMovimiento.almacen_id = salida.almacen_id;
 	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
 
@@ -46,6 +47,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.entrada_id = entrada_id;
 	nMovimiento.idClienteFiscal = entrada.idClienteFiscal;
 	nMovimiento.idSucursal = entrada.idSucursal;
+	nMovimiento.sucursal_id = entrada.sucursal_id;
 	nMovimiento.almacen_id = entrada.almacen_id;
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.embalajes= itemPartida.embalajes;
@@ -67,7 +69,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	});
 }
 
-function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClienteFiscal,idSucursal,almacen_id) {
+function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClienteFiscal,sucursal_id,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.fechaMovimiento = new Date();
@@ -77,7 +79,7 @@ function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClie
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "EXISTENCIA_INICIAL";
 	nMovimiento.idClienteFiscal = idClienteFiscal;
-	nMovimiento.idSucursal = idSucursal;
+	nMovimiento.sucursal_id = sucursal_id;
 	nMovimiento.almacen_id = almacen_id;
 
 	nMovimiento.save();

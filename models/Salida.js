@@ -8,6 +8,7 @@ const Salida = Schema({
 	usuarioSalida_id:Number,
 	idClienteFiscal:Number,
 	idSucursal:Number,
+	sucursal_id:{type:Schema.ObjectId,ref:'Sucursal'},
 	almacen_id: {type:Schema.ObjectId, ref:"Almacen"},
 	fechaAlta:Date,
 	fechaSalida:Date,

@@ -11,6 +11,7 @@ const MovimientoInventario = Schema({
 	almacen_id:{type:Schema.ObjectId, ref:"Almacen"},
 	idClienteFiscal:Number,
 	idSucursal:Number,
+	sucursal_id: {type:Schema.ObjectId, ref:"Sucursal"},
 	idSucursal:Number,
 	fechaMovimiento:Date,
 	cantidad:Number,

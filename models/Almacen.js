@@ -13,6 +13,7 @@ const Almacen = Schema(
 		numExt:String,
 		numInt:String,
 		idSucursal:Number,
+		sucursal_id:{type:Schema.ObjectId,ref:'Sucursal'},
 		status:String
 	},
 	{collection:'Almacenes'}

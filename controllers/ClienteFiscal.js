@@ -8,13 +8,6 @@ async function getNextID(){
 }
 
 function get(req, res) {
-	/*
-	CteFiscal.find({statusReg:"ACTIVO"}, (error,cliente) => {
-		if(error)
-			return res.status(500).send({message:"Error"});
-
-		res.status(200).send(cliente);
-	});*/
 
 	CteFiscal.find({statusReg:"ACTIVO"}).sort({nombreCorto: 1})
 	.then((cliente)=>{
@@ -47,6 +40,7 @@ async function save(req,res){
 	nCliente.usuarioAlta_id = req.body.usuarioAlta_id;
 	nCliente.nombreUsuario = req.body.nombreUsuario;
 	nCliente.idSucursal = req.body.idSucursal;
+	nCliente.sucursal_id = req.body.sucursal_id;
 	nCliente.fechaAlta = new Date();
 	nCliente.nombreCorto = req.body.nombreCorto;
 	nCliente.nombreComercial = req.body.nombreComercial;
