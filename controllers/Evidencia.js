@@ -43,7 +43,20 @@ function saveEvidencia(req,res){
 
 }
 
+function deleteEvidencia(req,res){
+	let _id = req.query.id;
+
+	Evidencia.remove({_id:_id},{justOne:true}).then((removed)=>{
+		res.status(200).send("ELIMINADO CORRECTAMENTE");
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	});
+}
+
+
 module.exports = {
 	saveEvidencia,
-	getEvidenciasByID
+	getEvidenciasByID,
+	deleteEvidencia
 }

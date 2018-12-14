@@ -198,7 +198,7 @@ async function getByIDs_cte_suc_alm(req, res){
 	let fechaI = req.query.fechaInicio;
 	let fechaF = req.query.fechaFinal;
 	let tipo = req.query.tipo;
-
+	
 	let boolNull = !_arrClientesFiscales.includes(null) && !_arrSucursales.includes(null) && !_arrAlmacenes.includes(null);
 	let boolEmtpy = !_arrClientesFiscales.includes("") && !_arrSucursales.includes("") && !_arrAlmacenes.includes("");
 
