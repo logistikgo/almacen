@@ -33,13 +33,13 @@ function getById(req,res){
 
 	Almacen.findOne({_id:_idAlmacen})
 	.then((almacen) => {
-            res.status(200).send(almacen);
-        })
-        .catch((error) => {
-            return res.status(500).send({
-                message: error
-            });
-        });
+		res.status(200).send(almacen);
+	})
+	.catch((error) => {
+		return res.status(500).send({
+			message: error
+		});
+	});
 }
 
 function getAlmacenesByIDSucursal(req,res){
@@ -53,23 +53,25 @@ function getAlmacenesByIDSucursal(req,res){
 }
 
 function getUbicaciones(req,res){
-	let _almacen_id = req.params.almacen_id;
-	let _idClienteFiscal = req.params.idClienteFiscal;
-	let _idSucursal = req.params.idSucursal;
+	let _almacen_id = req.query.almacen_id;
+	let _idClienteFiscal = req.query.idClienteFiscal;
 
-	MovimientoInventario.find( {almacen_id:_almacen_id,idSucursal:_idSucursal,idClienteFiscal:_idClienteFiscal,posicion: { $ne: null } })
+	MovimientoInventario.find( {almacen_id:_almacen_id,idClienteFiscal:_idClienteFiscal,posicion: { $ne: null } })
 	.populate({
 		path:'producto_id'
 	})
+	.populate({
+		path:'posicion_id'
+	})
 	.then((data)=>{
-		let arrPosiciones = data.map((x)=>{return (
-			{
-				posicion:x.posicion,
+		let arrPosiciones = data.map((x)=>{
+			return ({
+				posicion:x.posicion_id.nombre,
 				nivel: x.nivel,
 				clave:x.producto_id.clave,
 				descripcion:x.producto_id.descripcion
-			}
-			)});
+			})
+		});
 
 		res.status(200).send(arrPosiciones);
 	})
@@ -96,9 +98,9 @@ async function saveAlmacen(req,res){
 
 	nAlmacen.save()
 	.then(async(data)=>{
-			for(let posicion of posiciones){
-				Posicion.save(data._id, posicion);
-			}
+		for(let posicion of posiciones){
+			Posicion.save(data._id, posicion);
+		}
 		res.status(200).send(data);
 	})
 	.catch((err)=>{

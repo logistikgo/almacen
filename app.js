@@ -84,7 +84,7 @@ app.post('/api/saveAlmacen',Almacen.saveAlmacen);
 app.post('/api/updateAlmacen',Almacen.updateAlmacen);
 app.post('/api/deleteAlmacen',Almacen.deleteAlmacen);
 app.get('/api/validaPosicion/:posicion/:nivel/:almacen_id', Almacen.validaPosicion);
-app.get('/api/ubicaciones/:almacen_id/:idClienteFiscal/:idSucursal',Almacen.getUbicaciones);
+app.get('/api/ubicaciones',Almacen.getUbicaciones);
 
 app.post('/api/evidencia',Evidencia.saveEvidencia);
 app.get('/api/evidencias',Evidencia.getEvidenciasByID);
