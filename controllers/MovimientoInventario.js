@@ -193,31 +193,34 @@ function get(req, res){
 
 async function getByIDs_cte_suc_alm(req, res){
 	let _arrClientesFiscales = req.query.arrClientesFiscales;
-	let _idSucursal = req.query.idSucursal;
-	let _idAlmacen = req.query.idAlmacen;
+	let _arrSucursales = req.query.arrSucursales;
+	let _arrAlmacenes = req.query.arrAlmacenes;
 	let fechaI = req.query.fechaInicio;
 	let fechaF = req.query.fechaFinal;
 	let tipo = req.query.tipo;
 
-	if(_arrClientesFiscales != null && _idSucursal != null && _idAlmacen != null){
+	let boolNull = !_arrClientesFiscales.includes(null) && !_arrSucursales.includes(null) && !_arrAlmacenes.includes(null);
+	let boolEmtpy = !_arrClientesFiscales.includes("") && !_arrSucursales.includes("") && !_arrAlmacenes.includes("");
+
+	if(boolEmtpy && boolNull){
 
 		let filtro = {
 			clienteFiscal_id:{$in:_arrClientesFiscales},
-			idSucursal:_idSucursal,
-			almacen_id:_idAlmacen
+			idSucursal:{$in:_arrSucursales},
+			almacen_id:{$in:_arrAlmacenes}
 		};
 		if(tipo!=null && tipo!="TODOS"){
 			filtro["tipo"] = tipo;
 		}
 		let filtroEntrada = {
 			clienteFiscal_id:{$in:_arrClientesFiscales},
-			idSucursal:_idSucursal,
-			almacen_id:_idAlmacen
+			idSucursal:{$in:_arrSucursales},
+			almacen_id:{$in:_arrAlmacenes}
 		};
 		let filtroSalida = {
 			clienteFiscal_id:{$in:_arrClientesFiscales},
-			idSucursal:_idSucursal,
-			almacen_id:_idAlmacen
+			idSucursal:{$in:_arrSucursales},
+			almacen_id:{$in:_arrAlmacenes}
 		};
 
 		if(fechaI!=null && fechaI!=fechaF){
@@ -250,40 +253,33 @@ async function getByIDs_cte_suc_alm(req, res){
 					]
 				};
 			}
-			
 		}
-		
-
 		MovimientoInventario.find(filtro)
-		.populate({
-			path:'producto_id'
-		})
-		.populate({
-			path:'entrada_id'
-		})
-		.populate({
-			path:'salida_id'
-		})
-		.populate({
-			path:'almacen_id'
-		})
-		.populate({
-			path:'clienteFiscal_id'
-		})
-		.populate({
-			path:'posicion_id'
-		})
-		.then((movimientos)=>{
-
-
-
-			res.status(200).send(movimientos);
-		})
-		.catch(err=>console.log(err));
-
-	}
-	else{
-		res.status(500).send({message:"Error en la petición, parametros incorrectos"});
+			.populate({
+				path:'producto_id'
+			})
+			.populate({
+				path:'entrada_id'
+			})
+			.populate({
+				path:'salida_id'
+			})
+			.populate({
+				path:'almacen_id'
+			})
+			.populate({
+				path:'clienteFiscal_id'
+			})
+			.populate({
+				path:'posicion_id'
+			})
+			.then((movimientos)=>{
+				res.status(200).send(movimientos);
+			})
+			.catch((err)=>{
+				res.status(500).send(err);
+			});
+	
 	}
 }
 
