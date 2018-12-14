@@ -5,17 +5,26 @@ const MovimientoInventario = require('../controllers/MovimientoInventario')
 
 function get(req, res) {
 	
-	Producto.find({statusReg:"ACTIVO"}, (error,producto) => {
-		if(error)
-			return res.status(500).send({message:"Error"});
-
+	Producto.find({statusReg:"ACTIVO"})
+	.populate({
+		path:'presentacion_id', 
+		model: 'Presentacion'
+	})
+	.then((producto) => {
 		res.status(200).send(producto);
+	})
+	.catch((error) => {
+		return res.status(500).send(error);
 	});
 }
 
 function getByIDsClientesFiscales(req,res){
 	let _arrClienteFiscales = req.query.arrClientesFiscales;
 	Producto.find({arrClientesFiscales_id:{$in:_arrClienteFiscales},"statusReg":"ACTIVO"})
+	.populate({
+		path:'presentacion_id', 
+		model: 'Presentacion'
+	})
 	.then((productos)=>{
 		res.status(200).send(productos);
 	})
@@ -26,12 +35,17 @@ function getByIDsClientesFiscales(req,res){
 
 function getByIDClienteFiscal(req, res) {
 	let _idClienteFiscal = req.params.idClienteFiscal;
-	Producto.find({arrClientesFiscales_id:{$in:[_idClienteFiscal]}, statusReg:"ACTIVO"}, (error,producto) => {
-		if(error)
-			return res.status(500).send({message:"Error"});
-
+	Producto.find({arrClientesFiscales_id:{$in:[_idClienteFiscal]}, statusReg:"ACTIVO"})
+	.populate({
+		path:'presentacion_id', 
+		model: 'Presentacion'
+	})
+	.then((producto) => {
 		res.status(200).send(producto);
-	});	
+	})
+	.catch((error) => {
+		return res.status(500).send(error);
+	});
 	
 }
 
@@ -58,6 +72,7 @@ async function save(req,res) {
 	nProducto.sucursal_id = params.sucursal_id;
 	nProducto.almacen_id = params.almacen_id;
 	nProducto.presentacion = params.presentacion;
+	nProducto.presentacion_id = params.presentacion_id;
 
 	nProducto.save()
 	.then((productoStored)=>{		
