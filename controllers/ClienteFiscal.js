@@ -65,7 +65,7 @@ async function save(req,res){
 }
 
 function update(req,res){
-	let _idCliente = req.body.idCliente;
+	let _id = req.body.id;
 
 	let item = {
 		fechaEdita:new Date(),
@@ -82,7 +82,7 @@ function update(req,res){
 		estado:req.body.estado,
 		pais:req.body.pais
 	}
-	CteFiscal.updateOne({idCliente:_idCliente},{$set:item}, (error,cliente) => {
+	CteFiscal.updateOne({_id:_id},{$set:item}, (error,cliente) => {
 		if(error)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(cliente);
