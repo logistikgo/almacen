@@ -8,6 +8,7 @@ const Embalaje = Schema({
 	nombre:String,
 	descripcion:String,
 	fechaAlta:Date,
+	fechaEdita:Date,
 	usuarioAlta_id:Number,
 	nombreUsuario:String,
 	usuarioEdita_id:Number,

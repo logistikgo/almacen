@@ -94,8 +94,11 @@ app.get('/api/posicion', Posicion.getById);
 app.put('/api/posicion', Posicion.update);
 app.delete('/api/posicion', Posicion._delete);
 
-app.get('/api/embalajes',Embalaje.getEmbalajes);
-app.post('/api/embalaje',Embalaje.saveEmbalaje);
+app.get('/api/embalajes',Embalaje.get);
+app.post('/api/embalaje',Embalaje.save);
+app.get('/api/embalaje',Embalaje.getById);
+app.put('/api/embalaje',Embalaje.update);
+app.delete('/api/embalaje',Embalaje._delete);
 
 app.get('/api/presentaciones',Presentacion.get);
 app.get('/api/presentacion', Presentacion.getById);
