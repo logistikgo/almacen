@@ -15,13 +15,23 @@ function get(req, res){
 	})
 	.catch((error)=>{
 		return res.status(500).send({
-                message: error
-            });
+			message: error
+		});
 	})
 }
 
 function getById(req, res){
+	let idPosicion = req.query.idPosicion;
+		console.log(idPosicion);
 
+	Posicion.findOne({_id:idPosicion})
+	.then((posicion) => {
+		console.log(posicion);
+		res.status(200).send(posicion);
+	})
+	.catch((error) => {
+		return res.status(500).send({message: error});
+	});
 }
 
 function save(almacen_id, posicion){
