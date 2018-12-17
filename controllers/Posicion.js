@@ -22,11 +22,9 @@ function get(req, res){
 
 function getById(req, res){
 	let idPosicion = req.query.idPosicion;
-		console.log(idPosicion);
 
 	Posicion.findOne({_id:idPosicion})
 	.then((posicion) => {
-		console.log(posicion);
 		res.status(200).send(posicion);
 	})
 	.catch((error) => {

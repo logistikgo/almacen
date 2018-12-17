@@ -6,7 +6,13 @@ const Schema = mongoose.Schema;
 const Posicion = Schema(
 	{
 		nombre: String,
-		niveles: [String],
+		niveles: [{
+			nombre: String,
+			productos: [{
+				producto_id:{type:Schema.ObjectId, ref:"Producto"},
+				movimiento_id:{type:Schema.ObjectId, ref:"MovimientoInventario"}
+			}]
+		}],
 		estatus: String,
 		almacen_id: {
 			type:Schema.ObjectId, 
