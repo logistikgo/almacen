@@ -36,11 +36,21 @@ function save(almacen_id, posicion){
 	let nPosicion = new Posicion();
 
 	nPosicion.nombre = posicion.nombre;
-	nPosicion.niveles = posicion.niveles;
 	nPosicion.estatus = "DISPONIBLE";
 	nPosicion.almacen_id = almacen_id;
 	nPosicion.fechaAlta = new Date();
 	nPosicion.statusReg = "ACTIVO";
+
+	let niveles = [];
+	for(let nivel of posicion.niveles){
+		let jNivel = {
+			"nombre": nivel,
+			"productos":[]
+		}
+		niveles.push(jNivel);
+	}
+	nPosicion.niveles = niveles;
+
 
 	nPosicion.save()
 	.catch(err=>console.log(err));
