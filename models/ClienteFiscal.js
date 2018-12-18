@@ -6,6 +6,7 @@ const Schema = mongoose.Schema;
 const ClienteFiscal = Schema({
 	idCliente:Number,
 	usuarioAlta_id : Number,
+	usuarioEdita_id :Number,
 	nombreUsuario : String,
 	idSucursal : Number,
 	sucursal_id:{type:Schema.ObjectId,ref:'Sucursal'},

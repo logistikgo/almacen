@@ -108,13 +108,11 @@ function validaProducto(req,res){
 }
 
 function _delete(req,res) {
-	let _idProducto = req.params.idProducto;
+	let _idProducto = req.body.idProducto;
 
 	Producto.findOne({idProducto:_idProducto, statusReg:"ACTIVO"}) 
 	.then((producto)=>{
-		console.log(producto);
 		producto.statusReg = "BAJA";
-
 		producto.save().then(()=>{
 			res.status(200).send(producto);
 		})
