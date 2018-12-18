@@ -37,7 +37,7 @@ app.use(function (req, res, next) {
 app.get('/api/productos', Producto.get);
 app.get('/api/productos/:idClienteFiscal', Producto.getByIDClienteFiscal);
 app.post('/api/producto', Producto.save);
-app.delete('/api/productos/:idProducto', Producto._delete);
+app.delete('/api/productos',Producto._delete);
 app.get('/api/validaProducto/:clave',Producto.validaProducto);
 app.get('/api/getProductos',Producto.getByIDsClientesFiscales);
 
@@ -65,10 +65,10 @@ app.get('/api/getSalidasByIDs/:idClienteFiscal/:idSucursal/:idAlmacen',Salida.ge
 app.post('/api/salida', Salida.save);
 
 app.get('/api/getCtesFiscales', CteFiscal.get);
-app.get('/api/getCteFiscal/:idCteFiscal', CteFiscal.getByIDCteFiscal);
+app.get('/api/clienteFiscal', CteFiscal.getByIDCteFiscal);
 app.post('/api/saveCteFiscal', CteFiscal.save);
 app.post('/api/deleteCteFiscal', CteFiscal._delete);
-app.post('/api/updateCteFiscal', CteFiscal.update);
+app.put('/api/clienteFiscal', CteFiscal.update);
 
 app.get('/api/sucursales', Sucursal.get);
 app.get('/api/sucursal', Sucursal.getById);

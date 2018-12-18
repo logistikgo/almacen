@@ -19,17 +19,15 @@ function get(req, res) {
 }
 
 function getByIDCteFiscal(req, res) {
-	let _idCliente = req.params.idCteFiscal;
+	let _id = req.query.id;
 
-	console.log(_idCliente);
+	CteFiscal.findOne({_id:_id})
+	.then((clienteFiscal)=>{
+		res.status(200).send(clienteFiscal);
 
-	CteFiscal.find({idCliente:_idCliente}, (error,cliente) => {
-		if(error)
-			return res.status(500).send({message:"Error"});
-
-		res.status(200).send(cliente[0]);
+	}).catch((error)=>{
+		res.status(500).send(error);
 	});
-
 }
 
 
@@ -67,8 +65,10 @@ async function save(req,res){
 function update(req,res){
 	let _id = req.body.id;
 
-	let item = {
+	let editQuery = {
 		fechaEdita:new Date(),
+		usuarioEdita_id: req.body.usuarioEdita_id,
+		nombreUsuario:req.body.nombreUsuario,
 		nombreCorto : req.body.nombreCorto,
 		nombreComercial : req.body.nombreComercial,
 		razonSocial: req.body.razonSocial,
@@ -82,11 +82,11 @@ function update(req,res){
 		estado:req.body.estado,
 		pais:req.body.pais
 	}
-	CteFiscal.updateOne({_id:_id},{$set:item}, (error,cliente) => {
-		if(error)
-			return res.status(500).send({message:"Error"});
-		res.status(200).send(cliente);
-		console.log(item);
+	CteFiscal.updateOne({_id:_id},{$set:editQuery})
+	.then((updated)=>{
+		res.status(200).send(updated);
+	}).catch((error)=>{
+		res.status(200).send(error);
 	});
 }
 
