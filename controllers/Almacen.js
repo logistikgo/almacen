@@ -42,7 +42,7 @@ function getById(req,res){
 	});
 }
 
-function getAlmacenesByIDSucursal(req,res){
+function get(req,res){
 	let _arrSucursales = req.query.arrSucursales;
 
 	Almacen.find({idSucursal:{$in:_arrSucursales}},(err,almacenes)=>{
@@ -164,7 +164,7 @@ module.exports = {
 	getAlmacenes,
 	getAlmacen,
 	getById,
-	getAlmacenesByIDSucursal,
+	get,
 	saveAlmacen,
 	updateAlmacen,
 	deleteAlmacen,
