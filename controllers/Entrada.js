@@ -63,9 +63,9 @@ function getPartidasByIDs(req,res){
 
 function getEntradaByID(req, res) {
 
-	let _idEntrada = req.params.idEntrada;
+	let _id = req.query.id;
 
-	Entrada.findOne({idEntrada: _idEntrada})
+	Entrada.findOne({_id: _id})
 	.populate({
 		path:'partidas.producto_id',
 		model:'Producto'
@@ -74,12 +74,11 @@ function getEntradaByID(req, res) {
 		path:'clienteFiscal_id',
 		model:'ClienteFiscal'
 	})
-	.exec(function(err,entrada){
-		if(err)
-			return res.status(200).send(err);
-
-		res.status(200).send(entrada);		
-
+	.then((entrada)=>{
+		res.status(200).send(entrada);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
 	});
 }
 

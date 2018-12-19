@@ -53,7 +53,7 @@ app.post('/api/deleteUsuario', Usuario._delete);
 app.post('/api/updateUsuario', Usuario.update);
 
 app.get('/api/entradas', Entrada.get);
-app.get('/api/entradaByID/:idEntrada', Entrada.getEntradaByID);
+app.get('/api/entradaByID', Entrada.getEntradaByID);
 app.get('/api/getEntradasByIDs/:idClienteFiscal/:idSucursal/:idAlmacen',Entrada.getEntradasByIDs);
 app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
 app.post('/api/entrada', Entrada.save);
