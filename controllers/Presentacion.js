@@ -31,8 +31,8 @@ async function save(req, res){
 
 	nPresentacion.nombre = params.nombre;
 	nPresentacion.descripcion = params.descripcion;
-	nPresentacion.idUsuario = params.idUsuario;
-	nPresentacion.nombreUsuario = params.nombreUsuario;
+	nPresentacion.usuarioAlta = params.usuarioAlta;
+	nPresentacion.usuarioAlta_id = params.usuarioAlta_id;
 	nPresentacion.fechaAlta = new Date();
 	nPresentacion.statusReg = "ACTIVO";
 
@@ -53,8 +53,8 @@ function update(req, res){
 	.then((presentacion) => {
 		presentacion.nombre = params.nombre;
 		presentacion.descripcion = params.descripcion;
-		presentacion.idUsuario = params.idUsuario;
-		presentacion.nombreUsuario = params.nombreUsuario;
+		presentacion.usuarioAlta = params.usuarioAlta;
+		presentacion.usuarioAlta_id = params.usuarioAlta_id;
 		presentacion.fechaAlta = new Date();
 
 		presentacion.save()

@@ -80,17 +80,10 @@ function getUbicaciones(req,res){
 	});
 }
 
-async function saveAlmacen(req,res){
+async function save(req,res){
 	let nAlmacen = new Almacen();
 
-	nAlmacen.idAlmacen = await getNextID();
 	nAlmacen.nombre = req.body.nombre;
-	nAlmacen.cp = req.body.cp;
-	nAlmacen.colonia = req.body.colonia;
-	nAlmacen.calle = req.body.calle;
-	nAlmacen.numExt = req.body.numExt;
-	nAlmacen.numInt = req.body.numInt;
-	nAlmacen.idSucursal = req.body.idSucursal;
 	nAlmacen.sucursal_id = req.body.sucursal_id,
 	nAlmacen.status = "ACTIVO";
 
@@ -165,7 +158,7 @@ module.exports = {
 	getAlmacen,
 	getById,
 	get,
-	saveAlmacen,
+	save,
 	updateAlmacen,
 	deleteAlmacen,
 	validaPosicion,

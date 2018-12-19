@@ -5,16 +5,12 @@ const Schema = mongoose.Schema;
 
 const Almacen = Schema(
 	{
-		idAlmacen:Number,
 		nombre:String,
-		cp:Number,
-		colonia:String,
-		calle:String,
-		numExt:String,
-		numInt:String,
-		idSucursal:Number,
 		sucursal_id:{type:Schema.ObjectId,ref:'Sucursal'},
 		status:String
+		usuarioAlta: String,
+		usuarioAlta_id: Number,
+		fechaAlta: Date,
 	},
 	{collection:'Almacenes'}
 );

@@ -6,8 +6,8 @@ const Schema = mongoose.Schema;
 const Presentacion = Schema({
 	nombre: String,
 	descripcion: String,
-	idUsuario: Number,
-	nombreUsuario: String,
+	usuarioAlta: String,
+	usuarioAlta_id: Number,
 	fechaAlta: Date,
 	statusReg: String
 }, {

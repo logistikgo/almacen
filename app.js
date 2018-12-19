@@ -80,7 +80,7 @@ app.delete('/api/sucursal', Sucursal._delete);
 app.get('/api/getAlmacen/:idAlmacen',Almacen.getAlmacen);
 app.get('/api/almacen', Almacen.getById);
 app.get('/api/almacenes',Almacen.get);
-app.post('/api/saveAlmacen',Almacen.saveAlmacen);
+app.post('/api/saveAlmacen',Almacen.save);
 app.post('/api/updateAlmacen',Almacen.updateAlmacen);
 app.post('/api/deleteAlmacen',Almacen.deleteAlmacen);
 app.get('/api/validaPosicion/:posicion/:nivel/:almacen_id', Almacen.validaPosicion);
