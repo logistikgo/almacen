@@ -81,8 +81,8 @@ app.get('/api/getAlmacen/:idAlmacen',Almacen.getAlmacen);
 app.get('/api/almacen', Almacen.getById);
 app.get('/api/almacenes',Almacen.get);
 app.post('/api/saveAlmacen',Almacen.save);
-app.post('/api/updateAlmacen',Almacen.updateAlmacen);
-app.post('/api/deleteAlmacen',Almacen.deleteAlmacen);
+app.put('/api/almacen',Almacen.update);
+app.delete('/api/almacen',Almacen._delete);
 app.get('/api/validaPosicion/:posicion/:nivel/:almacen_id', Almacen.validaPosicion);
 app.get('/api/ubicaciones',Almacen.getUbicaciones);
 

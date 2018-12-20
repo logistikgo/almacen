@@ -8,7 +8,7 @@ const Almacen = Schema(
 		nombre:String,
 		idSucursal: Number,
 		sucursal_id:{type:Schema.ObjectId,ref:'Sucursal'},
-		status:String,
+		statusReg:String,
 		usuarioAlta: String,
 		usuarioAlta_id: Number,
 		fechaAlta: Date,

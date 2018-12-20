@@ -32,7 +32,7 @@ function getById(req, res){
 	});
 }
 
-function save(almacen_id, posicion){
+function save(almacen_id, posicion, usuarioAlta_id, usuarioAla){
 	let nPosicion = new Posicion();
 
 	nPosicion.nombre = posicion.nombre;
@@ -40,6 +40,8 @@ function save(almacen_id, posicion){
 	nPosicion.almacen_id = almacen_id;
 	nPosicion.fechaAlta = new Date();
 	nPosicion.statusReg = "ACTIVO";
+	nPosicion.usuarioAlta_id= usuarioAlta_id;
+	nPosicion.usuarioAla = usuarioAla;
 
 	let niveles = [];
 	for(let nivel of posicion.niveles){

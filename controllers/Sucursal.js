@@ -24,7 +24,7 @@ function getById(req, res) {
     let idSucursal = parseInt(req.query.idSucursal);
 
     Sucursal.findOne({
-            idSucursal: idSucursal
+            _id: idSucursal
         })
         .then((sucursal) => {
             res.status(200).send(sucursal);
@@ -42,7 +42,8 @@ async function save(req, res){
 
     nSucursal.idSucursal = await Helpers.getNextID(Sucursal, 'idSucursal');
     nSucursal.arrClienteFiscales = params.arrClientesFiscales;
-    nSucursal.idUsuario = params.idUsuario;
+    nSucursal.usuarioAlta_id = params.usuarioAlta_id;
+    nSucursal.usuarioAlta = params.usuarioAlta;
     nSucursal.fechaAlta = new Date();
     nSucursal.nombre = params.nombre;
     nSucursal.calle = params.calle;
@@ -79,7 +80,7 @@ function update(req, res){
         cp: params.cp
     };
 
-    Sucursal.updateOne({idSucursal: idSucursal}, {$set:item})
+    Sucursal.updateOne({_id: idSucursal}, {$set:item})
     .then((sucursal)=>{
         res.status(200).send(sucursal);
     })
@@ -92,7 +93,7 @@ function update(req, res){
 function _delete(req, res){
     let idSucursal = req.body.idSucursal;
 
-    Sucursal.findOne({idSucursal:idSucursal, statusReg: "ACTIVO"})
+    Sucursal.findOne({_id:idSucursal, statusReg: "ACTIVO"})
     .then((sucursal) => {
         sucursal.statusReg = "BAJA";
         sucursal.save()

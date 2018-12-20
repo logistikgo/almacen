@@ -4,6 +4,8 @@ const Almacen = require('../models/Almacen');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../models/MovimientoInventario');
 const Posicion = require('../controllers/Posicion');
+const PosicionModel = require('../models/Posicion');
+
 
 async function getNextID(){
 	return await Helpers.getNextID(Almacen,"idAlmacen");
@@ -11,7 +13,7 @@ async function getNextID(){
 
 function getAlmacenes(req,res){
 
-	Almacen.find({status:"ACTIVO"},(err,almacenes)=>{
+	Almacen.find({statusReg:"ACTIVO"},(err,almacenes)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(almacenes);
@@ -21,7 +23,7 @@ function getAlmacenes(req,res){
 function getAlmacen(req,res){
 	let _idAlmacen = req.params.idAlmacen;
 
-	Almacen.find({idAlmacen:_idAlmacen, status:"ACTIVO"},(err,almacen)=>{
+	Almacen.find({idAlmacen:_idAlmacen, statusReg:"ACTIVO"},(err,almacen)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(almacen);
@@ -45,7 +47,10 @@ function getById(req,res){
 function get(req,res){
 	let _arrSucursales = req.query.arrSucursales;
 
-	Almacen.find({idSucursal:{$in:_arrSucursales}},(err,almacenes)=>{
+	Almacen.find({
+		idSucursal:{$in:_arrSucursales},
+		statusReg:"ACTIVO"
+	},(err,almacenes)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
 		res.status(200).send(almacenes);
@@ -82,17 +87,27 @@ function getUbicaciones(req,res){
 
 async function save(req,res){
 	let nAlmacen = new Almacen();
+	let params =req.body;
 
-	nAlmacen.nombre = req.body.nombre;
-	nAlmacen.sucursal_id = req.body.sucursal_id,
-	nAlmacen.status = "ACTIVO";
+	nAlmacen.nombre = params.nombre;
+	nAlmacen.idSucursal = params.idSucursal;
+	nAlmacen.sucursal_id = params.sucursal_id,
+	nAlmacen.statusReg = "ACTIVO";
+	nAlmacen.usuarioAlta= params.usuarioAlta;
+	nAlmacen.usuarioAlta_id= params.usuarioAlta_id;
+	nAlmacen.fechaAlta= new Date();
 
-	let posiciones = req.body.posiciones;
+	let posiciones = params.posiciones;
 
 	nAlmacen.save()
 	.then(async(data)=>{
 		for(let posicion of posiciones){
-			Posicion.save(data._id, posicion);
+
+			PosicionModel.findOne({nombre:posicion.nombre, almacen_id:data._id})
+			.then((dataPos) => {
+				if(!dataPos)
+					Posicion.save(data._id, posicion, params.usuarioAlta_id, params.usuarioAlta);
+			})
 		}
 		res.status(200).send(data);
 	})
@@ -101,30 +116,53 @@ async function save(req,res){
 	});
 }
 
-function updateAlmacen(req,res){
-	let _idAlmacen = req.body.idAlmacen;
+function update(req,res){
+	let params = req.body;
+	let _idAlmacen = params.idAlmacen;
 
-	let item = {
-		nombre:req.body.nombre,
-		idSucursal:req.body.idSucursal
-	}
+	Almacen.findOne({_id:_idAlmacen})
+	.then((almacen) => {
+		almacen.nombre = params.nombre;
+		almacen.idSucursal = params.idSucursal;
+		almacen.sucursal_id = params.sucursal_id,
+		almacen.statusReg = "ACTIVO";
+		almacen.usuarioAlta= params.usuarioAlta;
+		almacen.usuarioAlta_id= params.usuarioAlta_id;
+		almacen.fechaAlta= new Date();
 
-	Almacen.updateOne({idAlmacen:_idAlmacen},{$set:item},(err,almacen)=>{
-		if(err)
-			return res.status(500).send({message:"Error al editar"});
-		res.status(200).send(almacen);
+		let posiciones = params.posiciones;
 
-	});
+		almacen.save()
+		.then(async(data)=>{
+			for(let posicion of posiciones){
+				PosicionModel.findOne({nombre:posicion.nombre, almacen_id:data._id})
+				.then((dataPos) => {
+					if(!dataPos){
+						console.log(dataPos);
+						Posicion.save(data._id, posicion, params.usuarioAlta_id, params.usuarioAlta);
+					}
+				})
+			}
+
+			res.status(200).send(data);
+		})
+		.catch((err)=>{
+			console.log(err);
+		});
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	})
 }
 
-function deleteAlmacen(req,res){
-	let _idAlmacen = req.body.idAlmacen;
+function _delete(req,res){
+	let almacen_id = req.body.almacen_id;
 
 	let item = {
-		status:"BAJA"
+		statusReg:"BAJA"
 	}
 
-	Almacen.updateOne({idAlmacen:_idAlmacen},{$set:item},(err,almacen)=>{
+	Almacen.updateOne({_id:almacen_id},{$set:item},(err,almacen)=>{
 		if(err)
 			return res.status(500).send({message:"Error al eliminar"});
 		res.status(200).send(almacen);
@@ -159,8 +197,8 @@ module.exports = {
 	getById,
 	get,
 	save,
-	updateAlmacen,
-	deleteAlmacen,
+	update,
+	_delete,
 	validaPosicion,
 	getUbicaciones
 }
