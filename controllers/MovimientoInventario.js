@@ -17,7 +17,11 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.pesoNeto = itemPartida.pesoNeto;
 	nMovimiento.embalajes = itemPartida.embalajes;
 	nMovimiento.signo = -1;
-	nMovimiento.tipo = "SALIDA";
+	if(salida.tipo!="RECHAZO"){
+		nMovimiento.tipo = "SALIDA";
+	}else{
+		nMovimiento.tipo = "SALIDA_RECHAZO"
+	}
 	nMovimiento.posicion = itemPartida.posicion;
 	nMovimiento.posicion_id = itemPartida.posicion_id;
 	nMovimiento.nivel = itemPartida.nivel;
@@ -28,8 +32,13 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
 
 	await nMovimiento.save()
-	.then(async(data)=>{
-		await updateExistencia(-1,itemPartida,salida.fechaSalida);
+	.then(async(movimiento)=>{
+		if(salida.tipo!="RECHAZO"){
+			await updateExistencia(-1,itemPartida,salida.fechaSalida);
+		}else{
+			await updateExistenciaRechazo(-1,itemPartida,salida.fechaSalida);
+		}
+		
 	})
 	.catch((err)=>{
 		console.log(err);
@@ -54,15 +63,24 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.pesoBruto = itemPartida.pesoBruto;
 	nMovimiento.pesoNeto = itemPartida.pesoNeto;
 	nMovimiento.signo = 1;
-	nMovimiento.tipo = "ENTRADA";
+	if(entrada.tipo!="RECHAZO"){
+		nMovimiento.tipo = "ENTRADA";
+	}else{
+		nMovimiento.tipo = "ENTRADA_RECHAZO"
+	}
 	nMovimiento.posicion = itemPartida.posicion;
 	nMovimiento.posicion_id = itemPartida.posicion_id;
 	nMovimiento.nivel = itemPartida.nivel;
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
 
 	await nMovimiento.save()
-	.then(async(data)=>{
-		await updateExistencia(1,itemPartida,entrada.fechaEntrada);
+	.then(async(movimiento)=>{
+		if(entrada.tipo!="RECHAZO"){
+			await updateExistencia(1,itemPartida,entrada.fechaEntrada);
+		}else{
+			await updateExistenciaRechazo(1,itemPartida,entrada.fechaEntrada);
+		}
+		
 	})
 	.catch((err)=>{
 		console.log(err);
@@ -118,6 +136,49 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 		fechaUltimaSalida:producto.fechaUltimaSalida,
 		existenciaPesoBruto:producto.existenciaPesoBruto,
 		existenciaPesoNeto:producto.existenciaPesoNeto
+	};
+
+	producto.save();
+
+	await Producto.updateOne({_id:itemPartida.producto_id},{$set:item})
+	.then((productoUpdated)=>{
+
+	})
+	.catch((err)=>{
+		
+	});
+}
+
+async function updateExistenciaRechazo(signo,itemPartida,fechaMovimiento) {
+	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
+	if(itemPartida.embalajes){
+		for(let embajalePartida in itemPartida.embalajes){
+			
+			if(producto.embalajesRechazo[embajalePartida]){
+				producto.embalajesRechazo[embajalePartida] += (signo*itemPartida.embalajes[embajalePartida]);
+			}else if(signo>0){
+				producto.embalajesRechazo[embajalePartida] = (signo*itemPartida.embalajes[embajalePartida]);
+			}
+			
+		}
+	}
+	
+	producto.pesoNetoRechazo +=(signo*itemPartida.pesoNeto);
+	producto.pesoBrutoRechazo +=(signo*itemPartida.pesoBruto);
+
+	if(signo == 1){
+		producto.fechaUltimaEntradaRechazo = new Date(fechaMovimiento);
+	}
+	else{
+		producto.fechaUltimaSalidaRechazo = new Date(fechaMovimiento);
+	}
+
+	let item = {
+		embalajesRechazo:producto.embalajesRechazo,
+		fechaUltimaEntradaRechazo:producto.fechaUltimaEntradaRechazo,
+		fechaUltimaSalidaRechazo:producto.fechaUltimaSalidaRechazo,
+		pesoBrutoRechazo:producto.pesoBrutoRechazo,
+		pesoNetoRechazo:producto.pesoNetoRechazo
 	};
 
 	producto.save();

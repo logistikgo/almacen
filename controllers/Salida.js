@@ -17,14 +17,24 @@ function get(req,res) {
 }
 
 function getSalidasByIDs(req,res){
-	let _idClienteFiscal = req.params.idClienteFiscal;
-	let _idSucursal = req.params.idSucursal;
-	let _idAlmacen = req.params.idAlmacen;
+	let _idClienteFiscal = req.query.idClienteFiscal;
+	let _idSucursal = req.query.idSucursal;
+	let _idAlmacen = req.query.idAlmacen;
+	let _tipo = req.query.tipo;
 
-	Salida.find({clienteFiscal_id: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen},(err,salidas)=>{
-		if(err)
-			return res.status(500).send({message:"Error"});
+	let filter = {
+		clienteFiscal_id: _idClienteFiscal,
+		idSucursal:_idSucursal,
+		almacen_id:_idAlmacen,
+		tipo:_tipo
+	};
+
+	Salida.find(filter)
+	.then((salidas)=>{
 		res.status(200).send(salidas);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
 	});
 }
 
@@ -74,19 +84,16 @@ async function save(req, res) {
 	nSalida.valor = req.body.valor;
 	nSalida.clienteFiscal_id = req.body.clienteFiscal_id;
 	nSalida.item = req.body.item;
+	nSalida.tipo = req.body.tipo;
 
 	nSalida.save()
-	.then(async(data)=>{
-		for(let itemPartida of data.partidas){
-			/*await MovimientoInventario.saveSalida(itemPartida.producto_id,nSalida._id,itemPartida.piezas,
-				itemPartida.cajas,itemPartida.tarimas,itemPartida.pesoBruto,itemPartida.pesoNeto,itemPartida.valor,
-				req.body.idClienteFiscal,req.body.idSucursal,req.body.idAlmacen,req.body.fechaSalida);*/
-				await MovimientoInventario.saveSalida(itemPartida,data.id)
+	.then(async(salida)=>{
+		for(let itemPartida of salida.partidas){
+				await MovimientoInventario.saveSalida(itemPartida,salida.id)
 		}
-		res.status(200).send(data);
+		res.status(200).send(salida);
 	})
 	.catch((error)=>{
-		console.log(error);
 		res.status(500).send(error);
 	});
 }

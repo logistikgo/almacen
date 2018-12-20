@@ -20,45 +20,26 @@ function get( req,res){
 };
 
 function getEntradasByIDs(req,res){
-	let _idClienteFiscal = req.params.idClienteFiscal;
-	let _idSucursal = req.params.idSucursal;
-	let _idAlmacen = req.params.idAlmacen;
-	Entrada.find({clienteFiscal_id: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
+	let _idClienteFiscal = req.query.idClienteFiscal;
+	let _idSucursal = req.query.idSucursal;
+	let _idAlmacen = req.query.idAlmacen;
+	let _tipo = req.query.tipo;
+
+	let filter = {
+		clienteFiscal_id: _idClienteFiscal,
+		idSucursal:_idSucursal,
+		almacen_id:_idAlmacen,
+		tipo:_tipo
+	};
+	Entrada.find(filter)
+	.populate({
 		path:'partidas.producto_id',
 		model:'Producto'
 	}).then((entradas)=>{
 		res.status(200).send(entradas);
-	}).catch((err)=>{
-		return res.status(500).send({message:"Error"});
+	}).catch((error)=>{
+		res.status(500).send(error);
 	});
-}
-
-function getPartidasByIDs(req,res){
-	
-	let _idClienteFiscal = req.params.idClienteFiscal;
-	let _idSucursal = req.params.idSucursal;
-	let _idAlmacen = req.params.idAlmacen;
-
-	Entrada.find({idClienteFiscal: _idClienteFiscal,idSucursal:_idSucursal,almacen_id:_idAlmacen}).populate({
-		path:'partidas.producto_id',
-		model:'Producto'
-	}).then((entradas)=>{
-		let infoPartidas = [];
-		entradas.forEach(function(entrada){
-			let entry = entrada;
-			entrada.partidas.forEach(function(partida){
-				let json = {
-					infoPartida:partida,
-					infoEntrada:entry
-				}
-				infoPartidas.push(json);
-			});
-		});
-		res.status(200).send(infoPartidas);
-	}).catch((err)=>{
-		return res.status(500).send({message:"Error"});
-	});
-	
 }
 
 function getEntradaByID(req, res) {
@@ -110,6 +91,7 @@ async function save(req, res){
 	nEntrada.sucursal_id = req.body.sucursal_id;
 	nEntrada.almacen_id = bodyParams.almacen_id;
 	nEntrada.status = bodyParams.status;
+	nEntrada.tipo = bodyParams.tipo;
 	nEntrada.partidas = bodyParams.partidas;
 
 	nEntrada.fechaAlta = new Date();
@@ -117,19 +99,19 @@ async function save(req, res){
 	nEntrada.folio = await getNextID();
 
 	nEntrada.save()
-	.then(async(data)=>{
+	.then(async(entrada)=>{
 
-		if(data.almacen_id != "5bbd218e7dbb370763c8d388"){
-			for(let itemPartida of data.partidas){
+		if(entrada.almacen_id != "5bbd218e7dbb370763c8d388"){
+			for(let itemPartida of entrada.partidas){
 				
-				await MovimientoInventario.saveEntrada(itemPartida,data.id);
+				await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
 			}
 		}
 		
-		res.status(200).send(data);
+		res.status(200).send(entrada);
 	})
-	.catch((err)=>{
-		console.log(err);
+	.catch((error)=>{
+		res.status(500).send(error);
 	});
 }
 
@@ -252,6 +234,5 @@ module.exports = {
 	getEntradaByID,
 	save,
 	getEntradasByIDs,
-	getPartidasByIDs,
 	validaEntrada
 }

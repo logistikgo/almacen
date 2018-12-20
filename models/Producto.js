@@ -13,7 +13,9 @@ const Producto = Schema({
 	nombreUsuario:String,
 	fechaAlta:Date,
 	fechaUltimaEntrada:Date,
+	fechaUltimaEntradaRechazo:Date,
 	fechaUltimaSalida:Date,
+	fechaUltimaSalidaRechazo:Date,
 	fechaBaja:Date,
 	clave:String,
 	descripcion:String,
@@ -22,6 +24,8 @@ const Producto = Schema({
 	existenciaCajas:Number,
 	existenciaPesoBruto:Number,
 	existenciaPesoNeto:Number,
+	pesoBrutoRechazo:Number,
+	pesoNetoRechazo:Number,
 	peso:Number,
 	stockMaximo:Number,
 	stockMinimo:Number,
@@ -33,6 +37,7 @@ const Producto = Schema({
 	presentacion_id: {type:Schema.ObjectId, ref:"Presentacion"},
 	valor:Number,
 	embalajes:{},
+	embalajesRechazo:{},
 	arrClientesFiscales_id:[	
 		{type: Schema.ObjectId, ref: "ClienteFiscal"}
 	]

@@ -13,22 +13,23 @@ async function getPartidasByIDs(req,res){
 	let _arrClientesFiscales = req.query.arrClientesFiscales;
 	let _arrSucursales = req.query.arrSucursales;
 	let _arrAlmacenes = req.query.arrAlmacenes;
+	let _tipo = req.query.tipoMovimiento;
 	let fechaI = req.query.fechaInicio;
 	let fechaF = req.query.fechaFinal;
 	let tipo = req.query.tipo;
 
 	
 	if(fechaI==null){
-		let infoPartidasGrl = await getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes);
+		let infoPartidasGrl = await getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,_tipo);
 		await res.status(200).send(infoPartidasGrl);
 	}else{
-		let infoPartidasFiltro = await getPartidasFiltro(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,fechaI,fechaF,tipo);
+		let infoPartidasFiltro = await getPartidasFiltro(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,fechaI,fechaF,tipo,_tipo);
 		await res.status(200).send(infoPartidasFiltro);
 	}
 
 }
 
-async function getPartidasFiltro(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,fechaI,fechaF,tipo){
+async function getPartidasFiltro(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,fechaI,fechaF,tipo,_tipo){
 	let infoPartidasFiltro = [];
 	let boolFechas = fechaI==fechaF;
 	
@@ -40,12 +41,14 @@ async function getPartidasFiltro(_arrClientesFiscales,_arrSucursales,_arrAlmacen
 	let filtroEntrada = {
 		clienteFiscal_id: {$in:_arrClientesFiscales},
 		idSucursal:{$in:_arrSucursales},
-		almacen_id:{$in:_arrAlmacenes}
+		almacen_id:{$in:_arrAlmacenes},
+		tipo:_tipo
 	};
 	let filtroSalida = {
 		clienteFiscal_id: {$in:_arrClientesFiscales},
 		idSucursal:{$in:_arrSucursales},
-		almacen_id:{$in:_arrAlmacenes}
+		almacen_id:{$in:_arrAlmacenes},
+		tipo:_tipo
 	};
 	if(!boolFechas){
 		filtroEntrada["fechaEntrada"] = rango;
@@ -68,13 +71,14 @@ async function getPartidasFiltro(_arrClientesFiscales,_arrSucursales,_arrAlmacen
 	return infoPartidasFiltro;
 }
 
-async function getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes){
+async function getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,_tipo){
 	let infoPartidasGrl = [];
 
 	let filtro = {
 		clienteFiscal_id: {$in:_arrClientesFiscales},
 		idSucursal:{$in:_arrSucursales},
-		almacen_id:{$in:_arrAlmacenes}
+		almacen_id:{$in:_arrAlmacenes},
+		tipo:_tipo
 	};
 
 	let partidasEntrada = await getPartidasEntradas(filtro);

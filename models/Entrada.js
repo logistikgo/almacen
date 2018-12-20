@@ -31,6 +31,7 @@ const Entrada = Schema({
 	idAlmacen:Number,
 	clienteFiscal_id:{type:Schema.ObjectId,ref:'ClienteFiscal'},
 	status: String,
+	tipo:String,
 	partidas:[
 	/*
 		{
