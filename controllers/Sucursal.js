@@ -21,7 +21,7 @@ function get(req, res) {
 }
 
 function getById(req, res) {
-    let idSucursal = parseInt(req.query.idSucursal);
+    let idSucursal = req.query.idSucursal;
 
     Sucursal.findOne({
             _id: idSucursal
@@ -68,7 +68,8 @@ function update(req, res){
 
     let item = {
         arrClienteFiscales: params.arrClientesFiscales,
-        idUsuario: params.idUsuario,
+        usuarioAlta_id: params.usuarioAlta_id,
+        usuarioAlta: params.usuarioAlta,
         fechaAlta: new Date(),
         nombre: params.nombre,
         calle: params.calle,
