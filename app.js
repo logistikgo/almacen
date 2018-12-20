@@ -35,6 +35,7 @@ app.use(function (req, res, next) {
 //app.post('/api/formatItems',Helper.FormatItems);
 
 app.get('/api/productos', Producto.get);
+app.get('/api/producto', Producto.getById);
 app.get('/api/productos/:idClienteFiscal', Producto.getByIDClienteFiscal);
 app.post('/api/producto', Producto.save);
 app.delete('/api/productos',Producto._delete);

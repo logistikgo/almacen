@@ -10,7 +10,7 @@ const Producto = Schema({
 	idClienteFiscal:Number,
 	idProducto:Number,
 	usuarioAlta_id : Number,
-	nombreUsuario:String,
+	usuarioAlta:String,
 	fechaAlta:Date,
 	fechaUltimaEntrada:Date,
 	fechaUltimaEntradaRechazo:Date,

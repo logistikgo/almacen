@@ -18,6 +18,22 @@ function get(req, res) {
 	});
 }
 
+function getById(req, res) {
+	let idProducto = req.query.idProducto;
+	
+	Producto.findOne({_id:idProducto})
+	.populate({
+		path:'presentacion_id', 
+		model: 'Presentacion'
+	})
+	.then((producto) => {
+		res.status(200).send(producto);
+	})
+	.catch((error) => {
+		return res.status(500).send(error);
+	});
+}
+
 function getByIDsClientesFiscales(req,res){
 	let _arrClienteFiscales = req.query.arrClientesFiscales;
 	Producto.find({arrClientesFiscales_id:{$in:_arrClienteFiscales},"statusReg":"ACTIVO"})
@@ -60,7 +76,7 @@ async function save(req,res) {
 	nProducto.statusReg = "ACTIVO";
 	nProducto.fechaAlta = new Date();
 	nProducto.usuarioAlta_id = params.usuarioAlta_id;
-	nProducto.nombreUsuario = params.nombreUsuario;
+	nProducto.usuarioAlta = params.usuarioAlta;
 	nProducto.clave = params.clave;
 	nProducto.descripcion = params.descripcion;
 	nProducto.embalajes = params.embalajes;
@@ -110,7 +126,7 @@ function validaProducto(req,res){
 function _delete(req,res) {
 	let _idProducto = req.body.idProducto;
 
-	Producto.findOne({idProducto:_idProducto, statusReg:"ACTIVO"}) 
+	Producto.findOne({_id:_idProducto, statusReg:"ACTIVO"}) 
 	.then((producto)=>{
 		producto.statusReg = "BAJA";
 		producto.save().then(()=>{
@@ -124,6 +140,7 @@ function _delete(req,res) {
 
 module.exports = {
 	get,
+	getById,
 	getByIDClienteFiscal,
 	save,
 	_delete,
