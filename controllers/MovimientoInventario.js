@@ -1,6 +1,7 @@
 'use strict'
 
 const MovimientoInventario = require('../models/MovimientoInventario');
+const Posicion = require('../models/Posicion');
 const Producto = require('../models/Producto');
 const Entrada = require('../models/Entrada');
 const Salida = require('../models/Salida');
@@ -45,8 +46,6 @@ async function saveSalida(itemPartida,salida_id) {
 	})
 }
 
-
-
 async function saveEntrada(itemPartida,entrada_id) {
 	let nMovimiento = new MovimientoInventario();
 
@@ -72,6 +71,24 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.posicion_id = itemPartida.posicion_id;
 	nMovimiento.nivel = itemPartida.nivel;
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
+
+	let posicion = await Posicion.findOne({_id:itemPartida.posicion_id}).exec();
+	console.log(posicion);
+	posicion = posicion.find(x=>x.nombre==itemPartida.nivel);
+	console.log(posicion);
+	if(posicion.productos.find(x=>x.producto_id == itemPartida.producto_id)){
+		for(let embalaje in itemPartida.embalajes){
+			posicion.productos.embalajes[embalaje] += itemPartida.embalajes[embalaje];
+		}
+	}
+	else{
+		posicion.productos.embalajes.push({
+			producto_id: itemPartida.producto_id,
+			embalajes: itemPartida.embalajes
+		});
+	}
+	console.log(posicion);
+	posicion.save();
 
 	await nMovimiento.save()
 	.then(async(movimiento)=>{

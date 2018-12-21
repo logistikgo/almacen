@@ -10,7 +10,7 @@ const Posicion = Schema(
 			nombre: String,
 			productos: [{
 				producto_id:{type:Schema.ObjectId, ref:"Producto"},
-				embalajes: []
+				embalajes: {}
 			}]
 		}],
 		estatus: String,

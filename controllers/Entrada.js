@@ -103,7 +103,6 @@ async function save(req, res){
 
 		if(entrada.almacen_id != "5bbd218e7dbb370763c8d388"){
 			for(let itemPartida of entrada.partidas){
-				
 				await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
 			}
 		}
