@@ -104,6 +104,44 @@ async function save(req,res) {
 	});
 }
 
+function update(req, res){
+	let params = req.body;
+	let idProducto = params.idProducto;
+
+	Producto.findOne({_id:idProducto})
+	.then((producto) => {
+		producto.idClienteFiscal = params.idClienteFiscal;
+		producto.arrClientesFiscales_id = params.arrClientesFiscales;
+		producto.statusReg = "ACTIVO";
+		producto.fechaAlta = new Date();
+		producto.usuarioAlta_id = params.usuarioAlta_id;
+		producto.usuarioAlta = params.usuarioAlta;
+		producto.clave = params.clave;
+		producto.descripcion = params.descripcion;
+		producto.embalajes = params.embalajes;
+		producto.existenciaPesoBruto = params.existenciaPesoBruto;
+		producto.existenciaPesoNeto = params.existenciaPesoNeto;
+		producto.stockMaximo = params.stockMaximo;
+		producto.stockMinimo = params.stockMinimo;
+		producto.idSucursal = params.idSucursal;
+		producto.sucursal_id = params.sucursal_id;
+		producto.almacen_id = params.almacen_id;
+		producto.presentacion = params.presentacion;
+		producto.presentacion_id = params.presentacion_id;
+
+		producto.save()
+		.then(()=>{
+			res.status(200).send(producto);
+		})
+		.catch((error)=>{
+			res.status(500).send(error);
+		})
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	})
+}
+
 function validaProducto(req,res){
 	let _clave = req.params.clave;
 
@@ -143,6 +181,7 @@ module.exports = {
 	getById,
 	getByIDClienteFiscal,
 	save,
+	update,
 	_delete,
 	validaProducto,
 	getByIDsClientesFiscales
