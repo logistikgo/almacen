@@ -77,13 +77,26 @@ async function saveEntrada(itemPartida,entrada_id) {
 	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id == itemPartida.producto_id) != undefined){
 		let producto = nivel.productos.find(x=>x.producto_id == itemPartida.producto_id);
 		for(let embalaje in itemPartida.embalajes){
+			if(producto.embalajes[embalaje] == undefined){
+				producto.embalajes[embalaje] = 0;
+			}
 			producto.embalajes[embalaje] += itemPartida.embalajes[embalaje];
 		}
+		if(producto.pesoBruto == undefined){
+			producto.pesoBruto = 0;
+		}
+		producto.pesoBruto += itemPartida.pesoBruto;
+		if(producto.pesoNeto == undefined){
+			producto.pesoNeto = 0;
+		}
+		producto.pesoNeto += itemPartida.pesoNeto;
 	}
 	else{
 		nivel.productos.push({
 			producto_id: itemPartida.producto_id,
-			embalajes: itemPartida.embalajes
+			embalajes: itemPartida.embalajes,
+			pesoBruto: itemPartida.pesoBruto,
+			pesoNeto: itemPartida.pesoNeto,
 		});
 	}
 
