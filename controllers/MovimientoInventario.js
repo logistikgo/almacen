@@ -73,22 +73,25 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
 
 	let posicion = await Posicion.findOne({_id:itemPartida.posicion_id}).exec();
-	console.log(posicion);
-	posicion = posicion.find(x=>x.nombre==itemPartida.nivel);
-	console.log(posicion);
-	if(posicion.productos.find(x=>x.producto_id == itemPartida.producto_id)){
+	let nivel = posicion.niveles.find(x=>x.nombre==itemPartida.nivel);
+	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id == itemPartida.producto_id) != undefined){
+		let producto = nivel.productos.find(x=>x.producto_id == itemPartida.producto_id);
 		for(let embalaje in itemPartida.embalajes){
-			posicion.productos.embalajes[embalaje] += itemPartida.embalajes[embalaje];
+			producto.embalajes[embalaje] += itemPartida.embalajes[embalaje];
 		}
 	}
 	else{
-		posicion.productos.embalajes.push({
+		nivel.productos.push({
 			producto_id: itemPartida.producto_id,
 			embalajes: itemPartida.embalajes
 		});
 	}
-	console.log(posicion);
-	posicion.save();
+
+	let item={
+		niveles: posicion.niveles
+	};
+
+	await Posicion.updateOne({_id:itemPartida.posicion_id},{$set:item});
 
 	await nMovimiento.save()
 	.then(async(movimiento)=>{
@@ -134,7 +137,7 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 			
 		}
 	}
-		
+
 	producto.valor += (signo*itemPartida.valor);
 	producto.existenciaPesoNeto +=(signo*itemPartida.pesoNeto);
 	producto.existenciaPesoBruto +=(signo*itemPartida.pesoBruto);
@@ -326,38 +329,38 @@ async function getByIDs_cte_suc_alm(req, res){
 			}else{
 				filtro = {
 					$or:[
-						{entrada_id:{$in:arrEntradas}},
-						{salida_id:{$in:arrSalidas}}
+					{entrada_id:{$in:arrEntradas}},
+					{salida_id:{$in:arrSalidas}}
 					]
 				};
 			}
 		}
 		MovimientoInventario.find(filtro)
-			.populate({
-				path:'producto_id'
-			})
-			.populate({
-				path:'entrada_id'
-			})
-			.populate({
-				path:'salida_id'
-			})
-			.populate({
-				path:'almacen_id'
-			})
-			.populate({
-				path:'clienteFiscal_id'
-			})
-			.populate({
-				path:'posicion_id'
-			})
-			.then((movimientos)=>{
-				res.status(200).send(movimientos);
-			})
-			.catch((err)=>{
-				res.status(500).send(err);
-			});
-	
+		.populate({
+			path:'producto_id'
+		})
+		.populate({
+			path:'entrada_id'
+		})
+		.populate({
+			path:'salida_id'
+		})
+		.populate({
+			path:'almacen_id'
+		})
+		.populate({
+			path:'clienteFiscal_id'
+		})
+		.populate({
+			path:'posicion_id'
+		})
+		.then((movimientos)=>{
+			res.status(200).send(movimientos);
+		})
+		.catch((err)=>{
+			res.status(500).send(err);
+		});
+
 	}
 }
 
