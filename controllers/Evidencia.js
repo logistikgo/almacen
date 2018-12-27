@@ -7,6 +7,10 @@ function getEvidenciasByID(req,res){
 	let field = req.query.field;
 	let _id = req.query.id;
 	Evidencia.find({[field]:_id,statusReg:"ACTIVO"})
+	.populate({
+		path:'entrada_id',
+		model:'Entrada'
+	})
 	.then((evidencias)=>{
 		res.status(200).send(evidencias);
 	})
