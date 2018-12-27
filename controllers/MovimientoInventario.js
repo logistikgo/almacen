@@ -254,6 +254,25 @@ function getByProducto(req, res){
 	.catch(err=>console.log(err));
 }
 
+function getPosicionesByProducto(req, res){
+	let _producto_id = req.query.producto_id;
+	let _almacen_id = req.query.almacen_id;
+
+	MovimientoInventario.find({
+		producto_id:_producto_id, 
+		almacen_id: _almacen_id, 
+		tipo:"ENTRADA"
+	},{posicion_id:""})
+	.populate({
+		path:'posicion_id'
+	})
+	.then((posiciones)=>{
+		posiciones = Array.from(new Set(posiciones.map(x=>x.posicion_id)));
+		res.status(200).send(posiciones);
+	})
+	.catch(err=>console.log(err));
+}
+
 function get(req, res){
 
 	MovimientoInventario.find({})
@@ -375,6 +394,7 @@ module.exports={
 	get,
 	getByIDs_cte_suc_alm,
 	getByProducto,
+	getPosicionesByProducto,
 	saveSalida,
 	saveEntrada,
 	saveExistenciaInicial
