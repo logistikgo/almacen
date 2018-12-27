@@ -12,7 +12,8 @@ const Evidencia = Schema(
 		salida_id:{type:Schema.ObjectId,ref:'Salida'},
 		fechaAlta:Date,
 		usuario_id:Number,
-		usuarioNombre:String
+		usuarioNombre:String,
+		statusReg:String
 	},
 	{collection:'Evidencias'}
 );

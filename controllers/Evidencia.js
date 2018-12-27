@@ -4,10 +4,9 @@ const Evidencia = require('../models/Evidencia');
 
 
 function getEvidenciasByID(req,res){
-	let _tipo = req.query.tipo;
 	let field = req.query.field;
 	let _id = req.query.id;
-	Evidencia.find({tipo:_tipo,[field]:_id})
+	Evidencia.find({[field]:_id,statusReg:"ACTIVO"})
 	.then((evidencias)=>{
 		res.status(200).send(evidencias);
 	})
@@ -27,12 +26,10 @@ function saveEvidencia(req,res){
 	nEvidencia.fechaAlta = new Date();
 	nEvidencia.usuario_id = params.usuario_id;
 	nEvidencia.usuarioNombre = params.usuarioNombre;
-	if(params.tipo == 'entrada'){
-		nEvidencia.entrada_id = params.entrada_id;
-	}else if (params.tipo== 'salida'){
-		nEvidencia.salida_id = params.salida_id;
-	}
-
+	nEvidencia.entrada_id = params.entrada_id;
+	nEvidencia.salida_id = params.salida_id;
+	nEvidencia.statusReg = "ACTIVO";
+	
 	nEvidencia.save()
 	.then((storedEvidencia)=>{
 		res.status(200).send(storedEvidencia);
@@ -44,10 +41,13 @@ function saveEvidencia(req,res){
 }
 
 function deleteEvidencia(req,res){
-	let _id = req.query.id;
+	let _id = req.body.id;
+	let _tipo = req.body.tipo;
+	let field = req.body.field;
 
-	Evidencia.remove({_id:_id},{justOne:true}).then((removed)=>{
-		res.status(200).send("ELIMINADO CORRECTAMENTE");
+	Evidencia.updateOne({statusReg:"ACTIVO",[field]:_id,tipo:_tipo},{$set:{statusReg:"BAJA"}})
+	.then((removed)=>{
+		res.status(200).send(removed);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);

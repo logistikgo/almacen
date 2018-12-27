@@ -101,12 +101,10 @@ async function save(req, res){
 	nEntrada.save()
 	.then(async(entrada)=>{
 
-		if(entrada.almacen_id != "5bbd218e7dbb370763c8d388"){
-			for(let itemPartida of entrada.partidas){
-				await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
-			}
+		for(let itemPartida of entrada.partidas){
+			console.log("OK");
+			await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
 		}
-		
 		res.status(200).send(entrada);
 	})
 	.catch((error)=>{
