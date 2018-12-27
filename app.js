@@ -44,7 +44,6 @@ app.get('/api/validaProducto/:clave',Producto.validaProducto);
 app.get('/api/getProductos',Producto.getByIDsClientesFiscales);
 
 app.get('/api/movimientosInventario/:producto_id', MovimientosInventario.getByProducto);
-app.get ('/api/posicionesxProducto/:producto_id', MovimientosInventario.getPosicionesByProducto);
 app.get('/api/movimientosInventario', MovimientosInventario.get);
 app.get('/api/movimientosInventarioByIDs', MovimientosInventario.getByIDs_cte_suc_alm);
 
@@ -95,6 +94,7 @@ app.get('/api/posiciones', Posicion.get);
 app.get('/api/posicion', Posicion.getById);
 app.put('/api/posicion', Posicion.update);
 app.delete('/api/posicion', Posicion._delete);
+app.get ('/api/posicionesxProducto', Posicion.getPosicionesByProducto);
 
 app.get('/api/embalajes',Embalaje.get);
 app.post('/api/embalaje',Embalaje.save);
