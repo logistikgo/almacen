@@ -90,7 +90,6 @@ app.get('/api/ubicaciones',Almacen.getUbicaciones);
 
 app.post('/api/evidencia',Evidencia.saveEvidencia);
 app.get('/api/evidencias',Evidencia.getEvidenciasByID);
-app.delete('/api/evidencia',Evidencia.deleteEvidencia);
 
 app.get('/api/posiciones', Posicion.get);
 app.get('/api/posicion', Posicion.getById);
