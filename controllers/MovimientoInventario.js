@@ -261,7 +261,7 @@ function getPosicionesByProducto(req, res){
 	MovimientoInventario.find({
 		producto_id:_producto_id, 
 		almacen_id: _almacen_id, 
-		tipo:"ENTRADA"
+		tipo:{$in:["ENTRADA","ENTRADA_RECHAZO"]}
 	},{posicion_id:""})
 	.populate({
 		path:'posicion_id'
