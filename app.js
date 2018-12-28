@@ -43,7 +43,7 @@ app.delete('/api/productos',Producto._delete);
 app.get('/api/validaProducto/:clave',Producto.validaProducto);
 app.get('/api/getProductos',Producto.getByIDsClientesFiscales);
 
-app.get('/api/movimientosInventario/:producto_id', MovimientosInventario.getByProducto);
+app.get('/api/movimientosInventarioByProducto', MovimientosInventario.getByProducto);
 app.get ('/api/posicionesxProducto', MovimientosInventario.getPosicionesByProducto);
 app.get('/api/movimientosInventario', MovimientosInventario.get);
 app.get('/api/movimientosInventarioByIDs', MovimientosInventario.getByIDs_cte_suc_alm);

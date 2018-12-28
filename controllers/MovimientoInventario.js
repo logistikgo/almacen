@@ -233,9 +233,10 @@ async function updateExistenciaRechazo(signo,itemPartida,fechaMovimiento) {
 }
 
 function getByProducto(req, res){
-	let _producto_id = req.params.producto_id;
-
-	MovimientoInventario.find({producto_id:_producto_id})
+	let _producto_id = req.query.producto_id;
+	let _arrTipo = req.query.arrTipo;
+	
+	MovimientoInventario.find({producto_id:_producto_id,tipo:{$in:_arrTipo}})
 	.populate({
 		path:'producto_id'
 	})
