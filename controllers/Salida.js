@@ -41,9 +41,7 @@ function getSalidasByIDs(req,res){
 function getByID(req,res) {
 	let _salida_id = req.params.salida_id;
 
-	console.log(_salida_id);
-	
-	Salida.findOne({salida_id:_salida_id})
+	Salida.findOne({_id:_salida_id})
 	.populate({
 		path:'partidas.producto_id',
 		model:'Producto'
