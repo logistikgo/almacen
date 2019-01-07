@@ -29,16 +29,19 @@ const Salida = Schema({
 	item: String,
 	tipo:String,
 	partidas:[
-		/*{
+		{
 			producto_id:{type:Schema.ObjectId, ref:"Producto"},
-			piezas:Number,
-			tarimas:Number,
-			cajas:Number,
+			clave:String,
+			descripcion:String,
+			posicion:String,
+			posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
+			nivel:String,
+			lote:String,
+			valor:Number,
 			pesoBruto:Number,
 			pesoNeto:Number,
-			lote:String,
-			valor:Number
-		}*/
+			embalajes:{}
+		}
 	]
 },{collection:'Salidas'});
 

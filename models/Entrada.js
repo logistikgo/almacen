@@ -33,20 +33,19 @@ const Entrada = Schema({
 	status: String,
 	tipo:String,
 	partidas:[
-	/*
 		{
-			producto_id:{ type: Schema.ObjectId, ref: "Producto" },
-			piezas:Number,
-			tarimas:Number,
-			cajas:Number,
+			producto_id:{type:Schema.ObjectId, ref:"Producto"},
+			clave:String,
+			descripcion:String,
+			posicion:String,
+			posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
+			nivel:String,
+			lote:String,
+			valor:Number,
 			pesoBruto:Number,
 			pesoNeto:Number,
-			lote:String,
-			posicion: String,
-			nivel:String,
-			valor:Number,
-			embalajes:[]
-		}*/
+			embalajes:{}
+		}
 	]
 },
 {collection:'Entradas'}
