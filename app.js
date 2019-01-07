@@ -47,6 +47,7 @@ app.get('/api/movimientosInventarioByProducto', MovimientosInventario.getByProdu
 app.get ('/api/posicionesxProducto', MovimientosInventario.getPosicionesByProducto);
 app.get('/api/movimientosInventario', MovimientosInventario.get);
 app.get('/api/movimientosInventarioByIDs', MovimientosInventario.getByIDs_cte_suc_alm);
+app.post('/api/ajuste', MovimientosInventario.saveAjuste);
 
 app.get('/api/getUsuarios', Usuario.get);
 app.get('/api/getUsuario/:idusuario', Usuario.getByIDUsuario);

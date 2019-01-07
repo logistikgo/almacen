@@ -90,6 +90,48 @@ async function saveEntrada(itemPartida,entrada_id) {
 	});
 }
 
+async function saveAjuste(req, res) {
+	let bodyParams = req.body;
+	console.log(bodyParams);
+	let nMovimiento = new MovimientoInventario();
+
+	nMovimiento.producto_id = bodyParams.producto_id;
+	nMovimiento.idClienteFiscal = bodyParams.idClienteFiscal;
+	nMovimiento.sucursal_id = bodyParams.sucursal_id;
+	nMovimiento.almacen_id = bodyParams.almacen_id;
+	nMovimiento.fechaMovimiento = new Date();
+	nMovimiento.embalajes= bodyParams.embalajes;
+	nMovimiento.pesoBruto = bodyParams.pesoBruto;
+	nMovimiento.pesoNeto = bodyParams.pesoNeto;
+	nMovimiento.signo = bodyParams.signo;
+	nMovimiento.tipo = "AJUSTE";
+	nMovimiento.posicion = bodyParams.posicion;
+	nMovimiento.posicion_id = bodyParams.posicion_id;
+	nMovimiento.nivel = bodyParams.nivel;
+
+	let item = {
+		producto_id: bodyParams.producto_id,
+		embalajes: bodyParams.embalajes,
+		pesoNeto: bodyParams.pesoNeto,
+		pesoBruto: bodyParams.pesoBruto,
+		nivel: bodyParams.nivel,
+		posicion_id: bodyParams.posicion_id,
+		valor: 0
+	}
+
+	await updateExistenciaPosicion(bodyParams.signo, item);
+
+	await nMovimiento.save()
+	.then(async(movimiento)=>{
+		await updateExistencia(bodyParams.signo, item, nMovimiento.fechaMovimiento);
+		res.status(200).send(movimiento);
+	})
+	.catch((err)=>{
+		console.log(err);
+		res.status(500).send(err);
+	});
+}
+
 function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClienteFiscal,sucursal_id,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 	nMovimiento.producto_id = producto_id;
@@ -390,7 +432,6 @@ async function getByIDs_cte_suc_alm(req, res){
 	}
 }
 
-
 module.exports={
 	get,
 	getByIDs_cte_suc_alm,
@@ -398,5 +439,6 @@ module.exports={
 	getPosicionesByProducto,
 	saveSalida,
 	saveEntrada,
+	saveAjuste,
 	saveExistenciaInicial
 }
