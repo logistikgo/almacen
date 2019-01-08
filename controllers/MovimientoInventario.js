@@ -195,8 +195,8 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 async function updateExistenciaPosicion(signo, itemPartida){
 	let posicion = await Posicion.findOne({_id:itemPartida.posicion_id}).exec();
 	let nivel = posicion.niveles.find(x=>x.nombre==itemPartida.nivel);
-	
-	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id == itemPartida.producto_id) != undefined){
+
+	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id==itemPartida.producto_id.toString())){
 		let producto = nivel.productos.find(x=>x.producto_id == itemPartida.producto_id);
 		for(let embalaje in itemPartida.embalajes){
 			if(producto.embalajes[embalaje] == undefined){
