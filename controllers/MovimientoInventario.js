@@ -92,7 +92,6 @@ async function saveEntrada(itemPartida,entrada_id) {
 
 async function saveAjuste(req, res) {
 	let bodyParams = req.body;
-	console.log(bodyParams);
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = bodyParams.producto_id;
@@ -153,7 +152,6 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
 	if(itemPartida.embalajes){
 		for(let embajalePartida in itemPartida.embalajes){
-			
 			if(producto.embalajes[embajalePartida]){
 				producto.embalajes[embajalePartida] += (signo*itemPartida.embalajes[embajalePartida]);
 			}else if(signo>0){
