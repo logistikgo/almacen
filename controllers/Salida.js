@@ -1,6 +1,7 @@
 'use strict'
 
 const Salida = require('../models/Salida');
+const Entrada = require('../models/Entrada');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const Helper = require('../helpers');
 
@@ -83,6 +84,9 @@ async function save(req, res) {
 	nSalida.clienteFiscal_id = req.body.clienteFiscal_id;
 	nSalida.item = req.body.item;
 	nSalida.tipo = req.body.tipo;
+	nSalida.entrada_id = req.body.entrada_id;
+
+	await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
 
 	nSalida.save()
 	.then(async(salida)=>{
@@ -94,6 +98,89 @@ async function save(req, res) {
 	.catch((error)=>{
 		res.status(500).send(error);
 	});
+}
+
+function isEmptyPartida(partida){
+	let contEmbalajesCero = 0;
+	let tamEmbalajes = 0;
+	let isPesosEmpty = false;
+	let isEmbalajesEmpty = false;
+
+	for(let embalaje in partida.embalajes){tamEmbalajes+=1;} //Se obtiene la cantidad de embalajes
+	for(let embalaje in partida.embalajes){  //Obtiene la cantidad de embalajes con cero
+		if(partida.embalajes[embalaje]==0) contEmbalajesCero+=1; 
+	}
+
+	if(partida.pesoBruto == 0 && partida.pesoNeto == 0) 
+		isPesosEmpty = true;
+	else
+		isPesosEmpty = false;
+	// Si la cantidad de embalajes es igual a la cantidad de embalajes con cero
+	if(tamEmbalajes == contEmbalajesCero) 
+		isEmbalajesEmpty = true; 
+	else
+		isEmbalajesEmpty = false;
+
+	if(isEmbalajesEmpty && isPesosEmpty)
+		return true;
+	else
+		return false;
+
+}
+
+function isEmptyPartidas(partidas){
+	let tamPartidas = partidas.length;
+	let conPartidasCero = 0;
+
+	partidas.forEach(function(partida){
+		if(isEmptyPartida(partida)) conPartidasCero+=1; //Obtiene la cantidad de partidas en cero
+	});
+
+	if (tamPartidas == conPartidasCero) //Si el total de partidas es igual al total de partidas con cero
+		return true;
+	else
+		return false;
+}
+
+async function updatePartidasSalida(entrada_id,partidasDeSalida){
+	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
+	let nuevasPartidas = [];
+
+	entrada.partidasSalida.forEach(function(partidaDeEntrada){
+		let partidaEncontrada = partidasDeSalida.find(x=>x._id.toString()==partidaDeEntrada._id.toString());
+		if(partidaEncontrada!=undefined){
+			for(let embalajeDeSalida in partidaEncontrada.embalajes){
+				if(partidaDeEntrada.embalajes[embalajeDeSalida]){
+					partidaDeEntrada.embalajes[embalajeDeSalida]-= partidaEncontrada.embalajes[embalajeDeSalida];
+				}
+			}
+			partidaDeEntrada.pesoBruto-=partidaEncontrada.pesoBruto;
+			partidaDeEntrada.pesoNeto-=partidaEncontrada.pesoNeto;
+
+			if(isEmptyPartida(partidaDeEntrada)) 
+				partidaDeEntrada.isEmpty = true;
+			else
+				partidaDeEntrada.isEmpty = false;
+			
+		}
+		nuevasPartidas.push(partidaDeEntrada);
+	});
+	let empty = false;
+	empty = isEmptyPartidas(nuevasPartidas);
+	
+	
+	let jEdit = {
+		partidasSalida: nuevasPartidas,
+		isEmpty:empty
+	};
+
+	Entrada.updateOne({_id:entrada_id},{$set:jEdit})
+	.then((data)=>{
+
+	}).catch((error)=>{
+
+	});
+
 }
 
 module.exports = {

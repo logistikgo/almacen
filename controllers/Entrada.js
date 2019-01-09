@@ -52,6 +52,10 @@ function getEntradaByID(req, res) {
 		model:'Producto'
 	})
 	.populate({
+		path:'partidasSalida.producto_id',
+		model:'Producto'
+	})
+	.populate({
 		path:'clienteFiscal_id',
 		model:'ClienteFiscal'
 	})
@@ -93,10 +97,13 @@ async function save(req, res){
 	nEntrada.status = bodyParams.status;
 	nEntrada.tipo = bodyParams.tipo;
 	nEntrada.partidas = bodyParams.partidas;
+	nEntrada.partidasSalida = bodyParams.partidasSalida;
+	nEntrada.isEmpty = bodyParams.isEmpty;
 
 	nEntrada.fechaAlta = new Date();
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
+
 
 	nEntrada.save()
 	.then(async(entrada)=>{

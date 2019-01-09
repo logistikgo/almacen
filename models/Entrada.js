@@ -32,6 +32,7 @@ const Entrada = Schema({
 	clienteFiscal_id:{type:Schema.ObjectId,ref:'ClienteFiscal'},
 	status: String,
 	tipo:String,
+	isEmpty: Boolean,
 	partidas:[
 		{
 			producto_id:{type:Schema.ObjectId, ref:"Producto"},
@@ -45,6 +46,22 @@ const Entrada = Schema({
 			pesoBruto:Number,
 			pesoNeto:Number,
 			embalajes:{}
+		}
+	],
+	partidasSalida:[
+		{
+			producto_id:{type:Schema.ObjectId, ref:"Producto"},
+			clave:String,
+			descripcion:String,
+			posicion:String,
+			posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
+			nivel:String,
+			lote:String,
+			valor:Number,
+			pesoBruto:Number,
+			pesoNeto:Number,
+			embalajes:{},
+			isEmpty:Boolean
 		}
 	]
 },
