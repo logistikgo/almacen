@@ -12,7 +12,7 @@ function getNextID(){
 function get( req,res){
 	Entrada.find({}, (error,producto)=>{
 		if(error)
-			return res.status(500).send({message:"Error"});
+		return res.status(500).send({message:"Error"});
 
 		res.status(200).send(producto);
 
@@ -141,17 +141,17 @@ async function updatePosicion_Partida(req,res){
 
 		if(itemBodyPartidas!=null){
 			let newPartida = {
-					_id : itemPartida.id,
-					producto_id:itemPartida.producto_id,
-					tarimas : itemPartida.tarimas,
-					piezas : itemPartida.cantidad,
-					cajas : itemPartida.cajas,
-					posicion : itemBodyPartidas.posicion,
-					nivel : itemBodyPartidas.nivel
+				_id : itemPartida.id,
+				producto_id:itemPartida.producto_id,
+				tarimas : itemPartida.tarimas,
+				piezas : itemPartida.cantidad,
+				cajas : itemPartida.cajas,
+				posicion : itemBodyPartidas.posicion,
+				nivel : itemBodyPartidas.nivel
 
-				}
-				
-				arrPartidas.push(newPartida);
+			}
+
+			arrPartidas.push(newPartida);
 		}
 	});
 
@@ -165,7 +165,7 @@ async function updatePosicion_Partida(req,res){
 
 		Entrada.updateOne({idEntrada:_idEntrada},{$set:cambios},(err,entrada)=>{
 			if(err)
-				return res.status(500).send({message:"Error"});
+			return res.status(500).send({message:"Error"});
 			res.status(200).send(entrada);
 		});
 	}
@@ -173,9 +173,6 @@ async function updatePosicion_Partida(req,res){
 	{
 		res.status(500).send({message:"Error updatePosicion_Partida"});
 	}
-
-	
-
 }
 
 async function validaEntrada(req,res){
@@ -195,17 +192,17 @@ async function validaEntrada(req,res){
 		});
 		if(itemBodyPartidas!=null){
 			let newPartida = {
-					_id : itemPartida.id,
-					producto_id:itemPartida.producto_id,
-					tarimas : itemPartida.tarimas,
-					piezas : itemBodyPartidas.cantidad,
-					cajas : itemPartida.cajas,
-					posicion : itemBodyPartidas.posicion,
-					nivel : itemBodyPartidas.nivel
+				_id : itemPartida.id,
+				producto_id:itemPartida.producto_id,
+				tarimas : itemPartida.tarimas,
+				piezas : itemBodyPartidas.cantidad,
+				cajas : itemPartida.cajas,
+				posicion : itemBodyPartidas.posicion,
+				nivel : itemBodyPartidas.nivel
 
-				}
-				
-				arrPartidas.push(newPartida);
+			}
+
+			arrPartidas.push(newPartida);
 		}
 	});
 	
@@ -219,7 +216,7 @@ async function validaEntrada(req,res){
 
 		Entrada.updateOne({idEntrada:_idEntrada},{$set:cambios},(err,entrada)=>{
 			if(err)
-				return res.status(500).send({message:"Error"});
+			return res.status(500).send({message:"Error"});
 			for(let itemPartida of arrPartidas){
 				MovimientoInventario.saveEntrada(itemPartida.producto_id, entrada.id, itemPartida.piezas,itemPartida.cajas,itemPartida.tarimas,
 					_entrada.idClienteFiscal,_entrada.idSucursal,_entrada.almacen_id, itemPartida.posicion, itemPartida.nivel);
@@ -230,7 +227,69 @@ async function validaEntrada(req,res){
 	}else{
 		res.status(500).send({message:"Error en Json EndPoint"});
 	}	
-	
+}
+
+function updatePosicionPartida(req,res){
+	let bodyParams = req.body;
+
+	let entrada_id = bodyParams.entrada_id;
+	let partida_id = bodyParams.partida_id;
+
+	Entrada.findOne({_id:entrada_id})
+	.then((entrada) => {
+		let partida = entrada.partidas.find(x=>x._id == partida_id);
+
+		updatePosicion(entrada, partida, bodyParams);
+
+		let item = {
+			partidas: entrada.partidas
+		};
+
+		Entrada.updateOne({_id:entrada_id},{$set:item})
+		.then((item)=>{
+			res.status(200).send(item);
+		})
+		.catch((err)=>{
+			console.log(err);
+			res.status(500).send(err);
+		});
+	});
+}
+
+async function updatePosicion(entrada, partida,bodyParams){
+	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+
+	partida.posicion = bodyParams.posicion;
+	partida.posicion_id = bodyParams.posicion_id;
+	partida.nivel = bodyParams.nivel;
+
+	await MovimientoInventario.updateExistenciaPosicion(1, partida);
+}
+
+function updatePosicionEntrada(req,res){
+	let bodyParams = req.body;
+
+	let entrada_id = bodyParams.entrada_id;
+
+	Entrada.findOne({_id:entrada_id})
+	.then((entrada) => {
+		for(let itemPartida of entrada.partidas){
+			updatePosicion(entrada, itemPartida, bodyParams);
+		}
+
+		let item = {
+			partidas: entrada.partidas
+		};
+
+		Entrada.updateOne({_id:entrada_id},{$set:item})
+		.then((item)=>{
+			res.status(200).send(item);
+		})
+		.catch((err)=>{
+			console.log(err);
+			res.status(500).send(err);
+		});
+	});
 }
 
 module.exports = {
@@ -238,5 +297,7 @@ module.exports = {
 	getEntradaByID,
 	save,
 	getEntradasByIDs,
-	validaEntrada
+	validaEntrada,
+	updatePosicionPartida,
+	updatePosicionEntrada
 }

@@ -198,8 +198,8 @@ async function updateExistenciaPosicion(signo, itemPartida){
 	let posicion = await Posicion.findOne({_id:itemPartida.posicion_id}).exec();
 	let nivel = posicion.niveles.find(x=>x.nombre==itemPartida.nivel);
 	
-	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id == itemPartida.producto_id) != undefined){
-		let producto = nivel.productos.find(x=>x.producto_id == itemPartida.producto_id);
+	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id.toString() == itemPartida.producto_id.toString()) != undefined){
+		let producto = nivel.productos.find(x=>x.producto_id.toString() == itemPartida.producto_id.toString());
 		for(let embalaje in itemPartida.embalajes){
 			if(producto.embalajes[embalaje] == undefined){
 				producto.embalajes[embalaje] = 0;
@@ -440,5 +440,6 @@ module.exports={
 	saveSalida,
 	saveEntrada,
 	saveAjuste,
-	saveExistenciaInicial
+	saveExistenciaInicial,
+	updateExistenciaPosicion
 }
