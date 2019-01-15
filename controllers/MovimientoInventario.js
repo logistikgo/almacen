@@ -200,11 +200,15 @@ async function updateExistenciaPosicion(signo, itemPartida){
 	
 	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id.toString() == itemPartida.producto_id.toString()) != undefined){
 		let producto = nivel.productos.find(x=>x.producto_id.toString() == itemPartida.producto_id.toString());
+		let flagEmbalajes = 0;
+
 		for(let embalaje in itemPartida.embalajes){
 			if(producto.embalajes[embalaje] == undefined){
 				producto.embalajes[embalaje] = 0;
 			}
 			producto.embalajes[embalaje] += (signo * itemPartida.embalajes[embalaje]);
+
+			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
 		}
 		if(producto.pesoBruto == undefined){
 			producto.pesoBruto = 0;
@@ -214,6 +218,11 @@ async function updateExistenciaPosicion(signo, itemPartida){
 			producto.pesoNeto = 0;
 		}
 		producto.pesoNeto += (signo * itemPartida.pesoNeto);
+
+		if(producto.pesoBruto == 0 && producto.pesoNeto == 0 && flagEmbalajes == 0){
+			let index = posicion.niveles.indexOf(producto);
+			posicion.niveles.splice(index, 1);
+		}
 	}
 	else{
 		nivel.productos.push({
