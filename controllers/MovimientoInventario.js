@@ -287,7 +287,7 @@ function getByProducto(req, res){
 	let _producto_id = req.query.producto_id;
 	let _arrTipo = req.query.arrTipo;
 	
-	MovimientoInventario.find({producto_id:_producto_id,tipo:{$in:_arrTipo}})
+	MovimientoInventario.find({producto_id:_producto_id,tipo:{$in:_arrTipo}}).sort({fechaMovimiento: -1})
 	.populate({
 		path:'producto_id'
 	})
