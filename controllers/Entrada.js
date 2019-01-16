@@ -236,10 +236,10 @@ function updatePosicionPartida(req,res){
 	let partida_id = bodyParams.partida_id;
 
 	Entrada.findOne({_id:entrada_id})
-	.then((entrada) => {
+	.then(async (entrada) => {
 		let partida = entrada.partidas.find(x=>x._id == partida_id);
 
-		updatePosicion(entrada, partida, bodyParams);
+		await updatePosicion(partida, bodyParams);
 
 		let item = {
 			partidas: entrada.partidas
@@ -256,7 +256,7 @@ function updatePosicionPartida(req,res){
 	});
 }
 
-async function updatePosicion(entrada, partida,bodyParams){
+async function updatePosicion(partida,bodyParams){
 	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
 
 	partida.posicion = bodyParams.posicion;
@@ -268,13 +268,13 @@ async function updatePosicion(entrada, partida,bodyParams){
 
 function updatePosicionEntrada(req,res){
 	let bodyParams = req.body;
-
 	let entrada_id = bodyParams.entrada_id;
 
 	Entrada.findOne({_id:entrada_id})
-	.then((entrada) => {
+	.then(async (entrada) => {
+
 		for(let itemPartida of entrada.partidas){
-			updatePosicion(entrada, itemPartida, bodyParams);
+			await updatePosicion(itemPartida, bodyParams);
 		}
 
 		let item = {
