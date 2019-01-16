@@ -80,8 +80,11 @@ async function save(req,res) {
 	nProducto.clave = params.clave;
 	nProducto.descripcion = params.descripcion;
 	nProducto.embalajes = params.embalajes;
+	nProducto.embalajesRechazo = params.embalajes;
 	nProducto.existenciaPesoBruto = params.existenciaPesoBruto;
 	nProducto.existenciaPesoNeto = params.existenciaPesoNeto;
+	nProducto.pesoBrutoRechazo = params.existenciaPesoBruto;
+	nProducto.pesoNetoRechazo = params.existenciaPesoNeto;
 	nProducto.stockMaximo = params.stockMaximo;
 	nProducto.stockMinimo = params.stockMinimo;
 	nProducto.idSucursal = params.idSucursal;
