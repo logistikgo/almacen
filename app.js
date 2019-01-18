@@ -18,6 +18,7 @@ const Evidencia = require('./controllers/Evidencia');
 const Posicion = require('./controllers/Posicion');
 const Embalaje = require('./controllers/Embalaje');
 const Presentacion = require('./controllers/Presentacion');
+const Pasillo = require('./controllers/Pasillo');
 
 app.use(bodyParser.urlencoded({
     extended: false
@@ -112,5 +113,6 @@ app.post('/api/presentacion',Presentacion.save);
 app.put('/api/presentacion',Presentacion.update);
 app.delete('/api/presentacion', Presentacion._delete);
 
+app.get('/api/pasillos', Pasillo.get);
 
 module.exports = app;
