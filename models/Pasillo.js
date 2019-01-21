@@ -3,22 +3,27 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const Pasillo = Schema({
-	nombre: String,
-	almacen_id: {
-		type:Schema.ObjectId, 
-		ref:'Almacen'
+const Pasillo = Schema(
+	{
+		nombre: String,
+		almacen_id: {
+			type:Schema.ObjectId, 
+			ref:'Almacen'
+		},
+		posiciones: [{
+			posicion_id: {
+				type: Schema.ObjectId, 
+				ref: "Posicion"
+			}
+		}],
+		fechaAlta: Date,
+		usuarioAlta_id: Number,
+		usuarioAlta: String,
+		statusReg: String
 	},
-	posiciones: [{
-		posicion_id: {
-			type: Schema.ObjectId, 
-			ref: "Posicion"
-		}
-	}],
-	fechaAlta: Date,
-	usuarioAlta_id: Number,
-	usuarioAla: String,
-	statusReg: String
-});
+	{
+		collection: 'Pasillos'
+	}
+);
 
 module.exports = mongoose.model('Pasillo', Pasillo);

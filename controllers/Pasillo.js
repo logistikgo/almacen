@@ -8,6 +8,7 @@ function get(){
 
 function save(almacen_id, pasillo, usuarioAlta_id, usuarioAlta){
 	let nPasillo = new Pasillo();
+	console.log(pasillo);
 
 	nPasillo.nombre = pasillo.nombre;
 	nPasillo.almacen_id = almacen_id;
@@ -19,13 +20,13 @@ function save(almacen_id, pasillo, usuarioAlta_id, usuarioAlta){
 	let posiciones = [];
 	for(let posicion of pasillo.posiciones){
 		let jPosicion = {
-			"posicion_id": posicion._id
+			"posicion_id": posicion
 		}
 		posiciones.push(jPosicion);
 	}
 	nPasillo.posiciones = posiciones;
-
-
+	console.log(nPasillo);
+	
 	nPasillo.save()
 	.catch(err=>console.log(err));
 }

@@ -89,7 +89,7 @@ function getUbicaciones(req,res){
 
 async function save(req,res){
 	let nAlmacen = new Almacen();
-	let params =req.body;
+	let params = req.body;
 
 	nAlmacen.nombre = params.nombre;
 	nAlmacen.idSucursal = params.idSucursal;
@@ -104,12 +104,13 @@ async function save(req,res){
 	nAlmacen.save()
 	.then(async(data)=>{
 		for(let pasillo of pasillos){
-
 			PasilloModel.findOne({nombre:pasillo.nombre, almacen_id:data._id})
 			.then((dataPas) => {
-				if(!dataPas)
-					Pasillo.save(data._id, posicion, params.usuarioAlta_id, params.usuarioAlta);
-			})
+				if(!dataPas){
+					console.log(params.usuarioAlta);
+					Pasillo.save(data._id, pasillo, params.usuarioAlta_id, params.usuarioAlta);
+				}
+			});
 		}
 		res.status(200).send(data);
 	})
