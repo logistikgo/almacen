@@ -19,6 +19,8 @@ const Posicion = require('./controllers/Posicion');
 const Embalaje = require('./controllers/Embalaje');
 const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
+const dotenv = require('dotenv');
+dotenv.config();
 
 app.use(bodyParser.urlencoded({
     extended: false

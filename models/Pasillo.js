@@ -21,4 +21,4 @@ const Pasillo = Schema({
 	statusReg: String
 });
 
-module.exports = mongoose.model('Pasillo', Pasillo):
+module.exports = mongoose.model('Pasillo', Pasillo);
