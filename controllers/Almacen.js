@@ -6,6 +6,8 @@ const MovimientoInventario = require('../models/MovimientoInventario');
 const Posicion = require('../controllers/Posicion');
 const PosicionModel = require('../models/Posicion');
 
+const Pasillo = require('../controllers/Pasillo');
+const PasilloModel = require('../models/Pasillo');
 
 async function getNextID(){
 	return await Helpers.getNextID(Almacen,"idAlmacen");
@@ -97,16 +99,16 @@ async function save(req,res){
 	nAlmacen.usuarioAlta_id= params.usuarioAlta_id;
 	nAlmacen.fechaAlta= new Date();
 
-	let posiciones = params.posiciones;
+	let pasillos = params.pasillos;
 
 	nAlmacen.save()
 	.then(async(data)=>{
-		for(let posicion of posiciones){
+		for(let pasillo of pasillos){
 
-			PosicionModel.findOne({nombre:posicion.nombre, almacen_id:data._id})
-			.then((dataPos) => {
-				if(!dataPos)
-					Posicion.save(data._id, posicion, params.usuarioAlta_id, params.usuarioAlta);
+			PasilloModel.findOne({nombre:pasillo.nombre, almacen_id:data._id})
+			.then((dataPas) => {
+				if(!dataPas)
+					Pasillo.save(data._id, posicion, params.usuarioAlta_id, params.usuarioAlta);
 			})
 		}
 		res.status(200).send(data);
