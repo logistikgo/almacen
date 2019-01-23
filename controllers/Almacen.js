@@ -102,13 +102,12 @@ async function save(req,res){
 	let pasillos = params.pasillos;
 
 	nAlmacen.save()
-	.then(async(data)=>{
+	.then((data)=>{
 		for(let pasillo of pasillos){
 			PasilloModel.findOne({nombre:pasillo.nombre, almacen_id:data._id})
-			.then((dataPas) => {
+			.then(async (dataPas) => {
 				if(!dataPas){
-					console.log(params.usuarioAlta);
-					Pasillo.save(data._id, pasillo, params.usuarioAlta_id, params.usuarioAlta);
+					await Pasillo.save(data._id, pasillo, params.usuarioAlta_id, params.usuarioAlta);
 				}
 			});
 		}

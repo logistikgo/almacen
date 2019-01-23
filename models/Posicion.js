@@ -20,6 +20,7 @@ const Posicion = Schema(
 			type:Schema.ObjectId, 
 			ref:'Almacen'
 		},
+		pasillo_id: {type:Schema.ObjectId, ref:"Pasillo"},
 		fechaAlta: Date,
 		usuarioAlta_id: Number,
 		usuarioAla: String,

@@ -36,7 +36,7 @@ function getById(req, res){
 	});
 }
 
-function save(almacen_id, posicion, usuarioAlta_id, usuarioAlta){
+async function save(pasillo_id, almacen_id, posicion, usuarioAlta_id, usuarioAlta){
 	let nPosicion = new Posicion();
 
 	nPosicion.nombre = posicion.nombre;
@@ -46,6 +46,7 @@ function save(almacen_id, posicion, usuarioAlta_id, usuarioAlta){
 	nPosicion.statusReg = "ACTIVO";
 	nPosicion.usuarioAlta_id= usuarioAlta_id;
 	nPosicion.usuarioAlta = usuarioAlta;
+	nPosicion.pasillo_id = pasillo_id;
 
 	let niveles = [];
 	for(let nivel of posicion.niveles){
@@ -57,9 +58,8 @@ function save(almacen_id, posicion, usuarioAlta_id, usuarioAlta){
 	}
 	nPosicion.niveles = niveles;
 
-
-	nPosicion.save()
-	.catch(err=>console.log(err));
+	let posicionStored = await nPosicion.save();
+	return posicionStored;
 }
 
 function update(req, res){

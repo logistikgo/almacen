@@ -1,6 +1,8 @@
 'use strict'
 
 const Pasillo = require('../models/Pasillo');
+const Posicion = require('../controllers/Posicion');
+const PosicionModel = require('../models/Posicion');
 
 function get(){
 
@@ -8,7 +10,6 @@ function get(){
 
 function save(almacen_id, pasillo, usuarioAlta_id, usuarioAlta){
 	let nPasillo = new Pasillo();
-	console.log(pasillo);
 
 	nPasillo.nombre = pasillo.nombre;
 	nPasillo.almacen_id = almacen_id;
@@ -17,18 +18,30 @@ function save(almacen_id, pasillo, usuarioAlta_id, usuarioAlta){
 	nPasillo.usuarioAlta_id= usuarioAlta_id;
 	nPasillo.usuarioAlta = usuarioAlta;
 
-	let posiciones = [];
-	for(let posicion of pasillo.posiciones){
-		let jPosicion = {
-			"posicion_id": posicion
-		}
-		posiciones.push(jPosicion);
-	}
-	nPasillo.posiciones = posiciones;
-	console.log(nPasillo);
-	
+	let posiciones = pasillo.posiciones;
+	let posicionesGuardadas = [];
+
 	nPasillo.save()
-	.catch(err=>console.log(err));
+	.then(async(data)=>{
+		for(let posicion of posiciones){
+			let resPosicion = await Posicion.save(data._id, almacen_id, posicion, usuarioAlta_id, usuarioAlta);
+			console.log(resPosicion);
+
+			let jPosicion = {
+				"posicion_id": resPosicion._id
+			}
+
+			posicionesGuardadas.push(jPosicion);
+		}
+		
+		data.posiciones = posicionesGuardadas;
+		data.save();
+	})
+	.catch((err)=>{
+		console.log(err);
+	});
+
+	
 }
 
 function update(){
