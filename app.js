@@ -100,6 +100,7 @@ app.delete('/api/evidencia',Evidencia.deleteEvidencia);
 
 app.get('/api/posiciones', Posicion.get);
 app.get('/api/posicion', Posicion.getById);
+app.get('/api/posicionnivel', Posicion.getNivel);
 app.put('/api/posicion', Posicion.update);
 app.delete('/api/posicion', Posicion._delete);
 
@@ -116,5 +117,6 @@ app.put('/api/presentacion',Presentacion.update);
 app.delete('/api/presentacion', Presentacion._delete);
 
 app.get('/api/pasillos', Pasillo.get);
+app.get('/api/posicionesNom', Pasillo.getPosiciones);
 
 module.exports = app;

@@ -36,6 +36,24 @@ function getById(req, res){
 	});
 }
 
+function getNivel(req, res){
+	let idPosicion = req.query.idPosicion;
+	let nivel = req.query.nivel;
+
+	Posicion.findOne({_id:idPosicion})
+	.populate({
+		path:'niveles.productos.producto_id',
+		model: 'Producto'
+	})
+	.then((posicion) => {
+		let resNivel = posicion.niveles.find(x=>x.nombre==nivel);
+		res.status(200).send(resNivel);
+	})
+	.catch((error) => {
+		return res.status(500).send({message: error});
+	});
+}
+
 async function save(pasillo_id, almacen_id, posicion, usuarioAlta_id, usuarioAlta){
 	let nPosicion = new Posicion();
 
@@ -73,6 +91,7 @@ function _delete(req, res){
 module.exports = {
 	get,
 	getById,
+	getNivel,
 	save,
 	update,
 	_delete
