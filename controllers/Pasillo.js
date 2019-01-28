@@ -22,6 +22,26 @@ function get(req, res){
 	})
 }
 
+function getById(req, res){
+	let psillo_id = req.query.idPasillo;
+
+	Pasillo.findOne({_id:psillo_id})
+	.populate({
+		path:'posiciones.posicion_id'
+	})
+	.populate({
+		path:'producto_id'
+	})
+	.then((pasillos)=>{
+		res.status(200).send(pasillos);
+	})
+	.catch((error)=>{
+		return res.status(500).send({
+			message: error
+		});
+	})
+}
+
 //Posiciones x Pasillo
 function getPosiciones(req, res){
 	let almacen_id = req.query.idAlmacen;
@@ -103,6 +123,7 @@ function _delete(){
 
 module.exports = {
 	get,
+	getById,
 	getPosiciones,
 	save,
 	update,
