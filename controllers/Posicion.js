@@ -20,6 +20,23 @@ function get(req, res){
 	})
 }
 
+function getxPasillo(req, res){
+	let pasillo_id = req.query.idPasillo;
+
+	Posicion.find({
+		pasillo_id: new ObjectId(pasillo_id),
+		statusReg: "ACTIVO"
+	}).sort({nombre: 1})
+	.then((posiciones)=>{
+		res.status(200).send(posiciones);
+	})
+	.catch((error)=>{
+		return res.status(500).send({
+			message: error
+		});
+	})
+}
+
 function getById(req, res){
 	let idPosicion = req.query.idPosicion;
 
@@ -90,6 +107,7 @@ function _delete(req, res){
 
 module.exports = {
 	get,
+	getxPasillo,
 	getById,
 	getNivel,
 	save,

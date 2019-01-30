@@ -99,6 +99,7 @@ app.get('/api/evidencias',Evidencia.getEvidenciasByID);
 app.delete('/api/evidencia',Evidencia.deleteEvidencia);
 
 app.get('/api/posiciones', Posicion.get);
+app.get('/api/posicionesxPasillo', Posicion.getxPasillo);
 app.get('/api/posicion', Posicion.getById);
 app.get('/api/nivel', Posicion.getNivel);
 app.put('/api/posicion', Posicion.update);

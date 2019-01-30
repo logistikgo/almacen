@@ -23,6 +23,8 @@ async function saveSalida(itemPartida,salida_id) {
 	}else{
 		nMovimiento.tipo = "SALIDA_RECHAZO"
 	}
+	nMovimiento.pasillo = itemPartida.pasillo;
+	nMovimiento.pasillo_id = itemPartida.pasillo_id;
 	nMovimiento.posicion = itemPartida.posicion;
 	nMovimiento.posicion_id = itemPartida.posicion_id;
 	nMovimiento.nivel = itemPartida.nivel;
@@ -69,6 +71,8 @@ async function saveEntrada(itemPartida,entrada_id) {
 	}else{
 		nMovimiento.tipo = "ENTRADA_RECHAZO"
 	}
+	nMovimiento.pasillo = itemPartida.pasillo;
+	nMovimiento.pasillo_id = itemPartida.pasillo_id;
 	nMovimiento.posicion = itemPartida.posicion;
 	nMovimiento.posicion_id = itemPartida.posicion_id;
 	nMovimiento.nivel = itemPartida.nivel;

@@ -34,6 +34,8 @@ const Salida = Schema({
 			producto_id:{type:Schema.ObjectId, ref:"Producto"},
 			clave:String,
 			descripcion:String,
+			pasillo: String,
+			pasillo_id: {type:Schema.ObjectId, ref:"Pasillo"},
 			posicion:String,
 			posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
 			nivel:String,
