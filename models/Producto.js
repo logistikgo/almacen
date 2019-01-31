@@ -33,6 +33,7 @@ const Producto = Schema({
 	idSucursal:Number,
 	sucursal_id:{type:Schema.ObjectId, ref:"Sucursal"},
 	almacen_id: {type:Schema.ObjectId, ref:"Almacen"},
+	clienteFiscal_id: {type:Schema.ObjectId, ref:"ClienteFiscal"},
 	presentacion: String,
 	presentacion_id: {type:Schema.ObjectId, ref:"Presentacion"},
 	valor:Number,

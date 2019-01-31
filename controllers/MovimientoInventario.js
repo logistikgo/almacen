@@ -29,6 +29,7 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.posicion_id = itemPartida.posicion_id;
 	nMovimiento.nivel = itemPartida.nivel;
 	nMovimiento.idClienteFiscal = salida.idClienteFiscal;
+	nMovimiento.clienteFiscal_id = salida.clienteFiscal_id;
 	nMovimiento.idSucursal = salida.idSucursal;
 	nMovimiento.sucursal_id = salida.sucursal_id;
 	nMovimiento.almacen_id = salida.almacen_id;
@@ -58,6 +59,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.producto_id = itemPartida.producto_id;
 	nMovimiento.entrada_id = entrada_id;
 	nMovimiento.idClienteFiscal = entrada.idClienteFiscal;
+	nMovimiento.clienteFiscal_id = entrada.clienteFiscal_id;
 	nMovimiento.idSucursal = entrada.idSucursal;
 	nMovimiento.sucursal_id = entrada.sucursal_id;
 	nMovimiento.almacen_id = entrada.almacen_id;
@@ -136,7 +138,7 @@ async function saveAjuste(req, res) {
 	});
 }
 
-function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClienteFiscal,sucursal_id,almacen_id) {
+function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClienteFiscal,clienteFiscal_id,sucursal_id,almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.fechaMovimiento = new Date();
@@ -146,6 +148,7 @@ function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClie
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "EXISTENCIA_INICIAL";
 	nMovimiento.idClienteFiscal = idClienteFiscal;
+	nMovimiento.clienteFiscal_id = clienteFiscal_id;
 	nMovimiento.sucursal_id = sucursal_id;
 	nMovimiento.almacen_id = almacen_id;
 
@@ -368,7 +371,7 @@ async function getByIDs_cte_suc_alm(req, res){
 
 		let filtro = {
 			clienteFiscal_id:{$in:_arrClientesFiscales},
-			idSucursal:{$in:_arrSucursales},
+			sucursal_id:{$in:_arrSucursales},
 			almacen_id:{$in:_arrAlmacenes}
 		};
 		if(tipo!=null && tipo!="TODOS"){
@@ -376,12 +379,12 @@ async function getByIDs_cte_suc_alm(req, res){
 		}
 		let filtroEntrada = {
 			clienteFiscal_id:{$in:_arrClientesFiscales},
-			idSucursal:{$in:_arrSucursales},
+			sucursal_id:{$in:_arrSucursales},
 			almacen_id:{$in:_arrAlmacenes}
 		};
 		let filtroSalida = {
 			clienteFiscal_id:{$in:_arrClientesFiscales},
-			idSucursal:{$in:_arrSucursales},
+			sucursal_id:{$in:_arrSucursales},
 			almacen_id:{$in:_arrAlmacenes}
 		};
 
