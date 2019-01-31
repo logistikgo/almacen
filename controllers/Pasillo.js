@@ -30,7 +30,8 @@ function getById(req, res){
 		path:'posiciones.posicion_id'
 	})
 	.populate({
-		path:'producto_id'
+		path:'posiciones.posicion_id.niveles.productos.producto_id',
+		model: 'Producto'
 	})
 	.then((pasillos)=>{
 		res.status(200).send(pasillos);
