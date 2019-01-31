@@ -91,16 +91,17 @@ function update(req,res){
 }
 
 function _delete(req,res){
-	let _idCliente = req.body.idCliente;
+	let _id = req.body.clienteFiscal_id;
 
 	let item = {
 		statusReg:"BAJA",
 		fechaElimina : new Date()
 	}
-	CteFiscal.updateOne({idCliente:_idCliente},{$set:item}, (error,cliente) => {
-		if(error)
-			return res.status(500).send({message:"Error"});
+	CteFiscal.updateOne({_id:_id},{$set:item})
+	.then((cliente)=>{
 		res.status(200).send(cliente);
+	}).catch((error)=>{
+		res.status(500).send({message:"Error"});
 	});
 	
 }

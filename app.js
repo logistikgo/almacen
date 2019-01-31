@@ -75,7 +75,7 @@ app.post('/api/salida', Salida.save);
 app.get('/api/getCtesFiscales', CteFiscal.get);
 app.get('/api/clienteFiscal', CteFiscal.getByIDCteFiscal);
 app.post('/api/saveCteFiscal', CteFiscal.save);
-app.post('/api/deleteCteFiscal', CteFiscal._delete);
+app.delete('/api/deleteCteFiscal', CteFiscal._delete);
 app.put('/api/clienteFiscal', CteFiscal.update);
 
 app.get('/api/sucursales', Sucursal.get);
