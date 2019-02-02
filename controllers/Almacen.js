@@ -132,20 +132,36 @@ function update(req,res){
 		almacen.usuarioAlta_id= params.usuarioAlta_id;
 		almacen.fechaAlta= new Date();
 
-		let posiciones = params.posiciones;
+		let pasillos = params.pasillos;
 
 		almacen.save()
 		.then(async(data)=>{
-			for(let posicion of posiciones){
-				PosicionModel.findOne({nombre:posicion.nombre, almacen_id:data._id})
-				.then((dataPos) => {
-					if(!dataPos){
-						console.log(dataPos);
-						Posicion.save(data._id, posicion, params.usuarioAlta_id, params.usuarioAlta);
-					}
+			for(let pasillo of pasillos){
+				PasilloModel.findOne({nombre:pasillo.nombre, almacen_id:data._id})
+				.populate({
+					path:'posiciones.posicion_id'
 				})
-			}
+				.then(async (dataPas) => {
+					if(!dataPas){
+						await Pasillo.save(data._id, pasillo, params.usuarioAlta_id, params.usuarioAlta);
+					}
+					else{
+						let posiciones = pasillo.posiciones;
+						let posicionesGuardadas = [];
 
+						for(let posicion of posiciones){
+							let resPosicion = await Posicion.save(dataPas._id, data._id, posicion, params.usuarioAlta_id, params.usuarioAlta);
+							let jPosicion = {
+								"posicion_id": resPosicion._id
+							}
+							posicionesGuardadas.push(jPosicion);
+						}
+						dataPas.posiciones = posicionesGuardadas;
+						dataPas.save();
+						
+					}
+				});
+			}
 			res.status(200).send(data);
 		})
 		.catch((err)=>{
