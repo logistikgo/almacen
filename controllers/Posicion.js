@@ -27,6 +27,10 @@ function getxPasillo(req, res){
 		pasillo_id: new ObjectId(pasillo_id),
 		statusReg: "ACTIVO"
 	}).sort({nombre: 1})
+	.populate({
+		path:'niveles.productos.producto_id',
+		model: 'Producto'
+	})
 	.then((posiciones)=>{
 		res.status(200).send(posiciones);
 	})
