@@ -30,7 +30,23 @@ function getById(req, res) {
 		res.status(200).send(producto);
 	})
 	.catch((error) => {
-		return res.status(500).send(error);
+		res.status(500).send(error);
+	});
+}
+
+function getByClave(req,res){
+	let _clave = req.params.clave;
+
+	Producto.findOne({clave:_clave})
+	.populate({
+		path:'presentacion_id', 
+		model: 'Presentacion'
+	})
+	.then((producto) => {
+		res.status(200).send(producto);
+	})
+	.catch((error) => {
+		res.status(500).send(error);
 	});
 }
 
@@ -188,5 +204,6 @@ module.exports = {
 	update,
 	_delete,
 	validaProducto,
-	getByIDsClientesFiscales
+	getByIDsClientesFiscales,
+	getByClave
 }
