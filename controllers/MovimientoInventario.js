@@ -372,7 +372,8 @@ async function getByIDs_cte_suc_alm(req, res){
 		let filtro = {
 			clienteFiscal_id:{$in:_arrClientesFiscales},
 			sucursal_id:{$in:_arrSucursales},
-			almacen_id:{$in:_arrAlmacenes}
+			almacen_id:{$in:_arrAlmacenes},
+			tipo:{$nin:["EXISTENCIA_INICIAL","SALIDA_RECHAZO","ENTRADA_RECHAZO"]}
 		};
 		if(tipo!=null && tipo!="TODOS"){
 			filtro["tipo"] = tipo;
@@ -387,7 +388,6 @@ async function getByIDs_cte_suc_alm(req, res){
 			sucursal_id:{$in:_arrSucursales},
 			almacen_id:{$in:_arrAlmacenes}
 		};
-
 		if(fechaI!=null && fechaI!=fechaF){
 			let rango = {
 				$gte:new Date(fechaI), //grater than
@@ -398,9 +398,11 @@ async function getByIDs_cte_suc_alm(req, res){
 			
 			let entradas = await Entrada.find(filtroEntrada).exec();
 			let salidas = await Salida.find(filtroSalida).exec();
+			
 
 			let arrEntradas = entradas.map(x=>x._id);
 			let arrSalidas = salidas.map(x=>x._id);
+			
 
 			if(tipo == "ENTRADA"){
 				filtro = {
@@ -419,6 +421,7 @@ async function getByIDs_cte_suc_alm(req, res){
 				};
 			}
 		}
+		
 		MovimientoInventario.find(filtro)
 		.populate({
 			path:'producto_id'

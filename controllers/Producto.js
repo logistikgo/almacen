@@ -109,6 +109,7 @@ async function save(req,res) {
 	nProducto.almacen_id = params.almacen_id;
 	nProducto.presentacion = params.presentacion;
 	nProducto.presentacion_id = params.presentacion_id;
+	nProducto.valor = 0;
 
 	nProducto.save()
 	.then((productoStored)=>{		
