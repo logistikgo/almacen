@@ -373,7 +373,7 @@ async function getByIDs_cte_suc_alm(req, res){
 			clienteFiscal_id:{$in:_arrClientesFiscales},
 			sucursal_id:{$in:_arrSucursales},
 			almacen_id:{$in:_arrAlmacenes},
-			tipo:{$nin:["EXISTENCIA_INICIAL","SALIDA_RECHAZO","ENTRADA_RECHAZO"]}
+			tipo:{$nin:["SALIDA_RECHAZO","ENTRADA_RECHAZO"]}
 		};
 		if(tipo!=null && tipo!="TODOS"){
 			filtro["tipo"] = tipo;
