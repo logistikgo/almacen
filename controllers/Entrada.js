@@ -12,7 +12,7 @@ function getNextID(){
 function get( req,res){
 	Entrada.find({}, (error,producto)=>{
 		if(error)
-		return res.status(500).send({message:"Error"});
+			return res.status(500).send({message:"Error"});
 
 		res.status(200).send(producto);
 
@@ -61,6 +61,30 @@ function getEntradaByID(req, res) {
 	})
 	.then((entrada)=>{
 		res.status(200).send(entrada);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	});
+}
+
+function getPartidaById(req, res) {
+	let params = req.query;
+	let entrada_id = params.entrada_id;
+	let partida_id = params.partida_id;
+
+	Entrada.findOne({_id: entrada_id})
+	.populate({
+		path:'partidas.producto_id',
+		model:'Producto'
+	})
+	.populate({
+		path:'partidasSalida.producto_id',
+		model:'Producto'
+	})
+	.then((entrada)=>{
+		let partida = entrada.partidas.find(x=>x._id==partida_id);
+
+		res.status(200).send(partida);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);
@@ -165,7 +189,7 @@ async function updatePosicion_Partida(req,res){
 
 		Entrada.updateOne({idEntrada:_idEntrada},{$set:cambios},(err,entrada)=>{
 			if(err)
-			return res.status(500).send({message:"Error"});
+				return res.status(500).send({message:"Error"});
 			res.status(200).send(entrada);
 		});
 	}
@@ -216,7 +240,7 @@ async function validaEntrada(req,res){
 
 		Entrada.updateOne({idEntrada:_idEntrada},{$set:cambios},(err,entrada)=>{
 			if(err)
-			return res.status(500).send({message:"Error"});
+				return res.status(500).send({message:"Error"});
 			for(let itemPartida of arrPartidas){
 				MovimientoInventario.saveEntrada(itemPartida.producto_id, entrada.id, itemPartida.piezas,itemPartida.cajas,itemPartida.tarimas,
 					_entrada.idClienteFiscal,_entrada.idSucursal,_entrada.almacen_id, itemPartida.posicion, itemPartida.nivel);
@@ -297,6 +321,7 @@ module.exports = {
 	getEntradaByID,
 	save,
 	getEntradasByIDs,
+	getPartidaById,
 	validaEntrada,
 	updatePosicionPartida,
 	updatePosicionEntrada

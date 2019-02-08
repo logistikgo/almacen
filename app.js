@@ -63,6 +63,7 @@ app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID', Entrada.getEntradaByID);
 app.get('/api/getEntradasByIDs',Entrada.getEntradasByIDs);
 app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
+app.get('/api/partida', Entrada.getPartidaById);
 app.post('/api/entrada', Entrada.save);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
 app.put('/api/posicionxPartida', Entrada.updatePosicionPartida);
