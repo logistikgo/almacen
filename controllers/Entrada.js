@@ -70,7 +70,7 @@ function getEntradaByID(req, res) {
 function getPartidaById(req, res) {
 	let params = req.query;
 	let entrada_id = params.entrada_id;
-	let partida_id = params.partida_id;
+	let clave_partida = params.clave_partida;
 
 	Entrada.findOne({_id: entrada_id})
 	.populate({
@@ -82,12 +82,60 @@ function getPartidaById(req, res) {
 		model:'Producto'
 	})
 	.then((entrada)=>{
-		let partida = entrada.partidas.find(x=>x._id==partida_id);
+		let partida = entrada.partidas.find(x=>x.clave_partida==clave_partida);
 
 		res.status(200).send(partida);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);
+	});
+}
+
+function updatePartida(req,res){
+	let bodyParams = req.query;
+
+	let entrada_id = bodyParams.entrada_id;
+	let clave_partida = bodyParams.clave_partida;
+
+	Entrada.findOne({_id:entrada_id})
+	.then((entrada) => {
+
+		let partida = entrada.partidas.find(x=>x.clave_partida == clave_partida);
+		let partidaSalida = entrada.partidaSalida.find(x=>x.clave_partida == clave_partida);
+
+		partida.pasillo = bodyParams.pasillo;
+		partida.pasillo_id = bodyParams.pasillo_id;
+		partida.posicion = bodyParams.posicion;
+		partida.posicion_id = bodyParams.posicion_id;
+		partida.nivel = bodyParams.nivel;
+		partida.valor = bodyParams.valor;
+		partida.pesoBruto = bodyParams.pesoBruto;
+		partida.pesoNeto = bodyParams.pesoNeto;
+		partida.embalajes = bodyParams.embalajes;
+
+		partidaSalida.pasillo = bodyParams.pasillo;
+		partidaSalida.pasillo_id = bodyParams.pasillo_id;
+		partidaSalida.posicion = bodyParams.posicion;
+		partidaSalida.posicion_id = bodyParams.posicion_id;
+		partidaSalida.nivel = bodyParams.nivel;
+		partidaSalida.valor = bodyParams.valor;
+		partidaSalida.pesoBruto = bodyParams.pesoBruto;
+		partidaSalida.pesoNeto = bodyParams.pesoNeto;
+		partidaSalida.embalajes = bodyParams.embalajes;
+
+		let item = {
+			partidas: entrada.partidas,
+			partidaSalida: entrada.partidaSalida
+		};
+
+		Entrada.updateOne({_id:entrada_id},{$set:item})
+		.then((item)=>{
+			res.status(200).send(item);
+		})
+		.catch((err)=>{
+			console.log(err);
+			res.status(500).send(err);
+		});
 	});
 }
 
@@ -131,7 +179,6 @@ async function save(req, res){
 
 	nEntrada.save()
 	.then(async(entrada)=>{
-
 		for(let itemPartida of entrada.partidas){
 			console.log("OK");
 			await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
@@ -148,6 +195,7 @@ async function updatePosicion_Partida(req,res){
 	let _entrada_id = body.idEntrada;
 	let _partidas = body.partidas;
 	let arrPartidas = [];
+	
 	let _entrada = await Entrada.findOne({idEntrada:_entrada_id})
 	.populate({
 		path:'partidas.producto_id',
@@ -322,6 +370,7 @@ module.exports = {
 	save,
 	getEntradasByIDs,
 	getPartidaById,
+	updatePartida,
 	validaEntrada,
 	updatePosicionPartida,
 	updatePosicionEntrada

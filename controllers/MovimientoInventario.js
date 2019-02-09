@@ -79,6 +79,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.posicion_id = itemPartida.posicion_id;
 	nMovimiento.nivel = itemPartida.nivel;
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
+	nMovimiento.clave_partida = itemPartida.clave_partida;
 
 	await updateExistenciaPosicion(1, itemPartida);
 

@@ -27,8 +27,8 @@ const MovimientoInventario = Schema({
 	posicion: String,
 	posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
 	nivel:String,
-	embalajes:{}
-	
+	embalajes:{},
+	clave_partida: Number
 },
 {collection:"MovimientosInventario"});
 
