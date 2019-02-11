@@ -1,5 +1,6 @@
 'use strict'
 const Producto = require('../models/Producto');
+const ClienteALM_XD = require('../controllers/ClienteALM_XD');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario')
 
@@ -53,6 +54,40 @@ function getByClave(req,res){
 function getByIDsClientesFiscales(req,res){
 	let _arrClienteFiscales = req.query.arrClientesFiscales;
 	Producto.find({arrClientesFiscales_id:{$in:_arrClienteFiscales},"statusReg":"ACTIVO"})
+	.populate({
+		path:'presentacion_id', 
+		model: 'Presentacion'
+	})
+	.then((productos)=>{
+		res.status(200).send(productos);
+	})
+	.catch((err)=>{
+		res.status(500).send({message:"Error", error:err});
+	});
+}
+
+function getByIDClienteFiscal(req, res) {
+	let _idClienteFiscal = req.params.idClienteFiscal;
+	Producto.find({arrClientesFiscales_id:{$in:[_idClienteFiscal]}, statusReg:"ACTIVO"})
+	.populate({
+		path:'presentacion_id', 
+		model: 'Presentacion'
+	})
+	.then((producto) => {
+		res.status(200).send(producto);
+	})
+	.catch((error) => {
+		return res.status(500).send(error);
+	});
+	
+}
+
+async function getALM_XD(req,res){
+	let _arrClientesFiscalesXD= req.query.arrClientesFiscales;
+	
+	let _arrClientesFiscalesALM = await ClienteALM_XD.getIDClienteALM(_arrClientesFiscalesXD);
+	
+	Producto.find({arrClientesFiscales_id:{$in:_arrClientesFiscalesALM},"statusReg":"ACTIVO"})
 	.populate({
 		path:'presentacion_id', 
 		model: 'Presentacion'
@@ -206,5 +241,6 @@ module.exports = {
 	_delete,
 	validaProducto,
 	getByIDsClientesFiscales,
-	getByClave
+	getByClave,
+	getALM_XD
 }
