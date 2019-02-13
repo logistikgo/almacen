@@ -19,7 +19,8 @@ const Posicion = require('./controllers/Posicion');
 const Embalaje = require('./controllers/Embalaje');
 const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
-const dotenv = require('dotenv');
+const PrePartida = require('./controllers/PrePartida');
+const dotenv = require('dotenv'); //Used for environment variables
 dotenv.config();
 
 app.use(bodyParser.urlencoded({
@@ -34,8 +35,6 @@ app.use(function (req, res, next) {
     next();
 });
 
-//app.post('/api/formatEmbalajes',Helper.formatEmbalajes);
-//app.post('/api/formatItems',Helper.FormatItems);
 
 app.get('/api/productos', Producto.get);
 app.get('/api/producto', Producto.getById);
@@ -124,5 +123,8 @@ app.delete('/api/presentacion', Presentacion._delete);
 app.get('/api/pasillos', Pasillo.get);
 app.get('/api/pasillo', Pasillo.getById);
 app.get('/api/posicionesNom', Pasillo.getPosiciones);
+
+app.post('/api/prepartida',PrePartida.save);
+app.get('/api/prepartida',PrePartida.get);
 
 module.exports = app;

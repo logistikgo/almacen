@@ -86,7 +86,7 @@ async function getALM_XD(req,res){
 	let _arrClientesFiscalesXD= req.query.arrClientesFiscales;
 	
 	let _arrClientesFiscalesALM = await ClienteALM_XD.getIDClienteALM(_arrClientesFiscalesXD);
-	
+	console.log(_arrClientesFiscalesALM);
 	Producto.find({arrClientesFiscales_id:{$in:_arrClientesFiscalesALM},"statusReg":"ACTIVO"})
 	.populate({
 		path:'presentacion_id', 
