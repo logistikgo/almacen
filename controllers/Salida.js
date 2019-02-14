@@ -30,7 +30,7 @@ function getSalidasByIDs(req,res){
 		tipo:_tipo
 	};
 
-	Salida.find(filter)
+	Salida.find(filter).sort({fechaSalida:-1})
 	.then((salidas)=>{
 		res.status(200).send(salidas);
 	})

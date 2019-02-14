@@ -36,6 +36,8 @@ function save(req,res){
 	nPrePartida.pesoBruto = req.body.pesoBruto;
 	nPrePartida.pesoNeto = req.body.pesoNeto;
 	nPrePartida.embalajes = req.body.embalajes;
+	nPrePartida.isEmpty = false;
+	nPrePartida.clave_partida = req.body.clave_partida;
 
 	nPrePartida.save()
 	.then((PrePartida)=>{
@@ -76,7 +78,7 @@ async function saveEntradaAutomatica(req,res){
 	nEntrada.almacen_id = bodyParams.almacen_id;
 	nEntrada.status = bodyParams.status;
 	nEntrada.tipo = bodyParams.tipo;
-	nEntrada.partidas = bodyParams.partidas;
+	nEntrada.partidas = partidas;
 	nEntrada.partidasSalida = bodyParams.partidasSalida;
 	nEntrada.isEmpty = bodyParams.isEmpty;
 

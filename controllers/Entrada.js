@@ -31,7 +31,7 @@ function getEntradasByIDs(req,res){
 		almacen_id:_idAlmacen,
 		tipo:_tipo
 	};
-	Entrada.find(filter)
+	Entrada.find(filter).sort({fechaEntrada:-1})
 	.populate({
 		path:'partidas.producto_id',
 		model:'Producto'
