@@ -124,7 +124,7 @@ app.get('/api/pasillos', Pasillo.get);
 app.get('/api/pasillo', Pasillo.getById);
 app.get('/api/posicionesNom', Pasillo.getPosiciones);
 
-app.post('/api/prepartida',PrePartida.save);
+app.post('/api/prepartida',PrePartida.savePartidasPedido);
 app.get('/api/prepartida',PrePartida.get);
 
 module.exports = app;

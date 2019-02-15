@@ -20,32 +20,41 @@ function get(req,res){
 
 
 
-function save(req,res){
+function save(partida,IDPedido){
 
 	let nPrePartida = new PrePartida();
-	nPrePartida.IDPedido = req.body.IDPedido;
+	nPrePartida.IDPedido = IDPedido;
 	nPrePartida.fechaAlta = new Date();
-	nPrePartida.producto_id = req.producto_id;
-	nPrePartida.clave = req.body.clave;
-	nPrePartida.descripcion = req.body.descripcion;
-	nPrePartida.posicion = req.body.posicion;
-	nPrePartida.posicion_id = req.body.posicion_id;
-	nPrePartida.nivel = req.body.nivel;
-	nPrePartida.lote = req.body.lote;
-	nPrePartida.valor = req.body.valor;
-	nPrePartida.pesoBruto = req.body.pesoBruto;
-	nPrePartida.pesoNeto = req.body.pesoNeto;
-	nPrePartida.embalajes = req.body.embalajes;
+	nPrePartida.producto_id = partida.producto_id;
+	nPrePartida.clave = partida.clave;
+	nPrePartida.descripcion = partida.descripcion;
+	nPrePartida.lote = partida.lote;
+	nPrePartida.valor = partida.valor;
+	nPrePartida.pesoBruto = partida.pesoBruto;
+	nPrePartida.pesoNeto = partida.pesoNeto;
+	nPrePartida.embalajes = partida.embalajes;
 	nPrePartida.isEmpty = false;
-	nPrePartida.clave_partida = req.body.clave_partida;
+	nPrePartida.clave_partida = partida.clave_partida;
 
 	nPrePartida.save()
 	.then((PrePartida)=>{
-		res.status(201).send(PrePartida);
+		
 	})
 	.catch((error)=>{
-		res.status(500).send(error);
+		return -1;
 	});
+}
+
+function savePartidasPedido(req,res){
+	let _arrPartidas = req.body.partidas;
+	let IDPedido = req.body.idPedido;
+
+	if(_arrPartidas.length>0){
+		_arrPartidas.forEach(function(partida){
+			save(partida,IDPedido);
+		});
+		res.status(201).send(_arrPartidas);
+	}
 }
 
 async function saveEntradaAutomatica(req,res){
@@ -106,5 +115,6 @@ async function saveEntradaAutomatica(req,res){
 
 module.exports = {
 	save,
-	get
+	get,
+	savePartidasPedido
 }
