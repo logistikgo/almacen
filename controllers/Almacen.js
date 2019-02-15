@@ -3,11 +3,14 @@
 const Almacen = require('../models/Almacen');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../models/MovimientoInventario');
+
 const Posicion = require('../controllers/Posicion');
 const PosicionModel = require('../models/Posicion');
 
 const Pasillo = require('../controllers/Pasillo');
 const PasilloModel = require('../models/Pasillo');
+
+var ObjectId = (require('mongoose').Types.ObjectId);
 
 async function getNextID(){
 	return await Helpers.getNextID(Almacen,"idAlmacen");
@@ -46,15 +49,46 @@ function getById(req,res){
 	});
 }
 
+function getCatalogo(req,res){
+	let _arrSucursales = req.query.arrSucursales;
+
+	Almacen.find({
+		idSucursal:{$in:_arrSucursales},
+		statusReg:"ACTIVO"
+	},async (err,almacenes)=>{
+		console.log("*******************");
+
+		if(err)
+			return res.status(500).send({message:"Error"});
+
+		for(let almacen of almacenes){
+			console.log(almacen._id);
+
+			let cantPasillos = await PasilloModel.find({"almacen_id": new ObjectId(almacen._id)}).count();
+			let cantPosiciones = await PosicionModel.find({"almacen_id": new ObjectId(almacen._id)}).count();
+			
+			console.log(cantPasillos);
+			console.log(cantPosiciones);
+
+			almacen.pasillos_count = cantPasillos;
+			almacen.posiciones_count = cantPosiciones;
+		}
+
+		console.log(almacenes);
+		res.status(200).send(almacenes);
+	});
+}
+
 function get(req,res){
 	let _arrSucursales = req.query.arrSucursales;
 
 	Almacen.find({
 		idSucursal:{$in:_arrSucursales},
 		statusReg:"ACTIVO"
-	},(err,almacenes)=>{
+	}, (err,almacenes)=>{
 		if(err)
 			return res.status(500).send({message:"Error"});
+
 		res.status(200).send(almacenes);
 	});
 }

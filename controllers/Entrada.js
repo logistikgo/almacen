@@ -4,6 +4,7 @@ const Entrada = require('../models/Entrada');
 const Helper = require('../helpers');
 const Producto = require('../models/Producto');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
+const MovimientoInventarioModel = require('../models/MovimientoInventario');
 
 function getNextID(){
 	return Helper.getNextID(Entrada,"idEntrada");
@@ -98,10 +99,10 @@ function updatePartida(req,res){
 	let clave_partida = bodyParams.clave_partida;
 
 	Entrada.findOne({_id:entrada_id})
-	.then((entrada) => {
+	.then(async(entrada) => {
 
 		let partida = entrada.partidas.find(x=>x.clave_partida == clave_partida);
-		let partidaSalida = entrada.partidaSalida.find(x=>x.clave_partida == clave_partida);
+		let partidaSalida = entrada.partidasSalida.find(x=>x.clave_partida == clave_partida);
 
 		partida.pasillo = bodyParams.pasillo;
 		partida.pasillo_id = bodyParams.pasillo_id;
@@ -125,17 +126,34 @@ function updatePartida(req,res){
 
 		let item = {
 			partidas: entrada.partidas,
-			partidaSalida: entrada.partidaSalida
+			partidasSalida: entrada.partidasSalida
 		};
-
-		Entrada.updateOne({_id:entrada_id},{$set:item})
+		let succefulEntrada = 0;
+		await Entrada.updateOne({_id:entrada_id},{$set:item})
 		.then((item)=>{
-			res.status(200).send(item);
-		})
-		.catch((err)=>{
-			console.log(err);
-			res.status(500).send(err);
+			succefulEntrada = 1;
 		});
+
+		let itemMovimiento = {
+			embalajes: bodyParams.embalajes,
+			pesoBruto: bodyParams.pesoBruto,
+			pesoNeto: bodyParams.pesoNeto,
+			pasillo: bodyParams.pasillo,
+			pasillo_id: bodyParams.pasillo_id,
+			posicion: bodyParams.posicion,
+			posicion_id: bodyParams.posicion_id,
+			nivel: bodyParams.nivel,
+		};
+		let succefulmovimiento = 0;
+		await MovimientoInventarioModel.updateOne({entrada_id:entrada, clave_partida: clave_partida},{$set:itemMovimiento})
+		.then((item)=>{
+			succefulmovimiento = 1;
+		});
+
+		if(succefulEntrada == 1 && succefulmovimiento==1)
+			res.status(200).send(entrada);
+		else
+			res.status(500).send(entrada);
 	});
 }
 
