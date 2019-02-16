@@ -33,6 +33,7 @@ const Entrada = Schema({
 	status: String,
 	tipo:String,
 	isEmpty: Boolean,
+	salidas_id : [{type:Schema.ObjectId,ref:'Salida'}],
 	partidas:[
 		{
 			producto_id:{type:Schema.ObjectId, ref:"Producto"},

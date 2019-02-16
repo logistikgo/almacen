@@ -92,6 +92,7 @@ async function save(req, res) {
 	.then(async(salida)=>{
 		for(let itemPartida of salida.partidas){
 				await MovimientoInventario.saveSalida(itemPartida,salida.id)
+				await saveSalidasEnEntrada(salida.entrada_id,salida._id);
 		}
 		res.status(200).send(salida);
 	})
@@ -181,6 +182,22 @@ async function updatePartidasSalida(entrada_id,partidasDeSalida){
 
 	});
 
+}
+
+async function saveSalidasEnEntrada(entrada_id,salida_id){
+	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
+	entrada.salidas_id.push(salida_id);
+
+	let jEdit = {
+		salidas_id:entrada.salidas_id
+	};
+
+	Entrada.updateOne({_id:entrada_id},{$set:jEdit})
+	.then((data)=>{
+
+	}).catch((error)=>{
+
+	});
 }
 
 module.exports = {
