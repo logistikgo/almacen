@@ -82,10 +82,11 @@ async function getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,_ti
 	};
 
 	let partidasEntrada = await getPartidasEntradas(filtro);
-	let partidasSalida = await getPartidasSalidas(filtro);
+	//let partidasSalida = await getPartidasSalidas(filtro);
 
-	infoPartidasGrl = partidasEntrada.concat(partidasSalida);
-	return infoPartidasGrl;
+	//infoPartidasGrl = partidasEntrada.concat(partidasSalida);
+	//return infoPartidasGrl;
+	return partidasEntrada;
 }
 
 async function getPartidasEntradas(filtro){
@@ -102,6 +103,10 @@ async function getPartidasEntradas(filtro){
 		.populate({
 			path:'almacen_id',
 			model:'Almacen'
+		})
+		.populate({
+			path:'salidas_id',
+			model:'Salida'
 		})
 		.exec();
 		
