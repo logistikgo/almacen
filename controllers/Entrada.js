@@ -349,6 +349,8 @@ function updatePosicionPartida(req,res){
 async function updatePosicion(partida,bodyParams){
 	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
 
+	partida.pasillo = bodyParams.pasillo;
+	partida.pasillo_id = bodyParams.pasillo_id;
 	partida.posicion = bodyParams.posicion;
 	partida.posicion_id = bodyParams.posicion_id;
 	partida.nivel = bodyParams.nivel;
