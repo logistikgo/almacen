@@ -56,26 +56,24 @@ function getCatalogo(req,res){
 		idSucursal:{$in:_arrSucursales},
 		statusReg:"ACTIVO"
 	},async (err,almacenes)=>{
-		console.log("*******************");
-
 		if(err)
 			return res.status(500).send({message:"Error"});
 
+		let resAlmacenes = [];
+
 		for(let almacen of almacenes){
-			console.log(almacen._id);
+			let jAlmacen = JSON.parse( JSON.stringify( almacen ) );
 
 			let cantPasillos = await PasilloModel.find({"almacen_id": new ObjectId(almacen._id)}).count();
 			let cantPosiciones = await PosicionModel.find({"almacen_id": new ObjectId(almacen._id)}).count();
-			
-			console.log(cantPasillos);
-			console.log(cantPosiciones);
 
-			almacen.pasillos_count = cantPasillos;
-			almacen.posiciones_count = cantPosiciones;
+			jAlmacen['pasillos_count'] = cantPasillos;
+			jAlmacen['posiciones_count'] = cantPosiciones;
+
+			resAlmacenes.push(jAlmacen);
 		}
 
-		console.log(almacenes);
-		res.status(200).send(almacenes);
+		res.status(200).send(resAlmacenes);
 	});
 }
 
@@ -248,6 +246,7 @@ module.exports = {
 	getAlmacen,
 	getById,
 	get,
+	getCatalogo,
 	save,
 	update,
 	_delete,
