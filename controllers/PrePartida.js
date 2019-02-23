@@ -35,6 +35,7 @@ function save(partida,IDPedido){
 	nPrePartida.embalajes = partida.embalajes;
 	nPrePartida.isEmpty = false;
 	nPrePartida.clave_partida = partida.clave_partida;
+	nPrePartida.isAsignado = false;
 
 	nPrePartida.save()
 	.then((PrePartida)=>{
