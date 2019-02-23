@@ -46,8 +46,8 @@ function save(partida,IDPedido){
 }
 
 function savePartidasPedido(req,res){
-	let _arrPartidas = req.query.partidas;
-	let IDPedido = req.query.idPedido;
+	let _arrPartidas = req.body.partidas;
+	let IDPedido = req.body.idPedido;
 
 	console.log(_arrPartidas);
 
