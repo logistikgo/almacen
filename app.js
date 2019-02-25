@@ -20,6 +20,9 @@ const Embalaje = require('./controllers/Embalaje');
 const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
 const PrePartida = require('./controllers/PrePartida');
+const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
+const ColumnasxTipoUsuario = require("./controllers/ColumnasxTipoUsuario");
+
 const dotenv = require('dotenv'); //Used for environment variables
 dotenv.config();
 
