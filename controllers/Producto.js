@@ -1,6 +1,6 @@
 'use strict'
 const Producto = require('../models/Producto');
-const ClienteALM_XD = require('../controllers/ClienteALM_XD');
+const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario')
 
@@ -85,7 +85,7 @@ function getByIDClienteFiscal(req, res) {
 async function getALM_XD(req,res){
 	let _arrClientesFiscalesXD= req.query.arrClientesFiscales;
 	
-	let _arrClientesFiscalesALM = await ClienteALM_XD.getIDClienteALM(_arrClientesFiscalesXD);
+	let _arrClientesFiscalesALM = await Interfaz_ALM_XD.getIDClienteALM(_arrClientesFiscalesXD);
 	console.log(_arrClientesFiscalesALM);
 	Producto.find({arrClientesFiscales_id:{$in:_arrClientesFiscalesALM},"statusReg":"ACTIVO"})
 	.populate({

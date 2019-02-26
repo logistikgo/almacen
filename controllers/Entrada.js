@@ -5,6 +5,8 @@ const Helper = require('../helpers');
 const Producto = require('../models/Producto');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
+const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
+const PrePartida = require('../models/PrePartida');
 
 function getNextID(){
 	return Helper.getNextID(Entrada,"idEntrada");
@@ -384,6 +386,78 @@ function updatePosicionEntrada(req,res){
 	});
 }
 
+async function saveEntradaAutomatica(req,res){
+	let bodyParams = req.body;
+	let arrIDPedido = bodyParams.arrIDPedido;
+	let partidas = await PrePartida.find({IDPedido:{$in:arrIDPedido}}).exec();
+	
+	if(partidas && partidas.length>0)
+	{
+
+		let nEntrada = new Entrada();
+
+		let arrClientes = Interfaz_ALM_XD.getIDClienteALM([bodyParams.clienteFiscal_id]);
+		let arrSucursales = Interfaz_ALM_XD.getIDSucursalALM([bodyParams.sucursal_id]);
+
+		nEntrada.nombreUsuario = bodyParams.nombreUsuario; //nombreUsuario
+		nEntrada.embarque = bodyParams.embarque; //Folio viaje 
+		nEntrada.fechaEntrada = new Date(bodyParams.strFechaIngreso); 
+		nEntrada.tracto = bodyParams.tracto;//Si lo trae
+		nEntrada.remolque = bodyParams.remolque;//Si lo trae
+		nEntrada.unidad = bodyParams.unidad;//Si lo trae
+		nEntrada.transportista = bodyParams.transportista;//Si lo trae
+		nEntrada.valor = bodyParams.valor;//Si lo trae
+		nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes
+		nEntrada.sucursal_id = arrSucursales[0]; //Interfaz ALM_XD Sucursales
+
+		nEntrada.status = bodyParams.status; //SIN_POSICION
+		nEntrada.tipo = bodyParams.tipo;//NORMAL
+		nEntrada.partidas = partidas; //Pre partidas
+		nEntrada.partidasSalida = partidas; //Pre partidas
+		nEntrada.isEmpty = false;
+
+		nEntrada.fechaAlta = new Date();
+		nEntrada.idEntrada = await getNextID();
+		nEntrada.folio = await getNextID();
+
+		//nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id; //Diferente usuario Omitir
+		
+		//nEntrada.item = bodyParams.item; //Capturar en asignacion de posiciones
+		
+		//nEntrada.referencia = bodyParams.referencia; //Capturar
+		
+		//nEntrada.acuse = bodyParams.acuse; //Capturar
+		//nEntrada.recibio = bodyParams.recibio; //QUien hizo la asignacion de posiciones
+		//nEntrada.proveedor = bodyParams.proveedor; //Capturar
+		//nEntrada.ordenCompra = bodyParams.ordenCompra;//Capturar
+		//nEntrada.factura = bodyParams.factura;//Capturar
+		
+		
+
+		//nEntrada.idClienteFiscal = bodyParams.idClienteFiscal; //Ño
+		//nEntrada.idSucursal = bodyParams.idSucursal;// 
+		
+		//nEntrada.almacen_id = bodyParams.almacen_id; //Capturar
+		
+		nEntrada.save()
+		.then(async(entrada)=>{
+			updateToAsignado(partidas);
+
+			for(let itemPartida of entrada.partidas){
+				
+				await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
+			}
+			res.status(200).send(entrada);
+		})
+		.catch((error)=>{
+			res.status(500).send(error);
+		});
+	}else{
+		res.status(400).send({message:"Se intenta generar una entrada sin partidas",error:"No se encontró pre-partidas para los IDs de pedidos indicados"});
+	}
+
+}
+
 module.exports = {
 	get,
 	getEntradaByID,
@@ -393,5 +467,6 @@ module.exports = {
 	updatePartida,
 	validaEntrada,
 	updatePosicionPartida,
-	updatePosicionEntrada
+	updatePosicionEntrada,
+	saveEntradaAutomatica
 }
