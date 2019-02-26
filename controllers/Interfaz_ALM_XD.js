@@ -13,7 +13,7 @@ async function getIDSucursalALM(arrSucursalesXD) {
 	console.log(arrSucursalesXD);
 	let SucursalesALM_XD = await Interfaz_ALM_XD.find({xd_id:{$in:arrSucursalesXD},tipo:"Sucursal"}).exec();
 	let arrSucursalesALM = SucursalesALM_XD.map(x=>x.alm_id.toString());
-	return Sucu
+	return arrSucursalesALM;
 }
 
 

@@ -396,12 +396,12 @@ async function saveEntradaAutomatica(req,res){
 
 		let nEntrada = new Entrada();
 
-		let arrClientes = Interfaz_ALM_XD.getIDClienteALM([bodyParams.clienteFiscal_id]);
-		let arrSucursales = Interfaz_ALM_XD.getIDSucursalALM([bodyParams.sucursal_id]);
+		let arrClientes = Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
+		let arrSucursales = Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
 
 		nEntrada.nombreUsuario = bodyParams.nombreUsuario; //nombreUsuario
 		nEntrada.embarque = bodyParams.embarque; //Folio viaje 
-		nEntrada.fechaEntrada = new Date(bodyParams.strFechaIngreso); 
+		nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada); 
 		nEntrada.tracto = bodyParams.tracto;//Si lo trae
 		nEntrada.remolque = bodyParams.remolque;//Si lo trae
 		nEntrada.unidad = bodyParams.unidad;//Si lo trae
@@ -441,7 +441,7 @@ async function saveEntradaAutomatica(req,res){
 		
 		nEntrada.save()
 		.then(async(entrada)=>{
-			updateToAsignado(partidas);
+			await updateToAsignado(partidas);
 
 			for(let itemPartida of entrada.partidas){
 				

@@ -49,7 +49,7 @@ function save(partida,IDPedido){
 function updateToAsignado(arrPartidas){
 
 	let arrIDPartidas = arrPartidas.map(x=>x._id).toArray();
-
+	console.log(arrIDPartidas);
 	PrePartida.Update({_id:{$in:arrIDPartidas}},{$set:{isAsignado:true}})
 	.then((updated)=>{
 		return 1;
