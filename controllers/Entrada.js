@@ -27,13 +27,21 @@ function getEntradasByIDs(req,res){
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
 	let _tipo = req.query.tipo;
+	let _status = req.query.status;
 
 	let filter = {
 		clienteFiscal_id: _idClienteFiscal,
-		idSucursal:_idSucursal,
-		almacen_id:_idAlmacen,
+		sucursal_id:_idSucursal,
 		tipo:_tipo
 	};
+
+	if(!_status) //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
+	{
+		filter["almacen_id"] = _idAlmacen;
+		filter["status"] = "APLICADA";
+	}else{
+		filter["status"] = _status;
+	}
 	Entrada.find(filter).sort({fechaEntrada:-1})
 	.populate({
 		path:'partidas.producto_id',
@@ -396,9 +404,10 @@ async function saveEntradaAutomatica(req,res){
 
 		let nEntrada = new Entrada();
 
-		let arrClientes = Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
-		let arrSucursales = Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
-
+		let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
+		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
+		console.log(arrClientes);
+		console.log(arrSucursales);
 		nEntrada.nombreUsuario = bodyParams.nombreUsuario; //nombreUsuario
 		nEntrada.embarque = bodyParams.embarque; //Folio viaje 
 		nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada); 
@@ -432,8 +441,6 @@ async function saveEntradaAutomatica(req,res){
 		//nEntrada.ordenCompra = bodyParams.ordenCompra;//Capturar
 		//nEntrada.factura = bodyParams.factura;//Capturar
 		
-		
-
 		//nEntrada.idClienteFiscal = bodyParams.idClienteFiscal; //Ño
 		//nEntrada.idSucursal = bodyParams.idSucursal;// 
 		

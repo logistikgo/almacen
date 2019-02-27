@@ -17,8 +17,6 @@ async function getIDSucursalALM(arrSucursalesXD) {
 }
 
 
-
-
 module.exports = {
 	getIDClienteALM,
 	getIDSucursalALM
