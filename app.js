@@ -21,7 +21,6 @@ const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
 const PrePartida = require('./controllers/PrePartida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
-const ColumnasxTipoUsuario = require("./controllers/ColumnasxTipoUsuario");
 
 const dotenv = require('dotenv'); //Used for environment variables
 dotenv.config();
@@ -131,5 +130,7 @@ app.get('/api/posicionesNom', Pasillo.getPosiciones);
 
 app.post('/api/prepartida',PrePartida.savePartidasPedido);
 app.get('/api/prepartida',PrePartida.get);
+
+app.get('/api/columnas',ColumnasxUsuario.getColumns);
 
 module.exports = app;

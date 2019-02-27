@@ -2,19 +2,18 @@
 
 const ColumnasxTipoUsuario = require('../models/ColumnasxTipoUsuario');
 
-function get(req, res) {
-    let tipoUsuario = req.query.tipoUsuario;
-    let idTable = req.query.idTable;
+function get(tipoUsuario, idTable) {
+    let resColumnas;
 
     ColumnasxTipoUsuario.find({tipoUsuario: tipoUsuario, idTabla: idTable})
-        .then((columnas) => {
-            res.status(200).send(conf);
-        })
-        .catch((error) => {
-            return res.status(500).send({
-                message: error
-            });
-        });
+    .then((columnas) => {
+        resColumnas = columnas;
+    })
+    .catch((error) => {
+        resColumnas = null;
+    });
+        console.log(resColumnas);
+    return resColumnas;
 }
 
 module.exports = {
