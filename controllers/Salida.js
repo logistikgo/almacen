@@ -200,6 +200,8 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 	});
 }
 
+function save
+
 module.exports = {
 	get, 
 	getByID,
