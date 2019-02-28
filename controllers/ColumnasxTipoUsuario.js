@@ -2,17 +2,19 @@
 
 const ColumnasxTipoUsuario = require('../models/ColumnasxTipoUsuario');
 
-function get(tipoUsuario, idTable) {
+async function get(tipoUsuario, idTable) {
     let resColumnas;
 
-    ColumnasxTipoUsuario.find({tipoUsuario: tipoUsuario, idTabla: idTable})
+    await ColumnasxTipoUsuario.find({tipoUsuario: tipoUsuario, idTabla: idTable})
     .then((columnas) => {
         resColumnas = columnas;
+    console.log( "get tipousuario then" + resColumnas);
+
     })
     .catch((error) => {
         resColumnas = null;
     });
-        console.log(resColumnas);
+        console.log( "get tipousuario" + resColumnas);
     return resColumnas;
 }
 

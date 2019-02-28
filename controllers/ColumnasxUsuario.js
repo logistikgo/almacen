@@ -4,44 +4,50 @@ const ColumnasxUsuario = require('../models/ColumnasxUsuario');
 const ColumnasxTipoUsuario = require("../controllers/ColumnasxTipoUsuario");
 
 async function get(idUsuario, idTable) {
-    let resColumnas;
+    let resColumnas = null;;
+    console.log( resColumnas);
 
-    await ColumnasxUsuario.find({idUsuario: idUsuario, idTabla: idTable})
+    await ColumnasxUsuario.findOne({idUsuario: idUsuario, idTabla: idTable})
     .then((columnas) => {
         resColumnas = columnas;
-    console.log(resColumnas);
-
+        console.log( "get usuario then" + resColumnas);
+        console.log(resColumnas);
+        console.log(columnas.toArray().lenght);
     })
     .catch((error) => {
-        resColumnas = null;
     });
-    console.log(resColumnas);
+    console.log("get usuario" + resColumnas);
+    console.log( resColumnas);
+
     return resColumnas;
 }
 
 async function getColumns(req, res) {
-    console.log(req.query);
-
     let idUsuario = req.query.idUsuario;
     let tipousuario = req.query.tipousuario;
     let idTable = req.query.idTable;
     let columnas;
 
     try{
-        columnas = get(idUsuario, idTable);
+        columnas = await get(idUsuario, idTable);
+        console.log("getColumns 1" + columnas);
         console.log(columnas);
-        if(columnas == null || columnas == undefined){
-            columnas = await ColumnasxTipoUsuario.get(tipousuario, idTable);
-            console.log(columnas);
-        }
 
-        columnas = columnas == undefined ? {} : columnas;
+        console.log(columnas == null);
+
+        if(columnas == null){
+            columnas = await ColumnasxTipoUsuario.get(tipousuario, idTable);
+            console.log("getColumns 2" + columnas);
+        }
+        console.log(columnas);
+        columnas = columnas == undefined || columnas == null ? {} : columnas;
+    res.status(200).send(columnas);
+
     }
     catch(e){
         res.status(500).send(e);
     }
 
-    res.status(200).send(columnas);
 }
 
 module.exports = {
