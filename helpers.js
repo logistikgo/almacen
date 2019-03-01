@@ -1,4 +1,4 @@
-const PDF = require('pdfkit');
+//const PDF = require('pdfkit');
 const Entrada = require('./models/Entrada');
 const Salida = require('./models/Salida');
 const MovimientoInventario = require('./models/MovimientoInventario');
