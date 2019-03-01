@@ -3,7 +3,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const ColumnasxUsuario = Schema({
+const ColumnasxUsuario = Schema(
+{
 	idUsuario : Number,
     idTabla : String,
     columnas: [
