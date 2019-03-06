@@ -4,6 +4,7 @@ const Salida = require('../models/Salida');
 const Entrada = require('../models/Entrada');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const Helper = require('../helpers');
+const PrePartidaM = require("../models/PrePartida");
 
 function getNextID(){
 	return Helper.getNextID(Salida,"salida_id");
@@ -200,13 +201,69 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 	});
 }
 
-function saveSalidaAutomatica(req,res){
+async function saveSalidaAutomatica(req,res){
+	let bodyParams = req.body;
+	let arrIDPedido = bodyParams.arrIDPedido;
+	let partidas = await PrePartidaM.find({IDPedido:{$in:arrIDPedido}}).exec();
 	
+	if(partidas && partidas.length>0){
+		let entrada = await Entrada.findOne({"partidas._id":partidas[0]._id});
+		if(entrada){
+
+
+			let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
+			let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
+
+			let nSalida = new Salida();
+			nSalida.salida_id = await getNextID();
+			nSalida.fechaAlta = new Date();
+			nSalida.fechaSalida = new Date(req.body.fechaSalida);
+			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
+			nSalida.nombreUsuario = req.body.nombreUsuario;
+			nSalida.folio = await getNextID();
+			nSalida.partidas = partidas;	
+			nSalida.transportista = req.body.transportista;
+			nSalida.placasRemolque = req.body.placasRemolque;
+			nSalida.placasTrailer = req.body.placasTrailer;
+			nSalida.operador = req.body.operador;
+			
+			//nSalida.idClienteFiscal = arrClientes[0];;
+			//nSalida.idSucursal = req.body.idSucursal;
+			nSalida.sucursal_id = arrSucursales[0];
+			//nSalida.almacen_id = req.body.idAlmacen;
+			nSalida.embarco = req.body.embarco; //folio viaje
+			//nSalida.referencia = req.body.referencia;
+			nSalida.valor = req.body.valor;
+			nSalida.clienteFiscal_id = arrClientes[0];
+			//nSalida.item = req.body.item;
+			nSalida.tipo = req.body.tipo;//NORMAL
+			nSalida.entrada_id = entrada._id;
+
+			await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
+
+			nSalida.save()
+			.then(async(salida)=>{
+				for(let itemPartida of salida.partidas){
+						await MovimientoInventario.saveSalida(itemPartida,salida.id)
+						await saveSalidasEnEntrada(salida.entrada_id,salida._id);
+				}
+				res.status(200).send(salida);
+			})
+			.catch((error)=>{
+				res.status(500).send(error);
+			});
+		}else{
+			res.status(400).send("Se trata de generar una salida sin entrada");
+		}
+		
+	}
+
 }
 
 module.exports = {
 	get, 
 	getByID,
 	save,
-	getSalidasByIDs
+	getSalidasByIDs,
+	saveSalidaAutomatica
 }

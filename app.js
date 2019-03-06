@@ -77,6 +77,7 @@ app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
 app.get('/api/getSalidasByIDs',Salida.getSalidasByIDs);
 app.post('/api/salida', Salida.save);
+app.post('/api/saveSalidaAutomatica',Salida.saveSalidaAutomatica);
 
 app.get('/api/getCtesFiscales', CteFiscal.get);
 app.get('/api/clienteFiscal', CteFiscal.getByIDCteFiscal);

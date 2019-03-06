@@ -6,7 +6,8 @@ const Producto = require('../models/Producto');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
-const PrePartida = require('../models/PrePartida');
+const PrePartidaM = require('../models/PrePartida'); //modelo 
+const PrePartidaC = require('../controllers/PrePartida'); //controller
 
 function getNextID(){
 	return Helper.getNextID(Entrada,"idEntrada");
@@ -397,7 +398,7 @@ function updatePosicionEntrada(req,res){
 async function saveEntradaAutomatica(req,res){
 	let bodyParams = req.body;
 	let arrIDPedido = bodyParams.arrIDPedido;
-	let partidas = await PrePartida.find({IDPedido:{$in:arrIDPedido}}).exec();
+	let partidas = await PrePartidaM.find({IDPedido:{$in:arrIDPedido}}).exec();
 	
 	if(partidas && partidas.length>0)
 	{
@@ -448,7 +449,7 @@ async function saveEntradaAutomatica(req,res){
 		
 		nEntrada.save()
 		.then(async(entrada)=>{
-			await updateToAsignado(partidas);
+			await PrePartidaC.updateToAsignado(partidas);
 
 			for(let itemPartida of entrada.partidas){
 				
