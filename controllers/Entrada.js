@@ -219,6 +219,21 @@ async function save(req, res){
 	});
 }
 
+function update(req, res){
+	let entrada_id = req.body.entrada_id;
+
+	Entrada.updateOne(
+		{ _id: entrada_id },
+		{ $set: {} },
+		{})
+	.then((entrada)=>{
+			res.status(200).send(entrada);
+		})
+		.catch((error)=>{
+			res.status(500).send(error);
+		})
+}
+
 async function updatePosicion_Partida(req,res){
 	let bodyParams = req.body;
 	let _entrada_id = body.idEntrada;
@@ -470,6 +485,7 @@ module.exports = {
 	get,
 	getEntradaByID,
 	save,
+	update,
 	getEntradasByIDs,
 	getPartidaById,
 	updatePartida,

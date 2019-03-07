@@ -68,6 +68,7 @@ app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
 app.get('/api/partida', Entrada.getPartidaById);
 app.put('/api/partida', Entrada.updatePartida);
 app.post('/api/entrada', Entrada.save);
+app.put('/api/entrada', Entrada.update);
 app.post('/api/entradaAutomatica',Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
 app.put('/api/posicionxPartida', Entrada.updatePosicionPartida);
