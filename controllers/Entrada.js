@@ -220,18 +220,48 @@ async function save(req, res){
 }
 
 function update(req, res){
-	let entrada_id = req.body.entrada_id;
+	let bodyParams = req.body;
+	let entrada_id = bodyParams.entrada_id;
+
+	let jUpdate ={
+		usuarioAlta_id: bodyParams.usuarioAlta_id,
+		nombreUsuario: bodyParams.nombreUsuario,
+		item: bodyParams.item,
+		embarque: bodyParams.embarque,
+		referencia: bodyParams.referencia,
+		fechaEntrada: new Date(bodyParams.strFechaIngreso),
+		acuse: bodyParams.acuse,
+		recibio: bodyParams.recibio,
+		proveedor: bodyParams.proveedor,
+		ordenCompra: bodyParams.ordenCompra,
+		factura: bodyParams.factura,
+		tracto: bodyParams.tracto,
+		remolque: bodyParams.remolque,
+		unidad: bodyParams.unidad,
+		transportista: bodyParams.transportista,
+		valor: bodyParams.valor,
+		clienteFiscal_id: bodyParams.clienteFiscal_id,
+		idClienteFiscal: bodyParams.idClienteFiscal,
+		idSucursal: bodyParams.idSucursal,
+		sucursal_id: req.body.sucursal_id,
+		almacen_id: bodyParams.almacen_id,
+		status: bodyParams.status,
+		tipo: bodyParams.tipo,
+		partidas: bodyParams.partidas,
+		partidasSalida: bodyParams.partidasSalida,
+		isEmpty: bodyParams.isEmpty,
+		fechaAlta: new Date()
+	};
 
 	Entrada.updateOne(
 		{ _id: entrada_id },
-		{ $set: {} },
-		{})
+		{ $set: jUpdate })
 	.then((entrada)=>{
-			res.status(200).send(entrada);
-		})
-		.catch((error)=>{
-			res.status(500).send(error);
-		})
+		res.status(200).send(entrada);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	})
 }
 
 async function updatePosicion_Partida(req,res){
