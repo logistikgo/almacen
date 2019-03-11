@@ -227,7 +227,7 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.placasTrailer = req.body.placasTrailer;
 			nSalida.operador = req.body.operador;
 			
-			//nSalida.idClienteFiscal = arrClientes[0];;
+			//nSalida.idClienteFiscal = arrClientes[0];
 			//nSalida.idSucursal = req.body.idSucursal;
 			nSalida.sucursal_id = arrSucursales[0];
 			//nSalida.almacen_id = req.body.idAlmacen;

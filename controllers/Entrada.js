@@ -23,6 +23,8 @@ function get( req,res){
 	});
 };
 
+
+
 function getEntradasByIDs(req,res){
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
@@ -31,13 +33,13 @@ function getEntradasByIDs(req,res){
 	let _status = req.query.status;
 
 	let filter = {
-		clienteFiscal_id: _idClienteFiscal,
 		sucursal_id:_idSucursal,
 		tipo:_tipo
 	};
 
 	if(!_status) //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
 	{
+		filter["clienteFiscal_id"] = _idClienteFiscal;
 		filter["almacen_id"] = _idAlmacen;
 		filter["status"] = "APLICADA";
 	}else{
