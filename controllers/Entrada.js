@@ -452,9 +452,9 @@ async function saveEntradaAutomatica(req,res){
 
 		let nEntrada = new Entrada();
 
-		let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
+		//let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
 		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
-		console.log(arrClientes);
+		//console.log(arrClientes);
 		console.log(arrSucursales);
 		nEntrada.nombreUsuario = bodyParams.nombreUsuario; //nombreUsuario
 		nEntrada.embarque = bodyParams.embarque; //Folio viaje 
