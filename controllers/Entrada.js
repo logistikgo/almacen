@@ -464,7 +464,7 @@ async function saveEntradaAutomatica(req,res){
 		nEntrada.unidad = bodyParams.unidad;//Si lo trae
 		nEntrada.transportista = bodyParams.transportista;//Si lo trae
 		nEntrada.valor = bodyParams.valor;//Si lo trae
-		nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes
+		//nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes
 		nEntrada.sucursal_id = arrSucursales[0]; //Interfaz ALM_XD Sucursales
 
 		nEntrada.status = bodyParams.status; //SIN_POSICION
