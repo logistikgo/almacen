@@ -508,6 +508,7 @@ async function saveEntradaAutomatica(req,res){
 			res.status(500).send(error);
 		});
 	}else{
+		console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
 		res.status(400).send({message:"Se intenta generar una entrada sin partidas",error:"No se encontró pre-partidas para los IDs de pedidos indicados"});
 	}
 
