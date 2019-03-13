@@ -463,7 +463,7 @@ async function saveEntradaAutomatica(req,res){
 		nEntrada.remolque = bodyParams.remolque;//Si lo trae
 		nEntrada.unidad = bodyParams.unidad;//Si lo trae
 		nEntrada.transportista = bodyParams.transportista;//Si lo trae
-		nEntrada.valor = partidas.reduce(function(total,valor){
+		nEntrada.valor = partidas.map(x=>x.valor).reduce(function(total,valor){
 			return total + valor;
 		});//Si lo trae
 		//nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes
