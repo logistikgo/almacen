@@ -7,33 +7,53 @@ function get(req, res) {
     let _arrClientesFiscales = req.query.arrClientesFiscales;
     
     Sucursal.find({
-            arrClienteFiscales: {$in:_arrClientesFiscales},
-            statusReg: "ACTIVO"
-        })
-        .then((sucursales) => {
-            res.status(200).send(sucursales);
-        })
-        .catch((error) => {
-            return res.status(500).send({
-                message: error
-            });
+        arrClienteFiscales: {$in:_arrClientesFiscales},
+        statusReg: "ACTIVO"
+    })
+    .then((sucursales) => {
+        res.status(200).send(sucursales);
+    })
+    .catch((error) => {
+        return res.status(500).send({
+            message: error
         });
+    });
 }
 
 function getById(req, res) {
     let idSucursal = req.query.idSucursal;
 
     Sucursal.findOne({
-            _id: idSucursal
-        })
-        .then((sucursal) => {
-            res.status(200).send(sucursal);
-        })
-        .catch((error) => {
-            return res.status(500).send({
-                message: error
-            });
+        _id: idSucursal
+    })
+    .then((sucursal) => {
+        res.status(200).send(sucursal);
+    })
+    .catch((error) => {
+        return res.status(500).send({
+            message: error
         });
+    });
+}
+
+function getClientes(req, res) {
+    let idSucursal = req.query.idSucursal;
+
+    Sucursal.findOne({
+        _id: idSucursal
+    })
+    .populate({
+        path:'arrClienteFiscales', 
+        model: 'ClienteFiscal'
+    })
+    .then((sucursal) => {
+        res.status(200).send(sucursal.arrClienteFiscales);
+    })
+    .catch((error) => {
+        return res.status(500).send({
+            message: error
+        });
+    });
 }
 
 async function save(req, res){
@@ -110,6 +130,7 @@ function _delete(req, res){
 module.exports = {
     get,
     getById,
+    getClientes,
     save,
     update,
     _delete

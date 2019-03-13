@@ -88,6 +88,7 @@ app.put('/api/clienteFiscal', CteFiscal.update);
 
 app.get('/api/sucursales', Sucursal.get);
 app.get('/api/sucursal', Sucursal.getById);
+app.get('/api/clientesxSucursal', Sucursal.getClientes);
 app.post('/api/sucursal', Sucursal.save);
 app.put('/api/sucursal', Sucursal.update);
 app.delete('/api/sucursal', Sucursal._delete);
