@@ -463,12 +463,14 @@ async function saveEntradaAutomatica(req,res){
 		nEntrada.remolque = bodyParams.remolque;//Si lo trae
 		nEntrada.unidad = bodyParams.unidad;//Si lo trae
 		nEntrada.transportista = bodyParams.transportista;//Si lo trae
-		nEntrada.valor = bodyParams.valor;//Si lo trae
+		nEntrada.valor = partidas.map(x=>x.valor).reduce(function(total,valor){
+			return total + valor;
+		});//Si lo trae
 		//nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes
 		nEntrada.sucursal_id = arrSucursales[0]; //Interfaz ALM_XD Sucursales
 
-		nEntrada.status = bodyParams.status; //SIN_POSICION
-		nEntrada.tipo = bodyParams.tipo;//NORMAL
+		nEntrada.status = "SIN_POSICIONAR"; //SIN_POSICION
+		nEntrada.tipo = "NORMAL";//NORMAL
 		nEntrada.partidas = partidas; //Pre partidas
 		nEntrada.partidasSalida = partidas; //Pre partidas
 		nEntrada.isEmpty = false;
@@ -496,8 +498,8 @@ async function saveEntradaAutomatica(req,res){
 		
 		nEntrada.save()
 		.then(async(entrada)=>{
-			await PrePartidaC.updateToAsignado(partidas);
-
+			//await PrePartidaC.updateToAsignado(partidas);
+			
 			for(let itemPartida of entrada.partidas){
 				
 				await MovimientoInventario.saveEntrada(itemPartida,entrada.id);

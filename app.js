@@ -37,7 +37,6 @@ app.use(function (req, res, next) {
     next();
 });
 
-
 app.get('/api/productos', Producto.get);
 app.get('/api/producto', Producto.getById);
 app.get('/api/producto/:clave', Producto.getByClave);
