@@ -55,7 +55,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	let nMovimiento = new MovimientoInventario();
 
 	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
-
+	
 	nMovimiento.producto_id = itemPartida.producto_id;
 	nMovimiento.entrada_id = entrada_id;
 	nMovimiento.idClienteFiscal = entrada.idClienteFiscal;
@@ -73,15 +73,19 @@ async function saveEntrada(itemPartida,entrada_id) {
 	}else{
 		nMovimiento.tipo = "ENTRADA_RECHAZO"
 	}
-	nMovimiento.pasillo = itemPartida.pasillo;
-	nMovimiento.pasillo_id = itemPartida.pasillo_id;
-	nMovimiento.posicion = itemPartida.posicion;
-	nMovimiento.posicion_id = itemPartida.posicion_id;
-	nMovimiento.nivel = itemPartida.nivel;
+	if(entrada.status!="SIN_POSICIONAR"){
+		nMovimiento.pasillo = itemPartida.pasillo;
+		nMovimiento.pasillo_id = itemPartida.pasillo_id;
+		nMovimiento.posicion = itemPartida.posicion;
+		nMovimiento.posicion_id = itemPartida.posicion_id;
+		nMovimiento.nivel = itemPartida.nivel;
+	}
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
 	nMovimiento.clave_partida = itemPartida.clave_partida;
 
-	await updateExistenciaPosicion(1, itemPartida);
+	if(entrada.status!="SIN_POSICIONAR"){
+		await updateExistenciaPosicion(1, itemPartida);
+	}
 
 	await nMovimiento.save()
 	.then(async(movimiento)=>{
