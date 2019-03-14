@@ -49,7 +49,7 @@ const Entrada = Schema({
 			pesoBruto:Number,
 			pesoNeto:Number,
 			embalajes:{},
-			clave_partida: Number
+			clave_partida: String
 		}
 	],
 	partidasSalida:[
@@ -68,7 +68,7 @@ const Entrada = Schema({
 			pesoNeto:Number,
 			embalajes:{},
 			isEmpty:Boolean,
-			clave_partida: Number
+			clave_partida: String
 		}
 	]
 },

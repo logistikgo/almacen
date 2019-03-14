@@ -8,8 +8,13 @@ async function getNextID(){
 }
 
 function get(req, res) {
+	let sucursal_id = req.query.id
 
-	CteFiscal.find({statusReg:"ACTIVO"}).sort({nombreCorto: 1})
+	let jFilter = {
+		statusReg:"ACTIVO"
+	};
+
+	CteFiscal.find(jFilter).sort({nombreCorto: 1})
 	.then((cliente)=>{
 		res.status(200).send(cliente);	
 	})

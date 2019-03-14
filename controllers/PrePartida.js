@@ -34,7 +34,7 @@ function save(partida,IDPedido){
 	nPrePartida.pesoNeto = partida.pesoNeto;
 	nPrePartida.embalajes = partida.embalajes;
 	nPrePartida.isEmpty = false;
-	nPrePartida.clave_partida = partida.clave_partida;
+	nPrePartida.clave_partida = IDPedido + "" + partida.clave_partida;
 	nPrePartida.isAsignado = false;
 
 	nPrePartida.save()

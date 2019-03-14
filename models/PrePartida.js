@@ -19,7 +19,7 @@ const PrePartida = Schema(
 		pesoNeto:Number,
 		embalajes:{},
 		isEmpty:Boolean,
-		clave_partida:Number,
+		clave_partida:String,
 		isAsignado:Boolean
 	},
 	{collection:'PrePartidas'}
