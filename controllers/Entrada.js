@@ -256,19 +256,10 @@ function update(req, res){
 	};
 
 	let partidasPosicionadas = (bodyParams.partidas).filter(function (x){
-		console.log(x.pasillo_id);
-		console.log(x.pasillo);
-		console.log(x.posicion);
-		console.log(x.posicion_id);
-		console.log(x.nivel);
-		console.log(x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined);
-
 		return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
 	});
-	console.log(partidasPosicionadas.length);
-	console.log(bodyParams.partidas.length);
 
-	if(partidasPosicionadas.length == bodyParams.partidas.length && bodyParams.item != undefined && bodyParams.item != null){
+	if(partidasPosicionadas.length == bodyParams.partidas.length && bodyParams.item != undefined && bodyParams.item != null && bodyParams.item != ""){
 		jUpdate.status = "APLICADA";
 	}
 
