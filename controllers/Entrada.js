@@ -23,8 +23,6 @@ function get( req,res){
 	});
 };
 
-
-
 function getEntradasByIDs(req,res){
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;

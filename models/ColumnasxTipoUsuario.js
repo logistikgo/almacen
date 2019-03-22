@@ -8,8 +8,9 @@ const ColumnasxTipoUsuario = Schema({
     idTabla : String,
     columnas: [
     {
+    	indice: Number,
         nombre: String,
-        indice: Number
+        enumeracion: String
     }],
 },
 { collection: 'ColumnasxTipoUsuario' });
