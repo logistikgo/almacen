@@ -21,7 +21,6 @@ function get(req,res){
 
 
 function save(partida,IDPedido){
-
 	let nPrePartida = new PrePartida();
 	nPrePartida.IDPedido = IDPedido;
 	nPrePartida.fechaAlta = new Date();
@@ -47,7 +46,6 @@ function save(partida,IDPedido){
 }
 
 function updateToAsignado(arrPartidas){
-
 	let arrIDPartidas = arrPartidas.map(x=>x._id).toArray();
 	console.log(arrIDPartidas);
 	PrePartida.Update({_id:{$in:arrIDPartidas}},{$set:{isAsignado:true}})
