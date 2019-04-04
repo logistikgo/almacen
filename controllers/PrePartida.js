@@ -71,8 +71,17 @@ function savePartidasPedido(req,res){
 	}
 }
 
+function getPedidosPosicionados(req, res){
+	let arrPedidos = req.query.arrPedidos;
+
+	console.log(arrPedidos);
+
+	res.status(200).send(arrPedidos);
+}
+
 module.exports = {
 	save,
 	get,
-	savePartidasPedido
+	savePartidasPedido,
+	getPedidosPosicionados
 }

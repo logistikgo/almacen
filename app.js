@@ -132,6 +132,7 @@ app.get('/api/posicionesNom', Pasillo.getPosiciones);
 
 app.post('/api/prepartida',PrePartida.savePartidasPedido);
 app.get('/api/prepartida',PrePartida.get);
+app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
 
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
 
