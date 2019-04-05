@@ -6,6 +6,7 @@ const Helper = require('../helpers');
 const Producto = require('../models/Producto');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
+var ObjectId = (require('mongoose').Types.ObjectId);
 
 function get(req,res){
 	let _IDPedido = req.query.IDPedido;
@@ -19,6 +20,34 @@ function get(req,res){
 	});
 }
 
+function getPartidas(idPedido){
+	let arrPartidas = [];
+	PrePartida.find({IDPedido:idPedido})
+	.then(async (prePartidas)=>{
+		let i = 0;
+		for(let prePartida of prePartidas){
+			let partida = await getPartida(prePartida._id);
+			if(partida != undefined)
+				arrPartidas.push(partida);
+			i++;
+		}
+	});
+	return arrPartidas;
+}
+
+async function getPartida(prepartida){
+	let partida;
+	await Entrada.findOne({"partidas._id":new ObjectId(prepartida)})
+	.then((entrada)=>{
+		if(entrada != null){
+			partida = entrada.partidas.find(x=>x._id.toString() == prepartida.toString());
+		}
+		else{
+			console.log("Error: " + prepartida);
+		}
+	});
+	return partida;
+}
 
 function save(partida,IDPedido){
 	let nPrePartida = new PrePartida();
@@ -74,7 +103,10 @@ function savePartidasPedido(req,res){
 function getPedidosPosicionados(req, res){
 	let arrPedidos = req.query.arrPedidos;
 
-	console.log(arrPedidos);
+	for(let pedido of arrPedidos){
+		let arrpartidas = getPartidas(pedido);
+		console.log("ArrPartidas: " + arrpartidas);
+	}
 
 	res.status(200).send(arrPedidos);
 }
