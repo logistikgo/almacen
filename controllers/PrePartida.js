@@ -20,9 +20,9 @@ function get(req,res){
 	});
 }
 
-function getPartidas(idPedido){
+async function getPartidas(idPedido){
 	let arrPartidas = [];
-	PrePartida.find({IDPedido:idPedido})
+	await PrePartida.find({IDPedido:idPedido})
 	.then(async (prePartidas)=>{
 		let i = 0;
 		for(let prePartida of prePartidas){
@@ -100,15 +100,21 @@ function savePartidasPedido(req,res){
 	}
 }
 
-function getPedidosPosicionados(req, res){
+async function getPedidosPosicionados(req, res){
 	let arrPedidos = req.query.arrPedidos;
+	let resPedidos;
+	let arrPartidasPosicionadas;
 
 	for(let pedido of arrPedidos){
-		let arrpartidas = getPartidas(pedido);
-		console.log("ArrPartidas: " + arrpartidas);
+		let arrpartidas = await getPartidas(pedido);
+		//console.log("ArrPartidas: " + arrpartidas);
+		arrPartidasPosicionadas = arrpartidas.filter(x => x.pasillo_id != undefined && x.posicion_id != undefined && x.nivel != undefined);
+		console.log(pedido);
+		if(arrPartidasPosicionadas.length != arrpartidas.length)
+			resPedidos.push(pedido);
 	}
 
-	res.status(200).send(arrPedidos);
+	await res.status(200).send(resPedidos);
 }
 
 module.exports = {
