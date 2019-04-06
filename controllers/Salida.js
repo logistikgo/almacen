@@ -205,13 +205,15 @@ async function saveSalidaAutomatica(req,res){
 	let bodyParams = req.body;
 	let arrIDPedido = bodyParams.arrIDPedido;
 	let partidas = await PrePartidaM.find({IDPedido:{$in:arrIDPedido}}).exec();
-	
+	//console.log(partidas);
 	if(partidas && partidas.length>0){
 		let entrada = await Entrada.findOne({"partidas._id":partidas[0]._id});
+		//console.log(partidas[0]);
+		console.log(entrada);
 		if(entrada){
 
-
-			let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
+			/*
+			
 			let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
 
 			let nSalida = new Salida();
@@ -227,18 +229,19 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.placasTrailer = req.body.placasTrailer;
 			nSalida.operador = req.body.operador;
 			
-			//nSalida.idClienteFiscal = arrClientes[0];
+			//nSalida.idClienteFiscal = entrada.;
 			//nSalida.idSucursal = req.body.idSucursal;
 			nSalida.sucursal_id = arrSucursales[0];
 			//nSalida.almacen_id = req.body.idAlmacen;
 			nSalida.embarco = req.body.embarco; //folio viaje
 			//nSalida.referencia = req.body.referencia;
 			nSalida.valor = req.body.valor;
-			nSalida.clienteFiscal_id = arrClientes[0];
+			nSalida.clienteFiscal_id = entrada.clienteFiscal_id;
 			//nSalida.item = req.body.item;
 			nSalida.tipo = req.body.tipo;//NORMAL
 			nSalida.entrada_id = entrada._id;
 
+			
 			await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
 
 			nSalida.save()
@@ -251,11 +254,13 @@ async function saveSalidaAutomatica(req,res){
 			})
 			.catch((error)=>{
 				res.status(500).send(error);
-			});
+			});*/
 		}else{
 			res.status(400).send("Se trata de generar una salida sin entrada");
 		}
 		
+	}else{
+		res.status(400).send("Se trata de generar una salida sin partidas");
 	}
 
 }
