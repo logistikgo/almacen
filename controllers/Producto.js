@@ -147,13 +147,17 @@ async function save(req,res) {
 	nProducto.valor = 0;
 
 	nProducto.save()
-	.then((productoStored)=>{		
+	.then((productoStored)=>{	
+		
+		res.status(200).send(productoStored);	
 		MovimientoInventario.saveExistenciaInicial(productoStored._id, params.embalajes,
 			params.existenciaPesoBruto, params.existenciaPesoNeto,
 			params.idClienteFiscal,params.clienteFiscal_id, params.sucursal_id, params.almacen_id)
 		.then(()=>{
-			res.status(200).send({productoStored});
-		})
+			
+		});
+
+
 	})
 	.catch((err)=>{
 		return res.status(500).send({"message":"Error save producto", "error":err});
