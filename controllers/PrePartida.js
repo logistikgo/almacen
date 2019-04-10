@@ -91,12 +91,10 @@ async function getPartida(prepartida){
 	let partida;
 	await Entrada.findOne({"partidas._id":new ObjectId(prepartida)})
 	.then((entrada)=>{
-		if(entrada != null){
+		if(entrada != null)
 			partida = entrada.partidas.find(x=>x._id.toString() == prepartida.toString());
-		}
-		else{
+		else
 			console.log("Error: " + prepartida);
-		}
 	});
 	return partida;
 }
@@ -108,7 +106,6 @@ async function getPedidosPosicionados(req, res){
 	for(let pedido of arrPedidos){
 		let arrpartidas = await getPartidas(pedido);
 		arrPartidasPosicionadas = arrpartidas.filter(x => x.pasillo_id != undefined && x.posicion_id != undefined && x.nivel != undefined);
-
 		if(arrPartidasPosicionadas.length !== arrpartidas.length)
 			resPedidos.push(pedido);
 	}
