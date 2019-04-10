@@ -47,7 +47,7 @@ function save(partida,IDPedido){
 
 function updateToAsignado(arrPartidas){
 	let arrIDPartidas = arrPartidas.map(x=>x._id).toArray();
-	console.log(arrIDPartidas);
+	//console.log(arrIDPartidas);
 	PrePartida.Update({_id:{$in:arrIDPartidas}},{$set:{isAsignado:true}})
 	.then((updated)=>{
 		return 1;
@@ -57,15 +57,16 @@ function updateToAsignado(arrPartidas){
 	});
 }
 
-function savePartidasPedido(req,res){
+async function savePartidasPedido(req,res){
 	let _arrPartidas = req.body.partidas;
 	let IDPedido = req.body.idPedido;
-
-	console.log(_arrPartidas);
+	//let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([req.body.IDClienteFiscal]);
+	
+	//console.log(_arrPartidas);
 
 	if(_arrPartidas.length>0){
 		_arrPartidas.forEach(function(partida){
-			save(partida,IDPedido);
+			save(partida,IDPedido, );
 		});
 		res.status(201).send(_arrPartidas);
 	}
@@ -104,7 +105,6 @@ async function getPedidosPosicionados(req, res){
 	let arrPedidos = req.query.arrPedidos;
 	let resPedidos = [];
 	let arrPartidasPosicionadas;
-
 	for(let pedido of arrPedidos){
 		let arrpartidas = await getPartidas(pedido);
 		arrPartidasPosicionadas = arrpartidas.filter(x => x.pasillo_id != undefined && x.posicion_id != undefined && x.nivel != undefined);
@@ -112,7 +112,6 @@ async function getPedidosPosicionados(req, res){
 		if(arrPartidasPosicionadas.length !== arrpartidas.length)
 			resPedidos.push(pedido);
 	}
-
 	await res.status(200).send(resPedidos);
 }
 
