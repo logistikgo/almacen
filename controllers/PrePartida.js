@@ -20,35 +20,6 @@ function get(req,res){
 	});
 }
 
-async function getPartidas(idPedido){
-	let arrPartidas = [];
-	await PrePartida.find({IDPedido:idPedido})
-	.then(async (prePartidas)=>{
-		let i = 0;
-		for(let prePartida of prePartidas){
-			let partida = await getPartida(prePartida._id);
-			if(partida != undefined)
-				arrPartidas.push(partida);
-			i++;
-		}
-	});
-	return arrPartidas;
-}
-
-async function getPartida(prepartida){
-	let partida;
-	await Entrada.findOne({"partidas._id":new ObjectId(prepartida)})
-	.then((entrada)=>{
-		if(entrada != null){
-			partida = entrada.partidas.find(x=>x._id.toString() == prepartida.toString());
-		}
-		else{
-			console.log("Error: " + prepartida);
-		}
-	});
-	return partida;
-}
-
 function save(partida,IDPedido){
 	let nPrePartida = new PrePartida();
 	nPrePartida.IDPedido = IDPedido;
@@ -100,17 +71,45 @@ function savePartidasPedido(req,res){
 	}
 }
 
+async function getPartidas(idPedido){
+	let arrPartidas = [];
+	await PrePartida.find({IDPedido:idPedido})
+	.then(async (prePartidas)=>{
+		let i = 0;
+		for(let prePartida of prePartidas){
+			let partida = await getPartida(prePartida._id);
+			if(partida != undefined)
+				arrPartidas.push(partida);
+			i++;
+		}
+	});
+	return arrPartidas;
+}
+
+async function getPartida(prepartida){
+	let partida;
+	await Entrada.findOne({"partidas._id":new ObjectId(prepartida)})
+	.then((entrada)=>{
+		if(entrada != null){
+			partida = entrada.partidas.find(x=>x._id.toString() == prepartida.toString());
+		}
+		else{
+			console.log("Error: " + prepartida);
+		}
+	});
+	return partida;
+}
+
 async function getPedidosPosicionados(req, res){
 	let arrPedidos = req.query.arrPedidos;
-	let resPedidos;
+	let resPedidos = [];
 	let arrPartidasPosicionadas;
 
 	for(let pedido of arrPedidos){
 		let arrpartidas = await getPartidas(pedido);
-		//console.log("ArrPartidas: " + arrpartidas);
 		arrPartidasPosicionadas = arrpartidas.filter(x => x.pasillo_id != undefined && x.posicion_id != undefined && x.nivel != undefined);
-		console.log(pedido);
-		if(arrPartidasPosicionadas.length != arrpartidas.length)
+
+		if(arrPartidasPosicionadas.length !== arrpartidas.length)
 			resPedidos.push(pedido);
 	}
 
