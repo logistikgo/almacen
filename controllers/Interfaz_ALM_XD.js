@@ -17,7 +17,20 @@ async function getIDSucursalALM(arrSucursalesXD) {
 }
 
 
+function getIDSucursalALM(req,res){
+	let IDSucursalXD = req.query.IDSucursal;
+
+	Interfaz_ALM_XD.find({xd_id:IDSucursalXD,tipo:"Sucursal"})
+	.then((sucursalALM)=>{
+		res.status(200).send(sucursalALM);
+	}).
+	catch((error)=>{
+		res.status(500).send(error);
+	});
+}
+
 module.exports = {
 	getIDClienteALM,
+	getIDSucursalALM,
 	getIDSucursalALM
 }

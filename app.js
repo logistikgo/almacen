@@ -21,6 +21,7 @@ const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
 const PrePartida = require('./controllers/PrePartida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
+const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
 
 const dotenv = require('dotenv'); //Used for environment variables
 dotenv.config();
@@ -135,5 +136,7 @@ app.get('/api/prepartida',PrePartida.get);
 app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
 
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
+
+app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALM);
 
 module.exports = app;
