@@ -212,7 +212,6 @@ async function saveSalidaAutomatica(req,res){
 		console.log(entrada);
 		if(entrada){
 
-			/*
 			
 			let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
 
@@ -254,7 +253,9 @@ async function saveSalidaAutomatica(req,res){
 			})
 			.catch((error)=>{
 				res.status(500).send(error);
-			});*/
+			});
+
+			
 		}else{
 			res.status(400).send("Se trata de generar una salida sin entrada");
 		}
