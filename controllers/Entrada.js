@@ -383,6 +383,7 @@ async function validaEntrada(req,res){
 	}	
 }
 
+//ELIMINAR
 function updatePosicionPartida(req,res){
 	let bodyParams = req.body;
 
@@ -422,6 +423,7 @@ async function updatePosicion(partida,bodyParams){
 	await MovimientoInventario.updateExistenciaPosicion(1, partida);
 }
 
+//ELIMINAR
 function updatePosicionEntrada(req,res){
 	let bodyParams = req.body;
 	let entrada_id = bodyParams.entrada_id;

@@ -71,8 +71,8 @@ app.post('/api/entrada', Entrada.save);
 app.put('/api/entrada', Entrada.update);
 app.post('/api/entradaAutomatica',Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
-app.put('/api/posicionxPartida', Entrada.updatePosicionPartida);
-app.put('/api/posicionxEntrada', Entrada.updatePosicionEntrada);
+//app.put('/api/posicionxPartida', Entrada.updatePosicionPartida);
+//app.put('/api/posicionxEntrada', Entrada.updatePosicionEntrada);
 
 app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
