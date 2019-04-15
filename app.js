@@ -78,7 +78,7 @@ app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
 app.get('/api/getSalidasByIDs',Salida.getSalidasByIDs);
 app.post('/api/salida', Salida.save);
-app.post('/api/saveSalidaAutomatica',Salida.saveSalidaAutomatica);
+app.post('/api/salidaAutomatica',Salida.saveSalidaAutomatica);
 
 app.get('/api/getCtesFiscales', CteFiscal.get);
 app.get('/api/clienteFiscal', CteFiscal.getByIDCteFiscal);
@@ -137,6 +137,6 @@ app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
 
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
 
-app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALM);
+app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
 
 module.exports = app;

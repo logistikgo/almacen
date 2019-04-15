@@ -17,7 +17,7 @@ async function getIDSucursalALM(arrSucursalesXD) {
 }
 
 
-function getIDSucursalALM(req,res){
+function getIDSucursalALMAPI(req,res){
 	let IDSucursalXD = req.query.IDSucursal;
 
 	Interfaz_ALM_XD.find({xd_id:IDSucursalXD,tipo:"Sucursal"})
@@ -32,5 +32,5 @@ function getIDSucursalALM(req,res){
 module.exports = {
 	getIDClienteALM,
 	getIDSucursalALM,
-	getIDSucursalALM
+	getIDSucursalALMAPI
 }

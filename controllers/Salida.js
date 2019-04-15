@@ -256,11 +256,13 @@ async function saveSalidaAutomatica(req,res){
 			});
 
 			
-		}else{
+		}else
+		{
 			res.status(400).send("Se trata de generar una salida sin entrada");
 		}
 		
-	}else{
+	}else
+	{
 		res.status(400).send("Se trata de generar una salida sin partidas");
 	}
 
