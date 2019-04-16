@@ -349,12 +349,19 @@ function updatePartida(req,res){
 		if(partida.pesoBruto == bodyParams.pesoBruto && partida.pesoNeto == bodyParams.pesoNeto && partida.valor == bodyParams.valor && isEquals){
 			await updatePartidaPosicion(partida, partidaSalida, bodyParams);
 		}
-		else if(partida.pesoBruto != bodyParams.pesoBruto){
-
-		}
+		else{
+			if(partida.pesoBruto != bodyParams.pesoBruto)
+				await updatePartidaPesoB(partida, partidaSalida, bodyParams);
+			if(partida.pesoNeto != bodyParams.pesoNeto)
+				await updatePartidaPesoN(partida, partidaSalida, bodyParams);
+			if(!isEquals)
+				await updatePartidaEmbalajes(partida, partidaSalida, bodyParams);
+			if(partida.valor != bodyParams.valor)
+				await updatePartidaValor(partida, partidaSalida, bodyParams);
+		} 
 
 		let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
-		console.log(resMovimietno);
+		//console.log(resMovimietno);
 
 		let item = {
 			partidas: entrada.partidas,
@@ -363,7 +370,7 @@ function updatePartida(req,res){
 
 		await Entrada.updateOne({_id:entrada_id},{$set:item})
 		.then((item)=>{
-			console.log("complete");
+			//console.log("complete");
 			res.status(200).send(entrada);
 		})
 		.catch((error)=>{
@@ -410,7 +417,40 @@ async function updateMovimiento(entrada_id, clave_partida, bodyParams){
 
 //CASO BASE: Solo se updatean posiciones
 async function updatePartidaPosicion(partida, partidaSalida, bodyParams){
+	console.log("Caso base");
 	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+
+	partida.pasillo = bodyParams.pasillo;
+	partida.pasillo_id = bodyParams.pasillo_id;
+	partida.posicion = bodyParams.posicion;
+	partida.posicion_id = bodyParams.posicion_id;
+	partida.nivel = bodyParams.nivel;
+	partidaSalida.pasillo = bodyParams.pasillo;
+	partidaSalida.pasillo_id = bodyParams.pasillo_id;
+	partidaSalida.posicion = bodyParams.posicion;
+	partidaSalida.posicion_id = bodyParams.posicion_id;
+	partidaSalida.nivel = bodyParams.nivel;
+
+	await MovimientoInventario.updateExistenciaPosicion(1, partida);
+}
+
+async function updatePartidaPesoB(partida, partidaSalida, bodyParams){
+	console.log("PB");
+	let res = bodyParams.pesoBruto - partida.pesoBruto;
+	let auxPartida = {
+		producto_id: partida.producto_id,
+		embalajes: {},
+		pesoNeto: 0,
+		pesoBruto: res,
+		nivel: bodyParams.nivel,
+		posicion_id: bodyParams.posicion_id,
+		valor: 0
+	};
+
+	await MovimientoInventario.updateExistencia(1, auxPartida, new Date());
+
+	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+	partida.pesoBruto = bodyParams.pesoBruto;
 	partida.pasillo = bodyParams.pasillo;
 	partida.pasillo_id = bodyParams.pasillo_id;
 	partida.posicion = bodyParams.posicion;
@@ -422,27 +462,69 @@ async function updatePartidaPosicion(partida, partidaSalida, bodyParams){
 	partidaSalida.posicion = bodyParams.posicion;
 	partidaSalida.posicion_id = bodyParams.posicion_id;
 	partidaSalida.nivel = bodyParams.nivel;
+	partidaSalida.pesoBruto = bodyParams.pesoBruto;
 	await MovimientoInventario.updateExistenciaPosicion(1, partida);
 }
 
-async function updatePartidaPesoB(partida, partidaSalida, bodyParams){
-	partida.pesoBruto = bodyParams.pesoBruto;
-	partidaSalida.pesoBruto = bodyParams.pesoBruto;
-}
-
 async function updatePartidaPesoN(partida, partidaSalida, bodyParams){
+	console.log("PN");
+	let res = bodyParams.pesoNeto - partida.pesoNeto;
+	let auxPartida = {
+		producto_id: partida.producto_id,
+		embalajes: {},
+		pesoNeto: res,
+		pesoBruto: 0,
+		nivel: bodyParams.nivel,
+		posicion_id: bodyParams.posicion_id,
+		valor: 0
+	};
+
+	await MovimientoInventario.updateExistencia(1, auxPartida, new Date());
+
+	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
 	partida.pesoNeto = bodyParams.pesoNeto;
+	partida.pasillo = bodyParams.pasillo;
+	partida.pasillo_id = bodyParams.pasillo_id;
+	partida.posicion = bodyParams.posicion;
+	partida.posicion_id = bodyParams.posicion_id;
+	partida.nivel = bodyParams.nivel;
+
+	partidaSalida.pasillo = bodyParams.pasillo;
+	partidaSalida.pasillo_id = bodyParams.pasillo_id;
+	partidaSalida.posicion = bodyParams.posicion;
+	partidaSalida.posicion_id = bodyParams.posicion_id;
+	partidaSalida.nivel = bodyParams.nivel;
 	partidaSalida.pesoNeto = bodyParams.pesoNeto;
+	await MovimientoInventario.updateExistenciaPosicion(1, partida);
 }
 
 async function updatePartidaEmbalajes(partida, partidaSalida, bodyParams){
-	partida.embalajes = bodyParams.embalajes;
-	partidaSalida.embalajes = bodyParams.embalajes;
+	console.log("Embalajes");
+	for(let embalaje in partida.embalajes){
+
+		if(bodyParams.embalajes[embalaje] == undefined)
+			bodyParams.embalajes[embalaje] = 0;
+		if(bodyParams.embalajes[embalaje] != bodyParams.embalajes[embalaje])
+			return false;
+	}
+
+	// await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+
+	// partida.embalajes = bodyParams.embalajes;
+	// partidaSalida.embalajes = bodyParams.embalajes;
+
+	// await MovimientoInventario.updateExistenciaPosicion(1, partida);
 }
 
 async function updatePartidaValor(partida, partidaSalida, bodyParams){
-	partida.valor = bodyParams.valor;
-	partidaSalida.valor = bodyParams.valor;
+	console.log("Valor");
+
+	// await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+
+	// partida.valor = bodyParams.valor;
+	// partidaSalida.valor = bodyParams.valor;
+
+	// await MovimientoInventario.updateExistenciaPosicion(1, partida);
 }
 
 module.exports = {

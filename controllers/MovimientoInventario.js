@@ -162,6 +162,7 @@ function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClie
 
 async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
+
 	if(itemPartida.embalajes){
 		for(let embajalePartida in itemPartida.embalajes){
 			
@@ -170,7 +171,6 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 			}else if(signo>0){
 				producto.embalajes[embajalePartida] = (signo*itemPartida.embalajes[embajalePartida]);
 			}
-			
 		}
 	}
 
@@ -196,13 +196,13 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 
 	producto.save();
 
-	await Producto.updateOne({_id:itemPartida.producto_id},{$set:item})
-	.then((productoUpdated)=>{
+	await Producto.updateOne({_id:itemPartida.producto_id},{$set:item});
+	// .then((productoUpdated)=>{
 
-	})
-	.catch((err)=>{
+	// })
+	// .catch((err)=>{
 		
-	});
+	// });
 }
 
 async function updateExistenciaPosicion(signo, itemPartida){
@@ -464,5 +464,6 @@ module.exports={
 	saveEntrada,
 	saveAjuste,
 	saveExistenciaInicial,
-	updateExistenciaPosicion
+	updateExistenciaPosicion,
+	updateExistencia
 }
