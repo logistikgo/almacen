@@ -534,7 +534,6 @@ async function updatePartidaEmbalajes(partida, partidaSalida, bodyParams){
 			auxPartida.embalajes[embalaje.clave] = 0;
 
 		auxPartida.embalajes[embalaje.clave] = res;
-		console.log(auxPartida);
 		await MovimientoInventario.updateExistencia(1, auxPartida, new Date());
 
 		await MovimientoInventario.updateExistenciaPosicion(-1, partida);
