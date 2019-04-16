@@ -5,6 +5,7 @@ const Helper = require('../helpers');
 const Producto = require('../models/Producto');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
+const EmbalajesModel = require('../models/Embalaje');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const PrePartidaM = require('../models/PrePartida'); //modelo 
 const PrePartidaC = require('../controllers/PrePartida'); //controller
@@ -344,7 +345,8 @@ function updatePartida(req,res){
 		let partida = entrada.partidas.find(x=>x.clave_partida == clave_partida);
 		let partidaSalida = entrada.partidasSalida.find(x=>x.clave_partida == clave_partida);
 
-		let isEquals = equalsEmbalajes(partida, bodyParams);
+		let isEquals = await equalsEmbalajes(partida, bodyParams);
+		console.log(isEquals);
 		
 		if(partida.pesoBruto == bodyParams.pesoBruto && partida.pesoNeto == bodyParams.pesoNeto && partida.valor == bodyParams.valor && isEquals){
 			await updatePartidaPosicion(partida, partidaSalida, bodyParams);
@@ -380,17 +382,24 @@ function updatePartida(req,res){
 }
 
 //Campara los embalajes actuales con los nuevos para determinar el signo
-// 0 = diferentes
-// 1 = iguales
-function equalsEmbalajes(partida, bodyParams){
+// false = diferentes
+// true = iguales
+async function equalsEmbalajes(partida, bodyParams){
+	let embalajes = await getEmbalajes();
 	let res = true;
-	for(let embalaje in partida.embalajes){
-		if(bodyParams.embalajes[embalaje] == undefined)
-			bodyParams.embalajes[embalaje] = 0;
-		if(bodyParams.embalajes[embalaje] != bodyParams.embalajes[embalaje])
-			return false;
+	for(let embalaje of embalajes){
+		if(bodyParams.embalajes[embalaje.clave] == undefined)
+			bodyParams.embalajes[embalaje.clave] = 0;
+
+		if(partida.embalajes[embalaje.clave] == undefined)
+			partida.embalajes[embalaje.clave] = 0;
+
+		if(partida.embalajes[embalaje.clave] != bodyParams.embalajes[embalaje.clave]){
+			res = false;
+			break;
+		}
 	}
-	return res;
+	return await res;
 }
 
 //Updatea los cambios hechos en la partida en su respectivo movimiento
@@ -418,7 +427,8 @@ async function updateMovimiento(entrada_id, clave_partida, bodyParams){
 //CASO BASE: Solo se updatean posiciones
 async function updatePartidaPosicion(partida, partidaSalida, bodyParams){
 	console.log("Caso base");
-	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+	if(partida.pasillo_id != undefined && partida.posicion_id != undefined && partida.nivel != undefined)
+		await MovimientoInventario.updateExistenciaPosicion(-1, partida);
 
 	partida.pasillo = bodyParams.pasillo;
 	partida.pasillo_id = bodyParams.pasillo_id;
@@ -500,31 +510,88 @@ async function updatePartidaPesoN(partida, partidaSalida, bodyParams){
 
 async function updatePartidaEmbalajes(partida, partidaSalida, bodyParams){
 	console.log("Embalajes");
-	for(let embalaje in partida.embalajes){
+	let embalajes = await getEmbalajes();
 
-		if(bodyParams.embalajes[embalaje] == undefined)
-			bodyParams.embalajes[embalaje] = 0;
-		if(bodyParams.embalajes[embalaje] != bodyParams.embalajes[embalaje])
-			return false;
+	for(let embalaje of embalajes){
+		if(bodyParams.embalajes[embalaje.clave] == undefined)
+			bodyParams.embalajes[embalaje.clave] = 0;
+
+		if(partida.embalajes[embalaje.clave] == undefined)
+			partida.embalajes[embalaje.clave] = 0;
+
+		let res = bodyParams.embalajes[embalaje.clave] - partida.embalajes[embalaje.clave];
+
+		let auxPartida = {
+			producto_id: partida.producto_id,
+			embalajes: {},
+			pesoNeto: 0,
+			pesoBruto: 0,
+			nivel: bodyParams.nivel,
+			posicion_id: bodyParams.posicion_id,
+			valor: 0
+		};
+		if(auxPartida.embalajes[embalaje.clave] == undefined)
+			auxPartida.embalajes[embalaje.clave] = 0;
+
+		auxPartida.embalajes[embalaje.clave] = res;
+		console.log(auxPartida);
+		await MovimientoInventario.updateExistencia(1, auxPartida, new Date());
+
+		await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+		partida.embalajes[embalaje.clave] = bodyParams.embalajes[embalaje.clave];
+		partida.pasillo = bodyParams.pasillo;
+		partida.pasillo_id = bodyParams.pasillo_id;
+		partida.posicion = bodyParams.posicion;
+		partida.posicion_id = bodyParams.posicion_id;
+		partida.nivel = bodyParams.nivel;
+
+		partidaSalida.pasillo = bodyParams.pasillo;
+		partidaSalida.pasillo_id = bodyParams.pasillo_id;
+		partidaSalida.posicion = bodyParams.posicion;
+		partidaSalida.posicion_id = bodyParams.posicion_id;
+		partidaSalida.nivel = bodyParams.nivel;
+		partidaSalida.embalajes[embalaje.clave] = bodyParams.embalajes[embalaje.clave];
+		await MovimientoInventario.updateExistenciaPosicion(1, partida);
 	}
-
-	// await MovimientoInventario.updateExistenciaPosicion(-1, partida);
-
-	// partida.embalajes = bodyParams.embalajes;
-	// partidaSalida.embalajes = bodyParams.embalajes;
-
-	// await MovimientoInventario.updateExistenciaPosicion(1, partida);
 }
 
 async function updatePartidaValor(partida, partidaSalida, bodyParams){
 	console.log("Valor");
 
-	// await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+	let res = bodyParams.valor - partida.valor;
+	let auxPartida = {
+		producto_id: partida.producto_id,
+		embalajes: {},
+		pesoNeto: 0,
+		pesoBruto: 0,
+		nivel: bodyParams.nivel,
+		posicion_id: bodyParams.posicion_id,
+		valor: res
+	};
 
-	// partida.valor = bodyParams.valor;
-	// partidaSalida.valor = bodyParams.valor;
+	await MovimientoInventario.updateExistencia(1, auxPartida, new Date());
 
-	// await MovimientoInventario.updateExistenciaPosicion(1, partida);
+	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+	partida.valor = bodyParams.valor;
+	partida.pasillo = bodyParams.pasillo;
+	partida.pasillo_id = bodyParams.pasillo_id;
+	partida.posicion = bodyParams.posicion;
+	partida.posicion_id = bodyParams.posicion_id;
+	partida.nivel = bodyParams.nivel;
+
+	partidaSalida.pasillo = bodyParams.pasillo;
+	partidaSalida.pasillo_id = bodyParams.pasillo_id;
+	partidaSalida.posicion = bodyParams.posicion;
+	partidaSalida.posicion_id = bodyParams.posicion_id;
+	partidaSalida.nivel = bodyParams.nivel;
+	partidaSalida.valor = bodyParams.valor;
+	await MovimientoInventario.updateExistenciaPosicion(1, partida);
+}
+
+async function getEmbalajes(){
+	let res;
+	res = await EmbalajesModel.find({status:"ACTIVO"}).exec();
+	return res;
 }
 
 module.exports = {

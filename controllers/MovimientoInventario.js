@@ -230,6 +230,8 @@ async function updateExistenciaPosicion(signo, itemPartida){
 			producto.pesoNeto = 0;
 		producto.pesoNeto += (signo * itemPartida.pesoNeto);
 
+		producto.valor += (signo * itemPartida.valor);
+
 		if(producto.pesoBruto == 0 && producto.pesoNeto == 0 && flagEmbalajes == 0){
 			// let index = posicion.niveles.productos.indexOf(producto);
 			// posicion.niveles.productos.splice(index, 1);
