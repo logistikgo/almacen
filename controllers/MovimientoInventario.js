@@ -160,7 +160,6 @@ function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClie
 	nMovimiento.save();
 }
 
-
 async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
 	if(itemPartida.embalajes){
@@ -222,13 +221,13 @@ async function updateExistenciaPosicion(signo, itemPartida){
 
 			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
 		}
-		if(producto.pesoBruto == undefined){
+
+		if(producto.pesoBruto == undefined)
 			producto.pesoBruto = 0;
-		}
 		producto.pesoBruto += (signo * itemPartida.pesoBruto);
-		if(producto.pesoNeto == undefined){
+
+		if(producto.pesoNeto == undefined)
 			producto.pesoNeto = 0;
-		}
 		producto.pesoNeto += (signo * itemPartida.pesoNeto);
 
 		if(producto.pesoBruto == 0 && producto.pesoNeto == 0 && flagEmbalajes == 0){

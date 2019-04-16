@@ -103,71 +103,6 @@ function getPartidaById(req, res) {
 	});
 }
 
-function updatePartida(req,res){
-	let bodyParams = req.query;
-
-	let entrada_id = bodyParams.entrada_id;
-	let clave_partida = bodyParams.clave_partida;
-
-	Entrada.findOne({_id:entrada_id})
-	.then(async(entrada) => {
-
-		let partida = entrada.partidas.find(x=>x.clave_partida == clave_partida);
-		let partidaSalida = entrada.partidasSalida.find(x=>x.clave_partida == clave_partida);
-
-		partida.pasillo = bodyParams.pasillo;
-		partida.pasillo_id = bodyParams.pasillo_id;
-		partida.posicion = bodyParams.posicion;
-		partida.posicion_id = bodyParams.posicion_id;
-		partida.nivel = bodyParams.nivel;
-		partida.valor = bodyParams.valor;
-		partida.pesoBruto = bodyParams.pesoBruto;
-		partida.pesoNeto = bodyParams.pesoNeto;
-		partida.embalajes = bodyParams.embalajes;
-
-		partidaSalida.pasillo = bodyParams.pasillo;
-		partidaSalida.pasillo_id = bodyParams.pasillo_id;
-		partidaSalida.posicion = bodyParams.posicion;
-		partidaSalida.posicion_id = bodyParams.posicion_id;
-		partidaSalida.nivel = bodyParams.nivel;
-		partidaSalida.valor = bodyParams.valor;
-		partidaSalida.pesoBruto = bodyParams.pesoBruto;
-		partidaSalida.pesoNeto = bodyParams.pesoNeto;
-		partidaSalida.embalajes = bodyParams.embalajes;
-
-		let item = {
-			partidas: entrada.partidas,
-			partidasSalida: entrada.partidasSalida
-		};
-		let succefulEntrada = 0;
-		await Entrada.updateOne({_id:entrada_id},{$set:item})
-		.then((item)=>{
-			succefulEntrada = 1;
-		});
-
-		let itemMovimiento = {
-			embalajes: bodyParams.embalajes,
-			pesoBruto: bodyParams.pesoBruto,
-			pesoNeto: bodyParams.pesoNeto,
-			pasillo: bodyParams.pasillo,
-			pasillo_id: bodyParams.pasillo_id,
-			posicion: bodyParams.posicion,
-			posicion_id: bodyParams.posicion_id,
-			nivel: bodyParams.nivel,
-		};
-		let succefulmovimiento = 0;
-		await MovimientoInventarioModel.updateOne({entrada_id:entrada, clave_partida: clave_partida},{$set:itemMovimiento})
-		.then((item)=>{
-			succefulmovimiento = 1;
-		});
-
-		if(succefulEntrada == 1 && succefulmovimiento==1)
-			res.status(200).send(entrada);
-		else
-			res.status(500).send(entrada);
-	});
-}
-
 async function save(req, res){
 	let bodyParams = req.body;
 
@@ -217,116 +152,6 @@ async function save(req, res){
 	.catch((error)=>{
 		res.status(500).send(error);
 	});
-}
-
-function update(req, res){
-	let bodyParams = req.body;
-	let entrada_id = bodyParams.entrada_id;
-
-	let jUpdate ={
-		usuarioAlta_id: bodyParams.usuarioAlta_id,
-		nombreUsuario: bodyParams.nombreUsuario,
-		item: bodyParams.item,
-		embarque: bodyParams.embarque,
-		referencia: bodyParams.referencia,
-		fechaEntrada: new Date(bodyParams.strFechaIngreso),
-		acuse: bodyParams.acuse,
-		recibio: bodyParams.recibio,
-		proveedor: bodyParams.proveedor,
-		ordenCompra: bodyParams.ordenCompra,
-		factura: bodyParams.factura,
-		tracto: bodyParams.tracto,
-		remolque: bodyParams.remolque,
-		unidad: bodyParams.unidad,
-		transportista: bodyParams.transportista,
-		valor: bodyParams.valor,
-		clienteFiscal_id: bodyParams.clienteFiscal_id,
-		idClienteFiscal: bodyParams.idClienteFiscal,
-		idSucursal: bodyParams.idSucursal,
-		sucursal_id: req.body.sucursal_id,
-		almacen_id: bodyParams.almacen_id,
-		status: bodyParams.status,
-		tipo: bodyParams.tipo,
-		partidas: bodyParams.partidas,
-		partidasSalida: bodyParams.partidasSalida,
-		isEmpty: bodyParams.isEmpty,
-		fechaAlta: new Date()
-	};
-
-	let partidasPosicionadas = (bodyParams.partidas).filter(function (x){
-		return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
-	});
-
-	if(partidasPosicionadas.length == bodyParams.partidas.length && bodyParams.item != undefined && bodyParams.item != null && bodyParams.item != ""){
-		jUpdate.status = "APLICADA";
-	}
-
-	Entrada.updateOne(
-		{ _id: entrada_id },
-		{ $set: jUpdate })
-	.then((entrada)=>{
-		res.status(200).send(entrada);
-	})
-	.catch((error)=>{
-		res.status(500).send(error);
-	})
-}
-
-async function updatePosicion_Partida(req,res){
-	let bodyParams = req.body;
-	let _entrada_id = body.idEntrada;
-	let _partidas = body.partidas;
-	let arrPartidas = [];
-	
-	let _entrada = await Entrada.findOne({idEntrada:_entrada_id})
-	.populate({
-		path:'partidas.producto_id',
-		model:'Producto'
-	}).exec();
-
-	_entrada.partidas.forEach((itemPartida)=>{
-		let itemBodyPartidas = _partidas.find(async function(itemBodyPartidas){
-			if(itemBodyPartidas.producto_id == itemPartida.producto_id._id){
-				return itemBodyPartidas;
-			}else{
-				return null;
-			}
-		});
-
-		if(itemBodyPartidas!=null){
-			let newPartida = {
-				_id : itemPartida.id,
-				producto_id:itemPartida.producto_id,
-				tarimas : itemPartida.tarimas,
-				piezas : itemPartida.cantidad,
-				cajas : itemPartida.cajas,
-				posicion : itemBodyPartidas.posicion,
-				nivel : itemBodyPartidas.nivel
-
-			}
-
-			arrPartidas.push(newPartida);
-		}
-	});
-
-	let cambios = {}
-
-	if(arrPartidas.length>0)
-	{
-		cambios = {
-			partidas : arrPartidas
-		}
-
-		Entrada.updateOne({idEntrada:_idEntrada},{$set:cambios},(err,entrada)=>{
-			if(err)
-				return res.status(500).send({message:"Error"});
-			res.status(200).send(entrada);
-		});
-	}
-	else
-	{
-		res.status(500).send({message:"Error updatePosicion_Partida"});
-	}
 }
 
 async function validaEntrada(req,res){
@@ -381,73 +206,6 @@ async function validaEntrada(req,res){
 	}else{
 		res.status(500).send({message:"Error en Json EndPoint"});
 	}	
-}
-
-//ELIMINAR
-function updatePosicionPartida(req,res){
-	let bodyParams = req.body;
-
-	let entrada_id = bodyParams.entrada_id;
-	let partida_id = bodyParams.partida_id;
-
-	Entrada.findOne({_id:entrada_id})
-	.then(async (entrada) => {
-		let partida = entrada.partidas.find(x=>x._id == partida_id);
-
-		await updatePosicion(partida, bodyParams);
-
-		let item = {
-			partidas: entrada.partidas
-		};
-
-		Entrada.updateOne({_id:entrada_id},{$set:item})
-		.then((item)=>{
-			res.status(200).send(item);
-		})
-		.catch((err)=>{
-			console.log(err);
-			res.status(500).send(err);
-		});
-	});
-}
-
-async function updatePosicion(partida,bodyParams){
-	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
-
-	partida.pasillo = bodyParams.pasillo;
-	partida.pasillo_id = bodyParams.pasillo_id;
-	partida.posicion = bodyParams.posicion;
-	partida.posicion_id = bodyParams.posicion_id;
-	partida.nivel = bodyParams.nivel;
-
-	await MovimientoInventario.updateExistenciaPosicion(1, partida);
-}
-
-//ELIMINAR
-function updatePosicionEntrada(req,res){
-	let bodyParams = req.body;
-	let entrada_id = bodyParams.entrada_id;
-
-	Entrada.findOne({_id:entrada_id})
-	.then(async (entrada) => {
-
-		for(let itemPartida of entrada.partidas){
-			await updatePosicion(itemPartida, bodyParams);
-		}
-
-		let item = {
-			partidas: entrada.partidas
-		};
-
-		Entrada.updateOne({_id:entrada_id},{$set:item})
-		.then((item)=>{
-			res.status(200).send(item);
-		})
-		.catch((err)=>{
-			console.log(err);
-			res.status(500).send(err);
-		});
-	});
 }
 
 async function saveEntradaAutomatica(req,res){
@@ -521,7 +279,170 @@ async function saveEntradaAutomatica(req,res){
 		console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
 		res.status(400).send({message:"Se intenta generar una entrada sin partidas",error:"No se encontró pre-partidas para los IDs de pedidos indicados"});
 	}
+}
 
+function update(req, res){
+	let bodyParams = req.body;
+	let entrada_id = bodyParams.entrada_id;
+
+	let jUpdate ={
+		usuarioAlta_id: bodyParams.usuarioAlta_id,
+		nombreUsuario: bodyParams.nombreUsuario,
+		item: bodyParams.item,
+		embarque: bodyParams.embarque,
+		referencia: bodyParams.referencia,
+		fechaEntrada: new Date(bodyParams.strFechaIngreso),
+		acuse: bodyParams.acuse,
+		recibio: bodyParams.recibio,
+		proveedor: bodyParams.proveedor,
+		ordenCompra: bodyParams.ordenCompra,
+		factura: bodyParams.factura,
+		tracto: bodyParams.tracto,
+		remolque: bodyParams.remolque,
+		unidad: bodyParams.unidad,
+		transportista: bodyParams.transportista,
+		valor: bodyParams.valor,
+		clienteFiscal_id: bodyParams.clienteFiscal_id,
+		idClienteFiscal: bodyParams.idClienteFiscal,
+		idSucursal: bodyParams.idSucursal,
+		sucursal_id: req.body.sucursal_id,
+		almacen_id: bodyParams.almacen_id,
+		status: bodyParams.status,
+		tipo: bodyParams.tipo,
+		partidas: bodyParams.partidas,
+		partidasSalida: bodyParams.partidasSalida,
+		isEmpty: bodyParams.isEmpty,
+		fechaAlta: new Date()
+	};
+
+	let partidasPosicionadas = (bodyParams.partidas).filter(function (x){
+		return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
+	});
+
+	if(partidasPosicionadas.length == bodyParams.partidas.length && bodyParams.item != undefined && bodyParams.item != null && bodyParams.item != ""){
+		jUpdate.status = "APLICADA";
+	}
+
+	Entrada.updateOne(
+		{ _id: entrada_id },
+		{ $set: jUpdate })
+	.then((entrada)=>{
+		res.status(200).send(entrada);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	})
+}
+
+function updatePartida(req,res){
+	let bodyParams = req.query;
+	let entrada_id = bodyParams.entrada_id;
+	let clave_partida = bodyParams.clave_partida;
+
+	Entrada.findOne({_id:entrada_id})
+	.then(async(entrada) => {
+		let partida = entrada.partidas.find(x=>x.clave_partida == clave_partida);
+		let partidaSalida = entrada.partidasSalida.find(x=>x.clave_partida == clave_partida);
+
+		let isEquals = equalsEmbalajes(partida, bodyParams);
+		
+		if(partida.pesoBruto == bodyParams.pesoBruto && partida.pesoNeto == bodyParams.pesoNeto && partida.valor == bodyParams.valor && isEquals){
+			await updatePartidaPosicion(partida, partidaSalida, bodyParams);
+		}
+		else if(partida.pesoBruto != bodyParams.pesoBruto){
+
+		}
+
+		let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
+		console.log(resMovimietno);
+
+		let item = {
+			partidas: entrada.partidas,
+			partidasSalida: entrada.partidasSalida
+		};
+
+		await Entrada.updateOne({_id:entrada_id},{$set:item})
+		.then((item)=>{
+			console.log("complete");
+			res.status(200).send(entrada);
+		})
+		.catch((error)=>{
+			res.status(500).send(entrada);
+		});
+	});
+}
+
+//Campara los embalajes actuales con los nuevos para determinar el signo
+// 0 = diferentes
+// 1 = iguales
+function equalsEmbalajes(partida, bodyParams){
+	let res = true;
+	for(let embalaje in partida.embalajes){
+		if(bodyParams.embalajes[embalaje] == undefined)
+			bodyParams.embalajes[embalaje] = 0;
+		if(bodyParams.embalajes[embalaje] != bodyParams.embalajes[embalaje])
+			return false;
+	}
+	return res;
+}
+
+//Updatea los cambios hechos en la partida en su respectivo movimiento
+async function updateMovimiento(entrada_id, clave_partida, bodyParams){
+	let itemMovimiento = {
+		embalajes: bodyParams.embalajes,
+		pesoBruto: bodyParams.pesoBruto,
+		pesoNeto: bodyParams.pesoNeto,
+		pasillo: bodyParams.pasillo,
+		pasillo_id: bodyParams.pasillo_id,
+		posicion: bodyParams.posicion,
+		posicion_id: bodyParams.posicion_id,
+		nivel: bodyParams.nivel,
+	};
+
+	await MovimientoInventarioModel.updateOne({entrada_id:entrada_id, clave_partida: clave_partida},{$set:itemMovimiento})
+	.then((item)=>{
+		return true;
+	})
+	.catch((error)=>{
+		return false;
+	});
+}
+
+//CASO BASE: Solo se updatean posiciones
+async function updatePartidaPosicion(partida, partidaSalida, bodyParams){
+	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+	partida.pasillo = bodyParams.pasillo;
+	partida.pasillo_id = bodyParams.pasillo_id;
+	partida.posicion = bodyParams.posicion;
+	partida.posicion_id = bodyParams.posicion_id;
+	partida.nivel = bodyParams.nivel;
+
+	partidaSalida.pasillo = bodyParams.pasillo;
+	partidaSalida.pasillo_id = bodyParams.pasillo_id;
+	partidaSalida.posicion = bodyParams.posicion;
+	partidaSalida.posicion_id = bodyParams.posicion_id;
+	partidaSalida.nivel = bodyParams.nivel;
+	await MovimientoInventario.updateExistenciaPosicion(1, partida);
+}
+
+async function updatePartidaPesoB(partida, partidaSalida, bodyParams){
+	partida.pesoBruto = bodyParams.pesoBruto;
+	partidaSalida.pesoBruto = bodyParams.pesoBruto;
+}
+
+async function updatePartidaPesoN(partida, partidaSalida, bodyParams){
+	partida.pesoNeto = bodyParams.pesoNeto;
+	partidaSalida.pesoNeto = bodyParams.pesoNeto;
+}
+
+async function updatePartidaEmbalajes(partida, partidaSalida, bodyParams){
+	partida.embalajes = bodyParams.embalajes;
+	partidaSalida.embalajes = bodyParams.embalajes;
+}
+
+async function updatePartidaValor(partida, partidaSalida, bodyParams){
+	partida.valor = bodyParams.valor;
+	partidaSalida.valor = bodyParams.valor;
 }
 
 module.exports = {
@@ -533,7 +454,5 @@ module.exports = {
 	getPartidaById,
 	updatePartida,
 	validaEntrada,
-	updatePosicionPartida,
-	updatePosicionEntrada,
 	saveEntradaAutomatica
 }

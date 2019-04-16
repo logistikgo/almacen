@@ -72,6 +72,19 @@ async function savePartidasPedido(req,res){
 	}
 }
 
+async function getPedidosPosicionados(req, res){
+	let arrPedidos = req.query.arrPedidos;
+	let resPedidos = [];
+	let arrPartidasPosicionadas;
+	for(let pedido of arrPedidos){
+		let arrpartidas = await getPartidas(pedido);
+		arrPartidasPosicionadas = arrpartidas.filter(x => x.pasillo_id != undefined && x.posicion_id != undefined && x.nivel != undefined);
+		if(arrPartidasPosicionadas.length !== arrpartidas.length)
+			resPedidos.push(pedido);
+	}
+	await res.status(200).send(resPedidos);
+}
+
 async function getPartidas(idPedido){
 	let arrPartidas = [];
 	await PrePartida.find({IDPedido:idPedido})
@@ -97,19 +110,6 @@ async function getPartida(prepartida){
 			console.log("Error: " + prepartida);
 	});
 	return partida;
-}
-
-async function getPedidosPosicionados(req, res){
-	let arrPedidos = req.query.arrPedidos;
-	let resPedidos = [];
-	let arrPartidasPosicionadas;
-	for(let pedido of arrPedidos){
-		let arrpartidas = await getPartidas(pedido);
-		arrPartidasPosicionadas = arrpartidas.filter(x => x.pasillo_id != undefined && x.posicion_id != undefined && x.nivel != undefined);
-		if(arrPartidasPosicionadas.length !== arrpartidas.length)
-			resPedidos.push(pedido);
-	}
-	await res.status(200).send(resPedidos);
 }
 
 module.exports = {
