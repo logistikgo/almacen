@@ -229,7 +229,7 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.idSucursal = entrada.idSucursal;
 			nSalida.sucursal_id = entrada.sucursal_id;
 			nSalida.almacen_id = entrada.almacen_id;
-			nSalida.embarco = entrada.embarque;
+			nSalida.embarco = req.body.embarco;
 			nSalida.referencia = entrada.referencia;
 			nSalida.valor = entrada.valor;
 			nSalida.clienteFiscal_id = entrada.clienteFiscal_id;
