@@ -346,7 +346,7 @@ function updatePartida(req,res){
 		let partidaSalida = entrada.partidasSalida.find(x=>x.clave_partida == clave_partida);
 
 		let isEquals = await equalsEmbalajes(partida, bodyParams);
-		console.log(isEquals);
+		//console.log(isEquals);
 		
 		if(partida.pesoBruto == bodyParams.pesoBruto && partida.pesoNeto == bodyParams.pesoNeto && partida.valor == bodyParams.valor && isEquals){
 			await updatePartidaPosicion(partida, partidaSalida, bodyParams);
@@ -426,7 +426,7 @@ async function updateMovimiento(entrada_id, clave_partida, bodyParams){
 
 //CASO BASE: Solo se updatean posiciones
 async function updatePartidaPosicion(partida, partidaSalida, bodyParams){
-	console.log("Caso base");
+	//console.log("Caso base");
 	if(partida.pasillo_id != undefined && partida.posicion_id != undefined && partida.nivel != undefined)
 		await MovimientoInventario.updateExistenciaPosicion(-1, partida);
 
@@ -445,7 +445,7 @@ async function updatePartidaPosicion(partida, partidaSalida, bodyParams){
 }
 
 async function updatePartidaPesoB(partida, partidaSalida, bodyParams){
-	console.log("PB");
+	//console.log("PB");
 	let res = bodyParams.pesoBruto - partida.pesoBruto;
 	let auxPartida = {
 		producto_id: partida.producto_id,
@@ -477,7 +477,7 @@ async function updatePartidaPesoB(partida, partidaSalida, bodyParams){
 }
 
 async function updatePartidaPesoN(partida, partidaSalida, bodyParams){
-	console.log("PN");
+	//console.log("PN");
 	let res = bodyParams.pesoNeto - partida.pesoNeto;
 	let auxPartida = {
 		producto_id: partida.producto_id,
@@ -509,7 +509,7 @@ async function updatePartidaPesoN(partida, partidaSalida, bodyParams){
 }
 
 async function updatePartidaEmbalajes(partida, partidaSalida, bodyParams){
-	console.log("Embalajes");
+	//console.log("Embalajes");
 	let embalajes = await getEmbalajes();
 
 	for(let embalaje of embalajes){
@@ -555,7 +555,7 @@ async function updatePartidaEmbalajes(partida, partidaSalida, bodyParams){
 }
 
 async function updatePartidaValor(partida, partidaSalida, bodyParams){
-	console.log("Valor");
+	//console.log("Valor");
 
 	let res = bodyParams.valor - partida.valor;
 	let auxPartida = {
