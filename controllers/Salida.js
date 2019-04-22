@@ -93,9 +93,9 @@ async function save(req, res) {
 	nSalida.save()
 	.then(async(salida)=>{
 		for(let itemPartida of salida.partidas){
-				await MovimientoInventario.saveSalida(itemPartida,salida.id)
-				await saveSalidasEnEntrada(salida.entrada_id,salida._id);
+				await MovimientoInventario.saveSalida(itemPartida,salida.id);
 		}
+		await saveSalidasEnEntrada(salida.entrada_id,salida._id);
 		res.status(200).send(salida);
 	})
 	.catch((error)=>{
@@ -210,7 +210,7 @@ async function saveSalidaAutomatica(req,res){
 	if(partidas && partidas.length>0){
 		let entrada = await Entrada.findOne({"partidas._id":partidas[0]._id});
 		
-		if(entrada){
+		if(entrada && !entrada.isEmpty){
 			
 			let nSalida = new Salida();
 			nSalida.salida_id = await getNextID();
@@ -219,7 +219,7 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
 			nSalida.nombreUsuario = req.body.nombreUsuario;
 			nSalida.folio = await getNextID();
-			nSalida.partidas = getPartidasDeEntrada(entrada.partidas,partidas);	
+			nSalida.partidas = getPartidasDeEntrada(entrada.partidasSalida,partidas);	
 			nSalida.transportista = req.body.transportista;
 			nSalida.placasRemolque = req.body.placasRemolque;
 			nSalida.placasTrailer = req.body.placasTrailer;
@@ -243,9 +243,9 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.save()
 			.then(async(salida)=>{
 				for(let itemPartida of salida.partidas){
-						await MovimientoInventario.saveSalida(itemPartida,salida.id)
-						await saveSalidasEnEntrada(salida.entrada_id,salida._id);
+						await MovimientoInventario.saveSalida(itemPartida,salida.id);
 				}
+				await saveSalidasEnEntrada(salida.entrada_id,salida._id);
 				res.status(200).send(salida);
 			})
 			.catch((error)=>{
@@ -255,7 +255,7 @@ async function saveSalidaAutomatica(req,res){
 			
 		}else
 		{
-			res.status(400).send("Se trata de generar una salida sin entrada");
+			res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 		}
 		
 	}else
@@ -270,7 +270,7 @@ function getPartidasDeEntrada(partidasDeEntrada,partidasDeSalida){
 	let partidas = [];
 	partidasDeEntrada.forEach(function(partidaDeEntrada){
 	
-		if(IDSPartida.includes(partidaDeEntrada._id.toString())){
+		if(IDSPartida.includes(partidaDeEntrada._id.toString()) && !partidaDeEntrada.isEmpty){
 			partidas.push(partidaDeEntrada);
 		}
 	});

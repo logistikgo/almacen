@@ -316,6 +316,17 @@ function update(req, res){
 		fechaAlta: new Date()
 	};
 
+	//Updatea los movimientos de esta entrada, les asigna el campo almacen_id y clienteFiscal_id
+	MovimientoInventarioModel.find({entrada_id: entrada_id })
+	.then((movimientos)=>{
+		movimientos.forEach(function(movimiento){
+			movimiento.almacen_id = jUpdate.almacen_id;
+			movimiento.clienteFiscal_id = jUpdate.clienteFiscal_id;
+			//console.log(movimiento);
+			movimiento.save();
+		});
+	});
+
 	let partidasPosicionadas = (bodyParams.partidas).filter(function (x){
 		return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
 	});
