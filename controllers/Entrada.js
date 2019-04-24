@@ -219,10 +219,12 @@ async function saveEntradaAutomatica(req,res){
 
 		let nEntrada = new Entrada();
 
-		//let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
+		let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
 		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
+		//console.log("Arreglo de clientes fiscales in comming");
+		//console.log(bodyParams.IDClienteFiscal);
 		//console.log(arrClientes);
-		console.log(arrSucursales);
+		//console.log(arrSucursales);
 		nEntrada.nombreUsuario = bodyParams.nombreUsuario; //nombreUsuario
 		nEntrada.embarque = bodyParams.embarque; //Folio viaje 
 		nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada); 
@@ -233,9 +235,10 @@ async function saveEntradaAutomatica(req,res){
 		nEntrada.valor = partidas.map(x=>x.valor).reduce(function(total,valor){
 			return total + valor;
 		});//Si lo trae
-		//nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes
+		if(arrClientes.length>0){
+			nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes	
+		}
 		nEntrada.sucursal_id = arrSucursales[0]; //Interfaz ALM_XD Sucursales
-
 		nEntrada.status = "SIN_POSICIONAR"; //SIN_POSICION
 		nEntrada.tipo = "NORMAL";//NORMAL
 		nEntrada.partidas = partidas; //Pre partidas

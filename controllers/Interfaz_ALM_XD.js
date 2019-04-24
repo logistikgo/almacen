@@ -3,9 +3,12 @@
 const Interfaz_ALM_XD = require('../models/Interfaz_ALM_XD');
 
 async function getIDClienteALM(arrClientesXD) {
-	console.log(arrClientesXD);
+	//console.log("Inside de function");
+	//console.log(arrClientesXD);
 	let clientesALM_XD = await Interfaz_ALM_XD.find({xd_id:{$in:arrClientesXD},tipo:"Cliente"}).exec();
+	//console.log(clientesALM_XD);
 	let arrClientesALM = clientesALM_XD.map(x=>x.alm_id.toString());
+	//console.log(arrClientesALM);
 	return arrClientesALM;
 }
 
