@@ -400,6 +400,17 @@ function updatePartida(req,res){
 			partidasSalida: entrada.partidasSalida
 		};
 
+		//Validacion de cambio de status
+		let partidasPosicionadas = (item.partidas).filter(function (x){
+			return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
+		});
+
+		console.log(resMovimietno);
+
+		if(partidasPosicionadas.length == item.partidas.length && entrada.item != undefined && entrada.item != null && entrada.item != ""){
+			item.status = "APLICADA";
+		}
+
 		await Entrada.updateOne({_id:entrada_id},{$set:item})
 		.then((item)=>{
 			//console.log("complete");
@@ -456,7 +467,7 @@ async function updateMovimiento(entrada_id, clave_partida, bodyParams){
 
 //CASO BASE: Solo se updatean posiciones
 async function updatePartidaPosicion(partida, partidaSalida, bodyParams){
-	//console.log("Caso base");
+	console.log("Caso base");
 	if(partida.pasillo_id != undefined && partida.posicion_id != undefined && partida.nivel != undefined)
 		await MovimientoInventario.updateExistenciaPosicion(-1, partida);
 
