@@ -213,75 +213,91 @@ async function saveEntradaAutomatica(req,res){
 	let bodyParams = req.body;
 	let arrIDPedido = bodyParams.arrIDPedido;
 	let partidas = await PrePartidaM.find({IDPedido:{$in:arrIDPedido}}).exec();
-	
-	if(partidas && partidas.length>0)
-	{
+	let isEntrada = await validaEntradaDuplicado(bodyParams.embarque); //Valida si ya existe
 
-		let nEntrada = new Entrada();
+	if(!isEntrada){
+		if(partidas && partidas.length>0)
+		{
 
-		let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
-		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
-		//console.log("Arreglo de clientes fiscales in comming");
-		//console.log(bodyParams.IDClienteFiscal);
-		//console.log(arrClientes);
-		//console.log(arrSucursales);
-		nEntrada.nombreUsuario = bodyParams.nombreUsuario; //nombreUsuario
-		nEntrada.embarque = bodyParams.embarque; //Folio viaje 
-		nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada); 
-		nEntrada.tracto = bodyParams.tracto;//Si lo trae
-		nEntrada.remolque = bodyParams.remolque;//Si lo trae
-		nEntrada.unidad = bodyParams.unidad;//Si lo trae
-		nEntrada.transportista = bodyParams.transportista;//Si lo trae
-		nEntrada.valor = partidas.map(x=>x.valor).reduce(function(total,valor){
-			return total + valor;
-		});//Si lo trae
-		if(arrClientes.length>0){
-			nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes	
-		}
-		nEntrada.sucursal_id = arrSucursales[0]; //Interfaz ALM_XD Sucursales
-		nEntrada.status = "SIN_POSICIONAR"; //SIN_POSICION
-		nEntrada.tipo = "NORMAL";//NORMAL
-		nEntrada.partidas = partidas; //Pre partidas
-		nEntrada.partidasSalida = partidas; //Pre partidas
-		nEntrada.isEmpty = false;
+			let nEntrada = new Entrada();
 
-		nEntrada.fechaAlta = new Date();
-		nEntrada.idEntrada = await getNextID();
-		nEntrada.folio = await getNextID();
-
-		//nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id; //Diferente usuario Omitir
-		
-		//nEntrada.item = bodyParams.item; //Capturar en asignacion de posiciones
-		
-		//nEntrada.referencia = bodyParams.referencia; //Capturar
-		
-		//nEntrada.acuse = bodyParams.acuse; //Capturar
-		//nEntrada.recibio = bodyParams.recibio; //QUien hizo la asignacion de posiciones
-		//nEntrada.proveedor = bodyParams.proveedor; //Capturar
-		//nEntrada.ordenCompra = bodyParams.ordenCompra;//Capturar
-		//nEntrada.factura = bodyParams.factura;//Capturar
-		
-		//nEntrada.idClienteFiscal = bodyParams.idClienteFiscal; //Ño
-		//nEntrada.idSucursal = bodyParams.idSucursal;// 
-		
-		//nEntrada.almacen_id = bodyParams.almacen_id; //Capturar
-		
-		nEntrada.save()
-		.then(async(entrada)=>{
-			//await PrePartidaC.updateToAsignado(partidas);
-			
-			for(let itemPartida of entrada.partidas){
-				
-				await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
+			let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
+			let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
+			//console.log("Arreglo de clientes fiscales in comming");
+			//console.log(bodyParams.IDClienteFiscal);
+			//console.log(arrClientes);
+			//console.log(arrSucursales);
+			nEntrada.nombreUsuario = bodyParams.nombreUsuario; //nombreUsuario
+			nEntrada.embarque = bodyParams.embarque; //Folio viaje 
+			nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada); 
+			nEntrada.tracto = bodyParams.tracto;//Si lo trae
+			nEntrada.remolque = bodyParams.remolque;//Si lo trae
+			nEntrada.unidad = bodyParams.unidad;//Si lo trae
+			nEntrada.transportista = bodyParams.transportista;//Si lo trae
+			nEntrada.valor = partidas.map(x=>x.valor).reduce(function(total,valor){
+				return total + valor;
+			});//Si lo trae
+			if(arrClientes.length>0){
+				nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes	
 			}
-			res.status(200).send(entrada);
-		})
-		.catch((error)=>{
-			res.status(500).send(error);
-		});
+			nEntrada.sucursal_id = arrSucursales[0]; //Interfaz ALM_XD Sucursales
+			nEntrada.status = "SIN_POSICIONAR"; //SIN_POSICION
+			nEntrada.tipo = "NORMAL";//NORMAL
+			nEntrada.partidas = partidas; //Pre partidas
+			nEntrada.partidasSalida = partidas; //Pre partidas
+			nEntrada.isEmpty = false;
+
+			nEntrada.fechaAlta = new Date();
+			nEntrada.idEntrada = await getNextID();
+			nEntrada.folio = await getNextID();
+
+			//nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id; //Diferente usuario Omitir
+			
+			//nEntrada.item = bodyParams.item; //Capturar en asignacion de posiciones
+			
+			//nEntrada.referencia = bodyParams.referencia; //Capturar
+			
+			//nEntrada.acuse = bodyParams.acuse; //Capturar
+			//nEntrada.recibio = bodyParams.recibio; //QUien hizo la asignacion de posiciones
+			//nEntrada.proveedor = bodyParams.proveedor; //Capturar
+			//nEntrada.ordenCompra = bodyParams.ordenCompra;//Capturar
+			//nEntrada.factura = bodyParams.factura;//Capturar
+			
+			//nEntrada.idClienteFiscal = bodyParams.idClienteFiscal; //Ño
+			//nEntrada.idSucursal = bodyParams.idSucursal;// 
+			
+			//nEntrada.almacen_id = bodyParams.almacen_id; //Capturar
+			
+			nEntrada.save()
+			.then(async(entrada)=>{
+				//await PrePartidaC.updateToAsignado(partidas);
+				
+				for(let itemPartida of entrada.partidas){
+					
+					await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
+				}
+				res.status(200).send(entrada);
+			})
+			.catch((error)=>{
+				res.status(500).send(error);
+			});
+		}else{
+			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+			res.status(400).send({message:"Se intenta generar una entrada sin partidas",error:"No se encontró pre-partidas para los IDs de pedidos indicados"});
+		}
 	}else{
-		console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
-		res.status(400).send({message:"Se intenta generar una entrada sin partidas",error:"No se encontró pre-partidas para los IDs de pedidos indicados"});
+		console.log("No se puede generar la entrada, esta ya existe");
+		res.status(400).send({message:"Se intenta generar una entrada de un T1 que ya generó una entrada",error:"Se intenta generar una entrada de un T1 que ya generó una entrada"});
+	}
+}
+//Valida que la entrada ya existe o no, devolviendo true o false
+async function validaEntradaDuplicado(embarque){
+	let entradas = await Entrada.find({embarque:embarque}).exec();
+	//console.log(entradas);
+	if(entradas.length > 0){
+		return true;
+	}else{
+		return false;
 	}
 }
 
