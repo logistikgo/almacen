@@ -250,7 +250,7 @@ async function saveEntradaAutomatica(req,res){
 			nEntrada.fechaAlta = new Date();
 			nEntrada.idEntrada = await getNextID();
 			nEntrada.folio = await getNextID();
-
+			nEntrada.isEmpty = false;
 			//nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id; //Diferente usuario Omitir
 			
 			//nEntrada.item = bodyParams.item; //Capturar en asignacion de posiciones

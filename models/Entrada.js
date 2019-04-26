@@ -32,7 +32,7 @@ const Entrada = Schema({
 	clienteFiscal_id:{type:Schema.ObjectId,ref:'ClienteFiscal'},
 	status: String,
 	tipo:String,
-	isEmpty: Boolean,
+	isEmpty: { type: Boolean, default: false },
 	salidas_id : [{type:Schema.ObjectId,ref:'Salida'}],
 	partidas:[
 		{
@@ -67,7 +67,7 @@ const Entrada = Schema({
 			pesoBruto:Number,
 			pesoNeto:Number,
 			embalajes:{},
-			isEmpty:Boolean,
+			isEmpty:{ type: Boolean, default: false },
 			clave_partida: String
 		}
 	]

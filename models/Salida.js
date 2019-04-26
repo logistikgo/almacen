@@ -43,7 +43,8 @@ const Salida = Schema({
 			valor:Number,
 			pesoBruto:Number,
 			pesoNeto:Number,
-			embalajes:{}
+			embalajes:{},
+			clave_partida: String
 		}
 	]
 },{collection:'Salidas'});

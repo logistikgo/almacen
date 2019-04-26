@@ -109,12 +109,37 @@ async function getPartidasEntradas(filtro){
 			model:'Salida'
 		})
 		.exec();
-		
-	await entradas.forEach(function(entrada){
+	//console.log("-------------------------------------------------");
+	
+
+	let salidas = await Salida.find(filtro);
+	//console.log(salidas);
+	await entradas.forEach(async function(entrada){
 		let entry = entrada;
+
+		
+		let partidasDeSalida = salidas.filter(x=> x.entrada_id == entrada._id.toString()).map(x=>x.partidas);
+		
 		entrada.partidas.forEach(function(partida){
+			//--------------------------------
+			
+			let partidaSalidaDeEntrada = entrada.partidasSalida.find(x=> x.clave_partida == partida.clave_partida);
+			//console.log(salidas);
+			let salida = salidas.filter(x=> x.entrada_id == entrada._id.toString() && x.partidas[0]._id.toString() == partidaSalidaDeEntrada._id.toString());
+			//console.log("SE IMPRIMEN LAS SALIDAS");
+			//console.log(salida);
+			let partidasDeSalidas = partidasDeSalida.filter(x=> x[0]._id.toString() == partidaSalidaDeEntrada._id.toString());
+			let jsonPartidasSalida = [];
+			partidasDeSalidas.forEach(function(partidalocal){
+				jsonPartidasSalida.push(partidalocal[0]);
+			});
+			
+			
+			//---------------------------------------------------
 			let json = {
+				infoSalidas: salida,
 				infoPartida:partida,
+				infoPartidasSalida: jsonPartidasSalida,
 				infoEntrada:entry
 			}
 			infoPartidasEntradas.push(json);
