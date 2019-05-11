@@ -111,8 +111,9 @@ async function getPartidasEntradas(filtro){
 		.exec();
 	//console.log("-------------------------------------------------");
 	
-
+	delete filtro.fechaEntrada;
 	let salidas = await Salida.find(filtro);
+	console.log(filtro);
 	//console.log(salidas);
 	await entradas.forEach(async function(entrada){
 		let entry = entrada;
@@ -125,6 +126,7 @@ async function getPartidasEntradas(filtro){
 			
 			let partidaSalidaDeEntrada = entrada.partidasSalida.find(x=> x.clave_partida == partida.clave_partida);
 			//console.log(salidas);
+			partida.isEmpty = partidaSalidaDeEntrada.isEmpty;
 			let salida = salidas.filter(x=> x.entrada_id == entrada._id.toString() && x.partidas[0]._id.toString() == partidaSalidaDeEntrada._id.toString());
 			//console.log("SE IMPRIMEN LAS SALIDAS");
 			//console.log(salida);
