@@ -6,6 +6,7 @@ const Schema = mongoose.Schema;
 const PrePartida = Schema(
 	{
 		IDPedido:Number,
+		InfoPedido: {},
 		//clienteFiscal_id : {type:Schema.ObjectId,ref:'ClienteFiscal'},
 		fechaAlta:Date,
 		producto_id:{type:Schema.ObjectId,ref:'Producto'},

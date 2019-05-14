@@ -23,8 +23,8 @@ const PrePartida = require('./controllers/PrePartida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
 
-const dotenv = require('dotenv'); //Used for environment variables
-dotenv.config();
+//const dotenv = require('dotenv'); //Used for environment variables
+//dotenv.config();
 
 app.use(bodyParser.urlencoded({
     extended: false

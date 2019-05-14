@@ -1,3 +1,7 @@
+
+const dotenv = require('dotenv'); //Used for environment variables
+dotenv.config();
+
 module.exports = {
 	port: process.env.PORT || 8080,
 	//TEST
@@ -6,4 +10,5 @@ module.exports = {
 	//db: process.env.MONGODB || process.env.DB_DEMO_URL_ACCESS,//DEMO
 	//PRODUCCION
 	//db: process.env.MONGODB || process.env.DB_PRODUCTION_URL_ACCESS,//PRODUCCION
+	
 }

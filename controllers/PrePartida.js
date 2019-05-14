@@ -6,7 +6,18 @@ const Helper = require('../helpers');
 const Producto = require('../models/Producto');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
-var ObjectId = (require('mongoose').Types.ObjectId);
+const ObjectId = (require('mongoose').Types.ObjectId);
+
+const configSQL = (require('../configSQL'));
+const sql = require('mssql');
+
+//Se conecta a la base de datos en SQL
+sql.connect(configSQL, function (err) {
+    if (err) console.log(err);
+});
+
+//Con lla variable request se pueden hacer consultas o peticiones 
+const request = new sql.Request();
 
 function get(req,res){
 	let _IDPedido = req.query.IDPedido;
@@ -20,7 +31,7 @@ function get(req,res){
 	});
 }
 
-function save(partida,IDPedido){
+async function save(partida,IDPedido){
 	let nPrePartida = new PrePartida();
 	nPrePartida.IDPedido = IDPedido;
 	nPrePartida.fechaAlta = new Date();
@@ -35,6 +46,21 @@ function save(partida,IDPedido){
 	nPrePartida.isEmpty = false;
 	nPrePartida.clave_partida = IDPedido + "" + partida.clave_partida;
 	nPrePartida.isAsignado = false;
+	let queryGetPedido = `SELECT XD_IDPedido,Delivery,FechaPGI,FechaAlta,StatusProceso,IDClienteFiscal FROM XD_Pedidos WHERE XD_IDPedido = ${nPrePartida.IDPedido}`;
+	let resultQueryPedido = (await request.query(queryGetPedido)).recordset;
+
+	if(resultQueryPedido.length > 0){
+		let infoPedido = {
+			IDPedido: resultQueryPedido[0].XD_IDPedido,
+			Delivery: resultQueryPedido[0].Delivery,
+			FechaPGI: resultQueryPedido[0].FechaPGI,
+			FechaAlta: resultQueryPedido[0].FechaAlta,
+			StatusProceso: resultQueryPedido[0].StatusProceso,
+			IDClienteFiscal: resultQueryPedido[0].IDClienteFiscal
+		};
+
+		nPrePartida.InfoPedido = infoPedido;
+	}
 
 	nPrePartida.save()
 	.then((PrePartida)=>{

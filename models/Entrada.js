@@ -49,8 +49,10 @@ const Entrada = Schema({
 			pesoBruto:Number,
 			pesoNeto:Number,
 			embalajes:{},
+			isEmpty:{ type: Boolean, default: false },
 			clave_partida: String,
-			IDPedido : Number
+			IDPedido : Number,
+			InfoPedido: {}
 		}
 	],
 	partidasSalida:[
@@ -70,7 +72,8 @@ const Entrada = Schema({
 			embalajes:{},
 			isEmpty:{ type: Boolean, default: false },
 			clave_partida: String,
-			IDPedido : Number
+			IDPedido : Number,
+			InfoPedido: {}
 		}
 	]
 },
