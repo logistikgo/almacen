@@ -65,6 +65,7 @@ app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID', Entrada.getEntradaByID);
 app.get('/api/getEntradasByIDs',Entrada.getEntradasByIDs);
 app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
+app.get('/api/getDeliveryGroups',Helper.GetDeliveryGroups);
 app.get('/api/partida', Entrada.getPartidaById);
 app.put('/api/partida', Entrada.updatePartida);
 app.post('/api/entrada', Entrada.save);

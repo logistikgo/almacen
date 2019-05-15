@@ -82,6 +82,8 @@ async function getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,_ti
 	};
 
 	let partidasEntrada = await getPartidasEntradas(filtro);
+	//console.log(filtro);
+	
 	//let partidasSalida = await getPartidasSalidas(filtro);
 
 	//infoPartidasGrl = partidasEntrada.concat(partidasSalida);
@@ -91,6 +93,7 @@ async function getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,_ti
 
 async function getPartidasEntradas(filtro){
 	let infoPartidasEntradas = [];
+	
 	let entradas = await Entrada.find(filtro)
 		.populate({
 			path:'partidas.producto_id',
@@ -203,6 +206,48 @@ async function formatPartidasSalida(req,res){
 
 		});
 	});
+}
+
+async function GetDeliveryGroups(req,res){
+
+	let _arrClientesFiscales = req.query.arrClientesFiscales;
+	let _arrSucursales = req.query.arrSucursales;
+	let _arrAlmacenes = req.query.arrAlmacenes;
+	let _tipo = req.query.tipoMovimiento;
+
+	let filtro = {
+		clienteFiscal_id: {$in:_arrClientesFiscales},
+		sucursal_id:{$in:_arrSucursales},
+		almacen_id:{$in:_arrAlmacenes},
+		tipo:_tipo
+	};
+
+	let partidas = await getPartidasEntradas(filtro);
+	console.log("PARTIDAS");
+	//console.log(partidas);
+	let IDPedidos = await Entrada.find(filtro).distinct("partidas.InfoPedido.IDPedido").exec();
+	//console.log("IDPEDIDOS");
+	//console.log(IDPedidos);
+	let Pedidos = [];
+	IDPedidos.forEach(function(IDPedido){
+		let partidasDeIDPedido = partidas.filter(x =>  x.infoPartida.InfoPedido!=undefined ? x.infoPartida.InfoPedido.IDPedido == IDPedido : false);
+		if(partidasDeIDPedido.length>0){
+			//Hacer consulta de obtencion de informacion basica del pedido
+			//Delivery, PGI, ClienteDestino, CiudadDestino,T, Pzs,Cjs,Eta,CrossDock, Status
+			let jsonPedido = {
+				Delivery:  partidasDeIDPedido[0].infoPartida.InfoPedido.Delivery,
+				FechaPGI:  partidasDeIDPedido[0].infoPartida.InfoPedido.FechaPGI,
+				FechaAlta: partidasDeIDPedido[0].infoPartida.InfoPedido.FechaAlta,
+				Partidas: partidasDeIDPedido.map(m=> m.infoPartida)
+			};
+
+			Pedidos.push(jsonPedido);
+		}
+	});
+
+	res.status(200).send(Pedidos);
+	//return Pedidos;
+
 }
 
 /*
@@ -361,5 +406,6 @@ async function PDFEntrada(entrada_id){
 
 module.exports = {
 	getNextID,
-	getPartidasByIDs
+	getPartidasByIDs,
+	GetDeliveryGroups
 }
