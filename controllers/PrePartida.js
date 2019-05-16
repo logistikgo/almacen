@@ -11,13 +11,9 @@ const ObjectId = (require('mongoose').Types.ObjectId);
 const configSQL = (require('../configSQL'));
 const sql = require('mssql');
 
-//Se conecta a la base de datos en SQL
-sql.connect(configSQL, function (err) {
-    if (err) console.log(err);
-});
 
-//Con lla variable request se pueden hacer consultas o peticiones 
-const request = new sql.Request();
+//Se conecta a la base de datos en SQL conexion global
+
 
 function get(req,res){
 	let _IDPedido = req.query.IDPedido;
@@ -32,6 +28,10 @@ function get(req,res){
 }
 
 async function save(partida,IDPedido){
+
+	//Conexion local
+	const sql_pool = await new sql.ConnectionPool(configSQL).connect();
+
 	let nPrePartida = new PrePartida();
 	nPrePartida.IDPedido = IDPedido;
 	nPrePartida.fechaAlta = new Date();
@@ -47,7 +47,8 @@ async function save(partida,IDPedido){
 	nPrePartida.clave_partida = IDPedido + "" + partida.clave_partida;
 	nPrePartida.isAsignado = false;
 	let queryGetPedido = `SELECT XD_IDPedido,Delivery,FechaPGI,FechaAlta,StatusProceso,IDClienteFiscal FROM XD_Pedidos WHERE XD_IDPedido = ${nPrePartida.IDPedido}`;
-	let resultQueryPedido = (await request.query(queryGetPedido)).recordset;
+	let resultQueryPedido = (await sql_pool.query(queryGetPedido)).recordset;
+	sql.close();
 
 	if(resultQueryPedido.length > 0){
 		let infoPedido = {
@@ -69,6 +70,9 @@ async function save(partida,IDPedido){
 	.catch((error)=>{
 		return -1;
 	});
+
+
+	sql.close();
 }
 
 function updateToAsignado(arrPartidas){
