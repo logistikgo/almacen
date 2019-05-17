@@ -214,7 +214,7 @@ async function formatPartidasSalida(req,res){
 	});
 }
 
-async function GetDeliveryGroups(req,res){
+async function GetDeliveryGroupsEntrada(req,res){
 
 	//Conexion local
 	const sql_pool = await new sql.ConnectionPool(configSQL).connect();
@@ -235,13 +235,17 @@ async function GetDeliveryGroups(req,res){
 	
 	//console.log(partidas);
 	let IDPedidos = await Entrada.find(filtro).distinct("partidas.InfoPedido.IDPedido").exec();
-	//console.log(IDPedidos);
+	console.log(IDPedidos);
 	//Se obtienen la informacion de los pedidos de la base de datos en SQL Server
 	let queryGetPedidos = `SELECT XD_IDPedido,Delivery,FechaAlta,FechaPGI,FinalNombreComercial,FinalMunicipio,Tarimas,Peso,Volumen,Piezas,Cajas,FechaETA,SucursalCrossDock,StatusProceso FROM View_Pedidos WHERE XD_IDPedido in (${IDPedidos})`;
 	//console.log(queryGetPedidos);
-	let resultQueryPedidos = (await sql_pool.query(queryGetPedidos)).recordset;
-	//console.log(resultQueryPedidos);
-	sql.close();
+	let resultQueryPedidos = [];
+	if(IDPedidos.length>0){
+		resultQueryPedidos = (await sql_pool.query(queryGetPedidos)).recordset;
+		//console.log(resultQueryPedidos);
+		sql.close();	
+	}
+	
 
 
 	//console.log("IDPEDIDOS");
@@ -249,7 +253,7 @@ async function GetDeliveryGroups(req,res){
 	let Pedidos = [];
 	IDPedidos.forEach(function(IDPedido){
 		let partidasDeIDPedido = partidas.filter(x =>  x.infoPartida.InfoPedido!=undefined ? x.infoPartida.InfoPedido.IDPedido == IDPedido : false);
-
+		
 		if(partidasDeIDPedido.length>0){
 
 			let infoPedido = resultQueryPedidos.filter(x=> x.XD_IDPedido == IDPedido);
@@ -269,7 +273,10 @@ async function GetDeliveryGroups(req,res){
 				FechaETA:infoPedido[0].FechaETA,
 				CrossDock:infoPedido[0].SucursalCrossDock,
 				StatusProceso:infoPedido[0].StatusProceso,
-				Partidas: partidasDeIDPedido.map(m=> m.infoPartida)
+				Partidas: partidasDeIDPedido.map(m=> m.infoPartida),
+				FolioEntrada: partidasDeIDPedido.map(m=> m.infoEntrada)[0].folio,
+				entrada_id: partidasDeIDPedido.map(m=> m.infoEntrada)[0]._id,
+				idEntrada: partidasDeIDPedido.map(m=> m.infoEntrada)[0].idEntrada
 			};
 			//console.log(jsonPedido);
 			Pedidos.push(jsonPedido);
@@ -285,5 +292,5 @@ async function GetDeliveryGroups(req,res){
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
-	GetDeliveryGroups
+	GetDeliveryGroupsEntrada
 }
