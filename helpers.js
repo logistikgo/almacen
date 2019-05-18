@@ -121,35 +121,60 @@ async function getPartidasEntradas(filtro){
 	//console.log("-------------------------------------------------");
 	
 	delete filtro.fechaEntrada;
+	//Se obtienen todas las salidas con el mismo filtro
 	let salidas = await Salida.find(filtro);
-	console.log(filtro);
+	//console.log(filtro);
 	//console.log(salidas);
+
+	//Se itera por cada entrada
 	await entradas.forEach(async function(entrada){
 		let entry = entrada;
 
-		
+		//Se obtienen las partidas de las salidas
 		let partidasDeSalida = salidas.filter(x=> x.entrada_id == entrada._id.toString()).map(x=>x.partidas);
 		
+		//Se itera sobre las partidas de la entrada actual del iterador de entradas
 		entrada.partidas.forEach(function(partida){
 			//--------------------------------
-			
+			//Se obtiene la partidaSalida de la entrada de la partida actual, se utiliza la clave
 			let partidaSalidaDeEntrada = entrada.partidasSalida.find(x=> x.clave_partida == partida.clave_partida);
-			//console.log(salidas);
+			
 			partida.isEmpty = partidaSalidaDeEntrada.isEmpty;
-			let salida = salidas.filter(x=> x.entrada_id == entrada._id.toString() && x.partidas[0]._id.toString() == partidaSalidaDeEntrada._id.toString());
-			//console.log("SE IMPRIMEN LAS SALIDAS");
-			//console.log(salida);
-			let partidasDeSalidas = partidasDeSalida.filter(x=> x[0]._id.toString() == partidaSalidaDeEntrada._id.toString());
-			let jsonPartidasSalida = [];
-			partidasDeSalidas.forEach(function(partidalocal){
-				jsonPartidasSalida.push(partidalocal[0]);
+
+			let salidasActual = [];
+			let salidasDeEntradaActual = salidas.filter(x=> x.entrada_id == entrada._id.toString());
+			let partidasDeSalidasDeEntradaActual =  [];
+			salidasDeEntradaActual.forEach(function(salida){
+				salida.partidas.forEach(function(partida){
+					//Se obtiene la salida de la entrada actual y que contenga la partida actual del iterador
+					if(partida._id.toString() == partidaSalidaDeEntrada._id.toString()) {
+						salidasActual.push(salida);
+					}
+					partidasDeSalidasDeEntradaActual.push(partida);
+				});
 			});
+
+			let partidasDeSalidas = [];
+			partidasDeSalidasDeEntradaActual.forEach(function(partida){
+				//console.log(partida);
+				if(partida._id.toString() == partidaSalidaDeEntrada._id.toString()){
+					partidaSalidaDeEntrada.embalajes = partida.embalajes;
+					partidaSalidaDeEntrada.pesoBruto = partida.pesoBruto;
+					partidaSalidaDeEntrada.pesoNeto = partida.pesoNeto;
+					partidasDeSalidas.push(partida);
+				}
+			});
+			console.log(`PARTIDA SALIDA ${partidaSalidaDeEntrada._id} CONTIENE LAS SIGUIENTES PARTIDAS EN LA SALIDA: `);
+			console.log(partidasDeSalidas);
 			
 			
-			//---------------------------------------------------
+			let jsonPartidasSalida = partidasDeSalidas;
+			
 			let json = {
-				infoSalidas: salida,
+				infoSalidas: salidasActual,
 				infoPartida:partida,
+				partida_id : partida._id,
+				partidaSalidaDeEntrada : partidaSalidaDeEntrada,
 				infoPartidasSalida: jsonPartidasSalida,
 				infoEntrada:entry
 			}
