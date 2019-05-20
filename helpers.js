@@ -118,64 +118,48 @@ async function getPartidasEntradas(filtro){
 			model:'Salida'
 		})
 		.exec();
-	//console.log("-------------------------------------------------");
+	
 	
 	delete filtro.fechaEntrada;
 	//Se obtienen todas las salidas con el mismo filtro
 	let salidas = await Salida.find(filtro);
-	//console.log(filtro);
-	//console.log(salidas);
-
+	
 	//Se itera por cada entrada
 	await entradas.forEach(async function(entrada){
 		let entry = entrada;
 
-		//Se obtienen las partidas de las salidas
-		let partidasDeSalida = salidas.filter(x=> x.entrada_id == entrada._id.toString()).map(x=>x.partidas);
-		
-		//Se itera sobre las partidas de la entrada actual del iterador de entradas
+		//Se itera sobre las partidas de la entrada actual 
 		entrada.partidas.forEach(function(partida){
-			//--------------------------------
-			//Se obtiene la partidaSalida de la entrada de la partida actual, se utiliza la clave
-			let partidaSalidaDeEntrada = entrada.partidasSalida.find(x=> x.clave_partida == partida.clave_partida);
-			
-			partida.isEmpty = partidaSalidaDeEntrada.isEmpty;
 
-			let salidasActual = [];
+			let partidaAuxiliar = JSON.parse(JSON.stringify(partida));
+			//--------------------------------
+			//Se obtiene la partidaSalida de la partida actual, se utiliza la clave
+			let partidaSalidaDeEntrada = entrada.partidasSalida.find(x=> x.clave_partida == partidaAuxiliar.clave_partida);
+
+			partidaAuxiliar.isEmpty = partidaSalidaDeEntrada.isEmpty;
+			
+			//Se obtienen todas las salidas de la entrada actual
 			let salidasDeEntradaActual = salidas.filter(x=> x.entrada_id == entrada._id.toString());
-			let partidasDeSalidasDeEntradaActual =  [];
+
+			let partidaActual_partidasSalida =  [];
+			
+			//Se obtienen todas las partidas de las salidas que corresponden al id de partidaSalidaDeEntrada._id
 			salidasDeEntradaActual.forEach(function(salida){
 				salida.partidas.forEach(function(partida){
-					//Se obtiene la salida de la entrada actual y que contenga la partida actual del iterador
-					if(partida._id.toString() == partidaSalidaDeEntrada._id.toString()) {
-						salidasActual.push(salida);
+
+					if(partida._id.toString() == partidaSalidaDeEntrada._id.toString()){
+						let partidaAuxiliar = JSON.parse(JSON.stringify(partida));
+						partidaAuxiliar['folio'] = salida.folio;
+						partidaAuxiliar['item'] = salida.item;
+						partidaActual_partidasSalida.push(partidaAuxiliar);
 					}
-					partidasDeSalidasDeEntradaActual.push(partida);
+					
 				});
 			});
-
-			let partidasDeSalidas = [];
-			partidasDeSalidasDeEntradaActual.forEach(function(partida){
-				//console.log(partida);
-				if(partida._id.toString() == partidaSalidaDeEntrada._id.toString()){
-					partidaSalidaDeEntrada.embalajes = partida.embalajes;
-					partidaSalidaDeEntrada.pesoBruto = partida.pesoBruto;
-					partidaSalidaDeEntrada.pesoNeto = partida.pesoNeto;
-					partidasDeSalidas.push(partida);
-				}
-			});
-			console.log(`PARTIDA SALIDA ${partidaSalidaDeEntrada._id} CONTIENE LAS SIGUIENTES PARTIDAS EN LA SALIDA: `);
-			console.log(partidasDeSalidas);
-			
-			
-			let jsonPartidasSalida = partidasDeSalidas;
 			
 			let json = {
-				infoSalidas: salidasActual,
-				infoPartida:partida,
-				partida_id : partida._id,
-				partidaSalidaDeEntrada : partidaSalidaDeEntrada,
-				infoPartidasSalida: jsonPartidasSalida,
+				infoPartida:partidaAuxiliar,
+				infoPartidasSalida:partidaActual_partidasSalida,
 				infoEntrada:entry
 			}
 			infoPartidasEntradas.push(json);
@@ -239,11 +223,9 @@ async function formatPartidasSalida(req,res){
 	});
 }
 
-async function GetDeliveryGroupsEntrada(req,res){
+async function GetDeliveryGroups(req,res){
 
-	//Conexion local
-	const sql_pool = await new sql.ConnectionPool(configSQL).connect();
-
+	let _isEntradaOSalida = req.query.isEntradaOSalida;
 	let _arrClientesFiscales = req.query.arrClientesFiscales;
 	let _arrSucursales = req.query.arrSucursales;
 	let _arrAlmacenes = req.query.arrAlmacenes;
@@ -256,11 +238,26 @@ async function GetDeliveryGroupsEntrada(req,res){
 		tipo:_tipo
 	};
 
+	if(_isEntradaOSalida == "Entrada"){
+		let PedidosEntrada = await GetDeliveryGroupsEntrada(filtro);
+		res.status(200).send(PedidosEntrada);
+	}else{
+		let PedidosSalida = await GetDeliveryGroupsSalida(filtro);
+		res.status(200).send(PedidosSalida);
+	}
+
+}
+
+async function GetDeliveryGroupsEntrada(filtro){
+
+	//Conexion local
+	const sql_pool = await new sql.ConnectionPool(configSQL).connect();
+
 	let partidas = await getPartidasEntradas(filtro);
 	
 	//console.log(partidas);
 	let IDPedidos = await Entrada.find(filtro).distinct("partidas.InfoPedido.IDPedido").exec();
-	console.log(IDPedidos);
+	//console.log(IDPedidos);
 	//Se obtienen la informacion de los pedidos de la base de datos en SQL Server
 	let queryGetPedidos = `SELECT XD_IDPedido,Delivery,FechaAlta,FechaPGI,FinalNombreComercial,FinalMunicipio,Tarimas,Peso,Volumen,Piezas,Cajas,FechaETA,SucursalCrossDock,StatusProceso FROM View_Pedidos WHERE XD_IDPedido in (${IDPedidos})`;
 	//console.log(queryGetPedidos);
@@ -272,9 +269,6 @@ async function GetDeliveryGroupsEntrada(req,res){
 	}
 	
 
-
-	//console.log("IDPEDIDOS");
-	//console.log(IDPedidos);
 	let Pedidos = [];
 	IDPedidos.forEach(function(IDPedido){
 		let partidasDeIDPedido = partidas.filter(x =>  x.infoPartida.InfoPedido!=undefined ? x.infoPartida.InfoPedido.IDPedido == IDPedido : false);
@@ -308,8 +302,65 @@ async function GetDeliveryGroupsEntrada(req,res){
 		}
 	});
 
-	res.status(200).send(Pedidos);
-	//return Pedidos;
+	return Pedidos;
+
+}
+
+async function GetDeliveryGroupsSalida(filtro){
+
+	//Conexion local
+	const sql_pool = await new sql.ConnectionPool(configSQL).connect();
+
+	let partidas = await getPartidasSalidas(filtro);
+	
+	//console.log(partidas);
+	let IDPedidos = await Salida.find(filtro).distinct("partidas.InfoPedido.IDPedido").exec();
+	//console.log(IDPedidos);
+	//Se obtienen la informacion de los pedidos de la base de datos en SQL Server
+	let queryGetPedidos = `SELECT XD_IDPedido,Delivery,FechaAlta,FechaPGI,FinalNombreComercial,FinalMunicipio,Tarimas,Peso,Volumen,Piezas,Cajas,FechaETA,SucursalCrossDock,StatusProceso FROM View_Pedidos WHERE XD_IDPedido in (${IDPedidos})`;
+	//console.log(queryGetPedidos);
+	let resultQueryPedidos = [];
+	if(IDPedidos.length>0){
+		resultQueryPedidos = (await sql_pool.query(queryGetPedidos)).recordset;
+		//console.log(resultQueryPedidos);
+		sql.close();	
+	}
+
+	let Pedidos = [];
+	IDPedidos.forEach(function(IDPedido){
+		let partidasDeIDPedido = partidas.filter(x =>  x.infoPartida.InfoPedido!=undefined ? x.infoPartida.InfoPedido.IDPedido == IDPedido : false);
+		
+		if(partidasDeIDPedido.length>0){
+
+			let infoPedido = resultQueryPedidos.filter(x=> x.XD_IDPedido == IDPedido);
+
+			let jsonPedido = {
+				IDPedido: IDPedido,
+				Delivery:  infoPedido[0].Delivery,
+				FechaPGI:  infoPedido[0].FechaPGI,
+				FechaAlta: infoPedido[0].FechaAlta,
+				ClienteDestino: infoPedido[0].FinalNombreComercial,
+				CiudadDestino: infoPedido[0].FinalMunicipio,
+				T:infoPedido[0].Tarimas !=null ? infoPedido[0].Tarimas : 0,
+				Kg:infoPedido[0].Peso !=null ? infoPedido[0].Peso : 0,
+				M3:infoPedido[0].Volumen !=null ? infoPedido[0].Volumen : 0,
+				Pzs:infoPedido[0].Piezas !=null ? infoPedido[0].Piezas : 0,
+				Cjs:infoPedido[0].Cajas !=null ? infoPedido[0].Cajas : 0,
+				FechaETA:infoPedido[0].FechaETA,
+				CrossDock:infoPedido[0].SucursalCrossDock,
+				StatusProceso:infoPedido[0].StatusProceso,
+				Partidas: partidasDeIDPedido.map(m=> m.infoPartida),
+				FolioSalida: partidasDeIDPedido.map(m=> m.infoSalida)[0].folio,
+				salida_id: partidasDeIDPedido.map(m=> m.infoSalida)[0]._id,
+				idSalida: partidasDeIDPedido.map(m=> m.infoSalida)[0].idSalida
+			};
+			//console.log(jsonPedido);
+			Pedidos.push(jsonPedido);
+		}
+	});
+
+	
+	return Pedidos;
 
 }
 
@@ -317,5 +368,5 @@ async function GetDeliveryGroupsEntrada(req,res){
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
-	GetDeliveryGroupsEntrada
+	GetDeliveryGroups
 }
