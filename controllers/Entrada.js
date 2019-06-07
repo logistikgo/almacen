@@ -24,26 +24,36 @@ function get( req,res){
 	});
 };
 
-function getEntradasByIDs(req,res){
+async function getEntradasByIDs(req,res){
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
 	let _tipo = req.query.tipo;
 	let _status = req.query.status;
+	let _interfaz = req.query.interfaz;
 
 	let filter = {
 		sucursal_id:_idSucursal,
 		tipo:_tipo
 	};
 
-	if(!_status) //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
-	{
-		filter["clienteFiscal_id"] = _idClienteFiscal;
-		filter["almacen_id"] = _idAlmacen;
-		filter["status"] = "APLICADA";
-	}else{
-		filter["status"] = _status;
+	if(!_interfaz){ //Esta condicion determina si la funcion esta siendo usa de la interfaz o de la aplicacion
+		if(!_status) //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
+		{
+			filter["clienteFiscal_id"] = _idClienteFiscal;
+			filter["almacen_id"] = _idAlmacen;
+			filter["status"] = "APLICADA";
+		}else{
+			filter["status"] = _status;
+		}
 	}
+	else{
+		let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([_idClienteFiscal]);
+		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([_idSucursal]); 
+		filter.clienteFiscal_id = arrClientes[0];
+	 	filter.sucursal_id = arrSucursales[0];
+	}
+	
 	Entrada.find(filter).sort({fechaEntrada:-1})
 	.populate({
 		path:'partidas.producto_id',

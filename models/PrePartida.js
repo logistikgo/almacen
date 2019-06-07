@@ -22,7 +22,8 @@ const PrePartida = Schema(
 		embalajes:{},
 		isEmpty:Boolean,
 		clave_partida:String,
-		isAsignado:Boolean
+		isAsignado:Boolean,
+		isSeleccionada: Boolean
 	},
 	{collection:'PrePartidas'}
 );

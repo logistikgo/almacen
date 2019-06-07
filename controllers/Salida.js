@@ -145,6 +145,52 @@ function isEmptyPartidas(partidas){
 		return false;
 }
 
+async function updatePartidasSalidaAPI(req,res){
+	let entrada_id = req.body.entrada_id;
+	let partidasDeSalida = req.body.partidasDeSalida;
+
+	console.log(entrada_id);
+	//console.log(partidasDeSalida);
+	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
+	let nuevasPartidas = [];
+	console.log(partidasDeSalida);
+	entrada.partidasSalida.forEach(function(partidaDeEntrada){
+		let partidaEncontrada = partidasDeSalida.find(x=>x._id.toString()==partidaDeEntrada._id.toString());
+		if(partidaEncontrada!=undefined){
+			for(let embalajeDeSalida in partidaEncontrada.embalajes){
+				if(partidaDeEntrada.embalajes[embalajeDeSalida]){
+					partidaDeEntrada.embalajes[embalajeDeSalida]-= partidaEncontrada.embalajes[embalajeDeSalida];
+				}
+			}
+			partidaDeEntrada.pesoBruto-=partidaEncontrada.pesoBruto;
+			partidaDeEntrada.pesoNeto-=partidaEncontrada.pesoNeto;
+
+			if(isEmptyPartida(partidaDeEntrada)) 
+				partidaDeEntrada.isEmpty = true;
+			else
+				partidaDeEntrada.isEmpty = false;
+			
+		}
+		nuevasPartidas.push(partidaDeEntrada);
+	});
+	let empty = false;
+	empty = isEmptyPartidas(nuevasPartidas);
+	
+	
+	let jEdit = {
+		partidasSalida: nuevasPartidas,
+		isEmpty:empty
+	};
+
+	Entrada.updateOne({_id:entrada_id},{$set:jEdit})
+	.then((data)=>{
+
+	}).catch((error)=>{
+
+	});
+
+}
+
 async function updatePartidasSalida(entrada_id,partidasDeSalida){
 	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
 	let nuevasPartidas = [];
@@ -238,7 +284,11 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.entrada_id = entrada._id;
 
 			console.log(nSalida);
-			await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
+			if(!partidas[0].isSeleccionada){
+
+				await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
+			}
+			
 
 			nSalida.save()
 			.then(async(salida)=>{
@@ -282,5 +332,6 @@ module.exports = {
 	getByID,
 	save,
 	getSalidasByIDs,
-	saveSalidaAutomatica
+	saveSalidaAutomatica,
+	updatePartidasSalidaAPI
 }

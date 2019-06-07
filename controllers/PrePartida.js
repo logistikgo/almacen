@@ -46,6 +46,7 @@ async function save(partida,IDPedido){
 	nPrePartida.isEmpty = false;
 	nPrePartida.clave_partida = IDPedido + "" + partida.clave_partida;
 	nPrePartida.isAsignado = false;
+	nPrePartida.isSeleccionada = partida.isSeleccionada;
 	let queryGetPedido = `SELECT XD_IDPedido,Delivery,FechaPGI,FechaAlta,StatusProceso,IDClienteFiscal FROM XD_Pedidos WHERE XD_IDPedido = ${nPrePartida.IDPedido}`;
 	let resultQueryPedido = (await sql_pool.query(queryGetPedido)).recordset;
 	sql.close();
