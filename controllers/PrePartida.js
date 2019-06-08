@@ -33,6 +33,7 @@ async function save(partida,IDPedido){
 	const sql_pool = await new sql.ConnectionPool(configSQL).connect();
 
 	let nPrePartida = new PrePartida();
+	//nPrePartida._id = partida._id;
 	nPrePartida.IDPedido = IDPedido;
 	nPrePartida.fechaAlta = new Date();
 	nPrePartida.producto_id = partida.producto_id;

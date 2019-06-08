@@ -148,12 +148,12 @@ function isEmptyPartidas(partidas){
 async function updatePartidasSalidaAPI(req,res){
 	let entrada_id = req.body.entrada_id;
 	let partidasDeSalida = req.body.partidasDeSalida;
-
-	console.log(entrada_id);
+	console.log("SE EJECUTA LA FUNCION DE UPDATE PARA LA PARTIDA (API)");
+	//console.log(entrada_id);
 	//console.log(partidasDeSalida);
 	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
 	let nuevasPartidas = [];
-	console.log(partidasDeSalida);
+	//console.log(partidasDeSalida);
 	entrada.partidasSalida.forEach(function(partidaDeEntrada){
 		let partidaEncontrada = partidasDeSalida.find(x=>x._id.toString()==partidaDeEntrada._id.toString());
 		if(partidaEncontrada!=undefined){
@@ -184,17 +184,19 @@ async function updatePartidasSalidaAPI(req,res){
 
 	Entrada.updateOne({_id:entrada_id},{$set:jEdit})
 	.then((data)=>{
-
+		res.status(200).send(data);
+		console.log("SE EDITA LA ENTRADA (API)");
 	}).catch((error)=>{
-
+		res.status(500).send(error);
 	});
+	console.log("SE TERMINA LA FUNCION DE UPDATE PARA LA PARTIDA (API)");
 
 }
 
 async function updatePartidasSalida(entrada_id,partidasDeSalida){
 	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
 	let nuevasPartidas = [];
-
+	console.log("SE EJECUTA LA FUNCION DE UPDATE PARA LA PARTIDA");
 	entrada.partidasSalida.forEach(function(partidaDeEntrada){
 		let partidaEncontrada = partidasDeSalida.find(x=>x._id.toString()==partidaDeEntrada._id.toString());
 		if(partidaEncontrada!=undefined){
@@ -225,11 +227,11 @@ async function updatePartidasSalida(entrada_id,partidasDeSalida){
 
 	Entrada.updateOne({_id:entrada_id},{$set:jEdit})
 	.then((data)=>{
-
+		console.log("SE EDITA LA ENTRADA");
 	}).catch((error)=>{
 
 	});
-
+	console.log("SE EJECUTA LA FUNCION DE UPDATE PARA LA PARTIDA");
 }
 
 async function saveSalidasEnEntrada(entrada_id,salida_id){
@@ -255,8 +257,10 @@ async function saveSalidaAutomatica(req,res){
 	//console.log(partidas);
 	if(partidas && partidas.length>0){
 		let entrada = await Entrada.findOne({"partidas._id":partidas[0]._id});
-		
-		if(entrada && !entrada.isEmpty){
+		let entrada1 = await Entrada.findOne({"partidas.clave_partida":partidas[0].clave_partida});
+		//console.log(entrada);
+		//console.log(entrada1);
+		if((entrada && !entrada.isEmpty) || (entrada1 && !entrada1.isEmpty)){
 			
 			let nSalida = new Salida();
 			nSalida.salida_id = await getNextID();
@@ -283,9 +287,10 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.tipo = entrada.tipo;//NORMAL
 			nSalida.entrada_id = entrada._id;
 
-			console.log(nSalida);
+			
 			if(!partidas[0].isSeleccionada){
 
+				console.log("No deberia entrar aqui joven");
 				await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
 			}
 			

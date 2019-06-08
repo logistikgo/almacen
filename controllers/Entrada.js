@@ -155,7 +155,7 @@ async function save(req, res){
 	nEntrada.save()
 	.then(async(entrada)=>{
 		for(let itemPartida of entrada.partidas){
-			console.log("OK");
+			//console.log("OK");
 			await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
 		}
 		res.status(200).send(entrada);
@@ -415,7 +415,7 @@ function updatePartida(req,res){
 			return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
 		});
 
-		console.log(resMovimietno);
+		//console.log(resMovimietno);
 
 		if(partidasPosicionadas.length == item.partidas.length && entrada.item != undefined && entrada.item != null && entrada.item != ""){
 			item.status = "APLICADA";
@@ -477,7 +477,7 @@ async function updateMovimiento(entrada_id, clave_partida, bodyParams){
 
 //CASO BASE: Solo se updatean posiciones
 async function updatePartidaPosicion(partida, partidaSalida, bodyParams){
-	console.log("Caso base");
+	//console.log("Caso base");
 	if(partida.pasillo_id != undefined && partida.posicion_id != undefined && partida.nivel != undefined)
 		await MovimientoInventario.updateExistenciaPosicion(-1, partida);
 
