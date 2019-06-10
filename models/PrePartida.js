@@ -7,6 +7,7 @@ const PrePartida = Schema(
 	{
 		IDPedido:Number,
 		InfoPedido: {},
+		_idAux : {type:Schema.ObjectId},
 		//clienteFiscal_id : {type:Schema.ObjectId,ref:'ClienteFiscal'},
 		fechaAlta:Date,
 		producto_id:{type:Schema.ObjectId,ref:'Producto'},

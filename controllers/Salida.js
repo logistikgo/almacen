@@ -256,12 +256,13 @@ async function saveSalidaAutomatica(req,res){
 	let partidas = await PrePartidaM.find({IDPedido:{$in:arrIDPedido}}).exec();
 	//console.log(partidas);
 	if(partidas && partidas.length>0){
-		let entrada = await Entrada.findOne({"partidas._id":partidas[0]._id});
-		let entrada1 = await Entrada.findOne({"partidas.clave_partida":partidas[0].clave_partida});
-		//console.log(entrada);
-		//console.log(entrada1);
-		if((entrada && !entrada.isEmpty) || (entrada1 && !entrada1.isEmpty)){
-			
+		let isSeleccionada = partidas[0].isSeleccionada;
+		let entrada = !isSeleccionada ?  await Entrada.findOne({"partidas._id":partidas[0]._id}) : await Entrada.findOne({"partidas._id":partidas[0]._idAux});
+		
+		console.log(entrada);
+		
+		if((entrada && !entrada.isEmpty)){
+
 			let nSalida = new Salida();
 			nSalida.salida_id = await getNextID();
 			nSalida.fechaAlta = new Date();
@@ -269,7 +270,7 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
 			nSalida.nombreUsuario = req.body.nombreUsuario;
 			nSalida.folio = await getNextID();
-			nSalida.partidas = getPartidasDeEntrada(entrada.partidasSalida,partidas);	
+			nSalida.partidas =  !isSeleccionada ? getPartidasDeEntrada(entrada.partidasSalida,partidas) : partidas;	
 			nSalida.transportista = req.body.transportista;
 			nSalida.placasRemolque = req.body.placasRemolque;
 			nSalida.placasTrailer = req.body.placasTrailer;
@@ -288,7 +289,7 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.entrada_id = entrada._id;
 
 			
-			if(!partidas[0].isSeleccionada){
+			if(!isSeleccionada){
 
 				console.log("No deberia entrar aqui joven");
 				await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
@@ -318,6 +319,8 @@ async function saveSalidaAutomatica(req,res){
 		res.status(400).send("Se trata de generar una salida sin partidas");
 	}
 }
+
+
 
 function getPartidasDeEntrada(partidasDeEntrada,partidasDeSalida){
 	let IDSPartida = partidasDeSalida.map(x=> x._id.toString());
