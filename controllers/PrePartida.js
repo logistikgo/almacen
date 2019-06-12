@@ -35,6 +35,11 @@ async function save(partida,IDPedido){
 	let nPrePartida = new PrePartida();
 	nPrePartida._idAux = partida._id;
 	nPrePartida.IDPedido = IDPedido;
+	nPrePartida.pasillo = partida.pasillo;
+	nPrePartida.pasillo_id = partida.pasillo_id;
+	nPrePartida.posicion = partida.posicion;
+	nPrePartida.posicion_id = partida.posicion_id;
+	nPrePartida.nivel = partida.nivel;
 	nPrePartida.fechaAlta = new Date();
 	nPrePartida.producto_id = partida.producto_id;
 	nPrePartida.clave = partida.clave;
@@ -143,6 +148,7 @@ async function getPartida(prepartida){
 	});
 	return partida;
 }
+
 
 module.exports = {
 	save,

@@ -2,10 +2,11 @@
 
 const Sucursal = require('../models/Sucursal');
 const Helpers = require('../helpers');
+const Interfaz_ALM_XD = require('../models/Interfaz_ALM_XD');
 
-function get(req, res) {
+async function get(req, res) {
     let _arrClientesFiscales = req.query.arrClientesFiscales;
-    
+    //let sucursaless = Helpers.getSucursalesXD();
     Sucursal.find({
         arrClienteFiscales: {$in:_arrClientesFiscales},
         statusReg: "ACTIVO"
@@ -60,7 +61,7 @@ function getClientes(req, res) {
 async function save(req, res){
     let nSucursal = new Sucursal();
     let params = req.body;
-
+    let IDSucursalXD = params.IDSucursalXD;
     nSucursal.idSucursal = await Helpers.getNextID(Sucursal, 'idSucursal');
     nSucursal.arrClienteFiscales = params.arrClientesFiscales;
     nSucursal.usuarioAlta_id = params.usuarioAlta_id;
@@ -78,9 +79,21 @@ async function save(req, res){
 
     nSucursal.save()
     .then((sucursal)=>{
-        res.status(200).send({sucursal});
-    })
-    .catch(err=>console.log(err));
+        console.log(IDSucursalXD);
+        if(IDSucursalXD != "Ninguna"){
+            let NombreSucursalXD = params.NombreSucursalXD;
+            let  nInterfaz = new Interfaz_ALM_XD();
+            nInterfaz.nombre = NombreSucursalXD;
+            nInterfaz.tipo = "Sucursal",
+            nInterfaz.alm_id = sucursal._id;
+            nInterfaz.xd_id = IDSucursalXD;
+            nInterfaz.save();
+        }
+        res.status(200).send({sucursal});    
+        }).
+    catch((error)=>{
+        res.status(500).send(error);
+    });
 }
 
 function update(req, res){

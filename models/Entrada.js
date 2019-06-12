@@ -9,6 +9,7 @@ const Entrada = Schema({
 	fechaAlta:Date,
 	fechaEntrada:Date,
 	folio:String,
+	stringFolio : String,
 	item:String,
 	unidad:String,
 	usuarioAlta_id:Number,

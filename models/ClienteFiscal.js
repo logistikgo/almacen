@@ -16,6 +16,7 @@ const ClienteFiscal = Schema({
 	nombreCorto:String,
 	nombreComercial:String,
 	razonSocial:String,
+	clave: String,
 	rfc : String,
 	calle:String,
 	numExt:String,

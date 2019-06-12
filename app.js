@@ -86,6 +86,7 @@ app.delete('/api/deleteCteFiscal', CteFiscal._delete);
 app.put('/api/clienteFiscal', CteFiscal.update);
 
 app.get('/api/sucursales', Sucursal.get);
+app.get('/api/sucursalesXD',Helper.getSucursalesXD);
 app.get('/api/sucursal', Sucursal.getById);
 app.get('/api/clientesxSucursal', Sucursal.getClientes);
 app.post('/api/sucursal', Sucursal.save);

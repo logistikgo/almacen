@@ -15,6 +15,7 @@ const Salida = Schema({
 	usuarioAlta_id:Number,
 	nombreUsuario:String,
 	folio:String,
+	stringFolio : String,
 	referencia:String,
 	cliente:String,
 	transportista:String,
@@ -33,6 +34,7 @@ const Salida = Schema({
 		{
 			IDPedido : Number,
 			InfoPedido : {},
+			_idAux: {type:Schema.ObjectId},
 			producto_id:{type:Schema.ObjectId, ref:"Producto"},
 			clave:String,
 			descripcion:String,

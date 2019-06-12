@@ -2,6 +2,7 @@
 const Entrada = require('./models/Entrada');
 const Salida = require('./models/Salida');
 const MovimientoInventario = require('./models/MovimientoInventario');
+const Interfaz_ALM_XD = require('./models/Interfaz_ALM_XD');
 const ClienteFiscal = require('./models/ClienteFiscal');
 const fs = require('fs');
 const moment = require('moment');
@@ -147,7 +148,7 @@ async function getPartidasEntradas(filtro){
 			salidasDeEntradaActual.forEach(function(salida){
 				salida.partidas.forEach(function(partida){
 
-					if(partida._id.toString() == partidaSalidaDeEntrada._id.toString()){
+					if(partida._id.toString() == partidaSalidaDeEntrada._id.toString() || (partida._idAux && partida._idAux.toString() == partidaSalidaDeEntrada._id.toString()) ){
 						let partidaAuxiliar = JSON.parse(JSON.stringify(partida));
 						partidaAuxiliar['folio'] = salida.folio;
 						partidaAuxiliar['item'] = salida.item;
@@ -211,6 +212,13 @@ async function getNextID(dataContext, field){
 	console.log(max);
 
 	return max + 1;
+}
+
+async function getStringFolio(incr,clienteFiscal_id,Tipo){
+	let clienteFiscal = await ClienteFiscal.findOne({_id:clienteFiscal_id}).exec();
+	console.log(clienteFiscal);
+	let stringFolio = clienteFiscal.clave + "-" + Tipo + "-" + incr;
+	return stringFolio;
 }
 
 async function formatPartidasSalida(req,res){
@@ -364,9 +372,32 @@ async function GetDeliveryGroupsSalida(filtro){
 
 }
 
+async function getSucursalesXD(req,res){
+	try
+	{
+		const sql_pool = await new sql.ConnectionPool(configSQL).connect();
+
+		let IDSucursales = await Interfaz_ALM_XD.find({tipo:"Sucursal"}).distinct("xd_id").exec();
+		
+
+		let queryGetSucursales = `SELECT * FROM Sucursales WHERE IDSucursal not in (${IDSucursales}) and StatusReg = 'ACTIVO'`;
+		let resultQuerySucursales = (await sql_pool.query(queryGetSucursales)).recordset;
+		
+		sql.close();
+		
+		res.status(200).send(resultQuerySucursales);
+	}
+	catch(error){
+		res.status(500).send(error);
+	}
+}
+
+
 
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
-	GetDeliveryGroups
+	GetDeliveryGroups,
+	getStringFolio,
+	getSucursalesXD
 }

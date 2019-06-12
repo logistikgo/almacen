@@ -125,6 +125,7 @@ async function save(req,res) {
 	nProducto.arrClientesFiscales_id = params.arrClientesFiscales;
 	nProducto.idProducto = await Helpers.getNextID(Producto, "idProducto");
 	nProducto.statusReg = "ACTIVO";
+	nProducto.clave = params.clave;
 	nProducto.fechaAlta = new Date();
 	nProducto.usuarioAlta_id = params.usuarioAlta_id;
 	nProducto.usuarioAlta = params.usuarioAlta;

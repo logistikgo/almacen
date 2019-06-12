@@ -150,7 +150,7 @@ async function save(req, res){
 	nEntrada.fechaAlta = new Date();
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
-
+	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio,nEntrada.clienteFiscal_id,'I');
 
 	nEntrada.save()
 	.then(async(entrada)=>{
@@ -260,6 +260,7 @@ async function saveEntradaAutomatica(req,res){
 			nEntrada.fechaAlta = new Date();
 			nEntrada.idEntrada = await getNextID();
 			nEntrada.folio = await getNextID();
+			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio,nEntrada.clienteFiscal_id,'I');
 			nEntrada.isEmpty = false;
 			//nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id; //Diferente usuario Omitir
 			
