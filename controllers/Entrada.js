@@ -358,8 +358,10 @@ async function update(req, res){
 		});
 	});
 
+	//console.log(jUpdate.partidas);
+
 	if(jUpdate.status == "SIN_POSICIONAR"){
-		console.log("Estatus: SIN POSICIONAR");
+		//console.log("Estatus: SIN POSICIONAR");
 		let pasilloBahia = await Pasillo.findOne({
 			isBahia: true,
 			statusReg: "ACTIVO"
@@ -367,20 +369,37 @@ async function update(req, res){
 		.populate({
 			path:'posiciones.posicion_id'
 		}).exec();
-		console.log(pasilloBahia);
+		//console.log(pasilloBahia);
 
+		let posicionBahia = pasilloBahia.posiciones[0].posicion_id;
+		//console.log(posicionBahia);
 
-		let posicionBahia = pasilloBahia.posiciones[0];
-		console.log(posicionBahia);
+		for(let partida of jUpdate.partidas){
+			//console.log(partida);
 
-		for(let partida in jUpdate.partidas){
-			if(partida.pasillo_id!=undefined || partida.pasillo!=undefined ||  partida.posicion!=undefined || partida.posicion_id!=undefined || partida.nivel!=undefined){
-				console.log("POSICION BAHIA");
+			let clave_partida = partida.clave_partida;
+			let partidaSalida = jUpdate.partidasSalida.find(x=>x.clave_partida == clave_partida);
+
+			if(partida.pasillo_id==undefined || partida.pasillo==undefined ||  partida.posicion==undefined || partida.posicion_id==undefined || partida.nivel==undefined){
+				let jParamsposition = {
+					pasillo: pasilloBahia.nombre,
+					pasillo_id: pasilloBahia._id,
+					posicion: posicionBahia.nombre,
+					posicion_id: posicionBahia._id,
+					nivel: "PISO",
+					embalajes: partida.embalajes,
+					pesoBruto: partida.pesoBruto,
+					pesoNeto: partida. pesoNeto
+				};
+
+				//console.log(jParamsposition);
+
+				await updatePartidaPosicion(partida, partidaSalida, jParamsposition);
+
+				let res = await updateMovimiento(entrada_id, clave_partida, jParamsposition);
 				
-				partida.pasillo_id = pasillobahia._id;
-				partida.posicion = posicionBahia.nombre;
-				partida.posicion_id = posicionBahia._id;
-				partida.nivel = "PISO";
+				console.log("UPDATE MOVIMIENTO");
+				console.log(res);
 			}
 		}
 
