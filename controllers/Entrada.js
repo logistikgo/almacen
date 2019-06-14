@@ -9,6 +9,7 @@ const EmbalajesModel = require('../models/Embalaje');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const PrePartidaM = require('../models/PrePartida'); //modelo 
 const PrePartidaC = require('../controllers/PrePartida'); //controller
+const Pasillo = require('../models/Pasillo');
 
 function getNextID(){
 	return Helper.getNextID(Entrada,"idEntrada");
@@ -51,7 +52,7 @@ async function getEntradasByIDs(req,res){
 		let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([_idClienteFiscal]);
 		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([_idSucursal]); 
 		filter.clienteFiscal_id = arrClientes[0];
-	 	filter.sucursal_id = arrSucursales[0];
+		filter.sucursal_id = arrSucursales[0];
 	}
 	
 	Entrada.find(filter).sort({fechaEntrada:-1})
@@ -312,7 +313,7 @@ async function validaEntradaDuplicado(embarque){
 	}
 }
 
-function update(req, res){
+async function update(req, res){
 	let bodyParams = req.body;
 	let entrada_id = bodyParams.entrada_id;
 
@@ -357,6 +358,34 @@ function update(req, res){
 		});
 	});
 
+	if(jUpdate.status == "SIN_POSICIONAR"){
+		console.log("Estatus: SIN POSICIONAR");
+		let pasilloBahia = await Pasillo.findOne({
+			isBahia: true,
+			statusReg: "ACTIVO"
+		})
+		.populate({
+			path:'posiciones.posicion_id'
+		}).exec();
+		console.log(pasilloBahia);
+
+
+		let posicionBahia = pasilloBahia.posiciones[0];
+		console.log(posicionBahia);
+
+		for(let partida in jUpdate.partidas){
+			if(partida.pasillo_id!=undefined || partida.pasillo!=undefined ||  partida.posicion!=undefined || partida.posicion_id!=undefined || partida.nivel!=undefined){
+				console.log("POSICION BAHIA");
+				
+				partida.pasillo_id = pasillobahia._id;
+				partida.posicion = posicionBahia.nombre;
+				partida.posicion_id = posicionBahia._id;
+				partida.nivel = "PISO";
+			}
+		}
+
+	}
+	
 	let partidasPosicionadas = (bodyParams.partidas).filter(function (x){
 		return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
 	});
