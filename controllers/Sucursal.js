@@ -79,7 +79,7 @@ async function save(req, res){
 
     nSucursal.save()
     .then((sucursal)=>{
-        console.log(IDSucursalXD);
+        
         if(IDSucursalXD != "Ninguna"){
             let NombreSucursalXD = params.NombreSucursalXD;
             let  nInterfaz = new Interfaz_ALM_XD();

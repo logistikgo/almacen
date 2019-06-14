@@ -80,6 +80,7 @@ app.post('/api/salida', Salida.save);
 app.post('/api/salidaAutomatica',Salida.saveSalidaAutomatica);
 
 app.get('/api/getCtesFiscales', CteFiscal.get);
+app.get('/api/getCtesFiscalesXD', Helper.getClientesFiscalesXD);
 app.get('/api/clienteFiscal', CteFiscal.getByIDCteFiscal);
 app.post('/api/saveCteFiscal', CteFiscal.save);
 app.delete('/api/deleteCteFiscal', CteFiscal._delete);

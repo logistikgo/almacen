@@ -392,6 +392,25 @@ async function getSucursalesXD(req,res){
 	}
 }
 
+async function getClientesFiscalesXD(req,res){
+	try
+	{
+		const sql_pool = await new sql.ConnectionPool(configSQL).connect();
+		let IDClientesFiscales = await Interfaz_ALM_XD.find({tipo: "Cliente"}).distinct("xd_id").exec();
+		
+		let queryGetClientes = `SELECT * FROM Clientes WHERE isFiscal = 1 and IDCliente not in (${IDClientesFiscales}) and StatusProceso = 'VALIDADO'`;
+		let resultQueryClientes = (await sql_pool.query(queryGetClientes)).recordset;
+		
+		sql.close();
+		
+		res.status(200).send(resultQueryClientes);
+	}
+	catch(error)
+	{
+		res.status(500).send(error);
+	}
+}
+
 
 
 module.exports = {
@@ -399,5 +418,6 @@ module.exports = {
 	getPartidasByIDs,
 	GetDeliveryGroups,
 	getStringFolio,
-	getSucursalesXD
+	getSucursalesXD,
+	getClientesFiscalesXD
 }

@@ -1,6 +1,7 @@
 'use strict'
 const CteFiscal = require('../models/ClienteFiscal');
 const Helper = require('../helpers');
+const Interfaz_ALM_XD = require('../models/Interfaz_ALM_XD');
 
 async function getNextID(){
 	
@@ -13,7 +14,7 @@ function get(req, res) {
 	let jFilter = {
 		statusReg:"ACTIVO"
 	};
-
+	
 	CteFiscal.find(jFilter).sort({nombreCorto: 1})
 	.then((cliente)=>{
 		res.status(200).send(cliente);	
@@ -38,7 +39,7 @@ function getByIDCteFiscal(req, res) {
 
 async function save(req,res){
 	let nCliente = new CteFiscal();
-
+	let IDClienteXD = req.body.IDClienteXD;
 	nCliente.idCliente = await getNextID();
 	nCliente.usuarioAlta_id = req.body.usuarioAlta_id;
 	nCliente.nombreUsuario = req.body.nombreUsuario;
@@ -59,11 +60,22 @@ async function save(req,res){
 	nCliente.pais = req.body.pais;
 	nCliente.statusReg = "ACTIVO";
 
-	nCliente.save((error, clienteStored)=>{
-		if(error)
-			res.status(500).send({message:`Error al guardar${error}`});
+	nCliente.save()
+	.then((cliente)=>{
 
-		res.status(200).send({clienteStored});
+		if(IDClienteXD != "Ninguna"){
+            let NombreClienteXD = req.body.NombreClienteXD;
+            let  nInterfaz = new Interfaz_ALM_XD();
+            nInterfaz.nombre = NombreClienteXD;
+            nInterfaz.tipo = "Cliente",
+            nInterfaz.alm_id = cliente._id;
+            nInterfaz.xd_id = IDClienteXD;
+            nInterfaz.save();
+        }
+        res.status(200).send(cliente);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
 	});
 }
 
