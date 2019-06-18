@@ -152,6 +152,7 @@ async function getPartidasEntradas(filtro){
 						let partidaAuxiliar = JSON.parse(JSON.stringify(partida));
 						partidaAuxiliar['folio'] = salida.folio;
 						partidaAuxiliar['item'] = salida.item;
+						partidaAuxiliar['stringFolio'] = salida.stringFolio;
 						partidaActual_partidasSalida.push(partidaAuxiliar);
 					}
 					
