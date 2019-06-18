@@ -79,7 +79,7 @@ async function getPartidasSalida(req,res){
 
 		const sql_pool = await new sql.ConnectionPool(configSQL).connect();		
 
-		let queryGet = `SELECT * FROM ALM_PartidasSalida where IDALM_Salida = ${idEntrada}`;
+		let queryGet = `SELECT * FROM ALM_PartidasSalida where IDALM_Salida = ${idSalida}`;
 		let result = (await sql_pool.query(queryGet)).recordset;
 		
 		sql.close();
