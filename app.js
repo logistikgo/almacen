@@ -143,11 +143,11 @@ app.get('/api/columnas',ColumnasxUsuario.getColumns);
 app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
 
 //YORK
-app.get('/api/getEntradas', York.getEntradas);
-app.get('/api/getSalidas', York.getSalidas);
-app.get('/api/getProductos', York.getProductos);
-app.get('/api/getPartidasEntrada', York.getPartidasEntrada);
-app.get('/api/getPartidasSalida', York.getPartidasSalida);
+app.get('/api/getEntradasYork', York.getEntradas);
+app.get('/api/getSalidasYork', York.getSalidas);
+app.get('/api/getProductosYork', York.getProductos);
+app.get('/api/getPartidasEntradaYork', York.getPartidasEntrada);
+app.get('/api/getPartidasSalidaYork', York.getPartidasSalida);
 
 
 module.exports = app;
