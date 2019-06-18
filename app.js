@@ -22,20 +22,21 @@ const Pasillo = require('./controllers/Pasillo');
 const PrePartida = require('./controllers/PrePartida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
+const York = require('./controllers/York');
 
 //const dotenv = require('dotenv'); //Used for environment variables
 //dotenv.config();
 
 app.use(bodyParser.urlencoded({
-    extended: false
+	extended: false
 }));
 app.use(bodyParser.json());
 
 app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	next();
 });
 
 app.get('/api/productos', Producto.get);
@@ -140,5 +141,13 @@ app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
 
 app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
+
+//YORK
+app.get('/api/getEntradas', York.getEntradas);
+app.get('/api/getSalidas', York.getSalidas);
+app.get('/api/getProductos', York.getProductos);
+app.get('/api/getPartidasEntrada', York.getPartidasEntrada);
+app.get('/api/getPartidasSalida', York.getPartidasSalida);
+
 
 module.exports = app;
