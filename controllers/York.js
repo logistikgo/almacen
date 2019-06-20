@@ -6,6 +6,7 @@ const Helpers = require('../helpers');
 async function getEntradas(req,res){
 	try
 	{
+		//console.log("GET ENTRADAS YORK")
 		const sql_pool = await new sql.ConnectionPool(configSQL).connect();		
 
 		let queryGet = `SELECT * FROM ALM_Entradas`;
@@ -23,6 +24,7 @@ async function getEntradas(req,res){
 async function getSalidas(req,res){
 	try
 	{
+		//console.log("GET SALIDAS YORK")
 		const sql_pool = await new sql.ConnectionPool(configSQL).connect();		
 
 		let queryGet = `SELECT * FROM ALM_Salidas`;
@@ -40,6 +42,7 @@ async function getSalidas(req,res){
 async function getProductos(req,res){
 	try
 	{
+		//console.log("GET PRODUCTOS YORK")
 		const sql_pool = await new sql.ConnectionPool(configSQL).connect();		
 
 		let queryGet = `SELECT * FROM Productos`;
@@ -57,6 +60,7 @@ async function getProductos(req,res){
 async function getPartidasEntrada(req,res){
 	try
 	{
+		//console.log("GET PARTIDAS X ENTRADA YORK")
 		let idEntrada = req.query.IDEntrada;
 
 		const sql_pool = await new sql.ConnectionPool(configSQL).connect();		
@@ -76,6 +80,7 @@ async function getPartidasEntrada(req,res){
 async function getPartidasSalida(req,res){
 	try
 	{
+		//console.log("GET PARTIDAS X SALIDA YORK")
 		let idSalida = req.query.IDSalida;
 
 		const sql_pool = await new sql.ConnectionPool(configSQL).connect();		
