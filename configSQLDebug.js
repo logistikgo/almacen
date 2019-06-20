@@ -17,7 +17,8 @@ const config = {
 
 
     //ALMACEN YORK 
-    database : process.env.DatabaseALM_Produccion, //PRODUCCION
+    //database : process.env.DatabaseALM_Produccion, //PRODUCCION
+    database : process.env.DatabaseALM_Demo, //DEMO
 
 
     encrypt: true 

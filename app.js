@@ -148,6 +148,7 @@ app.get('/api/getSalidasYork', York.getSalidas);
 app.get('/api/getProductosYork', York.getProductos);
 app.get('/api/getPartidasEntradaYork', York.getPartidasEntrada);
 app.get('/api/getPartidasSalidaYork', York.getPartidasSalida);
+app.post('/api/saveEntradaYork',York.saveEntrada);
 
 
 module.exports = app;
