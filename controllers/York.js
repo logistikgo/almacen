@@ -129,7 +129,7 @@ async function saveEntrada(req,res){
 				let querySavePartida = `
 				INSERT INTO ALM_PartidasEntradas 
 				(IDProducto,IDUsuarioAlta,IDALM_Entrada,FechaAlta,Contenedor,NumeroParte,Tarimas,Piezas,Peso,Pedimento,Observaciones,IsSalida) 
-				VALUES (${partida.IDProducto},${IDUsuario},${entrada.IDALM_Entrada},'${(new Date()).toISOString()}','${partida.Contenedor}','${partida.NumeroParte}',${partida.Tarimas},${partida.Piezas},${partida.Peso},'${partida.Pedimento}','${partida.Observaciones}',${partida.IsSalida})`;
+				VALUES (${partida.IDProducto},${IDUsuario},${entrada.IDALM_Entrada},'${(new Date()).toISOString()}','${partida.Contenedor}','${partida.NumeroParte}',${partida.Tarimas},${partida.Piezas},${partida.Peso},'${entrada.Pedimento}','NA',0)`;
 				let partidaSaved = (await sql_pool.query(querySavePartida)).rowsAffected;
 				if(partidaSaved.length > 0 && partidaSaved[0] > 0){
 					await updateExistencias(partida.IDProducto,partida.Piezas,sql_pool);
