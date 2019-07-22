@@ -26,14 +26,10 @@ function getById(req,res){
 }
 
 function save(req,res){
-	let nEmbalaje = new Embalaje();
 
-	nEmbalaje.clave = req.body.clave;
-	nEmbalaje.nombre = req.body.nombre;
-	nEmbalaje.descripcion = req.body.descripcion;
+	let nEmbalaje = new Embalaje(req.body);
+
 	nEmbalaje.fechaAlta = new Date();
-	nEmbalaje.usuarioAlta_id = req.body.usuarioAlta_id;
-	nEmbalaje.nombreUsuario = req.body.nombreUsuario;
 	nEmbalaje.status = "ACTIVO";
 
 	nEmbalaje.save()
@@ -47,21 +43,10 @@ function save(req,res){
 
 function update(req,res){
 	let _id = req.body.id;
-	let _clave = req.body.clave;
-	let _nombre = req.body.nombre;
-	let _descripcion = req.body.descripcion;
-	let _fechaEdita = new Date();
-	let _usuarioEdita_id = req.body.usuarioEdita;
 
-	let editQuery = {
-		clave:_clave,
-		nombre:_nombre,
-		descripcion:_descripcion,
-		fechaEdita:_fechaEdita,
-		usuarioEdita_id:_usuarioEdita_id
-	};
-
-	Embalaje.updateOne({_id:_id},{$set:editQuery})
+	req.body.fechaEdita = new Date();
+	
+	Embalaje.updateOne({_id:_id},{$set:req.body})
 	.then((updated)=>{
 		res.status(200).send(updated);
 	})
