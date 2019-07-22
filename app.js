@@ -22,7 +22,6 @@ const Pasillo = require('./controllers/Pasillo');
 const PrePartida = require('./controllers/PrePartida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
-const York = require('./controllers/York');
 
 //const dotenv = require('dotenv'); //Used for environment variables
 //dotenv.config();
@@ -141,14 +140,5 @@ app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
 
 app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
-
-//YORK
-app.get('/api/getEntradasYork', York.getEntradas);
-app.get('/api/getSalidasYork', York.getSalidas);
-app.get('/api/getProductosYork', York.getProductos);
-app.get('/api/getPartidasEntradaYork', York.getPartidasEntrada);
-app.get('/api/getPartidasSalidaYork', York.getPartidasSalida);
-app.post('/api/saveEntradaYork',York.saveEntrada);
-
 
 module.exports = app;
