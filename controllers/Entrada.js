@@ -116,39 +116,11 @@ function getPartidaById(req, res) {
 }
 
 async function save(req, res){
-	let bodyParams = req.body;
-
-	let nEntrada = new Entrada();
-
-	nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id;
-	nEntrada.nombreUsuario = bodyParams.nombreUsuario;
-	nEntrada.item = bodyParams.item;
-	nEntrada.embarque = bodyParams.embarque;
-	nEntrada.referencia = bodyParams.referencia;
-	nEntrada.fechaEntrada = new Date(bodyParams.strFechaIngreso);
-	nEntrada.acuse = bodyParams.acuse;
-	nEntrada.recibio = bodyParams.recibio;
-	nEntrada.proveedor = bodyParams.proveedor;
-	nEntrada.ordenCompra = bodyParams.ordenCompra;
-	nEntrada.factura = bodyParams.factura;
-	nEntrada.tracto = bodyParams.tracto;
-	nEntrada.remolque = bodyParams.remolque;
-	nEntrada.unidad = bodyParams.unidad;
-	nEntrada.transportista = bodyParams.transportista;
-	nEntrada.valor = bodyParams.valor;
-	nEntrada.clienteFiscal_id = bodyParams.clienteFiscal_id;
-
-	nEntrada.idClienteFiscal = bodyParams.idClienteFiscal;
-	nEntrada.idSucursal = bodyParams.idSucursal;
-	nEntrada.sucursal_id = req.body.sucursal_id;
-	nEntrada.almacen_id = bodyParams.almacen_id;
-	nEntrada.status = bodyParams.status;
-	nEntrada.tipo = bodyParams.tipo;
-	nEntrada.partidas = bodyParams.partidas;
-	nEntrada.partidasSalida = bodyParams.partidasSalida;
-	nEntrada.isEmpty = bodyParams.isEmpty;
+	
+	let nEntrada = new Entrada(req.body);
 
 	nEntrada.fechaAlta = new Date();
+	nEntrada.fechaEntrada = new Date(req.body.strFechaIngreso);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio,nEntrada.clienteFiscal_id,'I');
@@ -229,22 +201,12 @@ async function saveEntradaAutomatica(req,res){
 	if(!isEntrada){
 		if(partidas && partidas.length>0)
 		{
-
-			let nEntrada = new Entrada();
-
 			let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
 			let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
-			//console.log("Arreglo de clientes fiscales in comming");
-			//console.log(bodyParams.IDClienteFiscal);
-			//console.log(arrClientes);
-			//console.log(arrSucursales);
-			nEntrada.nombreUsuario = bodyParams.nombreUsuario; //nombreUsuario
-			nEntrada.embarque = bodyParams.embarque; //Folio viaje 
-			nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada); 
-			nEntrada.tracto = bodyParams.tracto;//Si lo trae
-			nEntrada.remolque = bodyParams.remolque;//Si lo trae
-			nEntrada.unidad = bodyParams.unidad;//Si lo trae
-			nEntrada.transportista = bodyParams.transportista;//Si lo trae
+
+			let nEntrada = new Entrada(req.body);
+
+			nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada); 			
 			nEntrada.valor = partidas.map(x=>x.valor).reduce(function(total,valor){
 				return total + valor;
 			});//Si lo trae
@@ -263,22 +225,6 @@ async function saveEntradaAutomatica(req,res){
 			nEntrada.folio = await getNextID();
 			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio,nEntrada.clienteFiscal_id,'I');
 			nEntrada.isEmpty = false;
-			//nEntrada.usuarioAlta_id = bodyParams.usuarioAlta_id; //Diferente usuario Omitir
-			
-			//nEntrada.item = bodyParams.item; //Capturar en asignacion de posiciones
-			
-			//nEntrada.referencia = bodyParams.referencia; //Capturar
-			
-			//nEntrada.acuse = bodyParams.acuse; //Capturar
-			//nEntrada.recibio = bodyParams.recibio; //QUien hizo la asignacion de posiciones
-			//nEntrada.proveedor = bodyParams.proveedor; //Capturar
-			//nEntrada.ordenCompra = bodyParams.ordenCompra;//Capturar
-			//nEntrada.factura = bodyParams.factura;//Capturar
-			
-			//nEntrada.idClienteFiscal = bodyParams.idClienteFiscal; //Ño
-			//nEntrada.idSucursal = bodyParams.idSucursal;// 
-			
-			//nEntrada.almacen_id = bodyParams.almacen_id; //Capturar
 			
 			nEntrada.save()
 			.then(async(entrada)=>{
@@ -317,42 +263,14 @@ async function update(req, res){
 	let bodyParams = req.body;
 	let entrada_id = bodyParams.entrada_id;
 
-	let jUpdate ={
-		usuarioAlta_id: bodyParams.usuarioAlta_id,
-		nombreUsuario: bodyParams.nombreUsuario,
-		item: bodyParams.item,
-		embarque: bodyParams.embarque,
-		referencia: bodyParams.referencia,
-		fechaEntrada: new Date(bodyParams.strFechaIngreso),
-		acuse: bodyParams.acuse,
-		recibio: bodyParams.recibio,
-		proveedor: bodyParams.proveedor,
-		ordenCompra: bodyParams.ordenCompra,
-		factura: bodyParams.factura,
-		tracto: bodyParams.tracto,
-		remolque: bodyParams.remolque,
-		unidad: bodyParams.unidad,
-		transportista: bodyParams.transportista,
-		valor: bodyParams.valor,
-		clienteFiscal_id: bodyParams.clienteFiscal_id,
-		idClienteFiscal: bodyParams.idClienteFiscal,
-		idSucursal: bodyParams.idSucursal,
-		sucursal_id: req.body.sucursal_id,
-		almacen_id: bodyParams.almacen_id,
-		status: bodyParams.status,
-		tipo: bodyParams.tipo,
-		partidas: bodyParams.partidas,
-		partidasSalida: bodyParams.partidasSalida,
-		isEmpty: bodyParams.isEmpty,
-		fechaAlta: new Date()
-	};
+	req.body.fechaEntrada = new Date(bodyParams.strFechaIngreso);
 
 	//Updatea los movimientos de esta entrada, les asigna el campo almacen_id y clienteFiscal_id
 	MovimientoInventarioModel.find({entrada_id: entrada_id })
 	.then((movimientos)=>{
 		movimientos.forEach(function(movimiento){
-			movimiento.almacen_id = jUpdate.almacen_id;
-			movimiento.clienteFiscal_id = jUpdate.clienteFiscal_id;
+			movimiento.almacen_id = req.body.almacen_id;
+			movimiento.clienteFiscal_id = req.body.clienteFiscal_id;
 			//console.log(movimiento);
 			movimiento.save();
 		});
@@ -360,7 +278,7 @@ async function update(req, res){
 
 	//console.log(jUpdate.partidas);
 
-	if(jUpdate.status == "SIN_POSICIONAR"){
+	if(req.body.status == "SIN_POSICIONAR"){
 		//console.log("Estatus: SIN POSICIONAR");
 		let pasilloBahia = await Pasillo.findOne({
 			isBahia: true,
@@ -374,11 +292,11 @@ async function update(req, res){
 		let posicionBahia = pasilloBahia.posiciones[0].posicion_id;
 		//console.log(posicionBahia);
 
-		for(let partida of jUpdate.partidas){
+		for(let partida of req.body.partidas){
 			//console.log(partida);
 
 			let clave_partida = partida.clave_partida;
-			let partidaSalida = jUpdate.partidasSalida.find(x=>x.clave_partida == clave_partida);
+			let partidaSalida = req.body.partidasSalida.find(x=>x.clave_partida == clave_partida);
 
 			if(partida.pasillo_id==undefined || partida.pasillo==undefined ||  partida.posicion==undefined || partida.posicion_id==undefined || partida.nivel==undefined){
 				let jParamsposition = {
@@ -405,17 +323,17 @@ async function update(req, res){
 
 	}
 	
-	let partidasPosicionadas = (bodyParams.partidas).filter(function (x){
+	let partidasPosicionadas = (req.body.partidas).filter(function (x){
 		return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
 	});
-
-	if(partidasPosicionadas.length == bodyParams.partidas.length && bodyParams.item != undefined && bodyParams.item != null && bodyParams.item != ""){
-		jUpdate.status = "APLICADA";
+	
+	if(partidasPosicionadas.length == req.body.partidas.length && req.body.item != undefined && req.body.item != null && req.body.item != ""){
+		req.body.status = "APLICADA";
 	}
 
 	Entrada.updateOne(
 		{ _id: entrada_id },
-		{ $set: jUpdate })
+		{ $set: req.body })
 	.then((entrada)=>{
 		res.status(200).send(entrada);
 	})
