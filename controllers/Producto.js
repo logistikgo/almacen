@@ -165,11 +165,11 @@ function validaProducto(req,res){
 	.then((producto)=>{
 		console.log(producto.length);
 		if(producto.length===0){
-			return res.status(200).send(true);
+			res.status(200).send(true);
 		}
 		else
 		{
-			return res.status(200).send(false);
+			res.status(200).send(false);
 		}
 	})
 	.catch((err)=>{
