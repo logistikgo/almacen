@@ -120,7 +120,7 @@ function getUbicaciones(req,res){
 }
 
 async function save(req,res){
-	
+
 	let pasillos = req.body.pasillos;
 	let nAlmacen = new Almacen(req.body);
 	
@@ -207,10 +207,10 @@ function _delete(req,res){
 		statusReg:"BAJA"
 	}
 
-	Almacen.updateOne({_id:almacen_id},{$set:item},(err,almacen)=>{
-		if(err)
-			return res.status(500).send({message:"Error al eliminar"});
+	Almacen.updateOne({_id:almacen_id},{$set:item}).then((almacen)=>{
 		res.status(200).send(almacen);
+	}).catch((err)=>{
+		res.status(500).send({message:"Error al eliminar"});
 	});
 }
 
