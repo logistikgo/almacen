@@ -89,7 +89,7 @@ function _delete(req,res){
 	.then((cliente)=>{
 		res.status(200).send(cliente);
 	}).catch((error)=>{
-		res.status(500).send({message:"Error"});
+		res.status(500).send(error);
 	});
 	
 }
