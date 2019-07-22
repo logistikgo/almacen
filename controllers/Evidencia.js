@@ -20,26 +20,18 @@ function getEvidenciasByID(req,res){
 }
 
 function saveEvidencia(req,res){
-	let params = req.body;
-
-	let nEvidencia = new Evidencia();
-
-	nEvidencia.nombreArchivo = params.nombreArchivo;
-	nEvidencia.rutaArchivo = params.rutaArchivo;
-	nEvidencia.tipo = params.tipo;
-	nEvidencia.fechaAlta = new Date();
-	nEvidencia.usuario_id = params.usuario_id;
-	nEvidencia.usuarioNombre = params.usuarioNombre;
-	nEvidencia.entrada_id = params.entrada_id;
-	nEvidencia.salida_id = params.salida_id;
-	nEvidencia.statusReg = "ACTIVO";
 	
+	req.body.fechaAlta = new Date();
+	req.body.statusReg = "ACTIVO";
+
+	let nEvidencia = new Evidencia(req.body);
+
 	nEvidencia.save()
 	.then((storedEvidencia)=>{
 		res.status(200).send(storedEvidencia);
 	})
 	.catch((err)=>{
-		return res.status(500).send({message:"Error",error:err})
+		res.status(500).send(error);
 	});
 
 }
