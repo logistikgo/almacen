@@ -118,89 +118,44 @@ function getByIDClienteFiscal(req, res) {
 
 //async
 async function save(req,res) {
-	let nProducto = new Producto();
-	let params = req.body;
-	
-	nProducto.idClienteFiscal = params.idClienteFiscal;
-	nProducto.arrClientesFiscales_id = params.arrClientesFiscales;
-	nProducto.idProducto = await Helpers.getNextID(Producto, "idProducto");
-	nProducto.statusReg = "ACTIVO";
-	nProducto.clave = params.clave;
-	nProducto.fechaAlta = new Date();
-	nProducto.usuarioAlta_id = params.usuarioAlta_id;
-	nProducto.usuarioAlta = params.usuarioAlta;
-	nProducto.clave = params.clave;
-	nProducto.descripcion = params.descripcion;
-	nProducto.embalajes = params.embalajes;
-	nProducto.embalajesRechazo = params.embalajes;
-	nProducto.existenciaPesoBruto = params.existenciaPesoBruto;
-	nProducto.existenciaPesoNeto = params.existenciaPesoNeto;
-	nProducto.pesoBrutoRechazo = params.existenciaPesoBruto;
-	nProducto.pesoNetoRechazo = params.existenciaPesoNeto;
-	nProducto.stockMaximo = params.stockMaximo;
-	nProducto.stockMinimo = params.stockMinimo;
-	nProducto.idSucursal = params.idSucursal;
-	nProducto.sucursal_id = params.sucursal_id;
-	nProducto.clienteFiscal_id = params.clienteFiscal_id;
-	nProducto.almacen_id = params.almacen_id;
-	nProducto.presentacion = params.presentacion;
-	nProducto.presentacion_id = params.presentacion_id;
-	nProducto.valor = 0;
+
+	req.body.idProducto = await Helpers.getNextID(Producto, "idProducto");
+	req.body.statusReg = "ACTIVO";
+	req.body.valor = 0;
+	req.body.fechaAlta = new Date();
+
+	let nProducto = new Producto(req.body);
 
 	nProducto.save()
 	.then((productoStored)=>{	
 		
 		res.status(200).send(productoStored);	
-		MovimientoInventario.saveExistenciaInicial(productoStored._id, params.embalajes,
-			params.existenciaPesoBruto, params.existenciaPesoNeto,
-			params.idClienteFiscal,params.clienteFiscal_id, params.sucursal_id, params.almacen_id)
+		MovimientoInventario.saveExistenciaInicial(productoStored._id, req.body.embalajes,
+			req.body.existenciaPesoBruto, req.body.existenciaPesoNeto,
+			req.body.idClienteFiscal,req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id)
 		.then(()=>{
 			
 		});
-
-
 	})
 	.catch((err)=>{
-		return res.status(500).send({"message":"Error save producto", "error":err});
+		res.status(500).send({"message":"Error save producto", "error":err});
 	});
 }
 
 function update(req, res){
-	let params = req.body;
+	
+	req.body.fechaEdita = new Date();
+
 	let idProducto = params.idProducto;
 
-	Producto.findOne({_id:idProducto})
-	.then((producto) => {
-		producto.idClienteFiscal = params.idClienteFiscal;
-		producto.arrClientesFiscales_id = params.arrClientesFiscales;
-		producto.statusReg = "ACTIVO";
-		producto.fechaAlta = new Date();
-		producto.usuarioAlta_id = params.usuarioAlta_id;
-		producto.usuarioAlta = params.usuarioAlta;
-		producto.clave = params.clave;
-		producto.descripcion = params.descripcion;
-		producto.embalajes = params.embalajes;
-		producto.existenciaPesoBruto = params.existenciaPesoBruto;
-		producto.existenciaPesoNeto = params.existenciaPesoNeto;
-		producto.stockMaximo = params.stockMaximo;
-		producto.stockMinimo = params.stockMinimo;
-		producto.idSucursal = params.idSucursal;
-		producto.sucursal_id = params.sucursal_id;
-		producto.almacen_id = params.almacen_id;
-		producto.presentacion = params.presentacion;
-		producto.presentacion_id = params.presentacion_id;
-
-		producto.save()
-		.then(()=>{
-			res.status(200).send(producto);
-		})
-		.catch((error)=>{
-			res.status(500).send(error);
-		})
+	Producto.updateOne({_id: idProducto},{$set: req.body})
+	.then(()=>{
+		res.status(200).send(producto);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);
-	})
+	});
+
 }
 
 function validaProducto(req,res){
@@ -225,16 +180,13 @@ function validaProducto(req,res){
 function _delete(req,res) {
 	let _idProducto = req.body.idProducto;
 
-	Producto.findOne({_id:_idProducto, statusReg:"ACTIVO"}) 
+	Producto.updateOne({_id:_idProducto},{$set: {statusReg:"BAJA"}})
 	.then((producto)=>{
-		producto.statusReg = "BAJA";
-		producto.save().then(()=>{
-			res.status(200).send(producto);
-		})
-	}).catch((error)=>{
+		res.status(200).send(producto);
+	})
+	.catch((error)=>{
 		res.status(500).send(error);
 	});
-
 }
 
 module.exports = {
