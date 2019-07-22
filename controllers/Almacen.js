@@ -127,77 +127,62 @@ async function save(req,res){
 	nAlmacen.statusReg = "ACTIVO";
 	nAlmacen.fechaAlta= new Date();
 	
-
 	nAlmacen.save()
 	.then((data)=>{
 		for(let pasillo of pasillos){
 			PasilloModel.findOne({nombre:pasillo.nombre, almacen_id:data._id})
 			.then(async (dataPas) => {
 				if(!dataPas){
-					await Pasillo.save(data._id, pasillo, params.usuarioAlta_id, params.usuarioAlta);
+					await Pasillo.save(data._id, pasillo, req.body.usuarioAlta_id, req.body.usuarioAlta);
 				}
 			});
 		}
 		res.status(200).send(data);
 	})
-	.catch((err)=>{
-		console.log(err);
+	.catch((error)=>{
+		console.log(error);
 	});
 }
 
 function update(req,res){
 	let params = req.body;
 	let _idAlmacen = params.idAlmacen;
+	let pasillos = params.pasillos;
+	
+	Almacen.updateOne({_id:_idAlmacen},{$set: req.body})
+	.then(async(data)=>{
+		
+		for(let pasillo of pasillos){
+			PasilloModel.findOne({nombre:pasillo.nombre, almacen_id:_idAlmacen})
+			.populate({
+				path:'posiciones.posicion_id'
+			})
+			.then(async (dataPas) => {
+				if(!dataPas){
+					await Pasillo.save(_idAlmacen, pasillo, params.usuarioAlta_id, params.usuarioAlta);
+				}
+				else{
+					let posiciones = pasillo.posiciones;
+					let posicionesGuardadas = [];
 
-	Almacen.findOne({_id:_idAlmacen})
-	.then((almacen) => {
-		almacen.nombre = params.nombre;
-		almacen.idSucursal = params.idSucursal;
-		almacen.sucursal_id = params.sucursal_id,
-		almacen.statusReg = "ACTIVO";
-		almacen.usuarioAlta= params.usuarioAlta;
-		almacen.usuarioAlta_id= params.usuarioAlta_id;
-		almacen.fechaAlta= new Date();
-
-		let pasillos = params.pasillos;
-
-		almacen.save()
-		.then(async(data)=>{
-			for(let pasillo of pasillos){
-				PasilloModel.findOne({nombre:pasillo.nombre, almacen_id:data._id})
-				.populate({
-					path:'posiciones.posicion_id'
-				})
-				.then(async (dataPas) => {
-					if(!dataPas){
-						await Pasillo.save(data._id, pasillo, params.usuarioAlta_id, params.usuarioAlta);
-					}
-					else{
-						let posiciones = pasillo.posiciones;
-						let posicionesGuardadas = [];
-
-						for(let posicion of posiciones){
-							let resPosicion = await Posicion.save(dataPas._id, data._id, posicion, params.usuarioAlta_id, params.usuarioAlta);
-							let jPosicion = {
-								"posicion_id": resPosicion._id
-							}
-							posicionesGuardadas.push(jPosicion);
+					for(let posicion of posiciones){
+						let resPosicion = await Posicion.save(dataPas._id, _idAlmacen, posicion, params.usuarioAlta_id, params.usuarioAlta);
+						let jPosicion = {
+							"posicion_id": resPosicion._id
 						}
-						dataPas.posiciones = posicionesGuardadas;
-						dataPas.save();
-						
+						posicionesGuardadas.push(jPosicion);
 					}
-				});
-			}
-			res.status(200).send(data);
-		})
-		.catch((err)=>{
-			console.log(err);
-		});
+					dataPas.posiciones = posicionesGuardadas;
+					dataPas.save();
+					
+				}
+			});
+		}
+		res.status(200).send(data);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);
-	})
+	});
 }
 
 function _delete(req,res){
