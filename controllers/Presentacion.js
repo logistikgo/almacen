@@ -26,15 +26,11 @@ function getById(req, res) {
 }
 
 async function save(req, res){
-	let nPresentacion = new Presentacion();
-	let params = req.body;
 
-	nPresentacion.nombre = params.nombre;
-	nPresentacion.descripcion = params.descripcion;
-	nPresentacion.usuarioAlta = params.usuarioAlta;
-	nPresentacion.usuarioAlta_id = params.usuarioAlta_id;
-	nPresentacion.fechaAlta = new Date();
-	nPresentacion.statusReg = "ACTIVO";
+	req.body.fechaAlta = new Date();
+	req.body.statusReg = "ACTIVO";
+
+	let nPresentacion = new Presentacion(req.body);
 
 	nPresentacion.save()
 	.then((presentacion)=>{
@@ -46,44 +42,30 @@ async function save(req, res){
 }
 
 function update(req, res){
-	let params = req.body;
-	let idPresentacion = params.idPresentacion;
+	
+	let idPresentacion = req.body.idPresentacion;
+	req.body.fechaEdita = new Date();
 
-	Presentacion.findOne({_id:idPresentacion})
-	.then((presentacion) => {
-		presentacion.nombre = params.nombre;
-		presentacion.descripcion = params.descripcion;
-		presentacion.usuarioAlta = params.usuarioAlta;
-		presentacion.usuarioAlta_id = params.usuarioAlta_id;
-		presentacion.fechaAlta = new Date();
-
-		presentacion.save()
-		.then(()=>{
-			res.status(200).send(presentacion);
-		})
-		.catch((error)=>{
-			res.status(500).send(error);
-		})
+	Presentacion.updateOne({_id:idPresentacion},{$set:req.body})
+	.then((presentacion)=>{
+		res.status(200).send(presentacion);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);
-	})
+	});
 }
 
 function _delete(req, res){
 	let idPresentacion = req.body.idPresentacion;
 
-	Presentacion.findOne({_id:idPresentacion})
-	.then((presentacion) => {
-		presentacion.statusReg = "BAJA";
-		presentacion.save()
-		.then(()=>{
-			res.status(200).send(presentacion);
-		})
+	Presentacion.updateOne({_id:idPresentacion},{$set:{statusReg:"BAJA"}})
+	.then((presentacion)=>{
+		res.status(200).send(presentacion);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);
-	})
+	});
+	
 }
 
 module.exports = {
