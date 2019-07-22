@@ -68,25 +68,9 @@ async function save(req,res){
 
 function update(req,res){
 	let _id = req.body.id;
+	req.body.fechaEdita = new Date();
 
-	let editQuery = {
-		fechaEdita:new Date(),
-		usuarioEdita_id: req.body.usuarioEdita_id,
-		nombreUsuario:req.body.nombreUsuario,
-		nombreCorto : req.body.nombreCorto,
-		nombreComercial : req.body.nombreComercial,
-		razonSocial: req.body.razonSocial,
-		rfc: req.body.rfc,
-		calle:req.body.calle,
-		numInt:req.body.numInt,
-		numExt:req.body.numExt,
-		cp:req.body.cp,
-		colonia:req.body.colonia,
-		municipio:req.body.municipio,
-		estado:req.body.estado,
-		pais:req.body.pais
-	}
-	CteFiscal.updateOne({_id:_id},{$set:editQuery})
+	CteFiscal.updateOne({_id:_id},{$set:req.body})
 	.then((updated)=>{
 		res.status(200).send(updated);
 	}).catch((error)=>{
