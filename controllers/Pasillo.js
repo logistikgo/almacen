@@ -30,25 +30,7 @@ function getById(req, res){
 
 	Pasillo.findOne({_id:psillo_id})
 	.then(async (pasillo)=>{
-		//let resPosiciones = [];
-
-		// for(let posicion of pasillo.posiciones){
-		// 	let posicion_id = posicion.posicion_id;
-			
-		// 	resPosiciones.push(await Posicion.findOne({
-		// 									_id: posicion_id
-		// 								})
-		// 								.populate({
-		// 									path:'niveles.productos.producto_id',
-		// 									model: 'Producto'
-		// 								})
-		// 								.then((posiciones)=>{
-		// 									res.status(200).send(posiciones);
-		// 								}));
-		// }
-
-		// pasillo.posiciones = resPosiciones;
-
+		
 		res.status(200).send(pasillo);
 	})
 	.catch((error)=>{
