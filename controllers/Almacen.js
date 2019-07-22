@@ -120,18 +120,13 @@ function getUbicaciones(req,res){
 }
 
 async function save(req,res){
-	let nAlmacen = new Almacen();
-	let params = req.body;
-
-	nAlmacen.nombre = params.nombre;
-	nAlmacen.idSucursal = params.idSucursal;
-	nAlmacen.sucursal_id = params.sucursal_id,
+	
+	let pasillos = req.body.pasillos;
+	let nAlmacen = new Almacen(req.body);
+	
 	nAlmacen.statusReg = "ACTIVO";
-	nAlmacen.usuarioAlta= params.usuarioAlta;
-	nAlmacen.usuarioAlta_id= params.usuarioAlta_id;
 	nAlmacen.fechaAlta= new Date();
-
-	let pasillos = params.pasillos;
+	
 
 	nAlmacen.save()
 	.then((data)=>{
