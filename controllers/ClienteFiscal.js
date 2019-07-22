@@ -38,26 +38,13 @@ function getByIDCteFiscal(req, res) {
 
 
 async function save(req,res){
-	let nCliente = new CteFiscal();
+	
+	let nCliente = new CteFiscal(req.body);
+	
 	let IDClienteXD = req.body.IDClienteXD;
+	
 	nCliente.idCliente = await getNextID();
-	nCliente.usuarioAlta_id = req.body.usuarioAlta_id;
-	nCliente.nombreUsuario = req.body.nombreUsuario;
-	nCliente.idSucursal = req.body.idSucursal;
-	nCliente.sucursal_id = req.body.sucursal_id;
 	nCliente.fechaAlta = new Date();
-	nCliente.nombreCorto = req.body.nombreCorto;
-	nCliente.nombreComercial = req.body.nombreComercial;
-	nCliente.razonSocial = req.body.razonSocial;
-	nCliente.rfc = req.body.rfc;
-	nCliente.calle = req.body.calle;
-	nCliente.numExt = req.body.numExt;
-	nCliente.numInt = req.body.numInt;
-	nCliente.cp = req.body.cp;
-	nCliente.colonia = req.body.colonia;
-	nCliente.municipio = req.body.municipio;
-	nCliente.estado = req.body.estado;
-	nCliente.pais = req.body.pais;
 	nCliente.statusReg = "ACTIVO";
 
 	nCliente.save()
