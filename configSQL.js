@@ -14,8 +14,6 @@ const config = {
     //CROSSDOCKS
     database: process.env.DatabaseXD_Demo, //DEMO
     //database: process.env.DatabaseXD_Produccion, //PRODUCCION
-
-
     encrypt: true	
 };
 
