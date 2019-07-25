@@ -11,7 +11,7 @@ const Almacen = Schema(
 		statusReg:String,
 		usuarioAlta: String,
 		usuarioAlta_id: Number,
-		fechaAlta: Date,
+		fechaAlta: Date
 	},
 	{collection:'Almacenes'}
 );

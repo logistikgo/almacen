@@ -14,7 +14,7 @@ mongoose.connect(config.db, { useNewUrlParser: true })
 
 	app.listen(config.port, () => {
 		console.log(`API ALMACEN JALANDO EN:${config.port}`);
-	})
+	});
 })
 .catch((err) => {
 	console.log(err)
