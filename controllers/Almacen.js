@@ -18,20 +18,23 @@ async function getNextID(){
 
 function getAlmacenes(req,res){
 
-	Almacen.find({statusReg:"ACTIVO"},(err,almacenes)=>{
-		if(err)
-			return res.status(500).send({message:"Error"});
-		res.status(200).send(almacenes);
-	})
+	Almacen.find({statusReg:"ACTIVO"}).
+	then((almacenes)=>{
+		res.status(200).send(almacenes)
+	}).catch((error)=>{
+		res.status(500).send(error);
+	});
 }
 
 function getAlmacen(req,res){
 	let _idAlmacen = req.params.idAlmacen;
 
-	Almacen.find({idAlmacen:_idAlmacen, statusReg:"ACTIVO"},(err,almacen)=>{
-		if(err)
-			return res.status(500).send({message:"Error"});
+	Almacen.find({idAlmacen:_idAlmacen, statusReg:"ACTIVO"})
+	.then((almacen)=>{
 		res.status(200).send(almacen);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
 	});
 }
 
@@ -140,7 +143,7 @@ async function save(req,res){
 		res.status(200).send(data);
 	})
 	.catch((error)=>{
-		console.log(error);
+		res.status(500).send(error);
 	});
 }
 
