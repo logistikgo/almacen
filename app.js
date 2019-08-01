@@ -20,6 +20,7 @@ const Embalaje = require('./controllers/Embalaje');
 const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
 const PrePartida = require('./controllers/PrePartida');
+const Partida = require('./controllers/Partida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
 
@@ -140,5 +141,8 @@ app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
 
 app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
+
+
+app.get('/api/partida/:filtro',Partida.get);
 
 module.exports = app;
