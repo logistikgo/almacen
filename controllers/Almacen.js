@@ -1,6 +1,6 @@
 'use strict'
 
-const Almacen = require('../models/Almacen');
+const Almacen = require('../models/Almacen'); //Se hace este cambio unicamente para dev
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../models/MovimientoInventario');
 
