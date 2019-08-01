@@ -2,7 +2,7 @@
 
 const Almacen = require('../models/Almacen');
 const Helpers = require('../helpers');
-const MovimientoInventario = require('../models/MovimientoInventario');
+const MovimientoInventario = require('../models/MovimientoInventario'); 
 
 const Posicion = require('../controllers/Posicion');
 const PosicionModel = require('../models/Posicion');
