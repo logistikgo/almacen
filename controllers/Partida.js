@@ -30,7 +30,7 @@ function get(req,res){
     });
 }
 
-function save(req,res){
+function post(req,res){
     let nPartida = new Partida(req.body);
 
     nPartida.save()
@@ -43,5 +43,6 @@ function save(req,res){
 }
 
 module.exports = {
-    get
+    get,
+    post
 }

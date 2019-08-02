@@ -11,6 +11,20 @@ const PrePartidaM = require('../models/PrePartida'); //modelo
 const PrePartidaC = require('../controllers/PrePartida'); //controller
 const Pasillo = require('../models/Pasillo');
 
+
+//METODOS NUEVOS CON LA ESTRUCTURA
+
+function get1(req,res){
+	//Entrada.
+}
+
+//FIN METODOS NUEVOS CON LA ESTRUCTURA
+
+
+
+
+
+
 function getNextID(){
 	return Helper.getNextID(Entrada,"idEntrada");
 }

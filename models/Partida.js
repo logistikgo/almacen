@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 
 const Partida = Schema(
     {
+        producto_id: {type:Schema.ObjectId,ref:'Producto'},
         entrada_id : {type:Schema.ObjectId,ref:'Entrada'},
         salidas_id : 
         [ 
@@ -13,8 +14,6 @@ const Partida = Schema(
                 embalajes: {}
             }
         ],
-        embalajesEntrada : {},
-        embalajesxSalir : {},
         posiciones: [
             {
                 embalajesEntrada: {},
@@ -25,6 +24,17 @@ const Partida = Schema(
             }
 
         ],
+        embalajesEntrada : {},
+        embalajesxSalir : {},
+        pesoBruto : Number,
+        pesoNeto: Number,
+        pesoBrutoxSalir : Number,
+        pesoNetoxSalir : Number,
+        lote: String,
+        valor: Number,
+        IDPedido: Number,
+        InfoPedido: {},
+        isEmpty: { type: Boolean, default: false },
         status: String
 
     },
