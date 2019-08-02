@@ -35,48 +35,7 @@ const Entrada = Schema({
 	tipo:String,
 	isEmpty: { type: Boolean, default: false },
 	salidas_id : [{type:Schema.ObjectId,ref:'Salida'}],
-	partidas:[
-		{
-			producto_id:{type:Schema.ObjectId, ref:"Producto"},
-			clave:String,
-			descripcion:String,
-			pasillo: String,
-			pasillo_id: {type:Schema.ObjectId, ref:"Pasillo"},
-			posicion:String,
-			posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
-			nivel:String,
-			lote:String,
-			valor:Number,
-			pesoBruto:Number,
-			pesoNeto:Number,
-			embalajes:{},
-			isEmpty:{ type: Boolean, default: false },
-			clave_partida: String,
-			IDPedido : Number,
-			InfoPedido: {}
-		}
-	],
-	partidasSalida:[
-		{
-			producto_id:{type:Schema.ObjectId, ref:"Producto"},
-			clave:String,
-			descripcion:String,
-			pasillo: String,
-			pasillo_id: {type:Schema.ObjectId, ref:"Pasillo"},
-			posicion:String,
-			posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
-			nivel:String,
-			lote:String,
-			valor:Number,
-			pesoBruto:Number,
-			pesoNeto:Number,
-			embalajes:{},
-			isEmpty:{ type: Boolean, default: false },
-			clave_partida: String,
-			IDPedido : Number,
-			InfoPedido: {}
-		}
-	]
+	partidas:[{type:Schema.ObjectId,ref:'Partida'}]
 },
 {collection:'Entradas'}
 );

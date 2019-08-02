@@ -30,12 +30,22 @@ function get(req,res){
     });
 }
 
-function post(req,res){
-    let nPartida = new Partida(req.body);
+function post(arrPartidas,entrada_id){
 
-    nPartida.save()
-    .then((partida)=>{
-        res.status(201).send(partida);
+    arrPartidas.forEach(function(partida){
+        let nPartida = new Partida(partida);  
+        nPartida.entrada_id = entrada_id;  
+        nPartida.save();
+    });
+}
+
+async function addSalida(salida,_id){
+    
+    await Partida.findOne({_id:_id}).then((partida)=>{
+
+        partida.salidas_id.push(salida);
+        partida.save();
+        
     })
     .catch((error)=>{
         res.status(500).send(error);
@@ -44,5 +54,6 @@ function post(req,res){
 
 module.exports = {
     get,
-    post
+    post,
+    addSalida
 }

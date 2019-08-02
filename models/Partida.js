@@ -6,7 +6,9 @@ const Schema = mongoose.Schema;
 const Partida = Schema(
     {
         producto_id: {type:Schema.ObjectId,ref:'Producto'},
-        entrada_id : {type:Schema.ObjectId,ref:'Entrada'},
+        clave : String,
+        descripcion: String,
+        entrada_id : {type:Schema.ObjectId,ref:'Entrada'}, 
         salidas_id : 
         [ 
             {
@@ -19,10 +21,12 @@ const Partida = Schema(
                 embalajesEntrada: {},
                 embalajesxSalir: {},
                 posicion_id: {type:Schema.ObjectId,ref:'Posicion'},
+                posicion: String,
                 pasillo_id : {type:Schema.ObjectId,ref:'Pasillo'},
-                nivel: {type:Schema.ObjectId}
+                pasillo:String,
+                nivel_id: {type:Schema.ObjectId},
+                nivel:String
             }
-
         ],
         embalajesEntrada : {},
         embalajesxSalir : {},
@@ -31,11 +35,11 @@ const Partida = Schema(
         pesoBrutoxSalir : Number,
         pesoNetoxSalir : Number,
         lote: String,
-        valor: Number,
+        valor: { type: Number, default: 0 },
         IDPedido: Number,
         InfoPedido: {},
         isEmpty: { type: Boolean, default: false },
-        status: String
+        status: { type: String, default: "APLICADA" }
 
     },
     {

@@ -1,6 +1,7 @@
 'use strict'
 
 const Entrada = require('../models/Entrada');
+const Partida = require('../controllers/Partida');
 const Helper = require('../helpers');
 const Producto = require('../models/Producto');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
@@ -20,22 +21,27 @@ function get1(req,res){
 
 //FIN METODOS NUEVOS CON LA ESTRUCTURA
 
-
-
-
-
-
 function getNextID(){
 	return Helper.getNextID(Entrada,"idEntrada");
 }
 
 function get( req,res){
-	Entrada.find({}, (error,producto)=>{
-		if(error)
-			return res.status(500).send({message:"Error"});
-
-		res.status(200).send(producto);
-
+	Entrada.find({})
+	.populate({
+		path:'partidas',
+		model: 'Partida'
+	})
+	.populate({
+		path:'partidas',
+		populate : {
+			path: 'producto_id'
+		}
+	})
+	.then((entradas)=>{
+		res.status(200).send(entradas);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
 	});
 };
 
@@ -112,12 +118,14 @@ function getPartidaById(req, res) {
 
 	Entrada.findOne({_id: entrada_id})
 	.populate({
-		path:'partidas.producto_id',
-		model:'Producto'
+		path: 'partidas',
+		model: 'Partida'
 	})
 	.populate({
-		path:'partidasSalida.producto_id',
-		model:'Producto'
+		path:'partidas',
+		populate : {
+			path: 'producto_id'
+		}
 	})
 	.then((entrada)=>{
 		let partida = entrada.partidas.find(x=>x.clave_partida==clave_partida);
@@ -131,8 +139,8 @@ function getPartidaById(req, res) {
 
 async function save(req, res){
 	
-	let nEntrada = new Entrada(req.body);
 
+	let nEntrada = new Entrada(req.body);
 	nEntrada.fechaAlta = new Date();
 	nEntrada.fechaEntrada = new Date(req.body.strFechaIngreso);
 	nEntrada.idEntrada = await getNextID();
@@ -141,11 +149,14 @@ async function save(req, res){
 
 	nEntrada.save()
 	.then(async(entrada)=>{
-		for(let itemPartida of entrada.partidas){
-			//console.log("OK");
-			await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
-		}
+		
+		// for(let itemPartida of req.body.partidas){
+		// 	//console.log("OK");
+		// 	await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
+		// }
+		console.log("Se guardo");
 		res.status(200).send(entrada);
+		await Partida.post(req.body.partidas,entrada._id);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);

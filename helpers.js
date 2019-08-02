@@ -210,14 +210,14 @@ async function getNextID(dataContext, field){
 	if(lastUser.length > 0)
 		max = (lastUser[0])[field];
 
-	console.log(max);
+	//console.log(max);
 
 	return max + 1;
 }
 
 async function getStringFolio(incr,clienteFiscal_id,Tipo){
 	let clienteFiscal = await ClienteFiscal.findOne({_id:clienteFiscal_id}).exec();
-	console.log(clienteFiscal);
+	//console.log(clienteFiscal);
 	let stringFolio = clienteFiscal.clave + "-" + Tipo + "-" + incr;
 	return stringFolio;
 }
