@@ -143,6 +143,7 @@ app.get('/api/columnas',ColumnasxUsuario.getColumns);
 app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
 
 
-app.get('/api/partida/:filtro',Partida.get);
+//app.get('/api/partida/:filtro',Partida.get);
+app.get('/api/partida/:entrada_id',Partida.getByEntrada);
 
 module.exports = app;

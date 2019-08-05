@@ -138,6 +138,11 @@ function getPartidaById(req, res) {
 }
 
 async function save(req, res){
+
+	/**
+	 * Guarda una nueva entrada en la base de datos
+	 * Asi mismo, guarda cada una de las partidas y un movimiento de inventario
+	 */
 	
 	let nEntrada = new Entrada(req.body);
 	
@@ -150,12 +155,13 @@ async function save(req, res){
 	nEntrada.save()
 	.then(async (entrada)=>{
 		
-		for(let itemPartida of req.body.partidasJson){
-			//console.log("OK");
+		for(let itemPartida of req.body.partidasJson){	
 			await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
 		}
+		
 		let partidas  = await Partida.post(req.body.partidasJson,entrada._id);
 		entrada.partidas = partidas;
+		
 		await Entrada.updateOne({_id: entrada._id},{$set:{partidas:partidas}}).then((updated)=>{
 			res.status(200).send(entrada);
 		});

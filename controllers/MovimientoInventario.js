@@ -52,8 +52,11 @@ async function saveSalida(itemPartida,salida_id) {
 }
 
 async function saveEntrada(itemPartida,entrada_id) {
+
+	//Nueva instancia del modelo Movimiento
 	let nMovimiento = new MovimientoInventario();
 
+	//Se encuentra la entrada
 	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
 	
 	nMovimiento.producto_id = itemPartida.producto_id;
@@ -68,6 +71,8 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.pesoBruto = itemPartida.pesoBruto;
 	nMovimiento.pesoNeto = itemPartida.pesoNeto;
 	nMovimiento.signo = 1;
+
+
 	if(entrada.tipo!="RECHAZO"){
 		nMovimiento.tipo = "ENTRADA";
 	}else{
@@ -79,9 +84,10 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
 	//nMovimiento.clave_partida = itemPartida.clave_partida;
 
-	if(entrada.status!="SIN_POSICIONAR"){
-		await updateExistenciaPosicion(1, itemPartida);
-	}
+	
+	// if(entrada.status!="SIN_POSICIONAR"){
+	// 	await updateExistenciaPosicion(1, itemPartida); //PENDIENTE DE CONTROL CON NUEVA ESTRUCTURA
+	// }
 
 	await nMovimiento.save()
 	.then(async(movimiento)=>{
@@ -157,15 +163,20 @@ function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClie
 }
 
 async function updateExistencia(signo,itemPartida,fechaMovimiento) {
+	/**
+	 * Esta funcion afecta la existencia de los embalajes del producto recibido
+	 * como parametro dentro del objeto itemPartida
+	 */
+
 	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
 
-	if(itemPartida.embalajes){
-		for(let embajalePartida in itemPartida.embalajes){
+	if(itemPartida.embalajesEntrada){
+		for(let embajalePartida in itemPartida.embalajesEntrada){
 			
 			if(producto.embalajes[embajalePartida]){
-				producto.embalajes[embajalePartida] += (signo*itemPartida.embalajes[embajalePartida]);
+				producto.embalajes[embajalePartida] += (signo*itemPartida.embalajesEntrada[embajalePartida]);
 			}else if(signo>0){
-				producto.embalajes[embajalePartida] = (signo*itemPartida.embalajes[embajalePartida]);
+				producto.embalajes[embajalePartida] = (signo*itemPartida.embalajesEntrada[embajalePartida]);
 			}
 		}
 	}
@@ -193,15 +204,14 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 	producto.save();
 
 	await Producto.updateOne({_id:itemPartida.producto_id},{$set:item});
-	// .then((productoUpdated)=>{
-
-	// })
-	// .catch((err)=>{
-		
-	// });
 }
 
 async function updateExistenciaPosicion(signo, itemPartida){
+	/**
+	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
+	 */
+
+
 	let posicion = await Posicion.findOne({_id:itemPartida.posicion_id}).exec();
 	let nivel = posicion.niveles.find(x=>x.nombre==itemPartida.nivel);
 	

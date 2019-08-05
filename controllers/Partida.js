@@ -1,6 +1,7 @@
 'use strict'
 
 const Partida = require('../models/Partida');
+const Helper = require('../helpers');
 
 function get(req,res){
     
@@ -33,15 +34,8 @@ function get(req,res){
 async function post(arrPartidas,entrada_id){
 
     var arrPartidas_id = [];
-    // arrPartidas.forEach(function(partida){
-    //     let nPartida = new Partida(partida);  
-    //     nPartida.entrada_id = entrada_id;  
-    //     nPartida.save().then((partida)=>{
-    //         arrPartidas_id.push(partida._id);
-    //     });
-    // });
-
-    await asyncForEach(arrPartidas,async function(partida){
+    
+    await Helper.asyncForEach(arrPartidas,async function(partida){
         let nPartida = new Partida(partida);  
         nPartida.entrada_id = entrada_id;  
         await nPartida.save().then((partida)=>{
@@ -65,14 +59,22 @@ async function addSalida(salida,_id){
     });
 }
 
-async function asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-    }
-  }
+async function getByEntrada(req,res){
+    let entrada_id = req.params.entrada_id;
+
+    Partida.find({entrada_id:entrada_id})
+    .then((partidas)=>{
+        res.status(200).send(partidas);
+    })
+    .catch((error)=>{
+        res.status(500).send(error);
+    });
+}
+
 
 module.exports = {
     get,
     post,
-    addSalida
+    addSalida,
+    getByEntrada
 }
