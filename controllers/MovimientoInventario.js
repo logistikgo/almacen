@@ -64,7 +64,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.sucursal_id = entrada.sucursal_id;
 	nMovimiento.almacen_id = entrada.almacen_id;
 	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.embalajes= itemPartida.embalajes;
+	nMovimiento.embalajes= itemPartida.embalajesEntrada;
 	nMovimiento.pesoBruto = itemPartida.pesoBruto;
 	nMovimiento.pesoNeto = itemPartida.pesoNeto;
 	nMovimiento.signo = 1;
@@ -74,14 +74,10 @@ async function saveEntrada(itemPartida,entrada_id) {
 		nMovimiento.tipo = "ENTRADA_RECHAZO"
 	}
 	if(entrada.status!="SIN_POSICIONAR"){
-		nMovimiento.pasillo = itemPartida.pasillo;
-		nMovimiento.pasillo_id = itemPartida.pasillo_id;
-		nMovimiento.posicion = itemPartida.posicion;
-		nMovimiento.posicion_id = itemPartida.posicion_id;
-		nMovimiento.nivel = itemPartida.nivel;
+		nMovimiento.posiciones = itemPartida.posiciones;
 	}
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
-	nMovimiento.clave_partida = itemPartida.clave_partida;
+	//nMovimiento.clave_partida = itemPartida.clave_partida;
 
 	if(entrada.status!="SIN_POSICIONAR"){
 		await updateExistenciaPosicion(1, itemPartida);

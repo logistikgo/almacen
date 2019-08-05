@@ -139,8 +139,8 @@ function getPartidaById(req, res) {
 
 async function save(req, res){
 	
-
 	let nEntrada = new Entrada(req.body);
+	
 	nEntrada.fechaAlta = new Date();
 	nEntrada.fechaEntrada = new Date(req.body.strFechaIngreso);
 	nEntrada.idEntrada = await getNextID();
@@ -148,15 +148,17 @@ async function save(req, res){
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio,nEntrada.clienteFiscal_id,'I');
 
 	nEntrada.save()
-	.then(async(entrada)=>{
+	.then(async (entrada)=>{
 		
-		// for(let itemPartida of req.body.partidas){
-		// 	//console.log("OK");
-		// 	await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
-		// }
-		console.log("Se guardo");
-		res.status(200).send(entrada);
-		await Partida.post(req.body.partidas,entrada._id);
+		for(let itemPartida of req.body.partidasJson){
+			//console.log("OK");
+			await MovimientoInventario.saveEntrada(itemPartida,entrada.id);
+		}
+		let partidas  = await Partida.post(req.body.partidasJson,entrada._id);
+		entrada.partidas = partidas;
+		await Entrada.updateOne({_id: entrada._id},{$set:{partidas:partidas}}).then((updated)=>{
+			res.status(200).send(entrada);
+		});
 	})
 	.catch((error)=>{
 		res.status(500).send(error);

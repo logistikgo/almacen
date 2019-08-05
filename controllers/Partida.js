@@ -30,13 +30,26 @@ function get(req,res){
     });
 }
 
-function post(arrPartidas,entrada_id){
+async function post(arrPartidas,entrada_id){
 
-    arrPartidas.forEach(function(partida){
+    var arrPartidas_id = [];
+    // arrPartidas.forEach(function(partida){
+    //     let nPartida = new Partida(partida);  
+    //     nPartida.entrada_id = entrada_id;  
+    //     nPartida.save().then((partida)=>{
+    //         arrPartidas_id.push(partida._id);
+    //     });
+    // });
+
+    await asyncForEach(arrPartidas,async function(partida){
         let nPartida = new Partida(partida);  
         nPartida.entrada_id = entrada_id;  
-        nPartida.save();
+        await nPartida.save().then((partida)=>{
+            arrPartidas_id.push(partida._id);
+        });
     });
+    return arrPartidas_id;
+
 }
 
 async function addSalida(salida,_id){
@@ -51,6 +64,12 @@ async function addSalida(salida,_id){
         res.status(500).send(error);
     });
 }
+
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
+  }
 
 module.exports = {
     get,
