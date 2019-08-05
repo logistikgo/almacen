@@ -14,8 +14,10 @@ const Pasillo = Schema(
 			posicion_id: {
 				type: Schema.ObjectId, 
 				ref: "Posicion"
-			}
+			},
+			prioridad: Number
 		}],
+		prioridad: Number,
 		fechaAlta: Date,
 		usuarioAlta_id: Number,
 		usuarioAlta: String,
