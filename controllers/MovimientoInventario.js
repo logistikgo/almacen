@@ -5,6 +5,7 @@ const Posicion = require('../models/Posicion');
 const Producto = require('../models/Producto');
 const Entrada = require('../models/Entrada');
 const Salida = require('../models/Salida');
+const Helper = require('../helpers');
 
 async function saveSalida(itemPartida,salida_id) {
 	let nMovimiento = new MovimientoInventario();
@@ -85,9 +86,14 @@ async function saveEntrada(itemPartida,entrada_id) {
 	//nMovimiento.clave_partida = itemPartida.clave_partida;
 
 	
-	// if(entrada.status!="SIN_POSICIONAR"){
-	// 	await updateExistenciaPosicion(1, itemPartida); //PENDIENTE DE CONTROL CON NUEVA ESTRUCTURA
-	// }
+	if(entrada.status!="SIN_POSICIONAR"){
+
+		Helper.asyncForEach(itemPartida.posiciones,async function(posicionxPartida){
+			await updateExistenciaPosicion(1, posicionxPartida,itemPartida.producto_id); //PENDIENTE DE CONTROL CON NUEVA ESTRUCTURA
+		});
+	}
+
+	
 
 	await nMovimiento.save()
 	.then(async(movimiento)=>{
@@ -206,28 +212,29 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 	await Producto.updateOne({_id:itemPartida.producto_id},{$set:item});
 }
 
-async function updateExistenciaPosicion(signo, itemPartida){
+async function updateExistenciaPosicion(signo, posicionxPartida,producto_id){
 	/**
 	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
 	 */
 
 
-	let posicion = await Posicion.findOne({_id:itemPartida.posicion_id}).exec();
-	let nivel = posicion.niveles.find(x=>x.nombre==itemPartida.nivel);
+	let posicion = await Posicion.findOne({_id:posicionxPartida.posicion_id}).exec();
+	let nivel = posicion.niveles.find(x=>x.nombre==posicionxPartida.nivel);
 	
-	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id.toString() == itemPartida.producto_id.toString()) != undefined){
-		let producto = nivel.productos.find(x=>x.producto_id.toString() == itemPartida.producto_id.toString());
+	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id.toString() == producto_id.toString()) != undefined){
+		let producto = nivel.productos.find(x=>x.producto_id.toString() == producto_id.toString());
 		let flagEmbalajes = 0;
 
-		for(let embalaje in itemPartida.embalajes){
+		for(let embalaje in posicionxPartida.embalajesEntrada){
 			if(producto.embalajes[embalaje] == undefined){
 				producto.embalajes[embalaje] = 0;
 			}
-			producto.embalajes[embalaje] += (signo * itemPartida.embalajes[embalaje]);
+			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajesEntrada[embalaje]);
 
 			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
 		}
 
+		/*
 		if(producto.pesoBruto == undefined)
 			producto.pesoBruto = 0;
 		producto.pesoBruto += (signo * itemPartida.pesoBruto);
@@ -237,6 +244,7 @@ async function updateExistenciaPosicion(signo, itemPartida){
 		producto.pesoNeto += (signo * itemPartida.pesoNeto);
 
 		producto.valor += (signo * itemPartida.valor);
+		*/
 
 		if(producto.pesoBruto == 0 && producto.pesoNeto == 0 && flagEmbalajes == 0){
 			// let index = posicion.niveles.productos.indexOf(producto);
@@ -245,10 +253,10 @@ async function updateExistenciaPosicion(signo, itemPartida){
 	}
 	else{
 		nivel.productos.push({
-			producto_id: itemPartida.producto_id,
-			embalajes: itemPartida.embalajes,
-			pesoBruto: itemPartida.pesoBruto,
-			pesoNeto: itemPartida.pesoNeto,
+			producto_id: producto_id,
+			embalajes: posicionxPartida.embalajesEntrada
+			// pesoBruto: itemPartida.pesoBruto,
+			// pesoNeto: itemPartida.pesoNeto,
 		});
 	}
 
@@ -256,7 +264,7 @@ async function updateExistenciaPosicion(signo, itemPartida){
 		niveles: posicion.niveles
 	};
 
-	await Posicion.updateOne({_id:itemPartida.posicion_id},{$set:item});
+	await Posicion.updateOne({_id:posicionxPartida.posicion_id},{$set:item});
 }
 
 async function updateExistenciaRechazo(signo,itemPartida,fechaMovimiento) {
