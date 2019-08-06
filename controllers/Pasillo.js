@@ -22,7 +22,7 @@ function get(req, res){
 		return res.status(500).send({
 			message: error
 		});
-	})
+	});
 }
 
 function getById(req, res){

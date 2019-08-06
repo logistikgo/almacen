@@ -1,6 +1,8 @@
 'use strict'
 
 const Posicion = require('../models/Posicion');
+const Pasillo = require('../models/Pasillo');
+
 var ObjectId = (require('mongoose').Types.ObjectId);
 
 function get(req, res){
@@ -75,6 +77,61 @@ function getNivel(req, res){
 	});
 }
 
+function getPosicionAutomatica(req, res){
+	let cantidad = req.query.cantidad;
+	let almacen_id = req.query.almacen_id;
+
+	Pasillo.find({
+		almacen_id: new ObjectId(almacen_id),
+		statusReg: "ACTIVO"
+	})
+	.sort({prioridad: 1})
+	.populate({
+		path:'posiciones.posicion_id'
+	})
+	.then((data)=>{
+		let posiciones = [];
+
+		for(let pasillo of data){
+			//Se ordenas las posiciones por prioridad
+			let posicionesPasillo = pasillo.posiciones.sort(function (a, b) {
+				if (a.prioridad > b.prioridad) {
+				  return 1;
+				}
+				if (a.prioridad < b.prioridad) {
+				  return -1;
+				}
+				// a must be equal to b
+				return 0;
+			  });
+
+			for(let pos of posicionesPasillo){
+				let posicion = pos.posicion_id;
+				for(let nivel of posicion.niveles){
+					let posicionNomenclatura = {
+						ubicacion: pasillo.nombre + nivel.nombre + posicion.nombre,
+						pasillo_id: posicion.pasillo_id._id,
+						posicion_id: posicion._id,
+						nivel: nivel._id
+					};
+					
+					if(posiciones.length < cantidad )
+						posiciones.push(posicionNomenclatura);
+					else
+						break;
+				}
+			}
+		}
+
+		res.status(200).send(posiciones);
+	})
+	.catch((error)=>{
+		return res.status(500).send({
+			message: error
+		});
+	});
+}
+
 async function save(pasillo_id, almacen_id, posicion, usuarioAlta_id, usuarioAlta){
 	let nPosicion = new Posicion();
 
@@ -114,6 +171,7 @@ module.exports = {
 	getxPasillo,
 	getById,
 	getNivel,
+	getPosicionAutomatica,
 	save,
 	update,
 	_delete
