@@ -13,7 +13,9 @@ const Partida = Schema(
         [ 
             {
                 salida_id: {type:Schema.ObjectId,ref:'Salida'},
-                embalajes: {}
+                embalajes: {},
+                pesoNeto : Number,
+                pesoBruto : Number
             }
         ],
         posiciones: [
