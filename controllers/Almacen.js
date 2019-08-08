@@ -195,6 +195,8 @@ function _delete(req,res){
 		statusReg:"BAJA"
 	}
 
+	
+
 	Almacen.updateOne({_id:almacen_id},{$set:item}).then((almacen)=>{
 		res.status(200).send(almacen);
 	}).catch((err)=>{
