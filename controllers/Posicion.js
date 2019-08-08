@@ -2,10 +2,6 @@
 
 const Posicion = require('../models/Posicion');
 const Pasillo = require('../models/Pasillo');
-<<<<<<< HEAD
-=======
-
->>>>>>> c7d3f83a53cfae10b1fb4f146f76eda548bc63ab
 var ObjectId = (require('mongoose').Types.ObjectId);
 
 function get(req, res){
