@@ -1,6 +1,7 @@
 'use strict'
 
 const Salida = require('../models/Salida');
+const Partida = require('../controllers/Partida');
 const Entrada = require('../models/Entrada');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const Helper = require('../helpers');
@@ -61,48 +62,38 @@ function getByID(req,res) {
 
 
 async function save(req, res) {
-	console.log('SAVE');
+	
 
-	let nSalida = new Salida();
-	nSalida.salida_id = await getNextID();
+	console.log(req.body);
+	let nSalida = new Salida(req.body);
+	//nSalida.salida_id = await getNextID();
 	nSalida.fechaAlta = new Date();
-	nSalida.fechaSalida = new Date(req.body.fechaSalida);
-	nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
-	nSalida.nombreUsuario = req.body.nombreUsuario;
+	nSalida.fechaSalida = new Date(req.body.strFechaSalida);
+	nSalida.salida_id = await getNextID();
 	nSalida.folio = await getNextID();
-	nSalida.partidas = req.body.partidas;	
-	nSalida.transportista = req.body.transportista;
-	nSalida.placasRemolque = req.body.placasRemolque;
-	nSalida.placasTrailer = req.body.placasTrailer;
-	nSalida.operador = req.body.operador;
-	nSalida.placasTrailer = req.body.placasTrailer;
-	nSalida.idClienteFiscal = req.body.idClienteFiscal;
-	nSalida.idSucursal = req.body.idSucursal;
-	nSalida.sucursal_id = req.body.sucursal_id;
-	nSalida.almacen_id = req.body.idAlmacen;
-	nSalida.embarco = req.body.embarco;
-	nSalida.referencia = req.body.referencia;
-	nSalida.valor = req.body.valor;
-	nSalida.clienteFiscal_id = req.body.clienteFiscal_id;
-	nSalida.item = req.body.item;
-	nSalida.tipo = req.body.tipo;
-	nSalida.entrada_id = req.body.entrada_id;
 	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio,nSalida.clienteFiscal_id,'O');
-
-	await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
 
 	nSalida.save()
 	.then(async(salida)=>{
-		for(let itemPartida of salida.partidas){
-				await MovimientoInventario.saveSalida(itemPartida,salida.id);
-		}
-		await saveSalidasEnEntrada(salida.entrada_id,salida._id);
-		res.status(200).send(salida);
+
+		// for(let itemPartida of salida.partidas){
+		// 	await MovimientoInventario.saveSalida(itemPartida,salida.id);
+		// }
+
+		console.log("se guardo");
+
+		let partidas = await Partida.put(req.body.jsonPartidas,salida._id);
+		salida.partidas = partidas;
+		//await saveSalidasEnEntrada(salida.entrada_id,salida._id);
+		await Salida.updateOne({_id: salida._id},{$set:{partidas:partidas}}).then((updated)=>{
+			res.status(200).send(salida);
+		});
 	})
 	.catch((error)=>{
 		res.status(500).send(error);
 	});
 }
+
 
 function isEmptyPartida(partida){
 	let contEmbalajesCero = 0;
@@ -192,47 +183,6 @@ async function updatePartidasSalidaAPI(req,res){
 	});
 	
 
-}
-
-async function updatePartidasSalida(entrada_id,partidasDeSalida){
-	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
-	let nuevasPartidas = [];
-	
-	entrada.partidasSalida.forEach(function(partidaDeEntrada){
-		let partidaEncontrada = partidasDeSalida.find(x=>x._id.toString()==partidaDeEntrada._id.toString());
-		if(partidaEncontrada!=undefined){
-			for(let embalajeDeSalida in partidaEncontrada.embalajes){
-				if(partidaDeEntrada.embalajes[embalajeDeSalida]){
-					partidaDeEntrada.embalajes[embalajeDeSalida]-= partidaEncontrada.embalajes[embalajeDeSalida];
-				}
-			}
-			partidaDeEntrada.pesoBruto-=partidaEncontrada.pesoBruto;
-			partidaDeEntrada.pesoNeto-=partidaEncontrada.pesoNeto;
-
-			if(isEmptyPartida(partidaDeEntrada)) 
-				partidaDeEntrada.isEmpty = true;
-			else
-				partidaDeEntrada.isEmpty = false;
-			
-		}
-		nuevasPartidas.push(partidaDeEntrada);
-	});
-	let empty = false;
-	empty = isEmptyPartidas(nuevasPartidas);
-	
-	
-	let jEdit = {
-		partidasSalida: nuevasPartidas,
-		isEmpty:empty
-	};
-
-	Entrada.updateOne({_id:entrada_id},{$set:jEdit})
-	.then((data)=>{
-		
-	}).catch((error)=>{
-
-	});
-	
 }
 
 async function saveSalidasEnEntrada(entrada_id,salida_id){

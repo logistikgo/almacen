@@ -145,6 +145,7 @@ app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
 
 
 //app.get('/api/partida/:filtro',Partida.get);
-app.get('/api/partida/:entrada_id',Partida.getByEntrada);
+app.get('/api/partida/entrada/:entrada_id',Partida.getByEntrada);
+app.get('/api/partida/salida/:salida_id',Partida.getBySalida);
 
 module.exports = app;

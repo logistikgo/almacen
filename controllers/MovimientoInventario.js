@@ -89,7 +89,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	if(entrada.status!="SIN_POSICIONAR"){
 
 		Helper.asyncForEach(itemPartida.posiciones,async function(posicionxPartida){
-			await updateExistenciaPosicion(1, posicionxPartida,itemPartida.producto_id); //PENDIENTE DE CONTROL CON NUEVA ESTRUCTURA
+			await updateExistenciaPosicion(1, posicionxPartida,itemPartida.producto_id); 
 		});
 	}
 
