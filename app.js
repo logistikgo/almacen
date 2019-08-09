@@ -65,14 +65,15 @@ app.post('/api/updateUsuario', Usuario.update);
 app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID', Entrada.getEntradaByID);
 app.get('/api/getEntradasByIDs',Entrada.getEntradasByIDs);
-app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
 app.get('/api/getDeliveryGroups',Helper.GetDeliveryGroups);
-app.get('/api/partida', Entrada.getPartidaById);
-app.put('/api/partida', Entrada.updatePartida);
 app.post('/api/entrada', Entrada.save);
 app.put('/api/entrada', Entrada.update);
 app.post('/api/entradaAutomatica',Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
+
+app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
+app.get('/api/partida', Entrada.getPartidaById);
+app.put('/api/partida', Entrada.updatePartida);
 
 app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
@@ -143,8 +144,7 @@ app.get('/api/columnas',ColumnasxUsuario.getColumns);
 
 app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
 
-
-//app.get('/api/partida/:filtro',Partida.get);
+app.get('/api/partida/:filtro',Partida.get);
 app.get('/api/partida/entrada/:entrada_id',Partida.getByEntrada);
 app.get('/api/partida/salida/:salida_id',Partida.getBySalida);
 
