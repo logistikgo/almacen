@@ -15,26 +15,26 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.producto_id = itemPartida.producto_id;
 	nMovimiento.salida_id = salida_id;
 	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.pesoBruto = itemPartida.pesoBruto;
-	nMovimiento.pesoNeto = itemPartida.pesoNeto;
-	nMovimiento.embalajes = itemPartida.embalajes;
+	nMovimiento.pesoBruto = itemPartida.pesoBrutoEnSalida;
+	nMovimiento.pesoNeto = itemPartida.pesoNetoEnSalida;
+	nMovimiento.embalajes = itemPartida.embalajesEnSalida;
 	nMovimiento.signo = -1;
 	if(salida.tipo!="RECHAZO"){
 		nMovimiento.tipo = "SALIDA";
 	}else{
 		nMovimiento.tipo = "SALIDA_RECHAZO"
 	}
-	nMovimiento.pasillo = itemPartida.pasillo;
-	nMovimiento.pasillo_id = itemPartida.pasillo_id;
-	nMovimiento.posicion = itemPartida.posicion;
-	nMovimiento.posicion_id = itemPartida.posicion_id;
-	nMovimiento.nivel = itemPartida.nivel;
+	nMovimiento.posiciones = itemPartida.posiciones;
 	nMovimiento.idClienteFiscal = salida.idClienteFiscal;
 	nMovimiento.clienteFiscal_id = salida.clienteFiscal_id;
 	nMovimiento.idSucursal = salida.idSucursal;
 	nMovimiento.sucursal_id = salida.sucursal_id;
 	nMovimiento.almacen_id = salida.almacen_id;
 	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
+
+	Helper.asyncForEach(itemPartida.posiciones,async function(posicionxPartida){
+		await updateExistenciaPosicion(1, posicionxPartida,itemPartida.producto_id); 
+	});
 
 	await updateExistenciaPosicion(-1, itemPartida);
 
@@ -88,7 +88,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 	
 	if(entrada.status!="SIN_POSICIONAR"){
 
-		Helper.asyncForEach(itemPartida.posiciones,async function(posicionxPartida){
+		await Helper.asyncForEach(itemPartida.posiciones,async function(posicionxPartida){
 			await updateExistenciaPosicion(1, posicionxPartida,itemPartida.producto_id); 
 		});
 	}

@@ -76,9 +76,9 @@ async function save(req, res) {
 	nSalida.save()
 	.then(async(salida)=>{
 
-		// for(let itemPartida of salida.partidas){
-		// 	await MovimientoInventario.saveSalida(itemPartida,salida.id);
-		// }
+		for(let itemPartida of req.body.jsonPartidas){
+			await MovimientoInventario.saveSalida(itemPartida,salida.id);
+		}
 
 		console.log("se guardo");
 
