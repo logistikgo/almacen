@@ -14,8 +14,6 @@ const Partida = Schema(
             {
                 salida_id: {type:Schema.ObjectId,ref:'Salida'},
                 embalajes: {},
-                pesoNeto : Number,
-                pesoBruto : Number,
                 posicion_id: {type:Schema.ObjectId,ref:'Posicion'},
                 posicion: String,
                 pasillo_id : {type:Schema.ObjectId,ref:'Pasillo'},
@@ -28,8 +26,6 @@ const Partida = Schema(
             {
                 embalajesEntrada: {},
                 embalajesxSalir: {},
-                pesoBruto: Number,
-                pesoNeto : Number,
                 posicion_id: {type:Schema.ObjectId,ref:'Posicion'},
                 posicion: String,
                 pasillo_id : {type:Schema.ObjectId,ref:'Pasillo'},
@@ -40,10 +36,6 @@ const Partida = Schema(
         ],
         embalajesEntrada : {},
         embalajesxSalir : {},
-        pesoBruto : Number,
-        pesoNeto: Number,
-        pesoBrutoxSalir : Number,
-        pesoNetoxSalir : Number,
         lote: String,
         valor: { type: Number, default: 0 },
         IDPedido: Number,

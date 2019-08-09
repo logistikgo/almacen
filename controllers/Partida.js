@@ -34,6 +34,11 @@ function get(req,res){
 
 async function put(arrPartidas,salida_id){
 
+    /**
+     * Guarda para cada partida, las cantidades restantes y updatea la Entrada isEmpty a true
+     * si todas las partidas estan vacias
+     */
+
     var arrPartidas_id = [];
     let entrada_id = arrPartidas.length > 0 ? arrPartidas[0].entrada_id : undefined;
     
@@ -44,7 +49,14 @@ async function put(arrPartidas,salida_id){
             salida_id : salida_id,
             embalajes : partida.embalajesEnSalida,
             pesoNeto : partida.pesoNetoEnSalida,
-            pesoBruto : partida.pesoBrutoEnSalida
+            pesoBruto : partida.pesoBrutoEnSalida,
+            //Por lo prontox, se toma la primera posicion :3
+            posicion_id: partida.posiciones[0].posicion_id,
+            posicion: partida.posiciones[0].posicion,
+            pasillo_id : partida.posiciones[0].pasillo_id,
+            pasillo:partida.posiciones[0].pasillo,
+            nivel_id: partida.posiciones[0].nivel_id,
+            nivel:partida.posiciones[0].nivel
         };
 
         let partidaFound = await Partida.findOne({_id : partida._id});

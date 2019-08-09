@@ -24,7 +24,7 @@ async function saveSalida(itemPartida,salida_id) {
 	}else{
 		nMovimiento.tipo = "SALIDA_RECHAZO"
 	}
-	nMovimiento.posiciones = itemPartida.posiciones;
+	nMovimiento.posiciones = itemPartida.posicionesEnSalida;
 	nMovimiento.idClienteFiscal = salida.idClienteFiscal;
 	nMovimiento.clienteFiscal_id = salida.clienteFiscal_id;
 	nMovimiento.idSucursal = salida.idSucursal;
@@ -32,8 +32,17 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.almacen_id = salida.almacen_id;
 	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
 
-	Helper.asyncForEach(itemPartida.posiciones,async function(posicionxPartida){
-		await updateExistenciaPosicion(1, posicionxPartida,itemPartida.producto_id); 
+	Helper.asyncForEach(itemPartida.posicionesEnSalida,async function(posicionxPartida){
+
+		let jsonFormatPosicion = {
+			posicion_id : posicionxPartida.posicion_id,
+			nivel : posicionxPartida.nivel,
+			embalajes : posicionxPartida.embalajesEnSalida,
+			pesoBruto : posicionxPartida.pesoBrutoEnSalida,
+			pesoNeto : posicionxPartida.pesoNetoEnSalida
+		};
+
+		await updateExistenciaPosicion(-1, posicionxPartida,itemPartida.producto_id); 
 	});
 
 	await updateExistenciaPosicion(-1, itemPartida);
@@ -89,7 +98,15 @@ async function saveEntrada(itemPartida,entrada_id) {
 	if(entrada.status!="SIN_POSICIONAR"){
 
 		await Helper.asyncForEach(itemPartida.posiciones,async function(posicionxPartida){
-			await updateExistenciaPosicion(1, posicionxPartida,itemPartida.producto_id); 
+			let jsonFormatPosicion = {
+				posicion_id : posicionxPartida.posicion_id,
+				nivel : posicionxPartida.nivel,
+				embalajes : posicionxPartida.embalajesEntrada,
+				pesoBruto : posicionxPartida.pesoBruto,
+				pesoNeto : posicionxPartida.pesoNeto
+			};
+
+			await updateExistenciaPosicion(1, jsonFormatPosicion,itemPartida.producto_id); 
 		});
 	}
 
@@ -217,7 +234,6 @@ async function updateExistenciaPosicion(signo, posicionxPartida,producto_id){
 	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
 	 */
 
-
 	let posicion = await Posicion.findOne({_id:posicionxPartida.posicion_id}).exec();
 	let nivel = posicion.niveles.find(x=>x.nombre==posicionxPartida.nivel);
 	
@@ -225,11 +241,11 @@ async function updateExistenciaPosicion(signo, posicionxPartida,producto_id){
 		let producto = nivel.productos.find(x=>x.producto_id.toString() == producto_id.toString());
 		let flagEmbalajes = 0;
 
-		for(let embalaje in posicionxPartida.embalajesEntrada){
+		for(let embalaje in posicionxPartida.embalajes){
 			if(producto.embalajes[embalaje] == undefined){
 				producto.embalajes[embalaje] = 0;
 			}
-			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajesEntrada[embalaje]);
+			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajes[embalaje]);
 
 			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
 		}
@@ -254,9 +270,9 @@ async function updateExistenciaPosicion(signo, posicionxPartida,producto_id){
 	else{
 		nivel.productos.push({
 			producto_id: producto_id,
-			embalajes: posicionxPartida.embalajesEntrada
-			// pesoBruto: itemPartida.pesoBruto,
-			// pesoNeto: itemPartida.pesoNeto,
+			embalajes: posicionxPartida.embalajes,
+			pesoBruto: posicionxPartida.pesoBruto,
+			pesoNeto: posicionxPartida.pesoNeto,
 		});
 	}
 
