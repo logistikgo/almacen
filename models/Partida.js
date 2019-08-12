@@ -14,12 +14,15 @@ const Partida = Schema(
             {
                 salida_id: {type:Schema.ObjectId,ref:'Salida'},
                 embalajes: {},
-                posicion_id: {type:Schema.ObjectId,ref:'Posicion'},
-                posicion: String,
-                pasillo_id : {type:Schema.ObjectId,ref:'Pasillo'},
-                pasillo:String,
-                nivel_id: {type:Schema.ObjectId},
-                nivel:String
+                salidaxPosicion: [{
+                    embalajes: {},
+                    posicion_id: {type:Schema.ObjectId,ref:'Posicion'},
+                    posicion: String,
+                    pasillo_id : {type:Schema.ObjectId,ref:'Pasillo'},
+                    pasillo:String,
+                    nivel_id: {type:Schema.ObjectId},
+                    nivel:String
+                }]
             }
         ],
         posiciones: [

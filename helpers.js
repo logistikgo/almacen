@@ -12,6 +12,10 @@ const blobstream = require('blob-stream');
 const configSQL = (require('./configSQL'));
 const sql = require('mssql');
 
+const distinct = (value,index,self) =>{
+    return self.indexOf(value) === index;
+};
+
 
 //sql.close();
 //Se conecta a la base de datos en SQL conexion global
@@ -386,5 +390,6 @@ module.exports = {
 	getStringFolio,
 	getSucursalesXD,
 	getClientesFiscalesXD,
-	asyncForEach
+	asyncForEach,
+	distinct
 }

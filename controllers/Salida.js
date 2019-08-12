@@ -73,6 +73,7 @@ async function save(req, res) {
 	nSalida.folio = await getNextID();
 	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio,nSalida.clienteFiscal_id,'O');
 
+
 	nSalida.save()
 	.then(async(salida)=>{
 
