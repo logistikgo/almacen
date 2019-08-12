@@ -72,7 +72,7 @@ app.post('/api/entradaAutomatica',Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
 
 app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
-app.get('/api/partida', Entrada.getPartidaById);
+//app.get('/api/partida', Entrada.getPartidaById);
 app.put('/api/partida', Entrada.updatePartida);
 
 app.get('/api/salidas', Salida.get);

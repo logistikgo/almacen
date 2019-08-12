@@ -5,31 +5,31 @@ const Salida = require('../models/Salida');
 const Helper = require('../helpers');
 
 function get(req,res){
-    
     let encoded_filter = req.params.filtro;
     var buff;
     var data_filter;
     var json_filter;
+
     try
     {
-        
         buff = new Buffer(encoded_filter,'base64');
         data_filter = buff.toString('ascii');
 
         json_filter = JSON.parse(data_filter);
 
+        Partida.find(json_filter)
+        .then((partidas)=>{
+            res.status(200).send(partidas);
+        })
+        .catch((error)=>{
+            res.status(500).send(error);
+        });
     }
     catch(error){
         res.status(500).send(error);
     }
     
-    Partida.find(json_filter)
-    .then((partidas)=>{
-        res.status(200).send(partidas);
-    })
-    .catch((error)=>{
-        res.status(500).send(error);
-    });
+    
 }
 
 async function put(arrPartidas,salida_id){
