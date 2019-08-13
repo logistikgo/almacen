@@ -14,7 +14,7 @@ const Partida = Schema(
             {
                 salida_id: {type:Schema.ObjectId,ref:'Salida'},
                 embalajes: {},
-                salidaxPosicion: [{
+                salidaxPosiciones: [{
                     embalajes: {},
                     posicion_id: {type:Schema.ObjectId,ref:'Posicion'},
                     posicion: String,
@@ -34,7 +34,8 @@ const Partida = Schema(
                 pasillo_id : {type:Schema.ObjectId,ref:'Pasillo'},
                 pasillo:String,
                 nivel_id: {type:Schema.ObjectId},
-                nivel:String
+                nivel:String,
+                isEmpty : { type: Boolean, default: false }
             }
         ],
         embalajesEntrada : {},

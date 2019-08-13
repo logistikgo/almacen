@@ -48,15 +48,7 @@ async function put(arrPartidas,salida_id){
         let jsonSalida_id = {
             salida_id : salida_id,
             embalajes : partida.embalajesEnSalida,
-            pesoNeto : partida.pesoNetoEnSalida,
-            pesoBruto : partida.pesoBrutoEnSalida,
-            //Por lo prontox, se toma la primera posicion :3
-            posicion_id: partida.posiciones[0].posicion_id,
-            posicion: partida.posiciones[0].posicion,
-            pasillo_id : partida.posiciones[0].pasillo_id,
-            pasillo:partida.posiciones[0].pasillo,
-            nivel_id: partida.posiciones[0].nivel_id,
-            nivel:partida.posiciones[0].nivel
+            salidaxPosiciones : partida.embalajesEnSalidaxPosicion
         };
 
         let partidaFound = await Partida.findOne({_id : partida._id});
@@ -67,8 +59,7 @@ async function put(arrPartidas,salida_id){
             let changes = {
                 salidas_id : partidaFound.salidas_id,
                 embalajesxSalir : partida.embalajesxSalir,
-                pesoNetoxSalir : partida.pesoNetoxSalir,
-                pesoBrutoxSalir : partida.pesoBrutoxSalir,
+                posiciones: partida.posiciones,
                 isEmpty : partida.isEmpty
             };
 

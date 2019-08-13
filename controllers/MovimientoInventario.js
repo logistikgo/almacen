@@ -15,8 +15,6 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.producto_id = itemPartida.producto_id;
 	nMovimiento.salida_id = salida_id;
 	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.pesoBruto = itemPartida.pesoBrutoEnSalida;
-	nMovimiento.pesoNeto = itemPartida.pesoNetoEnSalida;
 	nMovimiento.embalajes = itemPartida.embalajesEnSalida;
 	nMovimiento.signo = -1;
 	if(salida.tipo!="RECHAZO"){
@@ -24,7 +22,7 @@ async function saveSalida(itemPartida,salida_id) {
 	}else{
 		nMovimiento.tipo = "SALIDA_RECHAZO"
 	}
-	nMovimiento.posiciones = itemPartida.posicionesEnSalida;
+	//nMovimiento.posiciones = ;
 	nMovimiento.idClienteFiscal = salida.idClienteFiscal;
 	nMovimiento.clienteFiscal_id = salida.clienteFiscal_id;
 	nMovimiento.idSucursal = salida.idSucursal;
