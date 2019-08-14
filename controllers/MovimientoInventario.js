@@ -30,20 +30,18 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.almacen_id = salida.almacen_id;
 	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
 
-	Helper.asyncForEach(itemPartida.posicionesEnSalida,async function(posicionxPartida){
+	Helper.asyncForEach(itemPartida.embalajesEnSalidaxPosicion,async function(posicionxSalida){
 
 		let jsonFormatPosicion = {
-			posicion_id : posicionxPartida.posicion_id,
-			nivel : posicionxPartida.nivel,
-			embalajes : posicionxPartida.embalajesEnSalida,
-			pesoBruto : posicionxPartida.pesoBrutoEnSalida,
-			pesoNeto : posicionxPartida.pesoNetoEnSalida
+			posicion_id : posicionxSalida.posicion_id,
+			nivel : posicionxSalida.nivel,
+			embalajes : posicionxSalida.embalajes
 		};
 
-		await updateExistenciaPosicion(-1, posicionxPartida,itemPartida.producto_id); 
+		await updateExistenciaPosicion(-1, jsonFormatPosicion,itemPartida.producto_id); 
 	});
 
-	await updateExistenciaPosicion(-1, itemPartida);
+	//await updateExistenciaPosicion(-1, itemPartida);
 
 	await nMovimiento.save()
 	.then(async(movimiento)=>{
@@ -248,19 +246,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida,producto_id){
 			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
 		}
 
-		/*
-		if(producto.pesoBruto == undefined)
-			producto.pesoBruto = 0;
-		producto.pesoBruto += (signo * itemPartida.pesoBruto);
-
-		if(producto.pesoNeto == undefined)
-			producto.pesoNeto = 0;
-		producto.pesoNeto += (signo * itemPartida.pesoNeto);
-
-		producto.valor += (signo * itemPartida.valor);
-		*/
-
-		if(producto.pesoBruto == 0 && producto.pesoNeto == 0 && flagEmbalajes == 0){
+		if(flagEmbalajes == 0){
 			// let index = posicion.niveles.productos.indexOf(producto);
 			// posicion.niveles.productos.splice(index, 1);
 		}
@@ -268,9 +254,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida,producto_id){
 	else{
 		nivel.productos.push({
 			producto_id: producto_id,
-			embalajes: posicionxPartida.embalajes,
-			pesoBruto: posicionxPartida.pesoBruto,
-			pesoNeto: posicionxPartida.pesoNeto,
+			embalajes: posicionxPartida.embalajes
 		});
 	}
 
