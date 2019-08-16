@@ -18,6 +18,7 @@ function get(req,res){
         json_filter = JSON.parse(data_filter);
 
         Partida.find(json_filter)
+        .populate('entrada_id','fechaEntrada fechaAlta','Entrada')
         .then((partidas)=>{
             res.status(200).send(partidas);
         })
@@ -137,7 +138,6 @@ async function getBySalida(req,res){
 function isEmptyPartida(partida){
 	let contEmbalajesCero = 0;
 	let tamEmbalajes = 0;
-	let isPesosEmpty = false;
 	let isEmbalajesEmpty = false;
 
 	for(let embalaje in partida.embalajesxSalir){tamEmbalajes+=1;} //Se obtiene la cantidad de embalajes
@@ -145,17 +145,8 @@ function isEmptyPartida(partida){
 		if(partida.embalajesxSalir[embalaje]==0) contEmbalajesCero+=1; 
 	}
 
-	if(partida.pesoBrutoxSalir == 0 && partida.pesoNetoxSalir == 0) 
-		isPesosEmpty = true;
-	else
-		isPesosEmpty = false;
 	// Si la cantidad de embalajes es igual a la cantidad de embalajes con cero
 	if(tamEmbalajes == contEmbalajesCero) 
-		isEmbalajesEmpty = true; 
-	else
-		isEmbalajesEmpty = false;
-
-	if(isEmbalajesEmpty && isPesosEmpty)
 		return true;
 	else
 		return false;
@@ -181,9 +172,61 @@ async function setIsEmptyEntrada(entrada_id){
         let bisEmptyPartidas = await isEmptyPartidas(entrada_id);
 
         if(bisEmptyPartidas){
-            await Entrada.updateOne({_id : entrada_id},{$set: {isEmpty : true }}).exec();
+            await Entrada.updateOne({_id : entrada_id},{$set: {isEmpty : true,status: "FINALIZADO" }}).exec();
         }
     }
+}
+
+async function getByProductoEmbalaje(req,res){
+    
+    let producto_id = req.params.producto_id;
+    let embalaje = req.params.embalaje;
+    let clienteFiscal_id = req.params.clienteFiscal_id;
+    let sucursal_id = req.params.sucursal_id;
+    let almacen_id = req.params.almacen_id;
+    //let cantidad = req.params.cantidad;  
+
+
+    let partidas = await Partida.aggregate([
+        {
+            $lookup: {
+                from: 'Entrada',
+                localField : 'entrada_id',
+                foreignField : '_id',
+                as : 'entrada',
+                unwinding : {
+                    "preserveNullAndEmptyArrays" : false
+                },
+                matching : {
+                    clienteFiscal_id : clienteFiscal_id,
+                    sucursal_id : sucursal_id,
+                    almacen_id : almacen_id
+                }
+            }
+        }
+    ],function(err,result){
+        console.log(result);
+        res.status(200).send(result);
+    });
+
+    // let partidas = await Partida.find({producto_id: producto_id,isEmpty: false})
+    // .populate('entrada_id','clienteFiscal_id sucursal_id almacen_id','Entrada')
+    // .where(embalaje).gt(0)
+    // .where('entrada_id.clienteFiscal_id',clienteFiscal_id)
+    // .where('entrada_id.sucursal_id',sucursal_id)
+    // .where('entrada_id.almacen_id',almacen_id)
+    // .exec();
+
+    
+
+    // partidas.forEach(function(partida){
+    //     partida.posiciones.forEach(function(posicion){
+
+    //     });
+    // });
+
+    
+
 }
 
 
@@ -193,5 +236,6 @@ module.exports = {
     addSalida,
     getByEntrada,
     getBySalida,
-    put
+    put,
+    getByProductoEmbalaje
 }
