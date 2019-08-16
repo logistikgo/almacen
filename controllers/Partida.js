@@ -178,57 +178,128 @@ async function setIsEmptyEntrada(entrada_id){
 }
 
 async function getByProductoEmbalaje(req,res){
+
+    /**
+     * Obtiene las partidas por SKU, y genera los embalajes que se sacaran dependiendo
+     * de la disponibilidad de los embalajes existentes
+     */
     
     let producto_id = req.params.producto_id;
     let embalaje = req.params.embalaje;
-    let clienteFiscal_id = req.params.clienteFiscal_id;
-    let sucursal_id = req.params.sucursal_id;
-    let almacen_id = req.params.almacen_id;
-    //let cantidad = req.params.cantidad;  
+    let embalajesxSalir = "embalajesxSalir." + embalaje;
+    //let clienteFiscal_id = req.params.clienteFiscal_id;
+    //let sucursal_id = req.params.sucursal_id;
+    //let almacen_id = req.params.almacen_id;
+    let cantidad = req.params.cantidad;  
+    let cantidadAux = parseFloat(cantidad);
 
+    let BreakException = {};
 
-    let partidas = await Partida.aggregate([
+    /**
+     * Se obtienen las partidas necesarias para la cantidad deseada
+     * Se obtienen las partidas que no estan vacias, que tienen existencias por salir
+     * del embalaje solicitado y se ordenan de forma ascendente, de la mas antigua a la mas reciente
+     * Filtros utilizados: producto_id, isEmpty, clienteFiscal_id, sucursal_id, almacen_id
+     *
+     */
+    let partidas = await Partida
+    .find({producto_id : producto_id, isEmpty : false})
+    .populate('entrada_id','fechaEntrada clienteFiscal_id sucursal_id almacen_id',
+    {
+        // clienteFiscal_id : clienteFiscal_id, 
+        // sucursal_id: sucursal_id, 
+        // almacen_id: almacen_id
+    })
+    .where(embalajesxSalir).gt(0)
+    .exec();
+
+    partidas = partidas.sort(sortByfechaEntadaAsc);
+
+    let partidasActuales = [];
+    
+
+    /**
+     * Se obtienen las partidas por posicion, y se determina la cantidad de salida
+     * del embalaje para cada posicion, dependiendo de su disponibilidad
+     */
+    try
+    {
+        partidas.forEach(partida=> {
+            let subConsecutivo = 0;
+            
+            partida.posiciones.filter(x=> !x.isEmpty).forEach(posicion=>{
+                
+              if(cantidadAux > 0){
+                 let auxPartida = {
+                    _id : partida._id,
+                    _idLocal : partida._id + '/' + subConsecutivo,
+                    embalajesEntradaFull : partida.embalajesEntrada,
+                    embalajesxSalirFull : partida.embalajesxSalir,
+                    embalajesEntrada : posicion.embalajesxSalir,
+                    embalajesxSalir : posicion.embalajesxSalir,
+                    embalajesEnSalida : {},
+                    // posicion_id : posicion.posicion_id,
+                    // posicion : posicion.posicion,
+                    // pasillo_id : posicion.pasillo_id,
+                    // pasillo : posicion.pasillo,
+                    // nivel_id : posicion.nivel_id,
+                    // nivel : posicion.nivel,
+                    // ubicacion_id : posicion._id,
+                    // posicionesFull : partida.posiciones,
+                    posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
+                    // subConsecutivo : subConsecutivo,
+                    fechaEntrada : partida.entrada_id.fechaEntrada
+                 };
+                 
+                 if(cantidadAux >= auxPartida.embalajesxSalir[embalaje]){
+                    auxPartida.embalajesEnSalida[embalaje] = auxPartida.embalajesxSalir[embalaje];
+                    //auxPartida.embalajesxSalir[embalaje] = 0;
+                    //auxPartida.posiciones[0].embalajesxSalir[embalaje] = 0;
+                    
+                 }else{
+                    auxPartida.embalajesEnSalida[embalaje] = cantidadAux;
+                 }
+                 
+                 subConsecutivo+=1;
+                 partidasActuales.push(auxPartida);
+                 cantidadAux-=posicion.embalajesxSalir[embalaje];
+              }else{
+                 throw BreakException;
+              }
+          });
+        });
+    }
+    catch(e){
+        if(e == BreakException){
+            res.status(200).send(partidasActuales);
+        }else
         {
-            $lookup: {
-                from: 'Entrada',
-                localField : 'entrada_id',
-                foreignField : '_id',
-                as : 'entrada',
-                unwinding : {
-                    "preserveNullAndEmptyArrays" : false
-                },
-                matching : {
-                    clienteFiscal_id : clienteFiscal_id,
-                    sucursal_id : sucursal_id,
-                    almacen_id : almacen_id
-                }
-            }
+            throw e;
         }
-    ],function(err,result){
-        console.log(result);
-        res.status(200).send(result);
-    });
-
-    // let partidas = await Partida.find({producto_id: producto_id,isEmpty: false})
-    // .populate('entrada_id','clienteFiscal_id sucursal_id almacen_id','Entrada')
-    // .where(embalaje).gt(0)
-    // .where('entrada_id.clienteFiscal_id',clienteFiscal_id)
-    // .where('entrada_id.sucursal_id',sucursal_id)
-    // .where('entrada_id.almacen_id',almacen_id)
-    // .exec();
-
-    
-
-    // partidas.forEach(function(partida){
-    //     partida.posiciones.forEach(function(posicion){
-
-    //     });
-    // });
-
-    
-
+    }
 }
 
+function sortByfechaEntadaDesc(a,b){
+    if(a.entrada_id.fechaEntrada < b.entrada_id.fechaEntrada){
+        return 1;
+    }
+    if(a.entrada_id.fechaEntrada > b.entrada_id.fechaEntrada){
+        return -1;
+    }
+
+    return 0;
+}
+
+function sortByfechaEntadaAsc(a,b){
+    if(a.entrada_id.fechaEntrada < b.entrada_id.fechaEntrada){
+        return -1;
+    }
+    if(a.entrada_id.fechaEntrada > b.entrada_id.fechaEntrada){
+        return 1;
+    }
+
+    return 0;
+}
 
 module.exports = {
     get,

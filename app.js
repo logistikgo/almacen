@@ -147,6 +147,7 @@ app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
 app.get('/api/partida/:filtro',Partida.get);
 app.get('/api/partida/entrada/:entrada_id',Partida.getByEntrada);
 app.get('/api/partida/salida/:salida_id',Partida.getBySalida);
-app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:almacen_id',Partida.getByProductoEmbalaje);
+//app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:almacen_id/:cantidad',Partida.getByProductoEmbalaje);
+app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
 
 module.exports = app;
