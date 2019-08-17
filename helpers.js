@@ -383,6 +383,10 @@ async function asyncForEach(array, callback) {
     }
   }
 
+function Clone(jsonOBJ){
+	return JSON.parse(JSON.stringify(jsonOBJ));
+}
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -391,5 +395,6 @@ module.exports = {
 	getSucursalesXD,
 	getClientesFiscalesXD,
 	asyncForEach,
-	distinct
+	distinct,
+	Clone
 }

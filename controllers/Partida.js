@@ -233,41 +233,49 @@ async function getByProductoEmbalaje(req,res){
                  let auxPartida = {
                     _id : partida._id,
                     _idLocal : partida._id + '/' + subConsecutivo,
-                    embalajesEntradaFull : partida.embalajesEntrada,
-                    embalajesxSalirFull : partida.embalajesxSalir,
-                    embalajesEntrada : posicion.embalajesxSalir,
-                    embalajesxSalir : posicion.embalajesxSalir,
+                    embalajesEntradaFull : Helper.Clone(partida.embalajesEntrada),
+                    embalajesxSalirFull : Helper.Clone(partida.embalajesxSalir),
+                    embalajesEntrada : Helper.Clone(posicion.embalajesxSalir),
+                    embalajesxSalir : Helper.Clone(posicion.embalajesxSalir),
                     embalajesEnSalida : {},
-                    // posicion_id : posicion.posicion_id,
-                    // posicion : posicion.posicion,
-                    // pasillo_id : posicion.pasillo_id,
-                    // pasillo : posicion.pasillo,
-                    // nivel_id : posicion.nivel_id,
-                    // nivel : posicion.nivel,
-                    // ubicacion_id : posicion._id,
-                    // posicionesFull : partida.posiciones,
+                    posicion_id : Helper.Clone(posicion.posicion_id),
+                    posicion : Helper.Clone(posicion.posicion),
+                    pasillo_id : Helper.Clone(posicion.pasillo_id),
+                    pasillo : Helper.Clone(posicion.pasillo),
+                    nivel_id : Helper.Clone(posicion.nivel_id),
+                    nivel : Helper.Clone(posicion.nivel),
+                    ubicacion_id : Helper.Clone(posicion._id),
+                    posicionesFull : Helper.Clone(partida.posiciones),
                     posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
-                    // subConsecutivo : subConsecutivo,
+                    subConsecutivo : subConsecutivo,
                     fechaEntrada : partida.entrada_id.fechaEntrada
                  };
                  
                  if(cantidadAux >= auxPartida.embalajesxSalir[embalaje]){
                     auxPartida.embalajesEnSalida[embalaje] = auxPartida.embalajesxSalir[embalaje];
-                    //auxPartida.embalajesxSalir[embalaje] = 0;
-                    //auxPartida.posiciones[0].embalajesxSalir[embalaje] = 0;
+                    auxPartida.embalajesxSalir[embalaje] = 0;
+                    auxPartida.posiciones[0].embalajesxSalir[embalaje] = 0;
+                    auxPartida.posiciones[0].isEmpty = true;
                     
                  }else{
+                    
                     auxPartida.embalajesEnSalida[embalaje] = cantidadAux;
+                    auxPartida.embalajesxSalir[embalaje] -= cantidadAux;
+                    auxPartida.posiciones[0].embalajesxSalir[embalaje]-=cantidadAux;
                  }
                  
                  subConsecutivo+=1;
                  partidasActuales.push(auxPartida);
-                 cantidadAux-=posicion.embalajesxSalir[embalaje];
+                 cantidadAux-=auxPartida.embalajesEnSalida[embalaje];
               }else{
+                  //Si no hay mas que sacar entonces simplemente termina
                  throw BreakException;
               }
           });
         });
+        //Si los ciclos han terminado entonces se lanza  la excepcion de finalización.
+        //Puesto que ya no hay partidas disponibles
+        throw BreakException;
     }
     catch(e){
         if(e == BreakException){
