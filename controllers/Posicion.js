@@ -2,7 +2,6 @@
 
 const Posicion = require('../models/Posicion');
 const Pasillo = require('../models/Pasillo');
-
 var ObjectId = (require('mongoose').Types.ObjectId);
 
 function get(req, res){
@@ -111,10 +110,13 @@ function getPosicionAutomatica(req, res){
 					let posicionNomenclatura = {
 						ubicacion: pasillo.nombre + nivel.nombre + posicion.nombre,
 						pasillo_id: posicion.pasillo_id._id,
+						pasillo: pasillo.nombre,
 						posicion_id: posicion._id,
-						nivel: nivel._id
+						posicion: posicion.nombre,
+						nivel_id: nivel._id,
+						nivel: nivel.nombre
 					};
-					
+
 					if(posiciones.length < cantidad )
 						posiciones.push(posicionNomenclatura);
 					else

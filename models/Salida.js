@@ -25,32 +25,11 @@ const Salida = Schema({
 	operador:String,
 	clienteFiscal_id:{type:Schema.ObjectId,ref:'ClienteFiscal'},
 	idSucursal:Number,
-	idAlmacen:Number,
 	valor: Number,
 	item: String,
 	tipo:String,
 	entrada_id:{type:Schema.ObjectId,ref:"Entrada"},
-	partidas:[
-		{
-			IDPedido : Number,
-			InfoPedido : {},
-			_idAux: {type:Schema.ObjectId},
-			producto_id:{type:Schema.ObjectId, ref:"Producto"},
-			clave:String,
-			descripcion:String,
-			pasillo: String,
-			pasillo_id: {type:Schema.ObjectId, ref:"Pasillo"},
-			posicion:String,
-			posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
-			nivel:String,
-			lote:String,
-			valor:Number,
-			pesoBruto:Number,
-			pesoNeto:Number,
-			embalajes:{},
-			clave_partida: String
-		}
-	]
+	partidas:[{type:Schema.ObjectId,ref:'Partida'}]
 },{collection:'Salidas'});
 
 module.exports = mongoose.model('Salida',Salida);
