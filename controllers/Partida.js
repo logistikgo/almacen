@@ -231,6 +231,9 @@ async function getByProductoEmbalaje(req,res){
                 
               if(cantidadRestante > 0){
                  let auxPartida = {
+                     lote : partida.lote,
+                     clave : partida.clave,
+                     descripcion : partida.descripcion,
                     _id : partida._id,
                     _idLocal : partida._id + '/' + subConsecutivo,
                     embalajesEntradaFull : Helper.Clone(partida.embalajesEntrada),
