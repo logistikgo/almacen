@@ -1,5 +1,6 @@
 //const PDF = require('pdfkit');
 const Entrada = require('./models/Entrada');
+const Partida = require('./models/Partida');
 const Salida = require('./models/Salida');
 const MovimientoInventario = require('./models/MovimientoInventario');
 const Interfaz_ALM_XD = require('./models/Interfaz_ALM_XD');
@@ -10,6 +11,10 @@ const blobstream = require('blob-stream');
 
 const configSQL = (require('./configSQL'));
 const sql = require('mssql');
+
+const distinct = (value,index,self) =>{
+    return self.indexOf(value) === index;
+};
 
 
 //sql.close();
@@ -99,74 +104,34 @@ async function getPartidas(_arrClientesFiscales,_arrSucursales,_arrAlmacenes,_ti
 }
 
 async function getPartidasEntradas(filtro){
+
+	/**
+	 * Esta funcion obtiene las partidas de las entradas con el filtro dado
+	 */
 	let infoPartidasEntradas = [];
 	
-	let entradas = await Entrada.find(filtro)
-		.populate({
-			path:'partidas.producto_id',
-			model:'Producto'
-		})
-		.populate({
-			path:'clienteFiscal_id',
-			model:'ClienteFiscal'
-		})
-		.populate({
-			path:'almacen_id',
-			model:'Almacen'
-		})
-		.populate({
-			path:'salidas_id',
-			model:'Salida'
-		})
-		.exec();
-	
-	
-	delete filtro.fechaEntrada;
-	//Se obtienen todas las salidas con el mismo filtro
-	let salidas = await Salida.find(filtro);
-	
-	//Se itera por cada entrada
-	await entradas.forEach(async function(entrada){
-		let entry = entrada;
 
-		//Se itera sobre las partidas de la entrada actual 
-		entrada.partidas.forEach(function(partida){
 
-			let partidaAuxiliar = JSON.parse(JSON.stringify(partida));
-			//--------------------------------
-			//Se obtiene la partidaSalida de la partida actual, se utiliza la clave
-			let partidaSalidaDeEntrada = entrada.partidasSalida.find(x=> x.clave_partida == partidaAuxiliar.clave_partida);
 
-			partidaAuxiliar.isEmpty = partidaSalidaDeEntrada.isEmpty;
-			
-			//Se obtienen todas las salidas de la entrada actual
-			let salidasDeEntradaActual = salidas.filter(x=> x.entrada_id == entrada._id.toString());
 
-			let partidaActual_partidasSalida =  [];
-			
-			//Se obtienen todas las partidas de las salidas que corresponden al id de partidaSalidaDeEntrada._id
-			salidasDeEntradaActual.forEach(function(salida){
-				salida.partidas.forEach(function(partida){
-
-					if(partida._id.toString() == partidaSalidaDeEntrada._id.toString() || (partida._idAux && partida._idAux.toString() == partidaSalidaDeEntrada._id.toString()) ){
-						let partidaAuxiliar = JSON.parse(JSON.stringify(partida));
-						partidaAuxiliar['folio'] = salida.folio;
-						partidaAuxiliar['item'] = salida.item;
-						partidaAuxiliar['stringFolio'] = salida.stringFolio;
-						partidaActual_partidasSalida.push(partidaAuxiliar);
-					}
-					
-				});
-			});
-			
-			let json = {
-				infoPartida:partidaAuxiliar,
-				infoPartidasSalida:partidaActual_partidasSalida,
-				infoEntrada:entry
-			}
-			infoPartidasEntradas.push(json);
-		});
-	});
+	// let entradas = await Entrada.find(filtro)
+	// 	.populate({
+	// 		path:'partidas.producto_id',
+	// 		model:'Producto'
+	// 	})
+	// 	.populate({
+	// 		path:'clienteFiscal_id',
+	// 		model:'ClienteFiscal'
+	// 	})
+	// 	.populate({
+	// 		path:'almacen_id',
+	// 		model:'Almacen'
+	// 	})
+	// 	.populate({
+	// 		path:'salidas_id',
+	// 		model:'Salida'
+	// 	})
+	// 	.exec();
 
 	return infoPartidasEntradas;
 
@@ -210,14 +175,14 @@ async function getNextID(dataContext, field){
 	if(lastUser.length > 0)
 		max = (lastUser[0])[field];
 
-	console.log(max);
+	//console.log(max);
 
 	return max + 1;
 }
 
 async function getStringFolio(incr,clienteFiscal_id,Tipo){
 	let clienteFiscal = await ClienteFiscal.findOne({_id:clienteFiscal_id}).exec();
-	console.log(clienteFiscal);
+	//console.log(clienteFiscal);
 	let stringFolio = clienteFiscal.clave + "-" + Tipo + "-" + incr;
 	return stringFolio;
 }
@@ -412,7 +377,15 @@ async function getClientesFiscalesXD(req,res){
 	}
 }
 
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
+  }
 
+function Clone(jsonOBJ){
+	return JSON.parse(JSON.stringify(jsonOBJ));
+}
 
 module.exports = {
 	getNextID,
@@ -420,5 +393,8 @@ module.exports = {
 	GetDeliveryGroups,
 	getStringFolio,
 	getSucursalesXD,
-	getClientesFiscalesXD
+	getClientesFiscalesXD,
+	asyncForEach,
+	distinct,
+	Clone
 }

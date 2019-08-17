@@ -22,11 +22,17 @@ const MovimientoInventario = Schema({
 	signo:Number,
 	tipo:String,
 	referencia:String,
-	pasillo: String,
-	pasillo_id: {type:Schema.ObjectId, ref:"Pasillo"},
-	posicion: String,
-	posicion_id:{type:Schema.ObjectId, ref:"Posicion"},
-	nivel:String,
+	posiciones: [
+		{
+			embalajes: {},
+			posicion_id: {type:Schema.ObjectId,ref:'Posicion'},
+			posicion: String,
+			pasillo_id : {type:Schema.ObjectId,ref:'Pasillo'},
+			pasillo:String,
+			nivel_id: {type:Schema.ObjectId},
+			nivel:String
+		}
+	],
 	embalajes:{},
 	clave_partida: String
 },

@@ -20,6 +20,7 @@ const Embalaje = require('./controllers/Embalaje');
 const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
 const PrePartida = require('./controllers/PrePartida');
+const Partida = require('./controllers/Partida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
 
@@ -64,14 +65,15 @@ app.post('/api/updateUsuario', Usuario.update);
 app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID', Entrada.getEntradaByID);
 app.get('/api/getEntradasByIDs',Entrada.getEntradasByIDs);
-app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
 app.get('/api/getDeliveryGroups',Helper.GetDeliveryGroups);
-app.get('/api/partida', Entrada.getPartidaById);
-app.put('/api/partida', Entrada.updatePartida);
 app.post('/api/entrada', Entrada.save);
 app.put('/api/entrada', Entrada.update);
 app.post('/api/entradaAutomatica',Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
+
+app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
+//app.get('/api/partida', Entrada.getPartidaById);
+//app.put('/api/partida', Entrada.updatePartida);
 
 app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
@@ -113,6 +115,7 @@ app.get('/api/posiciones', Posicion.get);
 app.get('/api/posicionesxPasillo', Posicion.getxPasillo);
 app.get('/api/posicion', Posicion.getById);
 app.get('/api/nivel', Posicion.getNivel);
+app.get('/api/posicionAutomatica', Posicion.getPosicionAutomatica);
 app.put('/api/posicion', Posicion.update);
 app.delete('/api/posicion', Posicion._delete);
 
@@ -140,5 +143,12 @@ app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
 
 app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
+
+app.get('/api/partida/:filtro',Partida.get);
+app.get('/api/partida/entrada/:entrada_id',Partida.getByEntrada);
+app.get('/api/partida/salida/:salida_id',Partida.getBySalida);
+app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:almacen_id/:cantidad',Partida.getByProductoEmbalaje);
+//app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
+app.put('/api/partida/:_id', Entrada.put);
 
 module.exports = app;

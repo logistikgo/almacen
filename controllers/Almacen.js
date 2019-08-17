@@ -1,6 +1,6 @@
 'use strict'
 
-const Almacen = require('../models/Almacen');
+const Almacen = require('../models/Almacen'); //Se hace este cambio unicamente para dev
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../models/MovimientoInventario'); 
 
@@ -194,6 +194,8 @@ function _delete(req,res){
 	let item = {
 		statusReg:"BAJA"
 	}
+
+	
 
 	Almacen.updateOne({_id:almacen_id},{$set:item}).then((almacen)=>{
 		res.status(200).send(almacen);

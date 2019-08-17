@@ -123,6 +123,7 @@ async function save(req,res) {
 	req.body.statusReg = "ACTIVO";
 	req.body.valor = 0;
 	req.body.fechaAlta = new Date();
+	req.body.embalajesRechazo = req.body.embalajes;
 
 	let nProducto = new Producto(req.body);
 

@@ -22,7 +22,7 @@ function get(req, res){
 		return res.status(500).send({
 			message: error
 		});
-	})
+	});
 }
 
 function getById(req, res){
@@ -84,6 +84,7 @@ function save(almacen_id, pasillo, usuarioAlta_id, usuarioAlta){
 
 	nPasillo.nombre = pasillo.nombre;
 	nPasillo.almacen_id = almacen_id;
+	nPasillo.prioridad = pasillo.prioridad;
 	nPasillo.fechaAlta = new Date();
 	nPasillo.statusReg = "ACTIVO";
 	nPasillo.usuarioAlta_id= usuarioAlta_id;
@@ -98,7 +99,8 @@ function save(almacen_id, pasillo, usuarioAlta_id, usuarioAlta){
 			let resPosicion = await Posicion.save(data._id, almacen_id, posicion, usuarioAlta_id, usuarioAlta);
 
 			let jPosicion = {
-				"posicion_id": resPosicion._id
+				"posicion_id": resPosicion._id,
+				"prioridad": posicion.prioridad
 			}
 
 			posicionesGuardadas.push(jPosicion);
