@@ -187,11 +187,11 @@ async function getByProductoEmbalaje(req,res){
     let producto_id = req.params.producto_id;
     let embalaje = req.params.embalaje;
     let embalajesxSalir = "embalajesxSalir." + embalaje;
-    //let clienteFiscal_id = req.params.clienteFiscal_id;
-    //let sucursal_id = req.params.sucursal_id;
-    //let almacen_id = req.params.almacen_id;
+    let clienteFiscal_id = req.params.clienteFiscal_id;
+    let sucursal_id = req.params.sucursal_id;
+    let almacen_id = req.params.almacen_id;
     let cantidad = req.params.cantidad;  
-    let cantidadAux = parseFloat(cantidad);
+    let cantidadRestante = parseFloat(cantidad);
 
     let BreakException = {};
 
@@ -206,9 +206,9 @@ async function getByProductoEmbalaje(req,res){
     .find({producto_id : producto_id, isEmpty : false})
     .populate('entrada_id','fechaEntrada clienteFiscal_id sucursal_id almacen_id',
     {
-        // clienteFiscal_id : clienteFiscal_id, 
-        // sucursal_id: sucursal_id, 
-        // almacen_id: almacen_id
+        clienteFiscal_id : clienteFiscal_id, 
+        sucursal_id: sucursal_id, 
+        almacen_id: almacen_id
     })
     .where(embalajesxSalir).gt(0)
     .exec();
@@ -229,7 +229,7 @@ async function getByProductoEmbalaje(req,res){
             
             partida.posiciones.filter(x=> !x.isEmpty).forEach(posicion=>{
                 
-              if(cantidadAux > 0){
+              if(cantidadRestante > 0){
                  let auxPartida = {
                     _id : partida._id,
                     _idLocal : partida._id + '/' + subConsecutivo,
@@ -251,7 +251,7 @@ async function getByProductoEmbalaje(req,res){
                     fechaEntrada : partida.entrada_id.fechaEntrada
                  };
                  
-                 if(cantidadAux >= auxPartida.embalajesxSalir[embalaje]){
+                 if(cantidadRestante >= auxPartida.embalajesxSalir[embalaje]){
                     auxPartida.embalajesEnSalida[embalaje] = auxPartida.embalajesxSalir[embalaje];
                     auxPartida.embalajesxSalir[embalaje] = 0;
                     auxPartida.posiciones[0].embalajesxSalir[embalaje] = 0;
@@ -259,14 +259,14 @@ async function getByProductoEmbalaje(req,res){
                     
                  }else{
                     
-                    auxPartida.embalajesEnSalida[embalaje] = cantidadAux;
-                    auxPartida.embalajesxSalir[embalaje] -= cantidadAux;
-                    auxPartida.posiciones[0].embalajesxSalir[embalaje]-=cantidadAux;
+                    auxPartida.embalajesEnSalida[embalaje] = cantidadRestante;
+                    auxPartida.embalajesxSalir[embalaje] -= cantidadRestante;
+                    auxPartida.posiciones[0].embalajesxSalir[embalaje]-=cantidadRestante;
                  }
                  
                  subConsecutivo+=1;
                  partidasActuales.push(auxPartida);
-                 cantidadAux-=auxPartida.embalajesEnSalida[embalaje];
+                 cantidadRestante-=auxPartida.embalajesEnSalida[embalaje];
               }else{
                   //Si no hay mas que sacar entonces simplemente termina
                  throw BreakException;
