@@ -387,6 +387,14 @@ function Clone(jsonOBJ){
 	return JSON.parse(JSON.stringify(jsonOBJ));
 }
 
+function emptyEmbalajes(jsonEmbalaje){
+	let embalajeAuxiliar = Clone(jsonEmbalaje);
+	for(let embalaje in embalajeAuxiliar){
+		embalajeAuxiliar[embalaje] = 0;
+	}
+	return embalajeAuxiliar;
+}
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -396,5 +404,6 @@ module.exports = {
 	getClientesFiscalesXD,
 	asyncForEach,
 	distinct,
-	Clone
+	Clone,
+	emptyEmbalajes
 }

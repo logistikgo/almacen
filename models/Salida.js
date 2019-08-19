@@ -28,7 +28,7 @@ const Salida = Schema({
 	valor: Number,
 	item: String,
 	tipo:String,
-	entrada_id:{type:Schema.ObjectId,ref:"Entrada"},
+	entrada_id:[{type:Schema.ObjectId,ref:"Entrada"}],
 	partidas:[{type:Schema.ObjectId,ref:'Partida'}]
 },{collection:'Salidas'});
 
