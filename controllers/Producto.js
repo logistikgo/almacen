@@ -116,9 +116,7 @@ function getByIDClienteFiscal(req, res) {
 	
 }
 
-//async
 async function save(req,res) {
-
 	req.body.idProducto = await Helpers.getNextID(Producto, "idProducto");
 	req.body.statusReg = "ACTIVO";
 	req.body.valor = 0;
@@ -141,19 +139,16 @@ async function save(req,res) {
 }
 
 function update(req, res){
-	
+	let _id = req.params._id;
 	req.body.fechaEdita = new Date();
 
-	let idProducto = params.idProducto;
-
-	Producto.updateOne({_id: idProducto},{$set: req.body})
-	.then(()=>{
+	Producto.updateOne({_id: _id},{$set: req.body})
+	.then((producto)=>{
 		res.status(200).send(producto);
 	})
 	.catch((error)=>{
 		res.status(500).send(error);
 	});
-
 }
 
 function validaProducto(req,res){
