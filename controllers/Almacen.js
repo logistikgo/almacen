@@ -2,7 +2,7 @@
 
 const Almacen = require('../models/Almacen'); //Se hace este cambio unicamente para dev
 const Helpers = require('../helpers');
-const MovimientoInventario = require('../models/MovimientoInventario');
+const MovimientoInventario = require('../models/MovimientoInventario'); 
 
 const Posicion = require('../controllers/Posicion');
 const PosicionModel = require('../models/Posicion');
