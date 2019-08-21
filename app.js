@@ -151,4 +151,6 @@ app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:al
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
 app.put('/api/partida/:_id', Entrada.put);
 
+app.put('/api/migracion',Helper.migracion);
+
 module.exports = app;

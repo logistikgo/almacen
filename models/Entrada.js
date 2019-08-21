@@ -35,7 +35,11 @@ const Entrada = Schema({
 	tipo:String,
 	isEmpty: { type: Boolean, default: false },
 	salidas_id : [{type:Schema.ObjectId,ref:'Salida'}],
-	partidas:[{type:Schema.ObjectId,ref:'Partida'}]
+	//partidas:[{type:Schema.ObjectId,ref:'Partida'}],
+	//ATRIBUTOS AUXILIARES
+	done: Boolean,
+	partidasH : {},
+	partidasI : {}
 },
 {collection:'Entradas'}
 );
