@@ -184,10 +184,10 @@ async function getByProductoEmbalaje(req,res){
      * de la disponibilidad de los embalajes existentes
      */
     
-    let producto_id = req.params.producto_id;
-    let embalaje = req.params.embalaje;
-    let embalajesxSalir = "embalajesxSalir." + embalaje;
-    let clienteFiscal_id = req.params.clienteFiscal_id;
+    let producto_id = req.params.producto_id; //Hexa
+    let embalaje = req.params.embalaje; //tarimas, piezas
+    let embalajesxSalir = "embalajesxSalir." + embalaje; //"embalajesxSalir.tarimas"
+    let clienteFiscal_id = req.params.clienteFiscal_id; //He
     let sucursal_id = req.params.sucursal_id;
     let almacen_id = req.params.almacen_id;
     let cantidad = req.params.cantidad;  
