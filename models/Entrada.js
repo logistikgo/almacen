@@ -38,8 +38,11 @@ const Entrada = Schema({
 	partidas:[{type:Schema.ObjectId,ref:'Partida'}],
 	//ATRIBUTOS AUXILIARES
 	done: Boolean,
+	donepartida: Boolean,
 	partidasH : {},
-	partidasI : {}
+	partidasI : {},
+	cantPartidas : Number,
+	cantSalidas : Number
 },
 {collection:'Entradas'}
 );

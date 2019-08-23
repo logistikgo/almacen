@@ -398,75 +398,16 @@ function emptyEmbalajes(jsonEmbalaje){
 
 //MIGRACION 
 async function migracion(req,res){
-	/**
-	 *CREAR LAS PARTIDAS DE LAS ENTRADAS
-	 "partidas.1":{$exists:true}
-	 */
-	
-	await Entrada.updateMany({},{$set:{done:false}});
-	await Partida.deleteMany({}).exec();
-	let entradas = await Entrada.find({done:false});
-	await asyncForEach(entradas,async function(entrada){
-		console.log(entrada);
-		// await asyncForEach(entrada.partidas,async function(partida){
-			
-		// 	let json = {
-		// 		producto_id : partida.producto_id,
-		// 		clave: partida.clave,
-		// 		descripcion: partida.descripcion,
-		// 		entrada_id: entrada._id,
-		// 		salidas_id : [],
-		// 		embalajesEntrada: partida.embalajes,
-		// 		embalajesxSalir : partida.embalajes,
-		// 		lote : partida.lote,
-		// 		valor : partida.valor,
-		// 		isEmpty: partida.isEmpty,
-		// 		posiciones : [
-		// 			{
-		// 				embalajesEntrada: partida.embalajes,
-		// 				embalajesxSalir: partida.embalajes,
-		// 				posicion_id: partida.posicion_id,
-		// 				posicion: partida.posicion,
-		// 				pasillo_id : partida.pasillo_id,
-		// 				pasillo: partida.pasillo,
-		// 				nivel : partida.nivel,
-		// 				isEmpty: partida.isEmpty
-		// 			}
-		// 		]
-
-		// 	};
-		// 	let nPartida = new Partida(json);
-		// 	console.log(nPartida.producto_id);
-		// 	await nPartida.save();
-		// });
-		await Entrada.updateOne({_id: entrada._id,done:false},{$set : {done: true}});
+	let entradas = await Entrada.find({cantPartidas : 1 , cantSalidas: 1}).exec();
+	let partidas = [];
+	entradas.forEach(entrada=>{
+		entrada.partidasI.forEach(async partida_id=>{
+			let partida = await Partida.findOne({_id : partida_id}).exec();
+			partidas.push(partida);
+			let salidas = await Salida.find({entrada_id : entrada._id}).exec();
+		});
 	});
-	// entradas = Entrada.find({done:true}).exec();
-	// let partidas = Partida.find({}).exec();
-	// console.log("PARTIDAS CREADAS",partidas.length);
-	// console.log("ENTRADAS UPDATEADAS",entradas.length);
-
-
-	/**
-	 *UPDATE ARREGLO DE PARTIDAS CON _IDS DE MODELO PARTIDA
-	 */
-	// entradas = await Entrada.find({done:true});
-	// await asyncForEach(entradas,async function(entrada){
-	// 	var arr_ids = [];
-	// 	let partidas = await Partida.find({entrada_id: entrada._id});
-	// 	partidas.forEach(partida=>{
-	// 		arr_ids.push(partida._id);
-	// 	});
-		
-	// 	await Entrada.updateOne({_id:entrada._id},{$set:{partidasI:arr_ids}});
-	// });
-	//  console.log("ENTRADAS UPDATEADAS CON IDS DE PARTIDAS");
-
-	 /**
-	  * Se updatean las existencias de las partidas de las entradas con las salidas
-	  */
-	 console.log("TERMINO");
-	 res.status(200).send("TERMINO");
+	res.status(200).send(partidas);
 }
 
 
