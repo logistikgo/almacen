@@ -22,7 +22,7 @@ async function saveSalida(itemPartida,salida_id) {
 	}else{
 		nMovimiento.tipo = "SALIDA_RECHAZO"
 	}
-	//nMovimiento.posiciones = ;
+
 	nMovimiento.idClienteFiscal = salida.idClienteFiscal;
 	nMovimiento.clienteFiscal_id = salida.clienteFiscal_id;
 	nMovimiento.idSucursal = salida.idSucursal;
@@ -54,7 +54,6 @@ async function saveSalida(itemPartida,salida_id) {
 		}else{
 			await updateExistenciaRechazo(-1,jsonFormatPartida,salida.fechaSalida);
 		}
-		
 	})
 	.catch((err)=>{
 		console.log(err);
@@ -224,7 +223,12 @@ async function updateExistencia(signo,itemPartida,fechaMovimiento) {
 		}
 	}
 
-	producto.valor += (signo*itemPartida.valor);
+	if(itemPartida.valor && itemPartida.valor != null){
+		producto.valor += (signo*itemPartida.valor);
+	}
+	else{
+		producto.valor = 0;
+	}
 	
 	if(signo == 1){
 		producto.fechaUltimaEntrada = new Date(fechaMovimiento);
@@ -254,7 +258,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida,producto_id){
 
 	let posicion = await Posicion.findOne({_id:posicionxPartida.posicion_id}).exec();
 	let nivel = posicion.niveles.find(x=>x.nombre==posicionxPartida.nivel);
-	
+
 	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id.toString() == producto_id.toString()) != undefined){
 		let producto = nivel.productos.find(x=>x.producto_id.toString() == producto_id.toString());
 		let flagEmbalajes = 0;

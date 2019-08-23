@@ -62,21 +62,15 @@ function getByID(req,res) {
 
 
 async function save(req, res) {
-	
-
-	console.log(req.body);
 	let nSalida = new Salida(req.body);
-	//nSalida.salida_id = await getNextID();
 	nSalida.fechaAlta = new Date();
 	nSalida.fechaSalida = new Date(req.body.strFechaSalida);
 	nSalida.salida_id = await getNextID();
 	nSalida.folio = await getNextID();
 	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio,nSalida.clienteFiscal_id,'O');
 
-
 	nSalida.save()
 	.then(async(salida)=>{
-
 		for(let itemPartida of req.body.jsonPartidas){
 			await MovimientoInventario.saveSalida(itemPartida,salida.id);
 		}
@@ -84,7 +78,7 @@ async function save(req, res) {
 		let partidas = await Partida.put(req.body.jsonPartidas,salida._id);
 		salida.partidas = partidas;
 		//await saveSalidasEnEntrada(salida.entrada_id,salida._id);
-		await Salida.updateOne({_id: salida._id},{$set:{partidas:partidas}}).then((updated)=>{
+		await Salida.updateOne({_id: salida._id},{$set:{partidas:partidas}}).then((updated)=>{			
 			res.status(200).send(salida);
 		});
 	})

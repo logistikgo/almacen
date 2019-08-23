@@ -217,7 +217,6 @@ async function getByProductoEmbalaje(req,res){
 
     let partidasActuales = [];
     
-
     /**
      * Se obtienen las partidas por posicion, y se determina la cantidad de salida
      * del embalaje para cada posicion, dependiendo de su disponibilidad
@@ -248,6 +247,7 @@ async function getByProductoEmbalaje(req,res){
                     pasillo : posicion.pasillo,
                     nivel_id : posicion.nivel_id,
                     nivel : posicion.nivel,
+                    producto_id: producto_id,
                     ubicacion_id : posicion._id,
                     posicionesFull : Helper.Clone(partida.posiciones),
                     posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
