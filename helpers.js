@@ -395,6 +395,237 @@ function emptyEmbalajes(jsonEmbalaje){
 	return embalajeAuxiliar;
 }
 
+function isEmptyEmbalaje(embalaje){
+	let contEmbalajesCero = 0;
+	let tamEmbalajes = 0;
+
+	for(let x in embalaje){tamEmbalajes+=1;} //Se obtiene la cantidad de embalajes
+	for(let x in embalaje){  //Obtiene la cantidad de embalajes con cero
+		if(embalaje[x]==0) contEmbalajesCero+=1; 
+	}
+
+	// Si la cantidad de embalajes es igual a la cantidad de embalajes con cero
+	if(tamEmbalajes == contEmbalajesCero) 
+		return true;
+	else
+		return false;
+}
+
+
+//MIGRACION 
+async function migracion1(req,res){
+	let entradas = await Entrada.find({partidasSalida: {$ne:null}}).exec();
+	console.log(entradas.length);
+	let updateadosFalse = [];
+	let updateadosTrue = [];
+	// console.log(entradas.length,"BEGIN");
+
+	await asyncForEach(entradas,async function(entrada){
+		let totalPartidasSalida = entrada.partidasSalida.length;
+		let totalPartidasVacias = 0;
+		entrada.partidasSalida.forEach(partidaSalida=>{
+			let isEmpty = isEmptyEmbalaje(partidaSalida.embalajes);
+			if(isEmpty){
+				totalPartidasVacias+=1;
+			}
+		});
+		console.log("totalPartidasVacias == totalPartidasSalida",totalPartidasVacias == totalPartidasSalida);
+		if(totalPartidasVacias == totalPartidasSalida){
+			if(entrada.isEmpty == undefined || entrada.isEmpty == false){
+
+				await Entrada.findOneAndUpdate({_id : entrada._id},{$set : {isEmpty: true}},{new:true}).exec();
+				updateadosTrue.push(entrada._id);
+			}
+			//let entradaup = await Entrada.findOneAndUpdate({_id : entrada._id},{$set : {isEmpty: true}},{new:true}).exec();
+			//let entradaup = await Entrada.findOne({_id : entrada._id}).exec();
+			
+		}else{
+			if(entrada.isEmpty == undefined || entrada.isEmpty == true){
+				//updateados.push(entrada._id);
+				await Entrada.findOneAndUpdate({_id : entrada._id},{$set : {isEmpty: false}},{new:true}).exec();
+				updateadosFalse.push(entrada._id);
+			}
+			
+			//
+		}
+	});
+	 res.status(200).send({updateTrue : updateadosTrue, updateFalse : updateadosFalse});
+}
+
+async function migracion2(req,res){
+	let entradas = await Entrada.find({isEmpty:false, cantSalidas:1,cantPartidas:1}).exec();
+	let partidasupdateadas = [];
+	asyncForEach(entradas,async function(entrada){
+		if(entrada.partidas.length > 0 && entrada.partidas[0].embalajes){
+			
+			let embalajesxSalir = Clone(entrada.partidas[0].embalajes);
+			let salidas_id = [];
+			let embalajesSalida = emptyEmbalajes(entrada.partidas[0].embalajes);
+			let salidas = await Salida.find({entrada_id : entrada._id}).exec();
+			//console.log(salidas.length);
+			salidas.forEach(function(salida){
+				let jsonSalida = {};
+				jsonSalida["salida_id"] = salida._id;
+				jsonSalida["salidaxPosiciones"] = [];
+				salida.partidas.forEach(function(partida){
+					for(let x in embalajesxSalir){
+						if(partida.embalajes[x]!= undefined){
+							embalajesxSalir[x] -= partida.embalajes[x];
+							embalajesSalida[x] += partida.embalajes[x];
+						}
+					}
+					let posic = {
+						embalajes : partida.embalajes,
+						pasillo : partida.pasillo,
+						pasillo_id : partida.pasillo_id,
+						posicion : partida.posicion,
+						posicion_id : partida.posicion_id,
+						nivel : partida.nivel,
+
+					};
+					jsonSalida.salidaxPosiciones.push(posic);
+				});
+				jsonSalida["embalajes"] = embalajesSalida;
+				salidas_id.push(jsonSalida);
+			});
+			let partidaF = await Partida.findOne({_id: entrada.partidasI[0]});
+			let posiciones = partidaF.posiciones;
+			posiciones[0].isEmpty = true;
+			posiciones[0].embalajesxSalir = embalajesxSalir;
+			await Partida.updateOne({_id: entrada.partidasI[0]},{$set : {
+				embalajesxSalir : embalajesxSalir,
+				salidas_id : salidas_id,
+				posiciones : posiciones
+
+			}}).exec();
+			await Entrada.updateOne({_id : entrada._id},{$set : {isEmpty:true} });
+			partidasupdateadas.push(entrada.partidasI[0]);
+		}
+	});
+	res.status(200).send(partidasupdateadas);
+}
+
+async function migracion3(req,res){
+	let entrada = await Entrada.findOne({_id : "5d13a00c62251225187c0096"}).exec();
+	let salidas = await Salida.find({entrada_id : entrada._id}).exec();
+	asyncForEach(entrada.partidasSalida,partidaSalida=>{
+		
+		salidas.forEach(salida=>{
+			let jsonsalida_id = {};
+			jsonSalida_id['salida_id'] = salida._id;
+			jsonsalida_id['salidaxPosiciones'] = [];
+			salida.partidas.forEach(partidaEnSalida=>{
+				if(partidaDeSalida._id.toString() == partidaSalida._id.toString()){
+					jsonsalida_id['embalajes'] = partidaEnSalida.embalajes;
+					let posic = {
+						embalajes : partida.embalajes,
+						pasillo : partida.pasillo,
+						pasillo_id : partida.pasillo_id,
+						posicion : partida.posicion,
+						posicion_id : partida.posicion_id,
+						nivel : partida.nivel,
+
+					};
+					jsonSalida.salidaxPosiciones.push(posic);
+				}
+			});
+		});
+
+	});
+	
+
+
+	res.status(200).send({entradas: entradas});
+}
+
+async function migracion(req,res){
+
+	let entrada = await Entrada.findOne({_id : req.body._id}).exec();
+	let salidas = await Salida.find({entrada_id : entrada._id}).exec();
+	let partidasM = await Partida.find({entrada_id : entrada._id}).exec();
+	
+	let partidasOk = [];
+	// entrada.partidasSalida.forEach(partidaSalida=>{
+	// 	let partidaF = Clone(partidasM.find(x=> x.lote == partidaSalida.lote));
+	// 	partidasOk.push(partidaF);
+	// });
+	let partidasupdateadas = [];
+	entrada.partidasSalida.forEach(partidaSalida=>{
+
+		let partidasEnSalida = [];
+		let partidaF = Clone(partidasM.find(x=> x.lote == partidaSalida.lote));
+		partidaF.embalajesxSalir = partidaSalida.embalajes;
+		partidaF.posiciones[0].embalajesxSalir = partidaSalida.embalajes;
+		let embalajesxSalir = partidaSalida.embalajes;
+		let salidas_id = [];
+
+		salidas.forEach(salida=>{
+			let jsonSalida_id = {};
+			jsonSalida_id['salida_id'] = salida._id;
+			jsonSalida_id['salidaxPosiciones'] = [];
+			salida.partidas.forEach(partidaEnSalida=>{
+				let partidaEnSalidaCloned = Clone(partidaEnSalida);
+				partidaEnSalidaCloned.salida_id = salida._id;
+				if(partidaSalida._id.toString() == partidaEnSalida._id.toString()){
+					partidasEnSalida.push(partidaEnSalidaCloned);
+				}
+			});
+		});
+
+		let filterSalidas = partidasEnSalida.map(x=> x.salida_id).filter(distinct);
+		
+		filterSalidas.forEach(salida_id=>{
+			let partidasxSalida = partidasEnSalida.filter(x=> x.salida_id.toString() == salida_id);
+			let embalajesSalida = emptyEmbalajes(partidaSalida.embalajes);
+			let salidaxPosiciones = {
+				posicion_id : partidasxSalida[0].posicion_id,
+				posicion : partidasxSalida[0].posicion,
+				pasillo_id : partidasxSalida[0].pasillo_id,
+				pasillo : partidasxSalida[0].pasillo,
+				nivel : partidasxSalida[0].nivel,
+				nivel_id : partidasxSalida[0].nivel_id
+			};
+			partidasxSalida.forEach(partidaxSalida=>{
+				for(let x in embalajesSalida){
+					embalajesSalida[x] += parseFloat(partidaxSalida.embalajes[x]);
+				}
+			});
+			salidaxPosiciones['embalajes'] = embalajesSalida;
+			let jsonSalida_id = {
+				salida_id : salida_id,
+				embalajes : embalajesSalida,
+				salidaxPosiciones : salidaxPosiciones
+			};
+			salidas_id.push(jsonSalida_id);
+		});
+		partidaF.salidas_id = salidas_id;
+		let isEmpty = isEmptyEmbalaje(partidaF.embalajesxSalir);
+		partidaF.isEmpty = isEmpty;
+		partidaF.posiciones[0].isEmpty = isEmpty;
+
+
+		partidasupdateadas.push(partidaF);
+	});
+
+	
+	if(req.body.update){
+		await asyncForEach(partidasupdateadas,async function(partida){
+		
+			await Partida.updateOne({_id : partida._id},{$set : {
+				embalajesxSalir : partida.embalajesxSalir,
+				posiciones : partida.posiciones,
+				salidas_id : partida.salidas_id,
+				isEmpty : partida.isEmpty
+			}});
+		});
+	}
+
+	//res.status(200).send({partidasDelModelo: partidasupdateadas, partidasEnSalida: partidasEnSalida});
+	res.status(200).send(partidasupdateadas);
+	//res.status(200).send(partidasOk);
+}
+
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -405,5 +636,6 @@ module.exports = {
 	asyncForEach,
 	distinct,
 	Clone,
-	emptyEmbalajes
+	emptyEmbalajes,
+	migracion
 }

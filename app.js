@@ -44,7 +44,7 @@ app.get('/api/producto', Producto.getById);
 app.get('/api/producto/:clave', Producto.getByClave);
 app.get('/api/productos/:idClienteFiscal', Producto.getByIDClienteFiscal);
 app.post('/api/producto', Producto.save);
-app.put('/api/producto', Producto.update);
+app.put('/api/producto/:_id', Producto.update);
 app.delete('/api/productos',Producto._delete);
 app.get('/api/validaProducto/:clave',Producto.validaProducto);
 app.get('/api/getProductos',Producto.getByIDsClientesFiscales);
@@ -147,8 +147,10 @@ app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
 app.get('/api/partida/:filtro',Partida.get);
 app.get('/api/partida/entrada/:entrada_id',Partida.getByEntrada);
 app.get('/api/partida/salida/:salida_id',Partida.getBySalida);
-app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:almacen_id/:cantidad',Partida.getByProductoEmbalaje);
+app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:almacen_id/:cantidad/:isPEPS',Partida.getByProductoEmbalaje);
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
 app.put('/api/partida/:_id', Entrada.put);
+
+app.put('/api/migracion',Helper.migracion);
 
 module.exports = app;
