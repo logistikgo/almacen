@@ -138,7 +138,6 @@ async function getBySalida(req,res){
 function isEmptyPartida(partida){
 	let contEmbalajesCero = 0;
 	let tamEmbalajes = 0;
-	let isEmbalajesEmpty = false;
 
 	for(let embalaje in partida.embalajesxSalir){tamEmbalajes+=1;} //Se obtiene la cantidad de embalajes
 	for(let embalaje in partida.embalajesxSalir){  //Obtiene la cantidad de embalajes con cero

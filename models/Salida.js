@@ -29,7 +29,9 @@ const Salida = Schema({
 	item: String,
 	tipo:String,
 	entrada_id:[{type:Schema.ObjectId,ref:"Entrada"}],
-	partidas:[{type:Schema.ObjectId,ref:'Partida'}]
+	//partidas:[{type:Schema.ObjectId,ref:'Partida'}],
+	//CAMPOS AUXILIARES
+	partidas : {}
 },{collection:'Salidas'});
 
 module.exports = mongoose.model('Salida',Salida);
