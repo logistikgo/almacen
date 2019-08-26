@@ -191,6 +191,7 @@ async function getByProductoEmbalaje(req,res){
     let almacen_id = req.params.almacen_id;
     let cantidad = req.params.cantidad;  
     let cantidadRestante = parseFloat(cantidad);
+    let isPEPS = req.params.isPEPS;
 
     let BreakException = {};
 
@@ -215,14 +216,56 @@ async function getByProductoEmbalaje(req,res){
     partidas = partidas.sort(sortByfechaEntadaAsc);
 
     let partidasActuales = [];
-    
 
-    /**
-     * Se obtienen las partidas por posicion, y se determina la cantidad de salida
-     * del embalaje para cada posicion, dependiendo de su disponibilidad
-     */
     try
     {
+        //Validacion para Clientes fiscales que no utilicen algoritmo PEPS
+        if(isPEPS == false.toString())
+        {
+            partidas.forEach(partida=> {
+                let subConsecutivo = 0;
+                
+                partida.posiciones.filter(x=> !x.isEmpty).forEach(posicion=>{
+                    let auxPartida = {
+                        lote : partida.lote,
+                        clave : partida.clave,
+                        descripcion : partida.descripcion,
+                        isEmpty : partida.isEmpty,
+                    _id : partida._id,
+                    _idLocal : partida._id + '/' + subConsecutivo,
+                    embalajesEntradaFull : Helper.Clone(partida.embalajesEntrada),
+                    embalajesxSalirFull : Helper.Clone(partida.embalajesxSalir),
+                    embalajesEntrada : Helper.Clone(posicion.embalajesxSalir),
+                    embalajesxSalir : Helper.Clone(posicion.embalajesxSalir),
+                    embalajesEnSalida : Helper.emptyEmbalajes(posicion.embalajesxSalir),
+                    posicion_id : posicion.posicion_id,
+                    posicion : posicion.posicion,
+                    pasillo_id : posicion.pasillo_id,
+                    pasillo : posicion.pasillo,
+                    nivel_id : posicion.nivel_id,
+                    nivel : posicion.nivel,
+                    producto_id: producto_id,
+                    ubicacion_id : posicion._id,
+                    posicionesFull : Helper.Clone(partida.posiciones),
+                    posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
+                    subConsecutivo : subConsecutivo,
+                    fechaEntrada : partida.entrada_id.fechaEntrada,
+                    entrada_id : partida.entrada_id._id
+                    };
+
+                    subConsecutivo+=1;
+                    partidasActuales.push(auxPartida);
+                });
+            });
+
+            throw BreakException;
+        }
+
+        /**
+         * Se obtienen las partidas por posicion, y se determina la cantidad de salida
+         * del embalaje para cada posicion, dependiendo de su disponibilidad
+         */
+    
         partidas.forEach(partida=> {
             let subConsecutivo = 0;
             
@@ -247,6 +290,7 @@ async function getByProductoEmbalaje(req,res){
                     pasillo : posicion.pasillo,
                     nivel_id : posicion.nivel_id,
                     nivel : posicion.nivel,
+                    producto_id: producto_id,
                     ubicacion_id : posicion._id,
                     posicionesFull : Helper.Clone(partida.posiciones),
                     posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
