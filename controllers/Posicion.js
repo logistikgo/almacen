@@ -96,29 +96,15 @@ function getPosicionesxProducto(req, res){
 		let resPosiciones = [];
 
 		for(let posicion of posiciones){
-			//console.log("CURRENT POSICION");
-			//console.log(posicion);
-
 			let jPosicion = {
 				pasillo: posicion.pasillo_id.nombre,
 				pasillo_id: posicion.pasillo_id._id,
 				posicion: posicion.nombre,
 				posicion_id: posicion._id,
 			};
-			//console.log("JPOSICION");
-			//console.log(jPosicion);
 
 			let niveles = posicion.niveles.filter((x)=>{
-				let producto = x.productos.filter((x)=>{
-					if(x.producto_id._id.toString() == producto_id.toString()){
-						//console.log(x);
-					}
-					return x.producto_id._id.toString() == producto_id.toString();
-				});
-				
-				//console.log("PRODUCTO");
-				//console.log(producto);
-				//console.log(producto.length > 0);
+				let producto = x.productos.filter(x=>x.producto_id._id.toString() == producto_id.toString());
 
 				if(producto.length > 0){
 					jPosicion.embalajes = producto[0].embalajes;
@@ -126,9 +112,6 @@ function getPosicionesxProducto(req, res){
 				
 				return producto.length > 0;
 			});
-
-			//console.log("NIVELES");
-			//console.log(niveles);
 
 			for(let nivel of niveles){
 				jPosicion.nivel = nivel.nombre;
