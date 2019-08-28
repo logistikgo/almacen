@@ -213,8 +213,16 @@ async function getByProductoEmbalaje(req,res){
     .where(embalajesxSalir).gt(0)
     .exec();
 
+    //Se encuentra la partida de tipo  existencia inicial
+    //let partidaExistenciaInicial = await Partida.findOne({producto_id : producto_id, tipo: "EXISTENCIA_INICIAL"}).exec();
+    
+    
+    // if(partidaExistenciaInicial!= undefined && partidaExistenciaInicial.isEmpty == false){
+    //     partidas.push(partidaExistenciaInicial);
+    // }
+    
     partidas = partidas.sort(sortByfechaEntadaAsc);
-
+    
     let partidasActuales = [];
 
     try
@@ -224,33 +232,33 @@ async function getByProductoEmbalaje(req,res){
         {
             partidas.forEach(partida=> {
                 let subConsecutivo = 0;
-                
+                console.log(partida.lote);
                 partida.posiciones.filter(x=> !x.isEmpty).forEach(posicion=>{
                     let auxPartida = {
                         lote : partida.lote,
                         clave : partida.clave,
                         descripcion : partida.descripcion,
                         isEmpty : partida.isEmpty,
-                    _id : partida._id,
-                    _idLocal : partida._id + '/' + subConsecutivo,
-                    embalajesEntradaFull : Helper.Clone(partida.embalajesEntrada),
-                    embalajesxSalirFull : Helper.Clone(partida.embalajesxSalir),
-                    embalajesEntrada : Helper.Clone(posicion.embalajesxSalir),
-                    embalajesxSalir : Helper.Clone(posicion.embalajesxSalir),
-                    embalajesEnSalida : Helper.emptyEmbalajes(posicion.embalajesxSalir),
-                    posicion_id : posicion.posicion_id,
-                    posicion : posicion.posicion,
-                    pasillo_id : posicion.pasillo_id,
-                    pasillo : posicion.pasillo,
-                    nivel_id : posicion.nivel_id,
-                    nivel : posicion.nivel,
-                    producto_id: producto_id,
-                    ubicacion_id : posicion._id,
-                    posicionesFull : Helper.Clone(partida.posiciones),
-                    posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
-                    subConsecutivo : subConsecutivo,
-                    fechaEntrada : partida.entrada_id.fechaEntrada,
-                    entrada_id : partida.entrada_id._id
+                        _id : partida._id,
+                        _idLocal : partida._id + '/' + subConsecutivo,
+                        embalajesEntradaFull : Helper.Clone(partida.embalajesEntrada),
+                        embalajesxSalirFull : Helper.Clone(partida.embalajesxSalir),
+                        embalajesEntrada : Helper.Clone(posicion.embalajesxSalir),
+                        embalajesxSalir : Helper.Clone(posicion.embalajesxSalir),
+                        embalajesEnSalida : Helper.emptyEmbalajes(posicion.embalajesxSalir),
+                        posicion_id : posicion.posicion_id,
+                        posicion : posicion.posicion,
+                        pasillo_id : posicion.pasillo_id,
+                        pasillo : posicion.pasillo,
+                        nivel_id : posicion.nivel_id,
+                        nivel : posicion.nivel,
+                        producto_id: producto_id,
+                        ubicacion_id : posicion._id,
+                        posicionesFull : Helper.Clone(partida.posiciones),
+                        posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
+                        subConsecutivo : subConsecutivo,
+                        fechaEntrada : partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : new Date(),
+                        entrada_id : partida.entrada_id != undefined ? partida.entrada_id._id : ""
                     };
 
                     subConsecutivo+=1;
@@ -347,6 +355,9 @@ function sortByfechaEntadaDesc(a,b){
 }
 
 function sortByfechaEntadaAsc(a,b){
+    if(a.fechaEntrada == undefined || a.fechaEntrada == null || b.fechaEntrada == undefined || b.fechaEntrada == null){
+        return -1;
+    }
     if(a.entrada_id.fechaEntrada < b.entrada_id.fechaEntrada){
         return -1;
     }
