@@ -538,7 +538,7 @@ async function migracion3(req,res){
 	res.status(200).send({entradas: entradas});
 }
 
-async function migracion(req,res){
+async function migracion4(req,res){
 
 	let entrada = await Entrada.findOne({_id : req.body._id}).exec();
 	let salidas = await Salida.find({entrada_id : entrada._id}).exec();
@@ -560,6 +560,8 @@ async function migracion(req,res){
 		let salidas_id = [];
 
 		salidas.forEach(salida=>{
+
+
 			let jsonSalida_id = {};
 			jsonSalida_id['salida_id'] = salida._id;
 			jsonSalida_id['salidaxPosiciones'] = [];
@@ -623,6 +625,25 @@ async function migracion(req,res){
 	//res.status(200).send({partidasDelModelo: partidasupdateadas, partidasEnSalida: partidasEnSalida});
 	res.status(200).send(partidasupdateadas);
 	//res.status(200).send(partidasOk);
+}
+
+async function migracion(req,res){
+	let partidas = await Partida.find({});
+
+	await asyncForEach(partidas,async function(partida){
+		if(partida.salidas_id != undefined && partida.salidas_id.length > 0){
+			await asyncForEach(partida.salidas_id,async function(salida_id){
+				let salida = Clone(await Salida.findOne({_id : salida_id.salida_id}).exec());
+				//console.log(salida.partidas);
+				salida.partidas.push(partida._id);
+				//console.log(salida._id,partida._id);
+				await Salida.updateOne({_id : salida._id},{$set : {partidas: salida.partidas}});
+			});
+		}
+	});
+	//let partidasOk = partidas.map(x=> x.)
+	console.log("oks");
+	res.status(200).send("OKs");
 }
 
 
