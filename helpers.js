@@ -538,7 +538,7 @@ async function migracion3(req,res){
 	res.status(200).send({entradas: entradas});
 }
 
-async function migracion4(req,res){
+async function migracion5(req,res){
 
 	let entrada = await Entrada.findOne({_id : req.body._id}).exec();
 	let salidas = await Salida.find({entrada_id : entrada._id}).exec();
@@ -629,7 +629,7 @@ async function migracion4(req,res){
 
 async function migracion(req,res){
 	let partidas = await Partida.find({});
-
+	
 	await asyncForEach(partidas,async function(partida){
 		if(partida.salidas_id != undefined && partida.salidas_id.length > 0){
 			await asyncForEach(partida.salidas_id,async function(salida_id){
