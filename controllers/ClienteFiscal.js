@@ -20,7 +20,7 @@ function get(req, res) {
 		res.status(200).send(cliente);	
 	})
 	.catch((err)=>{
-		return res.status(500).send({message:"Error"});
+		return res.status(500).send(err);
 	});
 }
 
