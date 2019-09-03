@@ -115,6 +115,7 @@ app.get('/api/posiciones', Posicion.get);
 app.get('/api/posicionesxPasillo', Posicion.getxPasillo);
 app.get('/api/posicion', Posicion.getById);
 app.get('/api/nivel', Posicion.getNivel);
+app.get('/api/posicionesxProducto/:almacen_id/:producto_id', Posicion.getPosicionesxProducto)
 app.get('/api/posicionAutomatica', Posicion.getPosicionAutomatica);
 app.put('/api/posicion', Posicion.update);
 app.delete('/api/posicion', Posicion._delete);

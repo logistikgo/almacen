@@ -76,6 +76,59 @@ function getNivel(req, res){
 	});
 }
 
+//GET de productos por todas las posiciones de un Almacen
+function getPosicionesxProducto(req, res){
+	let almacen_id = req.params.almacen_id;
+	let producto_id = req.params.producto_id;
+
+	Posicion.find({
+		almacen_id: new ObjectId(almacen_id),
+		"niveles.productos.producto_id": new ObjectId(producto_id),
+		statusReg: "ACTIVO"
+	})
+	.populate({
+		path:'pasillo_id'
+	})
+	.populate({
+		path:'niveles.productos.producto_id'
+	})
+	.then((posiciones)=>{
+		let resPosiciones = [];
+
+		for(let posicion of posiciones){
+			let jPosicion = {
+				pasillo: posicion.pasillo_id.nombre,
+				pasillo_id: posicion.pasillo_id._id,
+				posicion: posicion.nombre,
+				posicion_id: posicion._id,
+			};
+
+			let niveles = posicion.niveles.filter((x)=>{
+				let producto = x.productos.filter(x=>x.producto_id._id.toString() == producto_id.toString());
+
+				if(producto.length > 0){
+					jPosicion.embalajes = producto[0].embalajes;
+				}
+				
+				return producto.length > 0;
+			});
+
+			for(let nivel of niveles){
+				jPosicion.nivel = nivel.nombre;
+				jPosicion.nivel_id = nivel._id;
+				resPosiciones.push(jPosicion);
+			}
+		}
+
+		res.status(200).send(resPosiciones);
+	})
+	.catch((error)=>{
+		return res.status(500).send({
+			message: error
+		});
+	})
+}
+
 function getPosicionAutomatica(req, res){
 	let cantidad = req.query.cantidad;
 	let almacen_id = req.query.almacen_id;
@@ -125,7 +178,12 @@ function getPosicionAutomatica(req, res){
 			}
 		}
 
-		res.status(200).send(posiciones);
+		if(posiciones.length == cantidad){
+			res.status(200).send(posiciones);
+		}
+		else{
+			res.status(200).send([]);
+		}
 	})
 	.catch((error)=>{
 		return res.status(500).send({
@@ -173,6 +231,7 @@ module.exports = {
 	getxPasillo,
 	getById,
 	getNivel,
+	getPosicionesxProducto,
 	getPosicionAutomatica,
 	save,
 	update,
