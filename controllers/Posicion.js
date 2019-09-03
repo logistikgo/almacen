@@ -178,7 +178,12 @@ function getPosicionAutomatica(req, res){
 			}
 		}
 
-		res.status(200).send(posiciones);
+		if(posiciones.length == cantidad){
+			res.status(200).send(posiciones);
+		}
+		else{
+			res.status(200).send([]);
+		}
 	})
 	.catch((error)=>{
 		return res.status(500).send({

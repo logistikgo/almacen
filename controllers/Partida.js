@@ -134,7 +134,6 @@ async function getBySalida(req,res){
     res.status(200).send(partidas);
 }
 
-
 function isEmptyPartida(partida){
 	let contEmbalajesCero = 0;
 	let tamEmbalajes = 0;
