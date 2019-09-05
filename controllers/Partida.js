@@ -41,7 +41,7 @@ async function put(arrPartidas,salida_id){
      */
 
     var arrPartidas_id = [];
-    let entrada_id = arrPartidas.length > 0 ? arrPartidas[0].entrada_id : undefined;
+    let entradas_id = arrPartidas.length > 0 ? arrPartidas.map(x=> x.entrada_id) : undefined;
     
     await Helper.asyncForEach(arrPartidas,async function(partida){
 
@@ -69,7 +69,9 @@ async function put(arrPartidas,salida_id){
 
     });
 
-    await setIsEmptyEntrada(entrada_id);
+    Helper.asyncForEach(entradas_id,async function(entrada_id){
+        await setIsEmptyEntrada(entrada_id);
+    });
 
     return arrPartidas_id;
 }
