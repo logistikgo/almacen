@@ -41,7 +41,7 @@ async function put(arrPartidas,salida_id){
      */
 
     var arrPartidas_id = [];
-    let entrada_id = arrPartidas.length > 0 ? arrPartidas[0].entrada_id : undefined;
+    let entradas_id = arrPartidas.length > 0 ? arrPartidas.map(x=> x.entrada_id) : undefined;
     
     await Helper.asyncForEach(arrPartidas,async function(partida){
 
@@ -69,7 +69,9 @@ async function put(arrPartidas,salida_id){
 
     });
 
-    await setIsEmptyEntrada(entrada_id);
+    Helper.asyncForEach(entradas_id,async function(entrada_id){
+        await setIsEmptyEntrada(entrada_id);
+    });
 
     return arrPartidas_id;
 }
@@ -211,6 +213,8 @@ async function getByProductoEmbalaje(req,res){
     })
     .where(embalajesxSalir).gt(0)
     .exec();
+    partidas = partidas.filter(x=> x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id 
+        && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id );
 
     //Se encuentra la partida de tipo  existencia inicial
     //let partidaExistenciaInicial = await Partida.findOne({producto_id : producto_id, tipo: "EXISTENCIA_INICIAL"}).exec();
@@ -227,6 +231,7 @@ async function getByProductoEmbalaje(req,res){
     try
     {
         //Validacion para Clientes fiscales que no utilicen algoritmo PEPS
+        console.log("isPEPS",isPEPS,isPEPS == false.toString());
         if(isPEPS == false.toString())
         {
             partidas.forEach(partida=> {
@@ -256,7 +261,7 @@ async function getByProductoEmbalaje(req,res){
                         posicionesFull : Helper.Clone(partida.posiciones),
                         posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
                         subConsecutivo : subConsecutivo,
-                        fechaEntrada : partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : new Date(),
+                        fechaEntrada : partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
                         entrada_id : partida.entrada_id != undefined ? partida.entrada_id._id : ""
                     };
 
@@ -273,6 +278,7 @@ async function getByProductoEmbalaje(req,res){
          * del embalaje para cada posicion, dependiendo de su disponibilidad
          */
     
+        console.log(cantidadRestante);
         partidas.forEach(partida=> {
             let subConsecutivo = 0;
             
@@ -302,8 +308,8 @@ async function getByProductoEmbalaje(req,res){
                     posicionesFull : Helper.Clone(partida.posiciones),
                     posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
                     subConsecutivo : subConsecutivo,
-                    fechaEntrada : partida.entrada_id.fechaEntrada,
-                    entrada_id : partida.entrada_id._id
+                    fechaEntrada : partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
+                    entrada_id : partida.entrada_id != undefined ? partida.entrada_id._id : ""
                  };
                  
                  if(cantidadRestante >= auxPartida.embalajesxSalir[embalaje]){

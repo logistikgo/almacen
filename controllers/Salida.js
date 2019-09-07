@@ -77,7 +77,8 @@ async function save(req, res) {
 		
 		let partidas = await Partida.put(req.body.jsonPartidas,salida._id);
 		salida.partidas = partidas;
-		//await saveSalidasEnEntrada(salida.entrada_id,salida._id);
+		console.log(partidas);
+		await saveSalidasEnEntrada(salida.entrada_id,salida._id);
 		await Salida.updateOne({_id: salida._id},{$set:{partidas:partidas}}).then((updated)=>{			
 			res.status(200).send(salida);
 		});
@@ -180,20 +181,18 @@ async function updatePartidasSalidaAPI(req,res){
 
 async function saveSalidasEnEntrada(entrada_id,salida_id){
 	
-	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
-	
-	entrada.salidas_id.push(salida_id);
+	let entradas = await Entrada.find({_id:{$in:entrada_id}}).exec();
+	console.log("ENTRADAS ENCONTRADAS DEL ARREGLO");
+	console.log(entrada_id);
+	Helper.asyncForEach(entradas,async function(entrada){
+		entrada.salidas_id.push(salida_id);
+		let jEdit = {
+			salidas_id:entrada.salidas_id
+		};
 
-	let jEdit = {
-		salidas_id:entrada.salidas_id
-	};
-
-	Entrada.updateOne({_id:entrada_id},{$set:jEdit})
-	.then((data)=>{
-		
-	}).catch((error)=>{
-		
+		await Entrada.updateOne({_id : entrada._id},{$set:jEdit}).exec();
 	});
+	
 }
 
 async function saveSalidaAutomatica(req,res){
