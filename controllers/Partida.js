@@ -213,14 +213,17 @@ async function getByProductoEmbalaje(req,res){
     })
     .where(embalajesxSalir).gt(0)
     .exec();
+    partidas = partidas.filter(x=> x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id 
+        && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id );
 
     partidas = partidas.sort(sortByfechaEntadaAsc);
-
+    //console.log("Partidas",partidas);
     let partidasActuales = [];
 
     try
     {
         //Validacion para Clientes fiscales que no utilicen algoritmo PEPS
+        console.log("isPEPS",isPEPS,isPEPS == false.toString());
         if(isPEPS == false.toString())
         {
             partidas.forEach(partida=> {
@@ -232,26 +235,26 @@ async function getByProductoEmbalaje(req,res){
                         clave : partida.clave,
                         descripcion : partida.descripcion,
                         isEmpty : partida.isEmpty,
-                    _id : partida._id,
-                    _idLocal : partida._id + '/' + subConsecutivo,
-                    embalajesEntradaFull : Helper.Clone(partida.embalajesEntrada),
-                    embalajesxSalirFull : Helper.Clone(partida.embalajesxSalir),
-                    embalajesEntrada : Helper.Clone(posicion.embalajesxSalir),
-                    embalajesxSalir : Helper.Clone(posicion.embalajesxSalir),
-                    embalajesEnSalida : Helper.emptyEmbalajes(posicion.embalajesxSalir),
-                    posicion_id : posicion.posicion_id,
-                    posicion : posicion.posicion,
-                    pasillo_id : posicion.pasillo_id,
-                    pasillo : posicion.pasillo,
-                    nivel_id : posicion.nivel_id,
-                    nivel : posicion.nivel,
-                    producto_id: producto_id,
-                    ubicacion_id : posicion._id,
-                    posicionesFull : Helper.Clone(partida.posiciones),
-                    posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
-                    subConsecutivo : subConsecutivo,
-                    fechaEntrada : partida.entrada_id.fechaEntrada,
-                    entrada_id : partida.entrada_id._id
+                        _id : partida._id,
+                        _idLocal : partida._id + '/' + subConsecutivo,
+                        embalajesEntradaFull : Helper.Clone(partida.embalajesEntrada),
+                        embalajesxSalirFull : Helper.Clone(partida.embalajesxSalir),
+                        embalajesEntrada : Helper.Clone(posicion.embalajesxSalir),
+                        embalajesxSalir : Helper.Clone(posicion.embalajesxSalir),
+                        embalajesEnSalida : Helper.emptyEmbalajes(posicion.embalajesxSalir),
+                        posicion_id : posicion.posicion_id,
+                        posicion : posicion.posicion,
+                        pasillo_id : posicion.pasillo_id,
+                        pasillo : posicion.pasillo,
+                        nivel_id : posicion.nivel_id,
+                        nivel : posicion.nivel,
+                        producto_id: producto_id,
+                        ubicacion_id : posicion._id,
+                        posicionesFull : Helper.Clone(partida.posiciones),
+                        posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
+                        subConsecutivo : subConsecutivo,
+                        fechaEntrada : partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
+                        entrada_id : partida.entrada_id != undefined ? partida.entrada_id._id : ""
                     };
 
                     subConsecutivo+=1;
@@ -267,6 +270,7 @@ async function getByProductoEmbalaje(req,res){
          * del embalaje para cada posicion, dependiendo de su disponibilidad
          */
     
+        console.log(cantidadRestante);
         partidas.forEach(partida=> {
             let subConsecutivo = 0;
             
@@ -296,8 +300,8 @@ async function getByProductoEmbalaje(req,res){
                     posicionesFull : Helper.Clone(partida.posiciones),
                     posiciones : [partida.posiciones.find(x=> x._id.toString() === posicion._id.toString())],
                     subConsecutivo : subConsecutivo,
-                    fechaEntrada : partida.entrada_id.fechaEntrada,
-                    entrada_id : partida.entrada_id._id
+                    fechaEntrada : partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
+                    entrada_id : partida.entrada_id != undefined ? partida.entrada_id._id : ""
                  };
                  
                  if(cantidadRestante >= auxPartida.embalajesxSalir[embalaje]){
@@ -348,6 +352,9 @@ function sortByfechaEntadaDesc(a,b){
 }
 
 function sortByfechaEntadaAsc(a,b){
+    if(a.fechaEntrada == undefined || a.fechaEntrada == null || b.fechaEntrada == undefined || b.fechaEntrada == null){
+        return -1;
+    }
     if(a.entrada_id.fechaEntrada < b.entrada_id.fechaEntrada){
         return -1;
     }
