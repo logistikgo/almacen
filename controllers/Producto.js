@@ -1,5 +1,6 @@
 'use strict'
 const Producto = require('../models/Producto');
+const Entrada = require('../models/Entrada');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario')
@@ -17,6 +18,17 @@ function get(req, res) {
 	.catch((error) => {
 		return res.status(500).send(error);
 	});
+}
+
+async function getExistenciasByAlmacen(req,res){
+	let almacen_id = req.params.almacen_id;
+	let producto_id = req.params.producto_id;
+
+	let entradas = await Entrada.find({almacen_id : almacen_id});
+	let entradas_id = entradas.map(x=> x._id);
+	let partidas = await Partida.find({entrada_id: { $in: entradas_id },producto_id : producto_id });
+	res.status(200).send(partidas);
+
 }
 
 function getById(req, res) {
@@ -192,5 +204,6 @@ module.exports = {
 	validaProducto,
 	getByIDsClientesFiscales,
 	getByClave,
-	getALM_XD
+	getALM_XD,
+	getExistenciasByAlmacen
 }

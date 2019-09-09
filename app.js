@@ -49,6 +49,7 @@ app.delete('/api/productos',Producto._delete);
 app.get('/api/validaProducto/:clave',Producto.validaProducto);
 app.get('/api/getProductos',Producto.getByIDsClientesFiscales);
 app.get('/api/getProductosALMXD',Producto.getALM_XD);
+app.get('/api/getExistenciasByAlmacen/:almacen_id/:producto_id',Producto.getExistenciasByAlmacen);
 
 app.get('/api/movimientosInventarioByProducto', MovimientosInventario.getByProducto);
 app.get ('/api/posicionesxProducto', MovimientosInventario.getPosicionesByProducto);
