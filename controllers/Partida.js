@@ -136,6 +136,7 @@ async function getBySalida(req,res){
     res.status(200).send(partidas);
 }
 
+
 function isEmptyPartida(partida){
 	let contEmbalajesCero = 0;
 	let tamEmbalajes = 0;
@@ -316,7 +317,7 @@ async function getByProductoEmbalaje(req,res){
                     auxPartida.embalajesEnSalida[embalaje] = auxPartida.embalajesxSalir[embalaje];
                     auxPartida.embalajesxSalir[embalaje] = 0;
                     auxPartida.posiciones[0].embalajesxSalir[embalaje] = 0;
-                    auxPartida.posiciones[0].isEmpty = true;
+                    auxPartida.posiciones[0].isEmpty = Helper.isEmptyEmbalaje(auxPartida.posiciones[0].embalajesxSalir);
                     
                  }else{
                     

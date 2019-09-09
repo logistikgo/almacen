@@ -658,5 +658,6 @@ module.exports = {
 	distinct,
 	Clone,
 	emptyEmbalajes,
+	isEmptyEmbalaje,
 	migracion
 }
