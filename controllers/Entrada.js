@@ -171,60 +171,6 @@ async function save(req, res){
 	});
 }
 
-async function validaEntrada(req,res){
-	let bodyParams = req.body;
-	let _idEntrada = bodyParams.idEntrada;
-	let _partidas = bodyParams.partidas;
-	var arrPartidas = [];
-	let _entrada = await Entrada.findOne({idEntrada:_idEntrada})
-	.populate({
-		path:'partidas.producto_id',
-		model:'Producto'
-	}).exec();	
-
-	_entrada.partidas.forEach(function(itemPartida){
-		let itemBodyPartidas = _partidas.find(function(itemBodyPartidas){
-			return itemBodyPartidas.clave === itemPartida.producto_id.clave;
-		});
-		if(itemBodyPartidas!=null){
-			let newPartida = {
-				_id : itemPartida.id,
-				producto_id:itemPartida.producto_id,
-				tarimas : itemPartida.tarimas,
-				piezas : itemBodyPartidas.cantidad,
-				cajas : itemPartida.cajas,
-				posicion : itemBodyPartidas.posicion,
-				nivel : itemBodyPartidas.nivel
-
-			}
-
-			arrPartidas.push(newPartida);
-		}
-	});
-	
-	//----------------------------------------------
-	if(arrPartidas.length==_entrada.partidas.length)
-	{
-		let cambios = {
-			status : "APLICADA",
-			partidas : arrPartidas
-		}
-
-		Entrada.updateOne({idEntrada:_idEntrada},{$set:cambios},(err,entrada)=>{
-			if(err)
-				return res.status(500).send({message:"Error"});
-			for(let itemPartida of arrPartidas){
-				MovimientoInventario.saveEntrada(itemPartida.producto_id, entrada.id, itemPartida.piezas,itemPartida.cajas,itemPartida.tarimas,
-					_entrada.idClienteFiscal,_entrada.idSucursal,_entrada.almacen_id, itemPartida.posicion, itemPartida.nivel);
-			}
-			res.status(200).send(entrada);
-		});
-
-	}else{
-		res.status(500).send({message:"Error en Json EndPoint"});
-	}	
-}
-
 async function saveEntradaAutomatica(req,res){
 	let bodyParams = req.body;
 	let arrIDPedido = bodyParams.arrIDPedido;
@@ -698,6 +644,61 @@ function put(req, res){
 			res.status(500).send(entrada);
 		});
 	});
+}
+
+//CHRONOS
+async function validaEntrada(req,res){
+	let bodyParams = req.body;
+	let _idEntrada = bodyParams.idEntrada;
+	let _partidas = bodyParams.partidas;
+	var arrPartidas = [];
+	let _entrada = await Entrada.findOne({idEntrada:_idEntrada})
+	.populate({
+		path:'partidas.producto_id',
+		model:'Producto'
+	}).exec();	
+
+	_entrada.partidas.forEach(function(itemPartida){
+		let itemBodyPartidas = _partidas.find(function(itemBodyPartidas){
+			return itemBodyPartidas.clave === itemPartida.producto_id.clave;
+		});
+		if(itemBodyPartidas!=null){
+			let newPartida = {
+				_id : itemPartida.id,
+				producto_id:itemPartida.producto_id,
+				tarimas : itemPartida.tarimas,
+				piezas : itemBodyPartidas.cantidad,
+				cajas : itemPartida.cajas,
+				posicion : itemBodyPartidas.posicion,
+				nivel : itemBodyPartidas.nivel
+
+			}
+
+			arrPartidas.push(newPartida);
+		}
+	});
+	
+	//----------------------------------------------
+	if(arrPartidas.length==_entrada.partidas.length)
+	{
+		let cambios = {
+			status : "APLICADA",
+			partidas : arrPartidas
+		}
+
+		Entrada.updateOne({idEntrada:_idEntrada},{$set:cambios},(err,entrada)=>{
+			if(err)
+				return res.status(500).send({message:"Error"});
+			for(let itemPartida of arrPartidas){
+				MovimientoInventario.saveEntrada(itemPartida.producto_id, entrada.id, itemPartida.piezas,itemPartida.cajas,itemPartida.tarimas,
+					_entrada.idClienteFiscal,_entrada.idSucursal,_entrada.almacen_id, itemPartida.posicion, itemPartida.nivel);
+			}
+			res.status(200).send(entrada);
+		});
+
+	}else{
+		res.status(500).send({message:"Error en Json EndPoint"});
+	}	
 }
 
 module.exports = {
