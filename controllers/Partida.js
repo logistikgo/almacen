@@ -216,8 +216,16 @@ async function getByProductoEmbalaje(req,res){
     partidas = partidas.filter(x=> x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id 
         && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id );
 
+    //Se encuentra la partida de tipo  existencia inicial
+    //let partidaExistenciaInicial = await Partida.findOne({producto_id : producto_id, tipo: "EXISTENCIA_INICIAL"}).exec();
+    
+    
+    // if(partidaExistenciaInicial!= undefined && partidaExistenciaInicial.isEmpty == false){
+    //     partidas.push(partidaExistenciaInicial);
+    // }
+    
     partidas = partidas.sort(sortByfechaEntadaAsc);
-    //console.log("Partidas",partidas);
+    
     let partidasActuales = [];
 
     try
@@ -228,7 +236,7 @@ async function getByProductoEmbalaje(req,res){
         {
             partidas.forEach(partida=> {
                 let subConsecutivo = 0;
-                
+                console.log(partida.lote);
                 partida.posiciones.filter(x=> !x.isEmpty).forEach(posicion=>{
                     let auxPartida = {
                         lote : partida.lote,
