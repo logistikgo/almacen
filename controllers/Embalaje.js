@@ -28,7 +28,7 @@ function getById(req,res){
 function save(req,res){
 
 	let nEmbalaje = new Embalaje(req.body);
-
+	nEmbalaje.clave = nEmbalaje.nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 	nEmbalaje.fechaAlta = new Date();
 	nEmbalaje.status = "ACTIVO";
 

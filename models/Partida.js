@@ -45,7 +45,7 @@ const Partida = Schema(
         IDPedido: Number,
         InfoPedido: {},
         isEmpty: { type: Boolean, default: false },
-        status: { type: String, default: "APLICADA" }
+        tipo: { type: String, default: "NORMAL" }
     },
     {
         collection: 'Partidas'

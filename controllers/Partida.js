@@ -3,6 +3,9 @@
 const Partida = require('../models/Partida');
 const Salida = require('../models/Salida');
 const Helper = require('../helpers');
+const Entrada = require('../models/Entrada');
+const NullParamsException = {error: "NullParamsException"};
+const BreakException = {info : "Break"};
 
 function get(req,res){
     let encoded_filter = req.params.filtro;
@@ -195,7 +198,7 @@ async function getByProductoEmbalaje(req,res){
     let cantidadRestante = parseFloat(cantidad);
     let isPEPS = req.params.isPEPS;
 
-    let BreakException = {};
+    
 
     /**
      * Se obtienen las partidas necesarias para la cantidad deseada
@@ -217,13 +220,6 @@ async function getByProductoEmbalaje(req,res){
     partidas = partidas.filter(x=> x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id 
         && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id );
 
-    //Se encuentra la partida de tipo  existencia inicial
-    //let partidaExistenciaInicial = await Partida.findOne({producto_id : producto_id, tipo: "EXISTENCIA_INICIAL"}).exec();
-    
-    
-    // if(partidaExistenciaInicial!= undefined && partidaExistenciaInicial.isEmpty == false){
-    //     partidas.push(partidaExistenciaInicial);
-    // }
     
     partidas = partidas.sort(sortByfechaEntadaAsc);
     
@@ -349,6 +345,78 @@ async function getByProductoEmbalaje(req,res){
     }
 }
 
+async function getPartidasByIDs(req,res){
+
+    /**
+     * Obtiene las partidas con respecto a los filtros de cliente fiscal, sucursal y almacen
+     */
+    
+    
+    let arrClientesFiscales_id = req.query.arrClientesFiscales_id; 
+    let arrSucursales_id = req.query.arrSucursales_id;
+    let arrAlmacenes_id = req.query.arrAlmacenes_id;
+    let tipo = req.query.tipo;
+    
+    try
+    {
+        if(arrClientesFiscales_id == undefined || arrClientesFiscales_id.length == 0) throw NullParamsException;
+        if(arrSucursales_id == undefined || arrSucursales_id.length == 0) throw NullParamsException;
+        if(arrAlmacenes_id == undefined || arrAlmacenes_id.length == 0) throw NullParamsException;
+        if(tipo == undefined || tipo == "") throw NullParamsException;
+        
+        
+        let entradas = await Entrada.find({clienteFiscal_id : {$in: arrClientesFiscales_id } ,
+            sucursal_id : {$in: arrSucursales_id },
+            almacen_id : {$in: arrAlmacenes_id}}).exec();
+        let entradas_id = entradas.map(x=> x._id);
+        
+        let partidas = await Partida
+        .find({entrada_id : {$in : entradas_id},tipo : tipo })
+        .populate({
+           path: "entrada_id" ,
+           model : "Entrada",
+           populate : {
+               path: "clienteFiscal_id",
+               model: "ClienteFiscal",
+               select : 'nombreCorto nombreComercial razonSocial'
+           },
+           select : 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra'
+        })
+        .populate({
+            path: "entrada_id" ,
+            model : "Entrada",
+            populate : {
+                path: "sucursal_id",
+                model: "Sucursal",
+                select : 'nombre'
+            },
+            select : 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra'
+         })
+         .populate({
+            path: "entrada_id" ,
+            model : "Entrada",
+            populate : {
+                path: "almacen_id",
+                model: "Almacen",
+                select : 'nombre'
+            },
+            select : 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra'
+         })
+         .populate({
+             path: 'salidas_id.salida_id',
+             model : 'Salida',
+             select : 'folio stringFolio fechaSalida'
+         })
+        .exec();
+
+        partidas = partidas.sort(sortByfechaEntadaAsc);
+        res.status(200).send(partidas);
+    }
+    catch(error){
+        res.status(500).send(error);
+    }
+}
+
 function sortByfechaEntadaDesc(a,b){
     if(a.entrada_id.fechaEntrada < b.entrada_id.fechaEntrada){
         return 1;
@@ -381,5 +449,6 @@ module.exports = {
     getByEntrada,
     getBySalida,
     put,
-    getByProductoEmbalaje
+    getByProductoEmbalaje,
+    getPartidasByIDs
 }

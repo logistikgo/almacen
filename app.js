@@ -49,6 +49,7 @@ app.delete('/api/productos',Producto._delete);
 app.get('/api/validaProducto/:clave',Producto.validaProducto);
 app.get('/api/getProductos',Producto.getByIDsClientesFiscales);
 app.get('/api/getProductosALMXD',Producto.getALM_XD);
+app.get('/api/getExistenciasByAlmacen/:almacen_id/:producto_id',Producto.getExistenciasByAlmacen);
 
 app.get('/api/movimientosInventarioByProducto', MovimientosInventario.getByProducto);
 app.get ('/api/posicionesxProducto', MovimientosInventario.getPosicionesByProducto);
@@ -71,7 +72,7 @@ app.put('/api/entrada', Entrada.update);
 app.post('/api/entradaAutomatica',Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada',Entrada.validaEntrada);
 
-app.get('/api/partidasByIDs',Helper.getPartidasByIDs);
+app.get('/api/partidasByIDs',Partida.getPartidasByIDs);
 //app.get('/api/partida', Entrada.getPartidaById);
 //app.put('/api/partida', Entrada.updatePartida);
 
@@ -151,7 +152,5 @@ app.get('/api/partida/salida/:salida_id',Partida.getBySalida);
 app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:almacen_id/:cantidad/:isPEPS',Partida.getByProductoEmbalaje);
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
 app.put('/api/partida/:_id', Entrada.put);
-
-app.put('/api/migracion',Helper.migracion);
 
 module.exports = app;
