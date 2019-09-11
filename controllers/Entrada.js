@@ -147,7 +147,7 @@ async function save(req, res){
 	let nEntrada = new Entrada(req.body);
 	
 	nEntrada.fechaAlta = new Date();
-	nEntrada.fechaEntrada = new Date(req.body.strFechaIngreso);
+	nEntrada.fechaEntrada = new Date(req.body.fechaEntrada + 'T' + req.body.horaEntrada);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio,nEntrada.clienteFiscal_id,'I');
@@ -185,7 +185,7 @@ async function saveEntradaAutomatica(req,res){
 
 			let nEntrada = new Entrada(req.body);
 
-			nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada); 			
+			nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada + 'T' + bodyParams.horaEntrada); 			
 			nEntrada.valor = partidas.map(x=>x.valor).reduce(function(total,valor){
 				return total + valor;
 			});//Si lo trae
