@@ -373,11 +373,10 @@ async function getPartidasByIDs(req,res){
         };
 
         if(fechaInicio != undefined && fechaFinal != undefined) {
-            filtro['fechaEntrada'] = { $gte : fechaInicio };
-            filtro['fechaEntrada'] = { $lt : fechaFinal };
+            filtro['fechaEntrada'] = { $gte : fechaInicio , $lt : fechaFinal };
         }
 
-        
+        console.log(filtro);
         let entradas = await Entrada.find(filtro).exec();
         let entradas_id = entradas.map(x=> x._id);
         

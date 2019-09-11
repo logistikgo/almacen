@@ -88,7 +88,7 @@ function get(req,res){
 		statusReg:"ACTIVO"
 	}, (err,almacenes)=>{
 		if(err)
-			return res.status(500).send({message:"Error"});
+			return res.status(500).send(err);
 
 		res.status(200).send(almacenes);
 	});
