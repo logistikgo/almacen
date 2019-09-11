@@ -84,7 +84,7 @@ function get(req,res){
 	let _arrSucursales = req.query.arrSucursales;
 
 	Almacen.find({
-		idSucursal:{$in:_arrSucursales},
+		sucursal_id:{$in:_arrSucursales},
 		statusReg:"ACTIVO"
 	}, (err,almacenes)=>{
 		if(err)
