@@ -64,7 +64,7 @@ function getByID(req,res) {
 async function save(req, res) {
 	let nSalida = new Salida(req.body);
 	nSalida.fechaAlta = new Date();
-	nSalida.fechaSalida = new Date(req.body.fechaSalida + 'T' + req.body.horaSalida);
+	nSalida.fechaSalida = new Date(req.body.fechaSalida);
 	nSalida.salida_id = await getNextID();
 	nSalida.folio = await getNextID();
 	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio,nSalida.clienteFiscal_id,'O');

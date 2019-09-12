@@ -147,7 +147,7 @@ async function save(req, res){
 	let nEntrada = new Entrada(req.body);
 	
 	nEntrada.fechaAlta = new Date();
-	nEntrada.fechaEntrada = new Date(req.body.fechaEntrada + 'T' + req.body.horaEntrada);
+	nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio,nEntrada.clienteFiscal_id,'I');
