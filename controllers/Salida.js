@@ -28,7 +28,7 @@ function getSalidasByIDs(req,res){
 
 	let filter = {
 		clienteFiscal_id: _idClienteFiscal,
-		idSucursal:_idSucursal,
+		sucursal_id:_idSucursal,
 		almacen_id:_idAlmacen,
 		tipo:_tipo
 	};
