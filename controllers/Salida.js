@@ -28,7 +28,7 @@ function getSalidasByIDs(req,res){
 
 	let filter = {
 		clienteFiscal_id: _idClienteFiscal,
-		idSucursal:_idSucursal,
+		sucursal_id:_idSucursal,
 		almacen_id:_idAlmacen,
 		tipo:_tipo
 	};
@@ -64,7 +64,7 @@ function getByID(req,res) {
 async function save(req, res) {
 	let nSalida = new Salida(req.body);
 	nSalida.fechaAlta = new Date();
-	nSalida.fechaSalida = new Date(req.body.strFechaSalida);
+	nSalida.fechaSalida = new Date(req.body.fechaSalida);
 	nSalida.salida_id = await getNextID();
 	nSalida.folio = await getNextID();
 	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio,nSalida.clienteFiscal_id,'O');

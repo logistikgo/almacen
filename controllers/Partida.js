@@ -355,6 +355,8 @@ async function getPartidasByIDs(req,res){
     let arrClientesFiscales_id = req.query.arrClientesFiscales_id; 
     let arrSucursales_id = req.query.arrSucursales_id;
     let arrAlmacenes_id = req.query.arrAlmacenes_id;
+    let fechaInicio = req.query.fechaInicio;
+    let fechaFinal = req.query.fechaFinal;
     let tipo = req.query.tipo;
     
     try
@@ -364,10 +366,17 @@ async function getPartidasByIDs(req,res){
         if(arrAlmacenes_id == undefined || arrAlmacenes_id.length == 0) throw NullParamsException;
         if(tipo == undefined || tipo == "") throw NullParamsException;
         
-        
-        let entradas = await Entrada.find({clienteFiscal_id : {$in: arrClientesFiscales_id } ,
+        let filtro = {
+            clienteFiscal_id : {$in: arrClientesFiscales_id } ,
             sucursal_id : {$in: arrSucursales_id },
-            almacen_id : {$in: arrAlmacenes_id}}).exec();
+            almacen_id : {$in: arrAlmacenes_id}
+        };
+
+        if(fechaInicio != undefined && fechaFinal != undefined) {
+            filtro['fechaEntrada'] = { $gte : fechaInicio , $lt : fechaFinal };
+        }
+
+        let entradas = await Entrada.find(filtro).exec();
         let entradas_id = entradas.map(x=> x._id);
         
         let partidas = await Partida
@@ -380,7 +389,7 @@ async function getPartidasByIDs(req,res){
                model: "ClienteFiscal",
                select : 'nombreCorto nombreComercial razonSocial'
            },
-           select : 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra'
+           select : 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista'
         })
         .populate({
             path: "entrada_id" ,
@@ -390,7 +399,7 @@ async function getPartidasByIDs(req,res){
                 model: "Sucursal",
                 select : 'nombre'
             },
-            select : 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra'
+            select : 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista'
          })
          .populate({
             path: "entrada_id" ,
@@ -400,12 +409,12 @@ async function getPartidasByIDs(req,res){
                 model: "Almacen",
                 select : 'nombre'
             },
-            select : 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra'
+            select : 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista'
          })
          .populate({
              path: 'salidas_id.salida_id',
              model : 'Salida',
-             select : 'folio stringFolio fechaSalida'
+             select : 'folio stringFolio fechaSalida item'
          })
         .exec();
 

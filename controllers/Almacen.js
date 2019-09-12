@@ -56,7 +56,7 @@ function getCatalogo(req,res){
 	let _arrSucursales = req.query.arrSucursales;
 
 	Almacen.find({
-		idSucursal:{$in:_arrSucursales},
+		sucursal_id:{$in:_arrSucursales},
 		statusReg:"ACTIVO"
 	},async (err,almacenes)=>{
 		if(err)
@@ -84,11 +84,11 @@ function get(req,res){
 	let _arrSucursales = req.query.arrSucursales;
 
 	Almacen.find({
-		idSucursal:{$in:_arrSucursales},
+		sucursal_id:{$in:_arrSucursales},
 		statusReg:"ACTIVO"
 	}, (err,almacenes)=>{
 		if(err)
-			return res.status(500).send({message:"Error"});
+			return res.status(500).send(err);
 
 		res.status(200).send(almacenes);
 	});

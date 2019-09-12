@@ -137,6 +137,26 @@ function getPartidaById(req, res) {
 	});
 }
 
+function getSalidasByID(req, res) {
+	let params = req.query;
+	let entrada_id = params.entrada_id;
+	let clave_salida = params.clave_salida;
+
+	Entrada.
+	findOne({_id: entrada_id}).
+	populate({
+		path:'',
+	})
+	.then((entrada)=>{
+		let partida = entrada.partidas.find(x=>x.clave_partida==clave_partida);
+
+		res.status(200).send(partida);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	});
+}
+
 async function save(req, res){
 
 	/**
@@ -147,7 +167,7 @@ async function save(req, res){
 	let nEntrada = new Entrada(req.body);
 	
 	nEntrada.fechaAlta = new Date();
-	nEntrada.fechaEntrada = new Date(req.body.strFechaIngreso);
+	nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio,nEntrada.clienteFiscal_id,'I');
@@ -185,7 +205,7 @@ async function saveEntradaAutomatica(req,res){
 
 			let nEntrada = new Entrada(req.body);
 
-			nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada); 			
+			nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada + 'T' + bodyParams.horaEntrada); 			
 			nEntrada.valor = partidas.map(x=>x.valor).reduce(function(total,valor){
 				return total + valor;
 			});//Si lo trae
