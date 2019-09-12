@@ -137,6 +137,26 @@ function getPartidaById(req, res) {
 	});
 }
 
+function getSalidasByID(req, res) {
+	let params = req.query;
+	let entrada_id = params.entrada_id;
+	let clave_salida = params.clave_salida;
+
+	Entrada.
+	findOne({_id: entrada_id}).
+	populate({
+		path:'',
+	})
+	.then((entrada)=>{
+		let partida = entrada.partidas.find(x=>x.clave_partida==clave_partida);
+
+		res.status(200).send(partida);
+	})
+	.catch((error)=>{
+		res.status(500).send(error);
+	});
+}
+
 async function save(req, res){
 
 	/**
