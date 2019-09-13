@@ -730,5 +730,6 @@ module.exports = {
 	getPartidaById,
 	validaEntrada,
 	saveEntradaAutomatica,
+	getSalidasByID,
 	put
 }
