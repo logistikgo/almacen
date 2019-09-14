@@ -1,6 +1,7 @@
 'use strict'
 
 const Entrada = require('../models/Entrada');
+const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
 const PartidaModel = require('../controllers/Partida');
 const Helper = require('../helpers');
@@ -137,22 +138,14 @@ function getPartidaById(req, res) {
 	});
 }
 
-function getSalidasByID(req, res) {
-	let params = req.query;
-	let entrada_id = params.entrada_id;
-	let clave_salida = params.clave_salida;
+function getSalidasByEntradaID(req, res) {
+	let _id = req.query._id;
 
-	Entrada.
-	findOne({_id: entrada_id}).
-	populate({
-		path:'',
+	Salida.find({entrada_id: _id})
+	.then((salidas) => {
+		res.status(200).send(salidas);
 	})
-	.then((entrada)=>{
-		let partida = entrada.partidas.find(x=>x.clave_partida==clave_partida);
-
-		res.status(200).send(partida);
-	})
-	.catch((error)=>{
+	.catch((error) => {
 		res.status(500).send(error);
 	});
 }
@@ -730,6 +723,6 @@ module.exports = {
 	getPartidaById,
 	validaEntrada,
 	saveEntradaAutomatica,
-	getSalidasByID,
+	getSalidasByEntradaID,
 	put
 }

@@ -66,7 +66,7 @@ app.post('/api/updateUsuario', Usuario.update);
 app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID', Entrada.getEntradaByID);
 app.get('/api/getEntradasByIDs',Entrada.getEntradasByIDs);
-app.get('/api/getDetalleSalidasByEntradaId', Entrada.getSalidasByID);
+app.get('/api/getSalidasByEntradaId', Entrada.getSalidasByEntradaID);
 app.get('/api/getDeliveryGroups',Helper.GetDeliveryGroups);
 app.post('/api/entrada', Entrada.save);
 app.put('/api/entrada', Entrada.update);
