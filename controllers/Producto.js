@@ -50,8 +50,6 @@ async function getExistenciasByAlmacen(req,res){
 	catch(error){
 		res.status(500).send(error);
 	}
-	
-
 }
 
 function getById(req, res) {
@@ -148,7 +146,6 @@ function getByIDClienteFiscal(req, res) {
 	.catch((error) => {
 		return res.status(500).send(error);
 	});
-	
 }
 
 async function save(req,res) {
