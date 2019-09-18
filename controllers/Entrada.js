@@ -74,6 +74,7 @@ async function getEntradasByIDs(req,res){
 		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([_idSucursal]); 
 		filter.clienteFiscal_id = arrClientes[0];
 		filter.sucursal_id = arrSucursales[0];
+		
 	}
 	
 	Entrada.find(filter).sort({fechaEntrada:-1})
