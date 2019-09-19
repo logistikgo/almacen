@@ -45,6 +45,7 @@ const Partida = Schema(
         IDPedido: Number,
         InfoPedido: {},
         isEmpty: { type: Boolean, default: false },
+        origen : { type: String, default: "ALM" },
         tipo: { type: String, default: "NORMAL" }
     },
     {
