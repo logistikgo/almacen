@@ -340,7 +340,7 @@ async function getByProductoEmbalaje(req,res){
             res.status(200).send(partidasActuales);
         }else
         {
-            throw e;
+            res.status(500).send(e);
         }
     }
 }
@@ -451,6 +451,40 @@ function sortByfechaEntadaAsc(a,b){
     return 0;
 }
 
+async function save(req,res){
+
+    try
+    {
+        var arrPartidas_id = [];
+        let arrPartidas = req.body.partidas;
+        await Helper.asyncForEach(arrPartidas,async function(partida){
+            let nPartida = new Partida(partida); 
+            nPartida.origen = "XD";
+            nPartida.tipo = "PEDIDO";
+            await nPartida.save().then((partida)=>{
+                arrPartidas_id.push(partida._id);
+            });
+        });
+        return arrPartidas_id;
+    }
+    catch(e)
+    {
+        res.status(500).send(e);
+    }
+}
+
+async function getByPedido(req,res){
+    try
+    {
+        Partida.find({IDPedido : req.params.IDPedido}).then(function(partidas){
+            res.status(200).send(partidas);
+        });
+    }
+    catch(e){
+        res.status(500).send(e);
+    }
+}
+
 module.exports = {
     get,
     post,
@@ -459,5 +493,7 @@ module.exports = {
     getBySalida,
     put,
     getByProductoEmbalaje,
-    getPartidasByIDs
+    getPartidasByIDs,
+    save,
+    getByPedido
 }

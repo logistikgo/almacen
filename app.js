@@ -19,7 +19,7 @@ const Posicion = require('./controllers/Posicion');
 const Embalaje = require('./controllers/Embalaje');
 const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
-const PrePartida = require('./controllers/PrePartida');
+//const PrePartida = require('./controllers/PrePartida');
 const Partida = require('./controllers/Partida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
@@ -138,10 +138,11 @@ app.get('/api/pasillos', Pasillo.get);
 app.get('/api/pasillo', Pasillo.getById);
 app.get('/api/posicionesNom', Pasillo.getPosiciones);
 
-app.post('/api/prepartida',PrePartida.savePartidasPedido);
-app.get('/api/prepartida',PrePartida.get);
-app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
-app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
+
+//app.post('/api/prepartida',PrePartida.savePartidasPedido);
+// app.get('/api/prepartida',PrePartida.get);
+// app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
+// app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
 
@@ -153,5 +154,7 @@ app.get('/api/partida/salida/:salida_id',Partida.getBySalida);
 app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:almacen_id/:cantidad/:isPEPS',Partida.getByProductoEmbalaje);
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
 app.put('/api/partida/:_id', Entrada.put);
+app.post('/api/partida',Partida.save);
+app.get('/api/partida/pedido/:IDPedido',Partida.getByPedido);
 
 module.exports = app;
