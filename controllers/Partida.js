@@ -453,6 +453,11 @@ function sortByfechaEntadaAsc(a,b){
 
 async function save(req,res){
 
+    /**
+     * Esta funcion es utilizada para guardar las partidas generadas desde un pedido
+     * en la plataforma de Crossdock (XD)
+     */
+
     try
     {
         var arrPartidas_id = [];
@@ -474,6 +479,12 @@ async function save(req,res){
 }
 
 async function getByPedido(req,res){
+
+    /**
+     * Esta funcion obtiene las partidas que fueron creadas
+     * a partir de pedidos en la plataforma Crossdock (XD)
+     */
+
     try
     {
         Partida.find({IDPedido : req.params.IDPedido}).then(function(partidas){
@@ -483,6 +494,26 @@ async function getByPedido(req,res){
     catch(e){
         res.status(500).send(e);
     }
+}
+
+async function update(req,res){
+
+    /**
+     * Esta funcion actualiza las existencias de la partida
+     * por un monto menor en cantidad de los embalajes
+     * Se utiliza al hacer un pedido con partidas ya existentes.
+     * Indicando que ese pedido es para una salida en ALM
+     */
+
+     try
+     {
+        let IDPedido = req.params.IDPedido;
+        let arrPartidas = req.body.partidas;
+     }
+     catch(e){
+         res.status(500).send(e);
+     }
+
 }
 
 module.exports = {
@@ -495,5 +526,6 @@ module.exports = {
     getByProductoEmbalaje,
     getPartidasByIDs,
     save,
-    getByPedido
+    getByPedido,
+    update
 }

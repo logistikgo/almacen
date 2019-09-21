@@ -156,5 +156,6 @@ app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:al
 app.put('/api/partida/:_id', Entrada.put);
 app.post('/api/partida',Partida.save);
 app.get('/api/partida/pedido/:IDPedido',Partida.getByPedido);
+app.put('/api/partida/pedido/:IDPedido',Partida.update);
 
 module.exports = app;
