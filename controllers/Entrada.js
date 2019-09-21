@@ -141,9 +141,10 @@ function getPartidaById(req, res) {
 
 function getSalidasByEntradaID(req, res) {
 	let _id = req.query.entrada_id;
-
+	console.log(_id);
 	Salida.find({entrada_id: _id})
 	.then((salidas) => {
+		//console.log(salidas);
 		res.status(200).send(salidas);
 	})
 	.catch((error) => {

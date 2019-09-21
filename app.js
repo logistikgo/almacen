@@ -22,6 +22,7 @@ const Pasillo = require('./controllers/Pasillo');
 //const PrePartida = require('./controllers/PrePartida');
 const Partida = require('./controllers/Partida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
+const ColumnasxOperacion = require("./controllers/ColumnasxOperacion");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
 
 //const dotenv = require('dotenv'); //Used for environment variables
@@ -145,6 +146,7 @@ app.get('/api/posicionesNom', Pasillo.getPosiciones);
 // app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
+app.get('/api/columnasOperacion/:idTable/:clienteFiscal_id/:sucursal_id/:almacen_id', ColumnasxOperacion.get);
 
 app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
 
