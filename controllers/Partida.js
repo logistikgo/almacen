@@ -507,8 +507,11 @@ async function update(req,res){
 
      try
      {
-        let IDPedido = req.params.IDPedido;
         let arrPartidas = req.body.partidas;
+        let changes = {
+            IDPedido
+        }
+
      }
      catch(e){
          res.status(500).send(e);

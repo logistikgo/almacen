@@ -40,13 +40,15 @@ const Partida = Schema(
         ],
         embalajesEntrada : {},
         embalajesxSalir : {},
+        embalajesAlmacen : {},
         lote: String,
         valor: { type: Number, default: 0 },
-        IDPedido: Number,
-        InfoPedido: {},
+        IDPedido: [Number],
+        InfoPedido: [],
         isEmpty: { type: Boolean, default: false },
         origen : { type: String, default: "ALM" },
-        tipo: { type: String, default: "NORMAL" }
+        tipo: { type: String, default: "NORMAL" },
+        status : { type: String, default: "ASIGNADA" }
     },
     {
         collection: 'Partidas'
