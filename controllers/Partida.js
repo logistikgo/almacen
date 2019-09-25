@@ -508,9 +508,20 @@ async function update(req,res){
      try
      {
         let arrPartidas = req.body.partidas;
-        let changes = {
-            IDPedido
-        }
+        await Helper.asyncForEach(arrPartidas,async function(partida){
+            
+            let changes = {
+                embalajesAlmacen : partida.embalajesAlmacen,
+                embalajesxSalir : partida.embalajesxSalir,
+                InfoPedidos : partida.InfoPedidos,
+                isEmpty : partida.isEmpty,
+                posiciones : partida.posiciones
+            };
+
+            Partida.updateOne({_id : partida._id.toString()},{$set : changes}).then(updated=>{
+                res.status(200).send(updated);
+            });
+        });
 
      }
      catch(e){
