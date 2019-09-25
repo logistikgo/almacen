@@ -43,7 +43,24 @@ const Partida = Schema(
         embalajesAlmacen : {},
         lote: String,
         valor: { type: Number, default: 0 },
-        InfoPedidos: [],
+        InfoPedidos: [
+            {
+                IDPedido : Number,
+                Delivery : String,
+                ClienteOrigen : String,
+                ClienteFinal : String,
+                ClienteFiscal : String,
+                FechaAlta : Date,
+                FechaETA : Date,
+                Tarimas : Number,
+                Piezas : Number,
+                Cajas : Number,
+                CrossDock : String,
+                Sucursal : String,
+                embalajes : {},
+                embalajesEnSalidasxPosicion : {}
+            }
+        ],
         isEmpty: { type: Boolean, default: false },
         origen : { type: String, default: "ALM" },
         tipo: { type: String, default: "NORMAL" },

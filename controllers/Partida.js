@@ -487,8 +487,15 @@ async function getByPedido(req,res){
 
     try
     {
-        Partida.find({IDPedido : req.params.IDPedido}).then(function(partidas){
-            res.status(200).send(partidas);
+        console.log(req.params.IDPedido);
+        Partida.find({'InfoPedidos.IDPedido' : req.params.IDPedido}).then(function(partidas){
+            let NPartidas = [];
+            partidas.forEach(partida=>{
+                let NPartida = JSON.parse(JSON.stringify(partida));
+                NPartida.embalajesxPedido = NPartida.InfoPedidos.find(x=> x.IDPedido == req.params.IDPedido).embalajes;
+                NPartidas.push(NPartida);
+            });
+            res.status(200).send(NPartidas);
         });
     }
     catch(e){
