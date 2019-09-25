@@ -41,7 +41,11 @@ async function getExistenciasByAlmacen(req,res){
 		partidas.forEach(function(partida){
 			for(let x in partida.embalajesxSalir){
 				if(existencias[x] == undefined) existencias[x] = 0;
-				existencias[x] += partida.embalajesxSalir[x];
+
+				if(partida.embalajesAlmacen != undefined)
+					existencias[x] += partida.embalajesAlmacen[x];
+				else
+					existencias[x] += partida.embalajesxSalir[x];
 			}
 		});
 
