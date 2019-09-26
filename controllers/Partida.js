@@ -481,18 +481,18 @@ async function save(req,res){
 async function getByPedido(req,res){
 
     /**
-     * Esta funcion obtiene las partidas que fueron creadas
-     * a partir de pedidos en la plataforma Crossdock (XD)
+     * Esta funcion obtiene las partidas que estan asignadas
+     * con uno o varios pedidos
      */
 
     try
     {
-        console.log(req.params.IDPedido);
-        Partida.find({'InfoPedidos.IDPedido' : req.params.IDPedido}).then(function(partidas){
+        
+        Partida.find({'InfoPedidos.IDPedido' : {$in : req.query.arrIDPedidos}}).then(function(partidas){
             let NPartidas = [];
             partidas.forEach(partida=>{
                 let NPartida = JSON.parse(JSON.stringify(partida));
-                NPartida.embalajesxPedido = NPartida.InfoPedidos.find(x=> x.IDPedido == req.params.IDPedido).embalajes;
+                if(req.query.arrIDPedidos.length == 1) NPartida.embalajesxPedido = NPartida.InfoPedidos.find(x=> x.IDPedido == req.query.arrIDPedidos[0]).embalajes;    
                 NPartidas.push(NPartida);
             });
             res.status(200).send(NPartidas);
@@ -503,7 +503,7 @@ async function getByPedido(req,res){
     }
 }
 
-async function update(req,res){
+async function _update(req,res){
 
     /**
      * Esta funcion actualiza las existencias de la partida
@@ -515,6 +515,9 @@ async function update(req,res){
      try
      {
         let arrPartidas = req.body.partidas;
+        let arrPartidasUpdated = [];
+        
+
         await Helper.asyncForEach(arrPartidas,async function(partida){
             
             let changes = {
@@ -525,10 +528,17 @@ async function update(req,res){
                 posiciones : partida.posiciones
             };
 
-            Partida.updateOne({_id : partida._id.toString()},{$set : changes}).then(updated=>{
-                res.status(200).send(updated);
-            });
+           let partidaUpdated =  await Partida.findOneAndUpdate({_id : partida._id.toString()},{$set : changes},{new : true});
+           arrPartidasUpdated.push(partidaUpdated);
+           
         });
+        if(arrPartidas.length == arrPartidasUpdated.length){
+            res.status(200).send(arrPartidasUpdated);
+        }else{
+            res.status(304).send({message: "Not all data was succesfully updated"});
+        }
+        
+        
 
      }
      catch(e){
@@ -548,5 +558,5 @@ module.exports = {
     getPartidasByIDs,
     save,
     getByPedido,
-    update
+    _update
 }

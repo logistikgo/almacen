@@ -3,7 +3,7 @@
 const Entrada = require('../models/Entrada');
 const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
-const PartidaModel = require('../controllers/Partida');
+const PartidaModel = require('../models/Partida');
 const Helper = require('../helpers');
 const Producto = require('../models/Producto');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
@@ -606,59 +606,59 @@ function updatePartida(req,res){
 }
 
 function put(req, res){
-	let partida_id = req.params. partida_id;
-	let params = req.query;
+	// let partida_id = req.params. partida_id;
+	// let params = req.query;
 
-	console.log(partida_id);
-	console.log(params);
+	// console.log(partida_id);
+	// console.log(params);
 
-	PartidaModel.findOne({_id:partida_id})
-	.then(async(partida) => {
-		let isEquals = await equalsEmbalajes(partida, bodyParams);
-		//console.log(isEquals);
+	// PartidaModel.findOne({_id:partida_id})
+	// .then(async(partida) => {
+	// 	let isEquals = await equalsEmbalajes(partida, bodyParams);
+	// 	//console.log(isEquals);
 		
-		if(partida.pesoBruto == bodyParams.pesoBruto && partida.pesoNeto == bodyParams.pesoNeto && partida.valor == bodyParams.valor && isEquals){
-			await updatePartidaPosicion(partida, partidaSalida, bodyParams);
-		}
-		else{
-			if(partida.pesoBruto != bodyParams.pesoBruto)
-				await updatePartidaPesoB(partida, partidaSalida, bodyParams);
-			if(partida.pesoNeto != bodyParams.pesoNeto)
-				await updatePartidaPesoN(partida, partidaSalida, bodyParams);
-			if(!isEquals)
-				await updatePartidaEmbalajes(partida, partidaSalida, bodyParams);
-			if(partida.valor != bodyParams.valor)
-				await updatePartidaValor(partida, partidaSalida, bodyParams);
-		} 
+	// 	if(partida.pesoBruto == bodyParams.pesoBruto && partida.pesoNeto == bodyParams.pesoNeto && partida.valor == bodyParams.valor && isEquals){
+	// 		await updatePartidaPosicion(partida, partidaSalida, bodyParams);
+	// 	}
+	// 	else{
+	// 		if(partida.pesoBruto != bodyParams.pesoBruto)
+	// 			await updatePartidaPesoB(partida, partidaSalida, bodyParams);
+	// 		if(partida.pesoNeto != bodyParams.pesoNeto)
+	// 			await updatePartidaPesoN(partida, partidaSalida, bodyParams);
+	// 		if(!isEquals)
+	// 			await updatePartidaEmbalajes(partida, partidaSalida, bodyParams);
+	// 		if(partida.valor != bodyParams.valor)
+	// 			await updatePartidaValor(partida, partidaSalida, bodyParams);
+	// 	} 
 
-		let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
-		//console.log(resMovimietno);
+	// 	let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
+	// 	//console.log(resMovimietno);
 
-		let item = {
-			partidas: entrada.partidas,
-			partidasSalida: entrada.partidasSalida
-		};
+	// 	let item = {
+	// 		partidas: entrada.partidas,
+	// 		partidasSalida: entrada.partidasSalida
+	// 	};
 
-		//Validacion de cambio de status
-		let partidasPosicionadas = (item.partidas).filter(function (x){
-			return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
-		});
+	// 	//Validacion de cambio de status
+	// 	let partidasPosicionadas = (item.partidas).filter(function (x){
+	// 		return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
+	// 	});
 
-		//console.log(resMovimietno);
+	// 	//console.log(resMovimietno);
 
-		if(partidasPosicionadas.length == item.partidas.length && entrada.item != undefined && entrada.item != null && entrada.item != ""){
-			item.status = "APLICADA";
-		}
+	// 	if(partidasPosicionadas.length == item.partidas.length && entrada.item != undefined && entrada.item != null && entrada.item != ""){
+	// 		item.status = "APLICADA";
+	// 	}
 
-		await Entrada.updateOne({_id:entrada_id},{$set:item})
-		.then((item)=>{
-			//console.log("complete");
-			res.status(200).send(entrada);
-		})
-		.catch((error)=>{
-			res.status(500).send(entrada);
-		});
-	});
+	// 	await Entrada.updateOne({_id:entrada_id},{$set:item})
+	// 	.then((item)=>{
+	// 		//console.log("complete");
+	// 		res.status(200).send(entrada);
+	// 	})
+	// 	.catch((error)=>{
+	// 		res.status(500).send(entrada);
+	// 	});
+	// });
 }
 
 //CHRONOS
