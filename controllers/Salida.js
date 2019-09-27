@@ -196,13 +196,12 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 }
 
 async function saveSalidaAutomatica(req,res){
-	let bodyParams = req.body;
-	let arrIDPedido = bodyParams.arrIDPedido;
-	let partidas = await PrePartidaM.find({IDPedido:{$in:arrIDPedido}}).exec();
+	
+	let partidas = await Partida.find({'InfoPedidos.IDPedido' : {$in : req.query.arrIDPedidos}}).exec();
 	//console.log(partidas);
 	if(partidas && partidas.length>0){
-		let isSeleccionada = partidas[0].isSeleccionada;
-		let entrada = !isSeleccionada ?  await Entrada.findOne({"partidas._id":partidas[0]._id}) : await Entrada.findOne({"partidasSalida._id":partidas[0]._idAux});
+		// let isSeleccionada = partidas[0].isSeleccionada;
+		// let entrada = !isSeleccionada ?  await Entrada.findOne({"partidas._id":partidas[0]._id}) : await Entrada.findOne({"partidasSalida._id":partidas[0]._idAux});
 		
 		//console.log(entrada);
 		

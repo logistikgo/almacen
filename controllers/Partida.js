@@ -487,7 +487,6 @@ async function getByPedido(req,res){
 
     try
     {
-        
         Partida.find({'InfoPedidos.IDPedido' : {$in : req.query.arrIDPedidos}}).then(function(partidas){
             let NPartidas = [];
             partidas.forEach(partida=>{
