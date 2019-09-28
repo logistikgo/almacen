@@ -2,6 +2,7 @@
 
 const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
+const PartidaModel = require('../models/Partida');
 const Entrada = require('../models/Entrada');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const Helper = require('../helpers');
@@ -197,15 +198,19 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 
 async function saveSalidaAutomatica(req,res){
 	
-	let partidas = await Partida.find({'InfoPedidos.IDPedido' : {$in : req.query.arrIDPedidos}}).exec();
+	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).exec();
 	//console.log(partidas);
 	if(partidas && partidas.length>0){
-		// let isSeleccionada = partidas[0].isSeleccionada;
-		// let entrada = !isSeleccionada ?  await Entrada.findOne({"partidas._id":partidas[0]._id}) : await Entrada.findOne({"partidasSalida._id":partidas[0]._idAux});
+		let entradas_id = partidas.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
+		let entradas = await Entrada.find({"_id": {$in : entradas_id } });
+		let infoPedidos = [];
+		partidas.forEach(function(partida){
+			let infoPedidosActual = partida.InfoPedidos.filter(x=> req.body.arrIDPedidos.includes(x.IDPedido))[0];
+			infoPedidos.push(infoPedidosActual);
+		});
 		
-		//console.log(entrada);
-		
-		if((entrada && !entrada.isEmpty) || (entrada && isSeleccionada)){
+		console.log(infoPedidos);
+		if((entradas && entradas.length > 0)){
 
 			let nSalida = new Salida();
 			nSalida.salida_id = await getNextID();
@@ -214,45 +219,41 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
 			nSalida.nombreUsuario = req.body.nombreUsuario;
 			nSalida.folio = await getNextID();
-			nSalida.partidas =  !isSeleccionada ? getPartidasDeEntrada(entrada.partidasSalida,partidas) : partidas;	
+			nSalida.partidas = partidas.map(x=> x._id);
 			nSalida.transportista = req.body.transportista;
 			nSalida.placasRemolque = req.body.placasRemolque;
 			nSalida.placasTrailer = req.body.placasTrailer;
 			nSalida.operador = req.body.operador;
-			
-			nSalida.idClienteFiscal = entrada.idClienteFiscal;
-			nSalida.idSucursal = entrada.idSucursal;
-			nSalida.sucursal_id = entrada.sucursal_id;
-			nSalida.almacen_id = entrada.almacen_id;
-			nSalida.embarco = req.body.embarco;
-			nSalida.referencia = entrada.referencia;
-			nSalida.valor = entrada.valor;
-			nSalida.clienteFiscal_id = entrada.clienteFiscal_id;
-			nSalida.item = entrada.item;
-			nSalida.tipo = entrada.tipo;//NORMAL
-			nSalida.entrada_id = entrada._id;
+			nSalida.entrada_id = entradas_id;
 
+			//console.log(nSalida);
 			
-			if(!isSeleccionada){
-
-				
-				await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
-			}
+			// nSalida.idClienteFiscal = entrada.idClienteFiscal;
+			// nSalida.idSucursal = entrada.idSucursal;
+			// nSalida.sucursal_id = entrada.sucursal_id;
+			// nSalida.almacen_id = entrada.almacen_id;
+			// nSalida.embarco = req.body.embarco;
+			// nSalida.referencia = entrada.referencia;
+			// nSalida.valor = entrada.valor;
+			// nSalida.clienteFiscal_id = entrada.clienteFiscal_id;
+			// nSalida.item = entrada.item;
+			// nSalida.tipo = entrada.tipo;//NORMAL
 			
 
-			nSalida.save()
-			.then(async(salida)=>{
-				for(let itemPartida of salida.partidas){
-						await MovimientoInventario.saveSalida(itemPartida,salida.id);
-				}
-				await saveSalidasEnEntrada(salida.entrada_id,salida._id);
-				res.status(200).send(salida);
-			})
-			.catch((error)=>{
-				res.status(500).send(error);
-			});
-
 			
+			// nSalida.save()
+			// .then(async(salida)=>{
+			// 	for(let itemPartida of salida.partidas){
+			// 			await MovimientoInventario.saveSalida(itemPartida,salida.id);
+			// 	}
+			// 	await saveSalidasEnEntrada(salida.entrada_id,salida._id);
+			// 	res.status(200).send(salida);
+			// })
+			// .catch((error)=>{
+			// 	res.status(500).send(error);
+			// });
+
+			res.status(200).send({});
 		}else
 		{
 			res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
