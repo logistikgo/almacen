@@ -269,7 +269,7 @@ async function saveSalidaAutomatica(req,res){
 			PartidaFound.salidas_id = partida.salidas_id;
 			PartidaFound.InfoPedidos = partida.InfoPedidos;
 			console.log(PartidaFound);
-			//await PartidaFound.save().exec();
+			await PartidaFound.save();
 			
 		});
 

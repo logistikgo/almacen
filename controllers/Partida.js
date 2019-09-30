@@ -68,7 +68,10 @@ async function put(arrPartidas,salida_id){
             };
 
             if(partidaFound.embalajesAlmacen!= undefined){
-                changes['embalajesAlmacen'] = partidaFound.embalajesxSalir;
+                for(let x in partidaFound.embalajesAlmacen){
+                    partidaFound.embalajesAlmacen[x] -= partida.embalajesEnSalida[x];
+                }
+                changes['embalajesAlmacen'] = partidaFound.embalajesAlmacen;
             }
 
             await Partida.updateOne({_id: partidaFound._id},{$set : changes}).exec();
