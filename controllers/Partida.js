@@ -136,7 +136,7 @@ async function updateForSalidaAutomatica(partidas,arrIDPedidos,salida_id){
                 pasillo_id : posiciones[0].pasillo_id,
                 pasillo:posiciones[0].pasillo,
                 nivel_id: posiciones[0].nivel_id,
-                nivel:posiciones[0].nivel_id
+                nivel:posiciones[0].nivel
             };
             posiciones.forEach(function(posicion){
                 for(let x in posicion.embalajes){
@@ -159,7 +159,7 @@ async function updateForSalidaAutomatica(partidas,arrIDPedidos,salida_id){
             partida.embalajesAlmacen[x] -= embalajesTotales[x];
         }
         let PartidaFound = await Partida.findOne({_id : partida._id}).exec();
-        
+
         PartidaFound.salidas_id = partida.salidas_id;
         PartidaFound.InfoPedidos = partida.InfoPedidos;
         PartidaFound.embalajesAlmacen = partida.embalajesAlmacen;
