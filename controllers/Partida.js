@@ -68,7 +68,10 @@ async function put(arrPartidas,salida_id){
             };
 
             if(partidaFound.embalajesAlmacen!= undefined){
-                changes['embalajesAlmacen'] = partidaFound.embalajesxSalir;
+                for(let x in partidaFound.embalajesAlmacen){
+                    partidaFound.embalajesAlmacen[x] -= partida.embalajesEnSalida[x];
+                }
+                changes['embalajesAlmacen'] = partidaFound.embalajesAlmacen;
             }
 
             await Partida.updateOne({_id: partidaFound._id},{$set : changes}).exec();
@@ -96,6 +99,75 @@ async function post(arrPartidas,entrada_id){
     });
     return arrPartidas_id;
 
+}
+
+async function updateForSalidaAutomatica(partidas,salida_id){
+
+    await Helper.asyncForEach(partidas,async function(partida){
+        let infoPedidosActual = partida.InfoPedidos.filter(x=> req.body.arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
+        
+        //Se debera sumar la cantidad
+        let embalajesTotales = {};
+        let embalajesxPosicion = [];
+        infoPedidosActual.forEach(function(infoPedido){
+            infoPedido.status = "COMPLETO";
+            embalajesxPosicion = embalajesxPosicion.concat(infoPedido.embalajesEnSalidasxPosicion);
+            for(let x in infoPedido.embalajes){
+                if(embalajesTotales[x] == undefined) embalajesTotales[x] = 0;
+                embalajesTotales[x] += infoPedido.embalajes[x];
+            }
+        });
+        //y se deberan unificar las posiciones
+        let ubicacionesDistintas = [];
+        let posicionesDistintas = [];
+        embalajesxPosicion.forEach(function(element){
+            element.ubicacion = element.pasillo + element.posicion + element.nivel;
+            ubicacionesDistintas.push(element.ubicacion);
+            ubicacionesDistintas = ubicacionesDistintas.filter(Helper.distinct);
+        });
+
+        ubicacionesDistintas.forEach(function(ubicacion){
+            let posiciones = embalajesxPosicion.filter(x=> x.ubicacion.toString() == ubicacion);
+            let posicionFinal = {
+                embalajes: {},
+                posicion_id: posiciones[0].posicion_id,
+                posicion: posiciones[0].posicion,
+                pasillo_id : posiciones[0].pasillo_id,
+                pasillo:posiciones[0].pasillo,
+                nivel_id: posiciones[0].nivel_id,
+                nivel:posiciones[0].nivel_id
+            };
+            posiciones.forEach(function(posicion){
+                for(let x in posicion.embalajes){
+                    if(posicionFinal.embalajes[x] == undefined) posicionFinal.embalajes[x] = 0;
+                    posicionFinal.embalajes[x] += posicion.embalajes[x];
+                }
+            });
+            posicionesDistintas.push(posicionFinal);
+        });
+        let  Jsonsalida_id = {
+            salida_id : salida_id,
+            embalajes: embalajesTotales,
+            salidaxPosiciones : posicionesDistintas
+        };
+        partida.salidas_id.push(Jsonsalida_id);
+
+        //Actualiza embalajesAlmacen
+        for(let x in partida.embalajesAlmacen){
+            partida.embalajesAlmacen[x] -= embalajesTotales[x];
+        }
+        let PartidaFound = await PartidaModel.findOne({_id : partida._id}).exec();
+        
+        if(Helper.Compare(partida.embalajesxSalir,partida.embalajesAlmacen)){
+            delete partida.embalajesAlmacen;
+            PartidaFound.embalajesAlmacen = undefined;
+        } 
+        PartidaFound.salidas_id = partida.salidas_id;
+        PartidaFound.InfoPedidos = partida.InfoPedidos;
+        console.log(PartidaFound);
+        await PartidaFound.save();
+        
+    });
 }
 
 async function addSalida(salida,_id){
@@ -716,5 +788,6 @@ module.exports = {
     save,
     getByPedido,
     _update,
-    _put
+    _put,
+    updateForSalidaAutomatica
 }
