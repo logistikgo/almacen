@@ -100,15 +100,16 @@ async function post(arrPartidas, entrada_id) {
 
 }
 
-async function updateForSalidaAutomatica(partidas, salida_id) {
-
-    await Helper.asyncForEach(partidas, async function (partida) {
-        let infoPedidosActual = partida.InfoPedidos.filter(x => req.body.arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
+async function updateForSalidaAutomatica(partidas,arrIDPedidos,salida_id){
+    let partidasEdited = [];
+    await Helper.asyncForEach(partidas,async function(partida){
+        let infoPedidosActual = partida.InfoPedidos.filter(x=> arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
 
         //Se debera sumar la cantidad
         let embalajesTotales = {};
         let embalajesxPosicion = [];
-        infoPedidosActual.forEach(function (infoPedido) {
+
+        infoPedidosActual.forEach(function(infoPedido){
             infoPedido.status = "COMPLETO";
             embalajesxPosicion = embalajesxPosicion.concat(infoPedido.embalajesEnSalidasxPosicion);
             for (let x in infoPedido.embalajes) {
@@ -150,23 +151,28 @@ async function updateForSalidaAutomatica(partidas, salida_id) {
             salidaxPosiciones: posicionesDistintas
         };
         partida.salidas_id.push(Jsonsalida_id);
-
+        partida.embalajesEnSalida = embalajesTotales;
+        partida.embalajesEnSalidaxPosicion = posicionesDistintas;
         //Actualiza embalajesAlmacen
         for (let x in partida.embalajesAlmacen) {
             partida.embalajesAlmacen[x] -= embalajesTotales[x];
         }
-        let PartidaFound = await PartidaModel.findOne({ _id: partida._id }).exec();
+        let PartidaFound = await Partida.findOne({_id : partida._id}).exec();
 
-        if (Helper.Compare(partida.embalajesxSalir, partida.embalajesAlmacen)) {
+        PartidaFound.salidas_id = partida.salidas_id;
+        PartidaFound.InfoPedidos = partida.InfoPedidos;
+        PartidaFound.embalajesAlmacen = partida.embalajesAlmacen;
+
+        if(Helper.Compare(partida.embalajesxSalir,partida.embalajesAlmacen)){
             delete partida.embalajesAlmacen;
             PartidaFound.embalajesAlmacen = undefined;
         }
-        PartidaFound.salidas_id = partida.salidas_id;
-        PartidaFound.InfoPedidos = partida.InfoPedidos;
-        console.log(PartidaFound);
-        await PartidaFound.save();
 
+        //console.log(PartidaFound);
+        await PartidaFound.save();
+        partidasEdited.push(partida);
     });
+    return partidasEdited;
 }
 
 async function addSalida(salida, _id) {

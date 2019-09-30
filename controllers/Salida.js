@@ -237,11 +237,11 @@ async function saveSalidaAutomatica(req,res){
 			
 			nSalida.save()
 			.then(async(salida)=>{
-				for(let itemPartida of salida.partidas){
-						await MovimientoInventario.saveSalida(itemPartida,salida.id);
+				let partidasEdited = await Partida.updateForSalidaAutomatica(partidas,req.body.arrIDPedidos,salida._id);
+				for(let itemPartida of partidasEdited){
+					await MovimientoInventario.saveSalida(itemPartida,salida.id);
 				}
 				await saveSalidasEnEntrada(salida.entrada_id,salida._id);
-				await Partida.updateForSalidaAutomatica(partidas,salida._id);
 				res.status(200).send(salida);
 			})
 			.catch((error)=>{
