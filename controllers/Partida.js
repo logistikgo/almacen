@@ -145,12 +145,12 @@ async function updateForSalidaAutomatica(partidas,salida_id){
             });
             posicionesDistintas.push(posicionFinal);
         });
-        let  salida_id = {
+        let  Jsonsalida_id = {
             salida_id : salida_id,
             embalajes: embalajesTotales,
             salidaxPosiciones : posicionesDistintas
         };
-        partida.salidas_id.push(salida_id);
+        partida.salidas_id.push(Jsonsalida_id);
 
         //Actualiza embalajesAlmacen
         for(let x in partida.embalajesAlmacen){
