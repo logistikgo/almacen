@@ -198,18 +198,84 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 
 async function saveSalidaAutomatica(req,res){
 	
-	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).exec();
+	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).lean().exec();
 	//console.log(partidas);
 	if(partidas && partidas.length>0){
 		let entradas_id = partidas.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
 		let entradas = await Entrada.find({"_id": {$in : entradas_id } });
-		let infoPedidos = [];
-		partidas.forEach(function(partida){
-			let infoPedidosActual = partida.InfoPedidos.filter(x=> req.body.arrIDPedidos.includes(x.IDPedido))[0];
-			infoPedidos.push(infoPedidosActual);
-		});
 		
-		console.log(infoPedidos);
+		//ACTUALIZACION PARTIDA INICIO
+		//Englobar este codigo en una funcion del controller de la partida
+		
+		await Helper.asyncForEach(partidas,async function(partida){
+			let infoPedidosActual = partida.InfoPedidos.filter(x=> req.body.arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
+			
+			//Se debera sumar la cantidad
+			let embalajesTotales = {};
+			let embalajesxPosicion = [];
+			infoPedidosActual.forEach(function(infoPedido){
+				infoPedido.status = "COMPLETO";
+				embalajesxPosicion = embalajesxPosicion.concat(infoPedido.embalajesEnSalidasxPosicion);
+				for(let x in infoPedido.embalajes){
+					if(embalajesTotales[x] == undefined) embalajesTotales[x] = 0;
+					embalajesTotales[x] += infoPedido.embalajes[x];
+				}
+			});
+			//y se deberan unificar las posiciones
+			let ubicacionesDistintas = [];
+			let posicionesDistintas = [];
+			embalajesxPosicion.forEach(function(element){
+				element.ubicacion = element.pasillo + element.posicion + element.nivel;
+				ubicacionesDistintas.push(element.ubicacion);
+				ubicacionesDistintas = ubicacionesDistintas.filter(Helper.distinct);
+			});
+
+			ubicacionesDistintas.forEach(function(ubicacion){
+				let posiciones = embalajesxPosicion.filter(x=> x.ubicacion.toString() == ubicacion);
+				let posicionFinal = {
+					embalajes: {},
+					posicion_id: posiciones[0].posicion_id,
+					posicion: posiciones[0].posicion,
+					pasillo_id : posiciones[0].pasillo_id,
+					pasillo:posiciones[0].pasillo,
+					nivel_id: posiciones[0].nivel_id,
+					nivel:posiciones[0].nivel_id
+				};
+				posiciones.forEach(function(posicion){
+					for(let x in posicion.embalajes){
+						if(posicionFinal.embalajes[x] == undefined) posicionFinal.embalajes[x] = 0;
+						posicionFinal.embalajes[x] += posicion.embalajes[x];
+					}
+				});
+				posicionesDistintas.push(posicionFinal);
+			});
+			let  salida_id = {
+				salida_id : "_id",
+				embalajes: embalajesTotales,
+				salidaxPosiciones : posicionesDistintas
+			};
+			partida.salidas_id.push(salida_id);
+
+			//Actualiza embalajesAlmacen
+			for(let x in partida.embalajesAlmacen){
+				partida.embalajesAlmacen[x] -= embalajesTotales[x];
+			}
+			let PartidaFound = await PartidaModel.findOne({_id : partida._id}).exec();
+			
+			if(Helper.Compare(partida.embalajesxSalir,partida.embalajesAlmacen)){
+				delete partida.embalajesAlmacen;
+				PartidaFound.embalajesAlmacen = undefined;
+			} 
+			PartidaFound.salidas_id = partida.salidas_id;
+			PartidaFound.InfoPedidos = partida.InfoPedidos;
+			console.log(PartidaFound);
+			//await PartidaFound.save().exec();
+			
+		});
+
+		//ACTUALIZACION PARTIDA FIN
+		
+		//console.log(infoPedidos);
 		if((entradas && entradas.length > 0)){
 
 			let nSalida = new Salida();
@@ -253,7 +319,7 @@ async function saveSalidaAutomatica(req,res){
 			// 	res.status(500).send(error);
 			// });
 
-			res.status(200).send({});
+			res.status(200).send(partidas);
 		}else
 		{
 			res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");

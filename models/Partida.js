@@ -58,7 +58,8 @@ const Partida = Schema(
                 CrossDock : String,
                 Sucursal : String,
                 embalajes : {},
-                embalajesEnSalidasxPosicion : {}
+                embalajesEnSalidasxPosicion : {},
+                status : { type: String,default : "PENDIENTE"}
             }
         ],
         isEmpty: { type: Boolean, default: false },
