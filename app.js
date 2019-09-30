@@ -19,9 +19,10 @@ const Posicion = require('./controllers/Posicion');
 const Embalaje = require('./controllers/Embalaje');
 const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
-const PrePartida = require('./controllers/PrePartida');
+//const PrePartida = require('./controllers/PrePartida');
 const Partida = require('./controllers/Partida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
+const ColumnasxOperacion = require("./controllers/ColumnasxOperacion");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
 
 //const dotenv = require('dotenv'); //Used for environment variables
@@ -66,7 +67,7 @@ app.post('/api/updateUsuario', Usuario.update);
 app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID', Entrada.getEntradaByID);
 app.get('/api/getEntradasByIDs',Entrada.getEntradasByIDs);
-app.get('/api/getDetalleSalidasByEntradaId', Entrada.getSalidasByID);
+app.get('/api/getSalidasByEntradaId', Entrada.getSalidasByEntradaID);
 app.get('/api/getDeliveryGroups',Helper.GetDeliveryGroups);
 app.post('/api/entrada', Entrada.save);
 app.put('/api/entrada', Entrada.update);
@@ -138,12 +139,14 @@ app.get('/api/pasillos', Pasillo.get);
 app.get('/api/pasillo', Pasillo.getById);
 app.get('/api/posicionesNom', Pasillo.getPosiciones);
 
-app.post('/api/prepartida',PrePartida.savePartidasPedido);
-app.get('/api/prepartida',PrePartida.get);
-app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
-app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
+
+//app.post('/api/prepartida',PrePartida.savePartidasPedido);
+// app.get('/api/prepartida',PrePartida.get);
+// app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
+// app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 
 app.get('/api/columnas',ColumnasxUsuario.getColumns);
+app.get('/api/columnasOperacion/:idTable/:clienteFiscal_id/:sucursal_id/:almacen_id', ColumnasxOperacion.get);
 
 app.get('/api/getSucursalALM',Interfaz_ALM_XD.getIDSucursalALMAPI);
 
@@ -152,6 +155,9 @@ app.get('/api/partida/entrada/:entrada_id',Partida.getByEntrada);
 app.get('/api/partida/salida/:salida_id',Partida.getBySalida);
 app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:almacen_id/:cantidad/:isPEPS',Partida.getByProductoEmbalaje);
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
-app.put('/api/partida/:_id', Entrada.put);
+app.put('/api/partida/:_id', Partida._put);
+app.post('/api/partida', Partida.save);
+app.get('/api/partida/pedido/get',Partida.getByPedido);
+app.put('/api/partida/pedido/update',Partida._update);
 
 module.exports = app;

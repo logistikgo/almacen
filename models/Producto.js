@@ -31,7 +31,6 @@ const Producto = Schema({
 	stockMaximo:Number,
 	stockMinimo:Number,
 	statusReg:String,
-	idSucursal:Number,
 	sucursal_id:{type:Schema.ObjectId, ref:"Sucursal"},
 	almacen_id: {type:Schema.ObjectId, ref:"Almacen"},
 	clienteFiscal_id: {type:Schema.ObjectId, ref:"ClienteFiscal"},

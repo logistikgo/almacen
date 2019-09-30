@@ -41,7 +41,11 @@ async function getExistenciasByAlmacen(req,res){
 		partidas.forEach(function(partida){
 			for(let x in partida.embalajesxSalir){
 				if(existencias[x] == undefined) existencias[x] = 0;
-				existencias[x] += partida.embalajesxSalir[x];
+
+				if(partida.embalajesAlmacen != undefined)
+					existencias[x] += partida.embalajesAlmacen[x];
+				else
+					existencias[x] += partida.embalajesxSalir[x];
 			}
 		});
 
@@ -50,8 +54,6 @@ async function getExistenciasByAlmacen(req,res){
 	catch(error){
 		res.status(500).send(error);
 	}
-	
-
 }
 
 function getById(req, res) {
@@ -148,7 +150,6 @@ function getByIDClienteFiscal(req, res) {
 	.catch((error) => {
 		return res.status(500).send(error);
 	});
-	
 }
 
 async function save(req,res) {
