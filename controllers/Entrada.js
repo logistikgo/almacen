@@ -333,63 +333,6 @@ async function update(req, res){
 	})
 }
 
-function updatePartida(req,res){
-	let bodyParams = req.query;
-	let entrada_id = bodyParams.entrada_id;
-	let clave_partida = bodyParams.clave_partida;
-
-	Entrada.findOne({_id:entrada_id})
-	.then(async(entrada) => {
-		let partida = entrada.partidas.find(x=>x.clave_partida == clave_partida);
-		let partidaSalida = entrada.partidasSalida.find(x=>x.clave_partida == clave_partida);
-
-		let isEquals = await equalsEmbalajes(partida, bodyParams);
-		//console.log(isEquals);
-		
-		if(partida.pesoBruto == bodyParams.pesoBruto && partida.pesoNeto == bodyParams.pesoNeto && partida.valor == bodyParams.valor && isEquals){
-			await updatePartidaPosicion(partida, partidaSalida, bodyParams);
-		}
-		else{
-			if(partida.pesoBruto != bodyParams.pesoBruto)
-				await updatePartidaPesoB(partida, partidaSalida, bodyParams);
-			if(partida.pesoNeto != bodyParams.pesoNeto)
-				await updatePartidaPesoN(partida, partidaSalida, bodyParams);
-			if(!isEquals)
-				await updatePartidaEmbalajes(partida, partidaSalida, bodyParams);
-			if(partida.valor != bodyParams.valor)
-				await updatePartidaValor(partida, partidaSalida, bodyParams);
-		} 
-
-		let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
-		//console.log(resMovimietno);
-
-		let item = {
-			partidas: entrada.partidas,
-			partidasSalida: entrada.partidasSalida
-		};
-
-		//Validacion de cambio de status
-		let partidasPosicionadas = (item.partidas).filter(function (x){
-			return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
-		});
-
-		//console.log(resMovimietno);
-
-		if(partidasPosicionadas.length == item.partidas.length && entrada.item != undefined && entrada.item != null && entrada.item != ""){
-			item.status = "APLICADA";
-		}
-
-		await Entrada.updateOne({_id:entrada_id},{$set:item})
-		.then((item)=>{
-			//console.log("complete");
-			res.status(200).send(entrada);
-		})
-		.catch((error)=>{
-			res.status(500).send(entrada);
-		});
-	});
-}
-
 //CHRONOS
 async function validaEntrada(req,res){
 	let bodyParams = req.body;

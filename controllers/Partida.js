@@ -551,9 +551,9 @@ function _put(req, res){
 
 	Partida.findOne({_id:partida_id})
 	.then(async(partida) => {
-        console.log(partida);
 		let isEquals = await equalsEmbalajes(partida, bodyParams);
-		console.log(isEquals);
+        console.log(isEquals);
+        console.log(partida.valor == bodyParams.valor);
 		
 		if(partida.valor == bodyParams.valor && isEquals)
 			await updatePartidaPosicion(partida, bodyParams);
@@ -567,30 +567,30 @@ function _put(req, res){
 		//let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
 		//console.log(resMovimietno);
 
-		let item = {
-			partidas: entrada.partidas,
-			partidasSalida: entrada.partidasSalida
-		};
+		// let item = {
+		// 	partidas: entrada.partidas,
+		// 	partidasSalida: entrada.partidasSalida
+		// };
 
-		//Validacion de cambio de status
-		let partidasPosicionadas = (item.partidas).filter(function (x){
-			return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
-		});
+		// //Validacion de cambio de status
+		// let partidasPosicionadas = (item.partidas).filter(function (x){
+		// 	return x.pasillo_id!=undefined && x.pasillo!=undefined && x.posicion!=undefined && x.posicion_id!=undefined && x.nivel!=undefined;
+		// });
 
-		//console.log(resMovimietno);
+		// //console.log(resMovimietno);
 
-		if(partidasPosicionadas.length == item.partidas.length && entrada.item != undefined && entrada.item != null && entrada.item != ""){
-			item.status = "APLICADA";
-		}
+		// if(partidasPosicionadas.length == item.partidas.length && entrada.item != undefined && entrada.item != null && entrada.item != ""){
+		// 	item.status = "APLICADA";
+		// }
 
-		await Entrada.updateOne({_id:entrada_id},{$set:item})
-		.then((item)=>{
-			//console.log("complete");
-			res.status(200).send(entrada);
-		})
-		.catch((error)=>{
-			res.status(500).send(entrada);
-		});
+		// await Entrada.updateOne({_id:entrada_id},{$set:item})
+		// .then((item)=>{
+		// 	//console.log("complete");
+		// 	res.status(200).send(entrada);
+		// })
+		// .catch((error)=>{
+		// 	res.status(500).send(entrada);
+		// });
 	});
 }
 
@@ -646,76 +646,7 @@ async function updateMovimiento(entrada_id, clave_partida, bodyParams){
 //CASO BASE: Solo se updatean posiciones
 async function updatePartidaPosicion(partida, bodyParams){
 	console.log("Caso base");
-	// if(partida.pasillo_id != undefined && partida.posicion_id != undefined && partida.nivel != undefined)
-	// 	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
-
 	partida.posiciones = bodyParams.posiciones;
-
-	//await MovimientoInventario.updateExistenciaPosicion(1, partida);
-}
-
-async function updatePartidaPesoB(partida, bodyParams){
-	//console.log("PB");
-	let res = bodyParams.pesoBruto - partida.pesoBruto;
-	let auxPartida = {
-		producto_id: partida.producto_id,
-		embalajes: {},
-		pesoNeto: 0,
-		pesoBruto: res,
-		nivel: bodyParams.nivel,
-		posicion_id: bodyParams.posicion_id,
-		valor: 0
-	};
-
-	await MovimientoInventario.updateExistencia(1, auxPartida, new Date());
-
-	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
-	partida.pesoBruto = bodyParams.pesoBruto;
-	partida.pasillo = bodyParams.pasillo;
-	partida.pasillo_id = bodyParams.pasillo_id;
-	partida.posicion = bodyParams.posicion;
-	partida.posicion_id = bodyParams.posicion_id;
-	partida.nivel = bodyParams.nivel;
-
-	// partidaSalida.pasillo = bodyParams.pasillo;
-	// partidaSalida.pasillo_id = bodyParams.pasillo_id;
-	// partidaSalida.posicion = bodyParams.posicion;
-	// partidaSalida.posicion_id = bodyParams.posicion_id;
-	// partidaSalida.nivel = bodyParams.nivel;
-	// partidaSalida.pesoBruto = bodyParams.pesoBruto;
-	await MovimientoInventario.updateExistenciaPosicion(1, partida);
-}
-
-async function updatePartidaPesoN(partida, bodyParams){
-	//console.log("PN");
-	let res = bodyParams.pesoNeto - partida.pesoNeto;
-	let auxPartida = {
-		producto_id: partida.producto_id,
-		embalajes: {},
-		pesoNeto: res,
-		pesoBruto: 0,
-		nivel: bodyParams.nivel,
-		posicion_id: bodyParams.posicion_id,
-		valor: 0
-	};
-
-	await MovimientoInventario.updateExistencia(1, auxPartida, new Date());
-
-	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
-	partida.pesoNeto = bodyParams.pesoNeto;
-	partida.pasillo = bodyParams.pasillo;
-	partida.pasillo_id = bodyParams.pasillo_id;
-	partida.posicion = bodyParams.posicion;
-	partida.posicion_id = bodyParams.posicion_id;
-	partida.nivel = bodyParams.nivel;
-
-	// partidaSalida.pasillo = bodyParams.pasillo;
-	// partidaSalida.pasillo_id = bodyParams.pasillo_id;
-	// partidaSalida.posicion = bodyParams.posicion;
-	// partidaSalida.posicion_id = bodyParams.posicion_id;
-	// partidaSalida.nivel = bodyParams.nivel;
-	// partidaSalida.pesoNeto = bodyParams.pesoNeto;
-	await MovimientoInventario.updateExistenciaPosicion(1, partida);
 }
 
 async function updatePartidaEmbalajes(partida, bodyParams){
