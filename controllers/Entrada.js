@@ -304,9 +304,9 @@ async function update(req, res){
 
 				//console.log(jParamsposition);
 
-				await updatePartidaPosicion(partida, partidaSalida, jParamsposition);
+				//await updatePartidaPosicion(partida, partidaSalida, jParamsposition);
 
-				let res = await updateMovimiento(entrada_id, clave_partida, jParamsposition);
+				//let res = await updateMovimiento(entrada_id, clave_partida, jParamsposition);
 				
 				console.log("UPDATE MOVIMIENTO");
 				console.log(res);

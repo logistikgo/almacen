@@ -556,18 +556,17 @@ function _put(req, res){
 
 	Partida.findOne({_id:partida_id})
 	.then(async(partida) => {
-		let isEquals = await equalsEmbalajes(partida, bodyParams);
+        let isEquals = await equalsEmbalajes(partida, bodyParams);
         console.log(isEquals);
-        console.log(partida.valor == bodyParams.valor);
+
+        if(!isEquals)
+			await updatePartidaEmbalajes(partida, bodyParams);
 		
-		if(partida.valor == bodyParams.valor && isEquals)
+		if(partida.posiciones == bodyParams.posiciones )
 			await updatePartidaPosicion(partida, bodyParams);
-		else{
-			if(!isEquals)
-				await updatePartidaEmbalajes(partida, bodyParams);
-			if(partida.valor != bodyParams.valor)
-				await updatePartidaValor(partida, bodyParams);
-		} 
+			
+		if(partida.valor != bodyParams.valor)
+			await updatePartidaValor(partida, bodyParams);
 
 		//let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
 		//console.log(resMovimietno);
@@ -701,36 +700,8 @@ async function updatePartidaEmbalajes(partida, bodyParams){
 }
 
 async function updatePartidaValor(partida, bodyParams){
-	//console.log("Valor");
-
-	let res = bodyParams.valor - partida.valor;
-	let auxPartida = {
-		producto_id: partida.producto_id,
-		embalajes: {},
-		pesoNeto: 0,
-		pesoBruto: 0,
-		nivel: bodyParams.nivel,
-		posicion_id: bodyParams.posicion_id,
-		valor: res
-	};
-
-	await MovimientoInventario.updateExistencia(1, auxPartida, new Date());
-
-	await MovimientoInventario.updateExistenciaPosicion(-1, partida);
+	console.log("Valor");
 	partida.valor = bodyParams.valor;
-	partida.pasillo = bodyParams.pasillo;
-	partida.pasillo_id = bodyParams.pasillo_id;
-	partida.posicion = bodyParams.posicion;
-	partida.posicion_id = bodyParams.posicion_id;
-	partida.nivel = bodyParams.nivel;
-
-	// partidaSalida.pasillo = bodyParams.pasillo;
-	// partidaSalida.pasillo_id = bodyParams.pasillo_id;
-	// partidaSalida.posicion = bodyParams.posicion;
-	// partidaSalida.posicion_id = bodyParams.posicion_id;
-	// partidaSalida.nivel = bodyParams.nivel;
-	// partidaSalida.valor = bodyParams.valor;
-	await MovimientoInventario.updateExistenciaPosicion(1, partida);
 }
 
 module.exports = {
