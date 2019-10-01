@@ -100,16 +100,16 @@ async function post(arrPartidas, entrada_id) {
 
 }
 
-async function updateForSalidaAutomatica(partidas,arrIDPedidos,salida_id){
+async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
     let partidasEdited = [];
-    await Helper.asyncForEach(partidas,async function(partida){
-        let infoPedidosActual = partida.InfoPedidos.filter(x=> arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
+    await Helper.asyncForEach(partidas, async function (partida) {
+        let infoPedidosActual = partida.InfoPedidos.filter(x => arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
 
         //Se debera sumar la cantidad
         let embalajesTotales = {};
         let embalajesxPosicion = [];
 
-        infoPedidosActual.forEach(function(infoPedido){
+        infoPedidosActual.forEach(function (infoPedido) {
             infoPedido.status = "COMPLETO";
             embalajesxPosicion = embalajesxPosicion.concat(infoPedido.embalajesEnSalidasxPosicion);
             for (let x in infoPedido.embalajes) {
@@ -135,7 +135,7 @@ async function updateForSalidaAutomatica(partidas,arrIDPedidos,salida_id){
                 pasillo_id: posiciones[0].pasillo_id,
                 pasillo: posiciones[0].pasillo,
                 nivel_id: posiciones[0].nivel_id,
-                nivel:posiciones[0].nivel
+                nivel: posiciones[0].nivel
             };
             posiciones.forEach(function (posicion) {
                 for (let x in posicion.embalajes) {
@@ -157,13 +157,13 @@ async function updateForSalidaAutomatica(partidas,arrIDPedidos,salida_id){
         for (let x in partida.embalajesAlmacen) {
             partida.embalajesAlmacen[x] -= embalajesTotales[x];
         }
-        let PartidaFound = await Partida.findOne({_id : partida._id}).exec();
+        let PartidaFound = await Partida.findOne({ _id: partida._id }).exec();
 
         PartidaFound.salidas_id = partida.salidas_id;
         PartidaFound.InfoPedidos = partida.InfoPedidos;
         PartidaFound.embalajesAlmacen = partida.embalajesAlmacen;
 
-        if(Helper.Compare(partida.embalajesxSalir,partida.embalajesAlmacen)){
+        if (Helper.Compare(partida.embalajesxSalir, partida.embalajesAlmacen)) {
             delete partida.embalajesAlmacen;
             PartidaFound.embalajesAlmacen = undefined;
         }
@@ -627,8 +627,11 @@ function _put(req, res) {
         .then(async (partida) => {
             let isEquals = await equalsEmbalajes(partida, bodyParams);
 
-            if (!isEquals)
+            if (!isEquals) {
                 await updatePartidaEmbalajes(partida, bodyParams);
+                //let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
+                //console.log(resMovimietno);
+            }
 
             if (partida.posiciones != bodyParams.posiciones) {
                 //console.log("Posicion");
@@ -639,9 +642,6 @@ function _put(req, res) {
                 //console.log("Valor");
                 partida.valor = bodyParams.valor;
             }
-
-            //let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
-            //console.log(resMovimietno);
 
             //console.log(partida);
 

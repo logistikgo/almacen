@@ -254,40 +254,28 @@ async function update(req, res) {
 	let bodyParams = req.body;
 	let entrada_id = bodyParams.entrada_id;
 
-	req.body.fechaEntrada = new Date(bodyParams.strFechaIngreso);
-
-	//Updatea los movimientos de esta entrada, les asigna el campo almacen_id y clienteFiscal_id
-	MovimientoInventarioModel.find({ entrada_id: entrada_id })
-		.then((movimientos) => {
-			movimientos.forEach(function (movimiento) {
-				movimiento.almacen_id = req.body.almacen_id;
-				movimiento.clienteFiscal_id = req.body.clienteFiscal_id;
-				//console.log(movimiento);
-				movimiento.save();
-			});
-		});
-
-	//console.log(jUpdate.partidas);
+	req.body.fechaEntrada = new Date(bodyParams.fechaEntrada);
+	req.body.fechaAlta = new Date();
 
 	if (req.body.status == "SIN_POSICIONAR") {
 		//console.log("Estatus: SIN POSICIONAR");
+
 		let pasilloBahia = await Pasillo.findOne({
 			isBahia: true,
 			statusReg: "ACTIVO"
-		})
-			.populate({
-				path: 'posiciones.posicion_id'
-			}).exec();
-		//console.log(pasilloBahia);
+		}).populate({
+			path: 'posiciones.posicion_id'
+		}).exec();
+
+		console.log(pasilloBahia);
 
 		let posicionBahia = pasilloBahia.posiciones[0].posicion_id;
-		//console.log(posicionBahia);
+		console.log(posicionBahia);
 
-		for (let partida of req.body.partidas) {
-			//console.log(partida);
+		for (let partida of req.body.partidasJson) {
+			console.log(partida);
 
 			let clave_partida = partida.clave_partida;
-			let partidaSalida = req.body.partidasSalida.find(x => x.clave_partida == clave_partida);
 
 			if (partida.pasillo_id == undefined || partida.pasillo == undefined || partida.posicion == undefined || partida.posicion_id == undefined || partida.nivel == undefined) {
 				let jParamsposition = {
@@ -295,42 +283,51 @@ async function update(req, res) {
 					pasillo_id: pasilloBahia._id,
 					posicion: posicionBahia.nombre,
 					posicion_id: posicionBahia._id,
-					nivel: "PISO",
+					nivel: posicionBahia.niveles[0].nombre,
 					embalajes: partida.embalajes,
-					pesoBruto: partida.pesoBruto,
-					pesoNeto: partida.pesoNeto
 				};
 
-				//console.log(jParamsposition);
+				console.log(jParamsposition);
 
 				//await updatePartidaPosicion(partida, partidaSalida, jParamsposition);
 
 				//let res = await updateMovimiento(entrada_id, clave_partida, jParamsposition);
 
-				console.log("UPDATE MOVIMIENTO");
-				console.log(res);
+				//console.log("UPDATE MOVIMIENTO");
+				//console.log(res);
 			}
 		}
 	}
 
+	//Updatea los movimientos de esta entrada, les asigna el campo almacen_id y clienteFiscal_id
+	MovimientoInventarioModel.find({ entrada_id: entrada_id })
+		.then((movimientos) => {
+			movimientos.forEach(function (movimiento) {
+				movimiento.almacen_id = req.body.almacen_id;
+				movimiento.clienteFiscal_id = req.body.clienteFiscal_id;
+				console.log(movimiento);
+				movimiento.save();
+			});
+		});
+
 	// //Validacion de cambio de status
-	let partidasPosicionadas = (req.body.partidas).filter(function (x) {
-		return x.pasillo_id != undefined && x.pasillo != undefined && x.posicion != undefined && x.posicion_id != undefined && x.nivel != undefined;
-	});
+	// let partidasPosicionadas = (req.body.partidas).filter(function (x) {
+	// 	return x.pasillo_id != undefined && x.pasillo != undefined && x.posicion != undefined && x.posicion_id != undefined && x.nivel != undefined;
+	// });
 
-	if (partidasPosicionadas.length == req.body.partidas.length && req.body.item != undefined && req.body.item != null && req.body.item != "") {
-		req.body.status = "APLICADA";
-	}
+	// if (partidasPosicionadas.length == req.body.partidas.length && req.body.item != undefined && req.body.item != null && req.body.item != "") {
+	// 	req.body.status = "APLICADA";
+	// }
 
-	Entrada.updateOne(
-		{ _id: entrada_id },
-		{ $set: req.body })
-		.then((entrada) => {
-			res.status(200).send(entrada);
-		})
-		.catch((error) => {
-			res.status(500).send(error);
-		})
+	// Entrada.updateOne(
+	// 	{ _id: entrada_id },
+	// 	{ $set: req.body })
+	// 	.then((entrada) => {
+	// 		res.status(200).send(entrada);
+	// 	})
+	// 	.catch((error) => {
+	// 		res.status(500).send(error);
+	// 	});
 }
 
 //CHRONOS
