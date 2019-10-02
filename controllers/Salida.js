@@ -201,6 +201,8 @@ async function saveSalidaAutomatica(req,res){
 	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).lean().exec();
 	//console.log(partidas);
 	if(partidas && partidas.length>0){
+		console.log(req.body.arrIDPedidos);
+		console.log(partidas.length);
 		let entradas_id = partidas.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
 		let entradas = await Entrada.find({"_id": {$in : entradas_id } });
 	
@@ -213,6 +215,7 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
 			nSalida.nombreUsuario = req.body.nombreUsuario;
 			nSalida.folio = await getNextID();
+			
 			nSalida.partidas = partidas.map(x=> x._id);
 			nSalida.transportista = req.body.transportista;
 			nSalida.placasRemolque = req.body.placasRemolque;
@@ -232,7 +235,9 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.clienteFiscal_id = entradas[0].clienteFiscal_id;
 			nSalida.item = entradas[0].item;
 			nSalida.tipo = entradas[0].tipo;//NORMAL
-			
+
+			nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio,nSalida.clienteFiscal_id,'O');
+			console.log("ClienteFiscal",nSalida.clienteFiscal_id);
 
 			
 			nSalida.save()
