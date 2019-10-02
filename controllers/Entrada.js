@@ -240,6 +240,7 @@ async function saveEntradaAutomatica(req, res) {
 		res.status(400).send({ message: "Se intenta generar una entrada de un T1 que ya generó una entrada", error: "Se intenta generar una entrada de un T1 que ya generó una entrada" });
 	}
 }
+
 //Valida que la entrada ya existe o no, devolviendo true o false
 async function validaEntradaDuplicado(embarque) {
 	let entradas = await Entrada.find({ embarque: embarque }).exec();
@@ -271,7 +272,7 @@ async function update(req, res) {
 		//console.log(posicionBahia);
 
 		for (let partida of req.body.partidasJson) {
-			console.log(partida);
+			//console.log(partida);
 			let clave_partida = partida.clave_partida;
 			if (partida.posiciones.length == 0) {
 				let jPosicionBahia = {
@@ -286,9 +287,9 @@ async function update(req, res) {
 					ubicacion: pasilloBahia.nombre + posicionBahia.niveles[0].nombre + posicionBahia.nombre
 				};
 				partida.posiciones.push(jPosicionBahia);
-				console.log(partida);
+				//console.log(partida);
 
-				await PartidaModel.updateOne({ _id: partida._id }, { $set: {posiciones: partida.posiciones} });
+				await PartidaModel.updateOne({ _id: partida._id }, { $set: { posiciones: partida.posiciones } });
 			}
 		}
 
@@ -302,13 +303,13 @@ async function update(req, res) {
 					movimiento.save();
 				});
 			});
+
+		//Validacion de cambio de status
+		let partidasPosicionadas = (req.body.partidasJson).filter(x => x.posiciones.length > 0);
+
+		if (partidasPosicionadas.length == req.body.partidasJson.length && req.body.item != undefined && req.body.item != null && req.body.item != "")
+			req.body.status = "APLICADA";
 	}
-
-	//Validacion de cambio de status
-	let partidasPosicionadas = (req.body.partidasJson).filter(x => x.posiciones.length > 0);
-
-	if (partidasPosicionadas.length == req.body.partidasJson.length && req.body.item != undefined && req.body.item != null && req.body.item != "")
-		req.body.status = "APLICADA";
 
 	Entrada.updateOne(
 		{ _id: entrada_id },
