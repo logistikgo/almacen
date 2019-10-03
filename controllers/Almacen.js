@@ -17,7 +17,6 @@ async function getNextID(){
 }
 
 function getAlmacenes(req,res){
-
 	Almacen.find({statusReg:"ACTIVO"}).
 	then((almacenes)=>{
 		res.status(200).send(almacenes)
@@ -123,7 +122,6 @@ function getUbicaciones(req,res){
 }
 
 async function save(req,res){
-
 	let pasillos = req.body.pasillos;
 	let nAlmacen = new Almacen(req.body);
 	
@@ -154,7 +152,6 @@ function update(req,res){
 	
 	Almacen.updateOne({_id:_idAlmacen},{$set: req.body})
 	.then(async(data)=>{
-		
 		for(let pasillo of pasillos){
 			PasilloModel.findOne({nombre:pasillo.nombre, almacen_id:_idAlmacen})
 			.populate({
@@ -169,15 +166,21 @@ function update(req,res){
 					let posicionesGuardadas = [];
 
 					for(let posicion of posiciones){
+						if(posicion.posicion_id != null || posicion.posicion_id != undefined){
+							posicion = posicion.posicion_id;
+						}
+						
+						console.log(posicion);
+						
 						let resPosicion = await Posicion.save(dataPas._id, _idAlmacen, posicion, params.usuarioAlta_id, params.usuarioAlta);
 						let jPosicion = {
 							"posicion_id": resPosicion._id
 						}
+
 						posicionesGuardadas.push(jPosicion);
 					}
 					dataPas.posiciones = posicionesGuardadas;
 					dataPas.save();
-					
 				}
 			});
 		}
@@ -194,8 +197,6 @@ function _delete(req,res){
 	let item = {
 		statusReg:"BAJA"
 	}
-
-	
 
 	Almacen.updateOne({_id:almacen_id},{$set:item}).then((almacen)=>{
 		res.status(200).send(almacen);
