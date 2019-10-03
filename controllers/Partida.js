@@ -720,6 +720,13 @@ async function updatePartidaEmbalajes(partida, bodyParams) {
     }
 }
 
+async function asignarEntrada(arrPartidas_id,entrada_id){
+    
+    await asyncForEach(arrPartidas_id,async function(partida_id){
+        await Partida.updateOne({_id : partida_id},{$set :{entrada_id : entrada_id}}).exec();
+    });
+}
+
 module.exports = {
     get,
     post,
@@ -733,5 +740,6 @@ module.exports = {
     getByPedido,
     _update,
     _put,
-    updateForSalidaAutomatica
+    updateForSalidaAutomatica,
+    asignarEntrada
 }

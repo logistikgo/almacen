@@ -186,58 +186,52 @@ async function save(req, res) {
 }
 
 async function saveEntradaAutomatica(req, res) {
-	let bodyParams = req.body;
-	let arrIDPedido = bodyParams.arrIDPedido;
-	let partidas = await PrePartidaM.find({ IDPedido: { $in: arrIDPedido } }).exec();
-	let isEntrada = await validaEntradaDuplicado(bodyParams.embarque); //Valida si ya existe
 
-	if (!isEntrada) {
-		if (partidas && partidas.length > 0) {
-			let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([bodyParams.IDClienteFiscal]);
-			let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([bodyParams.IDSucursal]);
+	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).lean().exec();
+	
+	//let isEntrada = await validaEntradaDuplicado(bodyParams.embarque); //Valida si ya existe
 
-			let nEntrada = new Entrada(req.body);
+	
+	if (partidas && partidas.length > 0) {
+		let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([req.body.IDClienteFiscal]);
+		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([req.body.IDSucursal]);
+		
+		let nEntrada = new Entrada();
 
-			nEntrada.fechaEntrada = new Date(bodyParams.fechaEntrada + 'T' + bodyParams.horaEntrada);
-			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
-				return total + valor;
-			});//Si lo trae
-			if (arrClientes.length > 0) {
-				nEntrada.clienteFiscal_id = arrClientes[0];  //Interfaz ALM_XD Clientes	
-			}
-			nEntrada.sucursal_id = arrSucursales[0]; //Interfaz ALM_XD Sucursales
-			nEntrada.status = "SIN_POSICIONAR"; //SIN_POSICION
-			nEntrada.tipo = "NORMAL";//NORMAL
-			nEntrada.partidas = partidas; //Pre partidas
-			nEntrada.partidasSalida = partidas; //Pre partidas
-			nEntrada.isEmpty = false;
+		nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
+		nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+			return total + valor;
+		});
+		nEntrada.clienteFiscal_id = arrClientes[0];
+		nEntrada.sucursal_id = arrSucursales[0];
+		nEntrada.status = "SIN_POSICIONAR"; 
+		nEntrada.tipo = "NORMAL";
+		nEntrada.partidas = partidas.map(x=> x._id);
+		nEntrada.nombreUsuario = req.body.nombreUsuario;
+		nEntrada.tracto = req.body.placasTrailer;
+		nEntrada.remolque = req.body.placasRemolque;
+		nEntrada.embarque = req.body.embarque;
+		nEntrada.transportista = req.body.transportista;
+		nEntrada.fechaAlta = new Date();
+		nEntrada.idEntrada = await getNextID();
+		nEntrada.folio = await getNextID();
+		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
 
-			nEntrada.fechaAlta = new Date();
-			nEntrada.idEntrada = await getNextID();
-			nEntrada.folio = await getNextID();
-			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
-			nEntrada.isEmpty = false;
-
-			nEntrada.save()
-				.then(async (entrada) => {
-					//await PrePartidaC.updateToAsignado(partidas);
-
-					for (let itemPartida of entrada.partidas) {
-
-						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
-					}
-					res.status(200).send(entrada);
-				})
-				.catch((error) => {
-					res.status(500).send(error);
-				});
-		} else {
-			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
-			res.status(400).send({ message: "Se intenta generar una entrada sin partidas", error: "No se encontró pre-partidas para los IDs de pedidos indicados" });
-		}
+		nEntrada.save()
+			.then(async (entrada) => {
+				
+				// await Partida.asignarEntrada(partidas.map(x=> x._id.toString()),entrada._id.toString());
+				// for (let itemPartida of partidas) {
+				// 	await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+				// }
+				res.status(200).send(entrada);
+			})
+			.catch((error) => {
+				res.status(500).send(error);
+			});
 	} else {
-		console.log("No se puede generar la entrada, esta ya existe");
-		res.status(400).send({ message: "Se intenta generar una entrada de un T1 que ya generó una entrada", error: "Se intenta generar una entrada de un T1 que ya generó una entrada" });
+		console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+		res.status(400).send({ message: "Se intenta generar una entrada sin partidas", error: "No se encontró pre-partidas para los IDs de pedidos indicados" });
 	}
 }
 

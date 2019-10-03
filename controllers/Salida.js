@@ -193,7 +193,6 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 
 		await Entrada.updateOne({_id : entrada._id},{$set:jEdit}).exec();
 	});
-	
 }
 
 async function saveSalidaAutomatica(req,res){
@@ -201,8 +200,7 @@ async function saveSalidaAutomatica(req,res){
 	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).lean().exec();
 	//console.log(partidas);
 	if(partidas && partidas.length>0){
-		console.log(req.body.arrIDPedidos);
-		console.log(partidas.length);
+		
 		let entradas_id = partidas.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
 		let entradas = await Entrada.find({"_id": {$in : entradas_id } });
 	

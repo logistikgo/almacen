@@ -29,7 +29,6 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.sucursal_id = salida.sucursal_id;
 	nMovimiento.almacen_id = salida.almacen_id;
 	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
-	nMovimiento.posiciones = itemPartida.embalajesEnSalidaxPosicion;
 
 	Helper.asyncForEach(itemPartida.embalajesEnSalidaxPosicion,async function(posicionxSalida){
 
@@ -77,8 +76,6 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.almacen_id = entrada.almacen_id;
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.embalajes= itemPartida.embalajesEntrada;
-	nMovimiento.pesoBruto = itemPartida.pesoBruto;
-	nMovimiento.pesoNeto = itemPartida.pesoNeto;
 	nMovimiento.signo = 1;
 
 
@@ -88,25 +85,7 @@ async function saveEntrada(itemPartida,entrada_id) {
 		nMovimiento.tipo = "ENTRADA_RECHAZO"
 	}
 
-	if(entrada.status!="SIN_POSICIONAR"){
-		let arrPosiciones = [];
-		itemPartida.posiciones.forEach(posicion => {
-			let posicionJson = {
-				embalajes: posicion.embalajesEntrada,
-				posicion_id: posicion.posicion_id,
-				posicion: posicion.posicion,
-				pasillo_id : posicion.pasillo_id,
-				pasillo: posicion.pasillo,
-				nivel_id: posicion.nivel_id,
-				nivel: posicion.nivel
-			};
-			arrPosiciones.push(posicionJson);
-		});
-		
-		nMovimiento.posiciones = arrPosiciones;
-	}
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
-	//nMovimiento.clave_partida = itemPartida.clave_partida;
 
 	
 	if(entrada.status!="SIN_POSICIONAR"){
