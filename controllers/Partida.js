@@ -534,19 +534,27 @@ async function save(req, res) {
      * Esta funcion es utilizada para guardar las partidas generadas desde un pedido
      * en la plataforma de Crossdock (XD)
      */
+    let DuplicatedException = {
+        name:        "Server Error", 
+        level:       "Show Stopper", 
+        message:     "There are objects with the same attribute IDPedido, thus they cannot be created.", 
+        htmlMessage: "Error detected. There are objects with the same attribute IDPedido.",
+        toString:    function(){return this.name + ": " + this.message;} 
+    };
 
     try {
+        let partidasCheck = await Partida.find({ 'InfoPedidos.IDPedido': { $in: req.body.IDPedido }}).exec();
+        if(partidasCheck.length > 0) throw DuplicatedException;
+
         var arrPartidas_id = [];
         let arrPartidas = req.body.partidas;
         await Helper.asyncForEach(arrPartidas, async function (partida) {
             let nPartida = new Partida(partida);
-            nPartida.origen = "XD";
-            nPartida.tipo = "PEDIDO";
             await nPartida.save().then((partida) => {
                 arrPartidas_id.push(partida._id);
             });
         });
-        return arrPartidas_id;
+        res.status(200).send(arrPartidas_id);
     }
     catch (e) {
         res.status(500).send(e);
