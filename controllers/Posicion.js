@@ -195,7 +195,7 @@ function getPosicionAutomatica(req, res) {
 async function save(pasillo_id, almacen_id, posicion, usuarioAlta_id, usuarioAlta) {
 	let nPosicion;
 	if (posicion._id != undefined || posicion._id != null) {
-		nPosicion = posicion;
+		nPosicion = await Posicion.findOne({ _id: posicion._id });
 	}
 	else {
 		nPosicion = new Posicion();
@@ -212,7 +212,6 @@ async function save(pasillo_id, almacen_id, posicion, usuarioAlta_id, usuarioAlt
 
 	let niveles = [];
 	for (let nivel of posicion.niveles) {
-		console.log(typeof nivel == "string");
 		if (typeof nivel == "string") {
 			let jNivel = {
 				"nombre": nivel,
@@ -221,7 +220,10 @@ async function save(pasillo_id, almacen_id, posicion, usuarioAlta_id, usuarioAlt
 			niveles.push(jNivel);
 		}
 	}
-	nPosicion.niveles = niveles;
+
+	if (posicion._id == undefined || posicion._id == null) {
+		nPosicion.niveles = niveles;
+	}
 
 	let posicionStored = await nPosicion.save();
 	return posicionStored;
