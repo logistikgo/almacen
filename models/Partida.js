@@ -40,12 +40,32 @@ const Partida = Schema(
         ],
         embalajesEntrada : {},
         embalajesxSalir : {},
+        embalajesAlmacen : {},
         lote: String,
         valor: { type: Number, default: 0 },
-        IDPedido: Number,
-        InfoPedido: {},
+        InfoPedidos: [
+            {
+                IDPedido : Number,
+                Delivery : String,
+                ClienteOrigen : String,
+                ClienteFinal : String,
+                ClienteFiscal : String,
+                FechaAlta : Date,
+                FechaETA : Date,
+                Tarimas : Number,
+                Piezas : Number,
+                Cajas : Number,
+                CrossDock : String,
+                Sucursal : String,
+                embalajes : {},
+                embalajesEnSalidasxPosicion : {},
+                status : { type: String,default : "PENDIENTE"}
+            }
+        ],
         isEmpty: { type: Boolean, default: false },
-        tipo: { type: String, default: "NORMAL" }
+        origen : { type: String, default: "ALM" },
+        tipo: { type: String, default: "NORMAL" },
+        status : { type: String, default: "ASIGNADA" }
     },
     {
         collection: 'Partidas'

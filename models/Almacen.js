@@ -6,7 +6,6 @@ const Schema = mongoose.Schema;
 const Almacen = Schema(
 	{
 		nombre:String,
-		idSucursal: Number,
 		sucursal_id:{type:Schema.ObjectId,ref:'Sucursal'},
 		statusReg:String,
 		usuarioAlta: String,

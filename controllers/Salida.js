@@ -2,6 +2,7 @@
 
 const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
+const PartidaModel = require('../models/Partida');
 const Entrada = require('../models/Entrada');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const Helper = require('../helpers');
@@ -192,21 +193,18 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 
 		await Entrada.updateOne({_id : entrada._id},{$set:jEdit}).exec();
 	});
-	
 }
 
 async function saveSalidaAutomatica(req,res){
-	let bodyParams = req.body;
-	let arrIDPedido = bodyParams.arrIDPedido;
-	let partidas = await PrePartidaM.find({IDPedido:{$in:arrIDPedido}}).exec();
-	//console.log(partidas);
+	
+	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).lean().exec();
+	
 	if(partidas && partidas.length>0){
-		let isSeleccionada = partidas[0].isSeleccionada;
-		let entrada = !isSeleccionada ?  await Entrada.findOne({"partidas._id":partidas[0]._id}) : await Entrada.findOne({"partidasSalida._id":partidas[0]._idAux});
 		
-		//console.log(entrada);
+		let entradas_id = partidas.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
+		let entradas = await Entrada.find({"_id": {$in : entradas_id } });
 		
-		if((entrada && !entrada.isEmpty) || (entrada && isSeleccionada)){
+		if((entradas && entradas.length > 0)){
 
 			let nSalida = new Salida();
 			nSalida.salida_id = await getNextID();
@@ -215,45 +213,44 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
 			nSalida.nombreUsuario = req.body.nombreUsuario;
 			nSalida.folio = await getNextID();
-			nSalida.partidas =  !isSeleccionada ? getPartidasDeEntrada(entrada.partidasSalida,partidas) : partidas;	
+			
+			nSalida.partidas = partidas.map(x=> x._id);
 			nSalida.transportista = req.body.transportista;
 			nSalida.placasRemolque = req.body.placasRemolque;
 			nSalida.placasTrailer = req.body.placasTrailer;
 			nSalida.operador = req.body.operador;
-			
-			nSalida.idClienteFiscal = entrada.idClienteFiscal;
-			nSalida.idSucursal = entrada.idSucursal;
-			nSalida.sucursal_id = entrada.sucursal_id;
-			nSalida.almacen_id = entrada.almacen_id;
-			nSalida.embarco = req.body.embarco;
-			nSalida.referencia = entrada.referencia;
-			nSalida.valor = entrada.valor;
-			nSalida.clienteFiscal_id = entrada.clienteFiscal_id;
-			nSalida.item = entrada.item;
-			nSalida.tipo = entrada.tipo;//NORMAL
-			nSalida.entrada_id = entrada._id;
+			nSalida.entrada_id = entradas_id;
 
 			
-			if(!isSeleccionada){
-
-				
-				await updatePartidasSalida(nSalida.entrada_id,nSalida.partidas);
-			}
 			
+			nSalida.idClienteFiscal = entradas[0].idClienteFiscal;
+			nSalida.idSucursal = entradas[0].idSucursal;
+			nSalida.sucursal_id = entradas[0].sucursal_id;
+			nSalida.almacen_id = entradas[0].almacen_id;
+			nSalida.embarco = entradas[0].embarque;
+			nSalida.referencia = entradas[0].referencia;
+			nSalida.valor = entradas[0].valor;
+			nSalida.clienteFiscal_id = entradas[0].clienteFiscal_id;
+			nSalida.item = entradas[0].item;
+			nSalida.tipo = entradas[0].tipo;//NORMAL
 
+			nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio,nSalida.clienteFiscal_id,'O');
+			
 			nSalida.save()
 			.then(async(salida)=>{
-				for(let itemPartida of salida.partidas){
-						await MovimientoInventario.saveSalida(itemPartida,salida.id);
+				let partidasEdited = await Partida.updateForSalidaAutomatica(partidas,req.body.arrIDPedidos,salida._id);
+				console.log("Ok1");
+				for(let itemPartida of partidasEdited){
+					await MovimientoInventario.saveSalida(itemPartida,salida.id);
 				}
+				console.log("Ok2");
 				await saveSalidasEnEntrada(salida.entrada_id,salida._id);
+				console.log("Ok3");
 				res.status(200).send(salida);
 			})
 			.catch((error)=>{
 				res.status(500).send(error);
 			});
-
-			
 		}else
 		{
 			res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
