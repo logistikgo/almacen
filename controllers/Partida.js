@@ -101,14 +101,23 @@ async function post(arrPartidas, entrada_id) {
 }
 
 async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
+
+    /**
+     * Para todas las partidas donde InfoPedidos.IDPedido se incluya en arrIDPedidos
+     * Obtiene la informacion de los embalajes y las posiciones que salieron para cada Pedido procedente del
+     * atributo InfoPedidos. Obtiene el total de embalajes que salieron y las posiciones para agregar 
+     * un nuevo elemento al atributo salidas_id. 
+     * 
+     */
     let partidasEdited = [];
     await Helper.asyncForEach(partidas, async function (partida) {
         let infoPedidosActual = partida.InfoPedidos.filter(x => arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
 
-        //Se debera sumar la cantidad
+        
         let embalajesTotales = {};
         let embalajesxPosicion = [];
 
+        //Obtiene los embalajes totales
         infoPedidosActual.forEach(function (infoPedido) {
             infoPedido.status = "COMPLETO";
             embalajesxPosicion = embalajesxPosicion.concat(infoPedido.embalajesEnSalidasxPosicion);
@@ -117,7 +126,9 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
                 embalajesTotales[x] += infoPedido.embalajes[x];
             }
         });
-        //y se deberan unificar las posiciones
+
+        //Obtiene las posiciones y agrupa las posiciones iguales. 
+        //El caso en donde se hicieron más de un Pedido y la posicion implicada fue la misma
         let ubicacionesDistintas = [];
         let posicionesDistintas = [];
         embalajesxPosicion.forEach(function (element) {
@@ -145,11 +156,13 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
             });
             posicionesDistintas.push(posicionFinal);
         });
+        //Nuevo elemento para el atributo salidas_id
         let Jsonsalida_id = {
-            salida_id: salida_id,
-            embalajes: embalajesTotales,
-            salidaxPosiciones: posicionesDistintas
+            salida_id: salida_id, //La salida
+            embalajes: embalajesTotales, //Los embalajes totales
+            salidaxPosiciones: posicionesDistintas //Las posiciones involucradas de esos embalajes totales
         };
+        
         partida.salidas_id.push(Jsonsalida_id);
         partida.embalajesEnSalida = embalajesTotales;
         partida.embalajesEnSalidaxPosicion = posicionesDistintas;
@@ -171,6 +184,14 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
         //console.log(PartidaFound);
         await PartidaFound.save();
         partidasEdited.push(partida);
+    });
+
+    //Para todas las partidas que fueron editadas, se obtiene el atributo entrada_id
+    //Y se ejecuta un distinct para obtener valores unicos, posteriormente se updatean las Entradas a
+    //isEmpty = true, en el caso de que todas sus partidas esten vacias.
+    let entradas_id = partidasEdited.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
+    Helper.asyncForEach(entradas_id, async function (entrada_id) {
+        await setIsEmptyEntrada(entrada_id);
     });
     return partidasEdited;
 }

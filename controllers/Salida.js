@@ -198,7 +198,7 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 async function saveSalidaAutomatica(req,res){
 	
 	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).lean().exec();
-	//console.log(partidas);
+	
 	if(partidas && partidas.length>0){
 		
 		let entradas_id = partidas.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
@@ -235,12 +235,11 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.tipo = entradas[0].tipo;//NORMAL
 
 			nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio,nSalida.clienteFiscal_id,'O');
-			console.log("ClienteFiscal",nSalida.clienteFiscal_id);
-
 			
 			nSalida.save()
 			.then(async(salida)=>{
 				let partidasEdited = await Partida.updateForSalidaAutomatica(partidas,req.body.arrIDPedidos,salida._id);
+
 				for(let itemPartida of partidasEdited){
 					await MovimientoInventario.saveSalida(itemPartida,salida.id);
 				}

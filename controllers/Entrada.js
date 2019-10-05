@@ -5,12 +5,9 @@ const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
 const PartidaModel = require('../models/Partida');
 const Helper = require('../helpers');
-const Producto = require('../models/Producto');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
-const PrePartidaM = require('../models/PrePartida'); //modelo 
-const PrePartidaC = require('../controllers/PrePartida'); //controller
 const Pasillo = require('../models/Pasillo');
 
 
@@ -140,7 +137,7 @@ function getPartidaById(req, res) {
 
 function getSalidasByEntradaID(req, res) {
 	let _id = req.query.entrada_id;
-	console.log(_id);
+	
 	Salida.find({ entrada_id: _id })
 		.then((salidas) => {
 			//console.log(salidas);
@@ -220,7 +217,7 @@ async function saveEntradaAutomatica(req, res) {
 		nEntrada.save()
 			.then(async (entrada) => {
 				
-				// await Partida.asignarEntrada(partidas.map(x=> x._id.toString()),entrada._id.toString());
+				await Partida.asignarEntrada(partidas.map(x=> x._id.toString()),entrada._id.toString());
 				// for (let itemPartida of partidas) {
 				// 	await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 				// }
