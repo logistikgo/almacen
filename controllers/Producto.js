@@ -41,7 +41,11 @@ async function getExistenciasByAlmacen(req,res){
 		partidas.forEach(function(partida){
 			for(let x in partida.embalajesxSalir){
 				if(existencias[x] == undefined) existencias[x] = 0;
-				existencias[x] += partida.embalajesxSalir[x];
+
+				if(partida.embalajesAlmacen != undefined)
+					existencias[x] += partida.embalajesAlmacen[x];
+				else
+					existencias[x] += partida.embalajesxSalir[x];
 			}
 		});
 
@@ -50,8 +54,6 @@ async function getExistenciasByAlmacen(req,res){
 	catch(error){
 		res.status(500).send(error);
 	}
-	
-
 }
 
 function getById(req, res) {
@@ -121,7 +123,7 @@ async function getALM_XD(req,res){
 	let _arrClientesFiscalesXD= req.query.arrClientesFiscales;
 	
 	let _arrClientesFiscalesALM = await Interfaz_ALM_XD.getIDClienteALM(_arrClientesFiscalesXD);
-	console.log(_arrClientesFiscalesALM);
+	
 	Producto.find({arrClientesFiscales_id:{$in:_arrClientesFiscalesALM},"statusReg":"ACTIVO"})
 	.populate({
 		path:'presentacion_id', 
@@ -148,7 +150,6 @@ function getByIDClienteFiscal(req, res) {
 	.catch((error) => {
 		return res.status(500).send(error);
 	});
-	
 }
 
 async function save(req,res) {

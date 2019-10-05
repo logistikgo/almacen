@@ -426,6 +426,28 @@ function isEmptyEmbalaje(embalaje){
 		return false;
 }
 
+function Compare(obj1,obj2){ //Compare json for 1 level of fields
+
+	//Check same fields for Obj1 to Obj2
+	for(let field in obj1){
+		let result = obj2.hasOwnProperty(field);
+		if(!result) return false;
+	}
+
+	//Check same fields for Obj2 to Obj1
+	for(let field in obj2){
+		let result = obj1.hasOwnProperty(field);
+		if(!result) return false;
+	}
+
+	for(let field in obj1){
+		if(obj1[field] != obj2[field]) return false;
+	}
+
+	return true;
+
+}
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -438,5 +460,6 @@ module.exports = {
 	Clone,
 	emptyEmbalajes,
 	isEmptyEmbalaje,
-	emptyAllEmbalajes
+	emptyAllEmbalajes,
+	Compare
 }
