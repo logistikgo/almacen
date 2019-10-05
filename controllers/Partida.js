@@ -109,6 +109,8 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
      * un nuevo elemento al atributo salidas_id. 
      * 
      */
+
+     
     let partidasEdited = [];
     await Helper.asyncForEach(partidas, async function (partida) {
         let infoPedidosActual = partida.InfoPedidos.filter(x => arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
@@ -750,9 +752,8 @@ async function updatePartidaEmbalajes(partida, bodyParams) {
 }
 
 async function asignarEntrada(arrPartidas_id,entrada_id){
-    
-    await asyncForEach(arrPartidas_id,async function(partida_id){
-        await Partida.updateOne({_id : partida_id},{$set :{entrada_id : entrada_id}}).exec();
+    await Helper.asyncForEach(arrPartidas_id,async function(partida_id){
+        await Partida.updateOne({_id : partida_id},{$set :{entrada_id : entrada_id,status: "ASIGNADA"}}).exec();
     });
 }
 

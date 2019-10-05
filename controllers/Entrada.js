@@ -218,9 +218,9 @@ async function saveEntradaAutomatica(req, res) {
 			.then(async (entrada) => {
 				
 				await Partida.asignarEntrada(partidas.map(x=> x._id.toString()),entrada._id.toString());
-				// for (let itemPartida of partidas) {
-				// 	await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
-				// }
+				for (let itemPartida of partidas) {
+					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+				}
 				res.status(200).send(entrada);
 			})
 			.catch((error) => {

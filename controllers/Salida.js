@@ -203,7 +203,7 @@ async function saveSalidaAutomatica(req,res){
 		
 		let entradas_id = partidas.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
 		let entradas = await Entrada.find({"_id": {$in : entradas_id } });
-	
+		
 		if((entradas && entradas.length > 0)){
 
 			let nSalida = new Salida();
@@ -239,11 +239,13 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.save()
 			.then(async(salida)=>{
 				let partidasEdited = await Partida.updateForSalidaAutomatica(partidas,req.body.arrIDPedidos,salida._id);
-
+				console.log("Ok1");
 				for(let itemPartida of partidasEdited){
 					await MovimientoInventario.saveSalida(itemPartida,salida.id);
 				}
+				console.log("Ok2");
 				await saveSalidasEnEntrada(salida.entrada_id,salida._id);
+				console.log("Ok3");
 				res.status(200).send(salida);
 			})
 			.catch((error)=>{
