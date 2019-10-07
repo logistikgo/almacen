@@ -60,7 +60,7 @@ async function getEntradasByIDs(req, res) {
 		{
 			filter["clienteFiscal_id"] = _idClienteFiscal;
 			filter["almacen_id"] = _idAlmacen;
-			filter["status"] = "APLICADA";
+			filter["status"] = { $in: ["APLICADA","FINALIZADO"]};
 		} else {
 			filter["status"] = _status;
 		}
