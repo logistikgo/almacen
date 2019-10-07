@@ -197,7 +197,7 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 
 async function saveSalidaAutomatica(req,res){
 	
-	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).lean().exec();
+	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos},isEmpty : false}).lean().exec();
 	
 	if(partidas && partidas.length>0){
 		
