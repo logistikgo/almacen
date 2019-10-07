@@ -197,7 +197,7 @@ async function saveSalidasEnEntrada(entrada_id,salida_id){
 
 async function saveSalidaAutomatica(req,res){
 	
-	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).lean().exec();
+	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos},isEmpty : false}).lean().exec();
 	
 	if(partidas && partidas.length>0){
 		
@@ -239,13 +239,13 @@ async function saveSalidaAutomatica(req,res){
 			nSalida.save()
 			.then(async(salida)=>{
 				let partidasEdited = await Partida.updateForSalidaAutomatica(partidas,req.body.arrIDPedidos,salida._id);
-				console.log("Ok1");
+				
 				for(let itemPartida of partidasEdited){
 					await MovimientoInventario.saveSalida(itemPartida,salida.id);
 				}
-				console.log("Ok2");
+				
 				await saveSalidasEnEntrada(salida.entrada_id,salida._id);
-				console.log("Ok3");
+				
 				res.status(200).send(salida);
 			})
 			.catch((error)=>{
