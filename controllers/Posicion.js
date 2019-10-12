@@ -108,24 +108,16 @@ function getPosicionesxProducto(req, res) {
 				jPosicion.embalajes = new Object();
 
 				let niveles = posicion.niveles.filter(async (x) => {
-					
 					let producto = x.productos.filter(x => x.producto_id._id.toString() == producto_id.toString());
 
 					if (producto.length > 0) {
-						let embalajes = await getEmbalajes();
+						for (let embalaje of Object.keys(producto[0].embalajes)) {
+							if (!Object.prototype.hasOwnProperty.call(jPosicion.embalajes, embalaje))
+								jPosicion.embalajes[embalaje] = producto[0].embalajes[embalaje];
+							else
+								jPosicion.embalajes[embalaje] += producto[0].embalajes[embalaje];
 
-						for (let embalaje of embalajes) {
-							if (Object.prototype.hasOwnProperty.call(producto[0].embalajes, embalaje.clave) && producto[0].embalajes[embalaje.clave] != undefined) {
-								console.log(x.nombre);
-								console.log(Object.prototype.hasOwnProperty.call(jPosicion.embalajes, embalaje.clave));
-								
-								if (!Object.prototype.hasOwnProperty.call(jPosicion.embalajes, embalaje.clave))
-									jPosicion.embalajes[embalaje.clave] = producto[0].embalajes[embalaje.clave];
-								else
-									jPosicion.embalajes[embalaje.clave] += producto[0].embalajes[embalaje.clave];
-
-								console.log(jPosicion.embalajes);
-							}
+							console.log(jPosicion.embalajes);
 						}
 					}
 
@@ -146,12 +138,6 @@ function getPosicionesxProducto(req, res) {
 				message: error
 			});
 		})
-}
-
-async function getEmbalajes() {
-	let res;
-	res = await EmbalajesModel.find({ status: "ACTIVO" }).exec();
-	return res;
 }
 
 function getPosicionAutomatica(req, res) {
