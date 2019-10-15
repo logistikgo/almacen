@@ -3,6 +3,7 @@
 const Posicion = require('../models/Posicion');
 const Pasillo = require('../models/Pasillo');
 var ObjectId = (require('mongoose').Types.ObjectId);
+const EmbalajesModel = require('../models/Embalaje');
 
 function get(req, res) {
 	let almacen_id = req.query.idAlmacen;
@@ -95,6 +96,7 @@ function getPosicionesxProducto(req, res) {
 		.then((posiciones) => {
 			let resPosiciones = [];
 
+
 			for (let posicion of posiciones) {
 				let jPosicion = {
 					pasillo: posicion.pasillo_id.nombre,
@@ -103,11 +105,20 @@ function getPosicionesxProducto(req, res) {
 					posicion_id: posicion._id,
 				};
 
-				let niveles = posicion.niveles.filter((x) => {
+				jPosicion.embalajes = new Object();
+
+				let niveles = posicion.niveles.filter(async (x) => {
 					let producto = x.productos.filter(x => x.producto_id._id.toString() == producto_id.toString());
 
 					if (producto.length > 0) {
-						jPosicion.embalajes = producto[0].embalajes;
+						for (let embalaje of Object.keys(producto[0].embalajes)) {
+							if (!Object.prototype.hasOwnProperty.call(jPosicion.embalajes, embalaje))
+								jPosicion.embalajes[embalaje] = producto[0].embalajes[embalaje];
+							else
+								jPosicion.embalajes[embalaje] += producto[0].embalajes[embalaje];
+
+							console.log(jPosicion.embalajes);
+						}
 					}
 
 					return producto.length > 0;
@@ -116,8 +127,8 @@ function getPosicionesxProducto(req, res) {
 				for (let nivel of niveles) {
 					jPosicion.nivel = nivel.nombre;
 					jPosicion.nivel_id = nivel._id;
-					resPosiciones.push(jPosicion);
 				}
+				resPosiciones.push(jPosicion);
 			}
 
 			res.status(200).send(resPosiciones);

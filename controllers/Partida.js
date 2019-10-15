@@ -122,6 +122,23 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
         //Obtiene los embalajes totales
         infoPedidosActual.forEach(function (infoPedido) {
             infoPedido.status = "COMPLETO";
+
+            if(partida.status != "SELECCIONADA"){
+                infoPedido.embalajesEnSalidasxPosicion = [];
+                partida.posiciones.forEach(posicion=>{
+                    let embalajesxPosicionCurrent = {
+                        embalajes : posicion.embalajesxSalir,
+                        posicion_id: posicion.posicion_id,
+                        posicion: posicion.posicion,
+                        pasillo_id: posicion.pasillo_id,
+                        pasillo: posicion.pasillo,
+                        nivel_id: posicion.nivel_id,
+                        nivel: posicion.nivel
+                    };
+                    infoPedido.embalajesEnSalidasxPosicion.push(embalajesxPosicionCurrent);
+                });
+            }
+
             embalajesxPosicion = embalajesxPosicion.concat(infoPedido.embalajesEnSalidasxPosicion);
             for (let x in infoPedido.embalajes) {
                 if (embalajesTotales[x] == undefined) embalajesTotales[x] = 0;
@@ -168,17 +185,39 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
         partida.salidas_id.push(Jsonsalida_id);
         partida.embalajesEnSalida = embalajesTotales;
         partida.embalajesEnSalidaxPosicion = posicionesDistintas;
+
         //Actualiza embalajesAlmacen
-        for (let x in partida.embalajesAlmacen) {
-            partida.embalajesAlmacen[x] -= embalajesTotales[x];
+        if(partida.status == "SELECCIONADA"){
+            for (let x in partida.embalajesAlmacen) {
+                partida.embalajesAlmacen[x] -= embalajesTotales[x];
+            }
         }
+
+        //Se debera updatear embalajesxSalir y los embalajes de las posiciones a cero
+        if(partida.status != "SELECCIONADA") {
+            partida.isEmpty = true;
+            for(let x in partida.embalajesxSalir){
+                partida.embalajesxSalir[x] = 0;
+            }
+            for(let i = 0; i < partida.posiciones.length;i++){
+                partida.posiciones[i].isEmpty = true;
+                for(let x in partida.posiciones[i].embalajesxSalir){
+                    partida.posiciones[i].embalajesxSalir[x] = 0;
+                }   
+            }
+        }
+        
         let PartidaFound = await Partida.findOne({ _id: partida._id }).exec();
 
         PartidaFound.salidas_id = partida.salidas_id;
         PartidaFound.InfoPedidos = partida.InfoPedidos;
-        PartidaFound.embalajesAlmacen = partida.embalajesAlmacen;
+        if(partida.status == "SELECCIONADA") PartidaFound.embalajesAlmacen = partida.embalajesAlmacen;
+        if(partida.status != "SELECCIONADA") PartidaFound.embalajesxSalir = partida.embalajesxSalir;
+        if(partida.status != "SELECCIONADA") PartidaFound.posiciones = partida.posiciones;
+        if(partida.status != "SELECCIONADA") PartidaFound.isEmpty = partida.isEmpty;
 
-        if (Helper.Compare(partida.embalajesxSalir, partida.embalajesAlmacen)) {
+        
+        if (partida.status == "SELECCIONADA" && Helper.Compare(partida.embalajesxSalir, partida.embalajesAlmacen)) {
             delete partida.embalajesAlmacen;
             PartidaFound.embalajesAlmacen = undefined;
         }
@@ -628,7 +667,8 @@ async function _update(req, res) {
                 embalajesxSalir: partida.embalajesxSalir,
                 InfoPedidos: partida.InfoPedidos,
                 isEmpty: partida.isEmpty,
-                posiciones: partida.posiciones
+                posiciones: partida.posiciones,
+                status : "SELECCIONADA"
             };
 
             let partidaUpdated = await Partida.findOneAndUpdate({ _id: partida._id.toString() }, { $set: changes }, { new: true });
