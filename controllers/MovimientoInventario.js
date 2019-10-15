@@ -7,19 +7,19 @@ const Entrada = require('../models/Entrada');
 const Salida = require('../models/Salida');
 const Helper = require('../helpers');
 
-async function saveSalida(itemPartida,salida_id) {
+async function saveSalida(itemPartida, salida_id) {
 	let nMovimiento = new MovimientoInventario();
 
-	let salida = await Salida.findOne({_id:salida_id}).exec();
+	let salida = await Salida.findOne({ _id: salida_id }).exec();
 
 	nMovimiento.producto_id = itemPartida.producto_id;
 	nMovimiento.salida_id = salida_id;
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.embalajes = itemPartida.embalajesEnSalida;
 	nMovimiento.signo = -1;
-	if(salida.tipo!="RECHAZO"){
+	if (salida.tipo != "RECHAZO") {
 		nMovimiento.tipo = "SALIDA";
-	}else{
+	} else {
 		nMovimiento.tipo = "SALIDA_RECHAZO"
 	}
 
@@ -30,43 +30,43 @@ async function saveSalida(itemPartida,salida_id) {
 	nMovimiento.almacen_id = salida.almacen_id;
 	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
 
-	Helper.asyncForEach(itemPartida.embalajesEnSalidaxPosicion,async function(posicionxSalida){
+	Helper.asyncForEach(itemPartida.embalajesEnSalidaxPosicion, async function (posicionxSalida) {
 
 		let jsonFormatPosicion = {
-			posicion_id : posicionxSalida.posicion_id,
-			nivel : posicionxSalida.nivel,
-			embalajes : posicionxSalida.embalajes
+			posicion_id: posicionxSalida.posicion_id,
+			nivel: posicionxSalida.nivel,
+			embalajes: posicionxSalida.embalajes
 		};
 
-		await updateExistenciaPosicion(-1, jsonFormatPosicion,itemPartida.producto_id); 
+		await updateExistenciaPosicion(-1, jsonFormatPosicion, itemPartida.producto_id);
 	});
-	
+
 	await nMovimiento.save()
-	.then(async(movimiento)=>{
-		let jsonFormatPartida = {
-			embalajes: itemPartida.embalajesEnSalida,
-			producto_id : itemPartida.producto_id,
-			valor : itemPartida.valorEnSalida
-		};
-		if(salida.tipo!="RECHAZO"){
-			await updateExistencia(-1,jsonFormatPartida,salida.fechaSalida);
-		}else{
-			await updateExistenciaRechazo(-1,jsonFormatPartida,salida.fechaSalida);
-		}
-	})
-	.catch((err)=>{
-		console.log(err);
-	})
+		.then(async (movimiento) => {
+			let jsonFormatPartida = {
+				embalajes: itemPartida.embalajesEnSalida,
+				producto_id: itemPartida.producto_id,
+				valor: itemPartida.valorEnSalida
+			};
+			if (salida.tipo != "RECHAZO") {
+				await updateExistencia(-1, jsonFormatPartida, salida.fechaSalida);
+			} else {
+				await updateExistenciaRechazo(-1, jsonFormatPartida, salida.fechaSalida);
+			}
+		})
+		.catch((err) => {
+			console.log(err);
+		})
 }
 
-async function saveEntrada(itemPartida,entrada_id) {
+async function saveEntrada(itemPartida, entrada_id) {
 
 	//Nueva instancia del modelo Movimiento
 	let nMovimiento = new MovimientoInventario();
 
 	//Se encuentra la entrada
-	let entrada = await Entrada.findOne({_id:entrada_id}).exec();
-	
+	let entrada = await Entrada.findOne({ _id: entrada_id }).exec();
+
 	nMovimiento.producto_id = itemPartida.producto_id;
 	nMovimiento.entrada_id = entrada_id;
 	nMovimiento.idClienteFiscal = entrada.idClienteFiscal;
@@ -75,53 +75,53 @@ async function saveEntrada(itemPartida,entrada_id) {
 	nMovimiento.sucursal_id = entrada.sucursal_id;
 	nMovimiento.almacen_id = entrada.almacen_id;
 	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.embalajes= itemPartida.embalajesEntrada;
+	nMovimiento.embalajes = itemPartida.embalajesEntrada;
 	nMovimiento.signo = 1;
 
 
-	if(entrada.tipo!="RECHAZO"){
+	if (entrada.tipo != "RECHAZO") {
 		nMovimiento.tipo = "ENTRADA";
-	}else{
+	} else {
 		nMovimiento.tipo = "ENTRADA_RECHAZO"
 	}
 
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
 
-	
-	if(entrada.status!="SIN_POSICIONAR"){
 
-		await Helper.asyncForEach(itemPartida.posiciones,async function(posicionxPartida){
+	if (entrada.status != "SIN_POSICIONAR") {
+
+		await Helper.asyncForEach(itemPartida.posiciones, async function (posicionxPartida) {
 			let jsonFormatPosicion = {
-				posicion_id : posicionxPartida.posicion_id,
-				nivel : posicionxPartida.nivel,
-				embalajes : posicionxPartida.embalajesEntrada,
-				pesoBruto : posicionxPartida.pesoBruto,
-				pesoNeto : posicionxPartida.pesoNeto
+				posicion_id: posicionxPartida.posicion_id,
+				nivel: posicionxPartida.nivel,
+				embalajes: posicionxPartida.embalajesEntrada,
+				pesoBruto: posicionxPartida.pesoBruto,
+				pesoNeto: posicionxPartida.pesoNeto
 			};
 
-			await updateExistenciaPosicion(1, jsonFormatPosicion,itemPartida.producto_id); 
+			await updateExistenciaPosicion(1, jsonFormatPosicion, itemPartida.producto_id);
 		});
 	}
 
-	
+
 
 	await nMovimiento.save()
-	.then(async(movimiento)=>{
-		let jsonFormatPartida = {
-			embalajes: itemPartida.embalajesEntrada,
-			producto_id : itemPartida.producto_id,
-			valor : itemPartida.valor
-		};
-		if(entrada.tipo!="RECHAZO"){
-			await updateExistencia(1,jsonFormatPartida,entrada.fechaEntrada);
-		}else{
-			await updateExistenciaRechazo(1,jsonFormatPartida,entrada.fechaEntrada);
-		}
-		
-	})
-	.catch((err)=>{
-		console.log(err);
-	});
+		.then(async (movimiento) => {
+			let jsonFormatPartida = {
+				embalajes: itemPartida.embalajesEntrada,
+				producto_id: itemPartida.producto_id,
+				valor: itemPartida.valor
+			};
+			if (entrada.tipo != "RECHAZO") {
+				await updateExistencia(1, jsonFormatPartida, entrada.fechaEntrada);
+			} else {
+				await updateExistenciaRechazo(1, jsonFormatPartida, entrada.fechaEntrada);
+			}
+
+		})
+		.catch((err) => {
+			console.log(err);
+		});
 }
 
 async function saveAjuste(req, res) {
@@ -134,7 +134,7 @@ async function saveAjuste(req, res) {
 	nMovimiento.sucursal_id = bodyParams.sucursal_id;
 	nMovimiento.almacen_id = bodyParams.almacen_id;
 	nMovimiento.fechaMovimiento = new Date();
-	nMovimiento.embalajes= bodyParams.embalajes;
+	nMovimiento.embalajes = bodyParams.embalajes;
 	nMovimiento.pesoBruto = bodyParams.pesoBruto;
 	nMovimiento.pesoNeto = bodyParams.pesoNeto;
 	nMovimiento.signo = bodyParams.signo;
@@ -156,17 +156,17 @@ async function saveAjuste(req, res) {
 	await updateExistenciaPosicion(bodyParams.signo, item);
 
 	await nMovimiento.save()
-	.then(async(movimiento)=>{
-		await updateExistencia(bodyParams.signo, item, nMovimiento.fechaMovimiento);
-		res.status(200).send(movimiento);
-	})
-	.catch((err)=>{
-		console.log(err);
-		res.status(500).send(err);
-	});
+		.then(async (movimiento) => {
+			await updateExistencia(bodyParams.signo, item, nMovimiento.fechaMovimiento);
+			res.status(200).send(movimiento);
+		})
+		.catch((err) => {
+			console.log(err);
+			res.status(500).send(err);
+		});
 }
 
-function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClienteFiscal,clienteFiscal_id,sucursal_id,almacen_id) {
+function saveExistenciaInicial(producto_id, embalajes, pesoBruto, pesoNeto, idClienteFiscal, clienteFiscal_id, sucursal_id, almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.fechaMovimiento = new Date();
@@ -183,67 +183,67 @@ function saveExistenciaInicial(producto_id, embalajes, pesoBruto,pesoNeto,idClie
 	nMovimiento.save();
 }
 
-async function updateExistencia(signo,itemPartida,fechaMovimiento) {
+async function updateExistencia(signo, itemPartida, fechaMovimiento) {
 	/**
 	 * Esta funcion afecta la existencia de los embalajes del producto recibido
 	 * como parametro dentro del objeto itemPartida
 	 */
 
-	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
+	let producto = await Producto.findOne({ _id: itemPartida.producto_id }).exec();
 
-	if(itemPartida.embalajes){
-		for(let embajalePartida in itemPartida.embalajes){
-			
-			if(producto.embalajes[embajalePartida]){
-				producto.embalajes[embajalePartida] += (signo*itemPartida.embalajes[embajalePartida]);
-			}else if(signo>0){
-				producto.embalajes[embajalePartida] = (signo*itemPartida.embalajes[embajalePartida]);
+	if (itemPartida.embalajes) {
+		for (let embajalePartida in itemPartida.embalajes) {
+
+			if (producto.embalajes[embajalePartida]) {
+				producto.embalajes[embajalePartida] += (signo * itemPartida.embalajes[embajalePartida]);
+			} else if (signo > 0) {
+				producto.embalajes[embajalePartida] = (signo * itemPartida.embalajes[embajalePartida]);
 			}
 		}
 	}
 
-	if(itemPartida.valor && itemPartida.valor != null){
-		producto.valor += (signo*itemPartida.valor);
+	if (itemPartida.valor && itemPartida.valor != null) {
+		producto.valor += (signo * itemPartida.valor);
 	}
-	else{
+	else {
 		producto.valor = 0;
 	}
-	
-	if(signo == 1){
+
+	if (signo == 1) {
 		producto.fechaUltimaEntrada = new Date(fechaMovimiento);
 	}
-	else{
+	else {
 		producto.fechaUltimaSalida = new Date(fechaMovimiento);
 	}
 
 	let item = {
-		embalajes:producto.embalajes,
-		valor:producto.valor,
-		fechaUltimaEntrada:producto.fechaUltimaEntrada,
-		fechaUltimaSalida:producto.fechaUltimaSalida,
-		existenciaPesoBruto:producto.existenciaPesoBruto,
-		existenciaPesoNeto:producto.existenciaPesoNeto
+		embalajes: producto.embalajes,
+		valor: producto.valor,
+		fechaUltimaEntrada: producto.fechaUltimaEntrada,
+		fechaUltimaSalida: producto.fechaUltimaSalida,
+		existenciaPesoBruto: producto.existenciaPesoBruto,
+		existenciaPesoNeto: producto.existenciaPesoNeto
 	};
 
 	producto.save();
 
-	await Producto.updateOne({_id:itemPartida.producto_id},{$set:item});
+	await Producto.updateOne({ _id: itemPartida.producto_id }, { $set: item });
 }
 
-async function updateExistenciaPosicion(signo, posicionxPartida,producto_id){
+async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 	/**
 	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
 	 */
 	console.log(posicionxPartida);
-	let posicion = await Posicion.findOne({_id:posicionxPartida.posicion_id}).exec();
-	let nivel = posicion.niveles.find(x=>x.nombre==posicionxPartida.nivel);
+	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
+	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
 
-	if(nivel.productos.length > 0 && nivel.productos.find(x=>x.producto_id.toString() == producto_id.toString()) != undefined){
-		let producto = nivel.productos.find(x=>x.producto_id.toString() == producto_id.toString());
+	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == producto_id.toString()) != undefined) {
+		let producto = nivel.productos.find(x => x.producto_id.toString() == producto_id.toString());
 		let flagEmbalajes = 0;
 
-		for(let embalaje in posicionxPartida.embalajes){
-			if(producto.embalajes[embalaje] == undefined){
+		for (let embalaje in posicionxPartida.embalajes) {
+			if (producto.embalajes[embalaje] == undefined) {
 				producto.embalajes[embalaje] = 0;
 			}
 			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajes[embalaje]);
@@ -251,230 +251,230 @@ async function updateExistenciaPosicion(signo, posicionxPartida,producto_id){
 			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
 		}
 
-		if(flagEmbalajes == 0){
+		if (flagEmbalajes == 0) {
 			// let index = posicion.niveles.productos.indexOf(producto);
 			// posicion.niveles.productos.splice(index, 1);
 		}
 	}
-	else{
+	else {
 		nivel.productos.push({
 			producto_id: producto_id,
 			embalajes: posicionxPartida.embalajes
 		});
 	}
 
-	let item={
+	let item = {
 		niveles: posicion.niveles
 	};
 
-	await Posicion.updateOne({_id:posicionxPartida.posicion_id},{$set:item});
+	await Posicion.updateOne({ _id: posicionxPartida.posicion_id }, { $set: item });
 }
 
-async function updateExistenciaRechazo(signo,itemPartida,fechaMovimiento) {
-	let producto = await Producto.findOne({_id:itemPartida.producto_id}).exec();
-	if(itemPartida.embalajes){
-		for(let embajalePartida in itemPartida.embalajes){
-			
-			if(producto.embalajesRechazo[embajalePartida]){
-				producto.embalajesRechazo[embajalePartida] += (signo*itemPartida.embalajes[embajalePartida]);
-			}else if(signo>0){
-				producto.embalajesRechazo[embajalePartida] = (signo*itemPartida.embalajes[embajalePartida]);
+async function updateExistenciaRechazo(signo, itemPartida, fechaMovimiento) {
+	let producto = await Producto.findOne({ _id: itemPartida.producto_id }).exec();
+	if (itemPartida.embalajes) {
+		for (let embajalePartida in itemPartida.embalajes) {
+
+			if (producto.embalajesRechazo[embajalePartida]) {
+				producto.embalajesRechazo[embajalePartida] += (signo * itemPartida.embalajes[embajalePartida]);
+			} else if (signo > 0) {
+				producto.embalajesRechazo[embajalePartida] = (signo * itemPartida.embalajes[embajalePartida]);
 			}
-			
+
 		}
 	}
-	
-	producto.pesoNetoRechazo +=(signo*itemPartida.pesoNeto);
-	producto.pesoBrutoRechazo +=(signo*itemPartida.pesoBruto);
 
-	if(signo == 1){
+	producto.pesoNetoRechazo += (signo * itemPartida.pesoNeto);
+	producto.pesoBrutoRechazo += (signo * itemPartida.pesoBruto);
+
+	if (signo == 1) {
 		producto.fechaUltimaEntradaRechazo = new Date(fechaMovimiento);
 	}
-	else{
+	else {
 		producto.fechaUltimaSalidaRechazo = new Date(fechaMovimiento);
 	}
 
 	let item = {
-		embalajesRechazo:producto.embalajesRechazo,
-		fechaUltimaEntradaRechazo:producto.fechaUltimaEntradaRechazo,
-		fechaUltimaSalidaRechazo:producto.fechaUltimaSalidaRechazo,
-		pesoBrutoRechazo:producto.pesoBrutoRechazo,
-		pesoNetoRechazo:producto.pesoNetoRechazo
+		embalajesRechazo: producto.embalajesRechazo,
+		fechaUltimaEntradaRechazo: producto.fechaUltimaEntradaRechazo,
+		fechaUltimaSalidaRechazo: producto.fechaUltimaSalidaRechazo,
+		pesoBrutoRechazo: producto.pesoBrutoRechazo,
+		pesoNetoRechazo: producto.pesoNetoRechazo
 	};
 
 	producto.save();
 
-	await Producto.updateOne({_id:itemPartida.producto_id},{$set:item})
-	.then((productoUpdated)=>{
+	await Producto.updateOne({ _id: itemPartida.producto_id }, { $set: item })
+		.then((productoUpdated) => {
 
-	})
-	.catch((err)=>{
-		
-	});
+		})
+		.catch((err) => {
+
+		});
 }
 
-function getByProducto(req, res){
+function getByProducto(req, res) {
 	let _producto_id = req.query.producto_id;
 	let _arrTipo = req.query.arrTipo;
-	
-	MovimientoInventario.find({producto_id:_producto_id,tipo:{$in:_arrTipo}}).sort({fechaMovimiento: -1})
-	.populate({
-		path:'producto_id'
-	})
-	.populate({
-		path:'entrada_id'
-	})
-	.populate({
-		path:'salida_id'
-	})
-	.populate({
-		path:'posicion_id'
-	})
-	.then((movimientos)=>{
-		res.status(200).send(movimientos);
-	})
-	.catch(err=>console.log(err));
+
+	MovimientoInventario.find({ producto_id: _producto_id, tipo: { $in: _arrTipo } }).sort({ fechaMovimiento: -1 })
+		.populate({
+			path: 'producto_id'
+		})
+		.populate({
+			path: 'entrada_id'
+		})
+		.populate({
+			path: 'salida_id'
+		})
+		.populate({
+			path: 'posicion_id'
+		})
+		.then((movimientos) => {
+			res.status(200).send(movimientos);
+		})
+		.catch(err => console.log(err));
 }
 
-function getPosicionesByProducto(req, res){
+function getPosicionesByProducto(req, res) {
 	let _producto_id = req.query.producto_id;
 	let _almacen_id = req.query.almacen_id;
 
 	MovimientoInventario.find({
-		producto_id:_producto_id, 
-		almacen_id: _almacen_id, 
-		tipo:{$in:["ENTRADA","ENTRADA_RECHAZO"]}
-	},{posicion_id:""})
-	.populate({
-		path:'posicion_id'
-	})
-	.then((posiciones)=>{
-		posiciones = Array.from(new Set(posiciones.map(x=>x.posicion_id)));
-		res.status(200).send(posiciones);
-	})
-	.catch(err=>console.log(err));
+		producto_id: _producto_id,
+		almacen_id: _almacen_id,
+		tipo: { $in: ["ENTRADA", "ENTRADA_RECHAZO"] }
+	}, { posicion_id: "" })
+		.populate({
+			path: 'posicion_id'
+		})
+		.then((posiciones) => {
+			posiciones = Array.from(new Set(posiciones.map(x => x.posicion_id)));
+			res.status(200).send(posiciones);
+		})
+		.catch(err => console.log(err));
 }
 
-function get(req, res){
+function get(req, res) {
 
 	MovimientoInventario.find({})
-	.populate({
-		path:'producto_id'
-	})
-	.populate({
-		path:'entrada_id'
-	})
-	.populate({
-		path:'salida_id'
-	})
-	.populate({
-		path:'almacen_id'
-	})
-	.populate({
-		path:'posicion_id'
-	})
-	.then((movimientos)=>{
-		res.status(200).send(movimientos);
-	})
-	.catch(err=>console.log(err));
+		.populate({
+			path: 'producto_id'
+		})
+		.populate({
+			path: 'entrada_id'
+		})
+		.populate({
+			path: 'salida_id'
+		})
+		.populate({
+			path: 'almacen_id'
+		})
+		.populate({
+			path: 'posicion_id'
+		})
+		.then((movimientos) => {
+			res.status(200).send(movimientos);
+		})
+		.catch(err => console.log(err));
 }
 
-async function getByIDs_cte_suc_alm(req, res){
+async function getByIDs_cte_suc_alm(req, res) {
 	let _arrClientesFiscales = req.query.arrClientesFiscales;
 	let _arrSucursales = req.query.arrSucursales;
 	let _arrAlmacenes = req.query.arrAlmacenes;
 	let fechaI = req.query.fechaInicio;
 	let fechaF = req.query.fechaFinal;
 	let tipo = req.query.tipo;
-	
+
 	let boolNull = !_arrClientesFiscales.includes(null) && !_arrSucursales.includes(null) && !_arrAlmacenes.includes(null);
 	let boolEmtpy = !_arrClientesFiscales.includes("") && !_arrSucursales.includes("") && !_arrAlmacenes.includes("");
 
-	if(boolEmtpy && boolNull){
+	if (boolEmtpy && boolNull) {
 
 		let filtro = {
-			clienteFiscal_id:{$in:_arrClientesFiscales},
-			sucursal_id:{$in:_arrSucursales},
-			almacen_id:{$in:_arrAlmacenes},
-			tipo:{$nin:["SALIDA_RECHAZO","ENTRADA_RECHAZO"]}
+			clienteFiscal_id: { $in: _arrClientesFiscales },
+			sucursal_id: { $in: _arrSucursales },
+			almacen_id: { $in: _arrAlmacenes },
+			tipo: { $nin: ["SALIDA_RECHAZO", "ENTRADA_RECHAZO"] }
 		};
-		if(tipo!=null && tipo!="TODOS"){
+		if (tipo != null && tipo != "TODOS") {
 			filtro["tipo"] = tipo;
 		}
 		let filtroEntrada = {
-			clienteFiscal_id:{$in:_arrClientesFiscales},
-			sucursal_id:{$in:_arrSucursales},
-			almacen_id:{$in:_arrAlmacenes}
+			clienteFiscal_id: { $in: _arrClientesFiscales },
+			sucursal_id: { $in: _arrSucursales },
+			almacen_id: { $in: _arrAlmacenes }
 		};
 		let filtroSalida = {
-			clienteFiscal_id:{$in:_arrClientesFiscales},
-			sucursal_id:{$in:_arrSucursales},
-			almacen_id:{$in:_arrAlmacenes}
+			clienteFiscal_id: { $in: _arrClientesFiscales },
+			sucursal_id: { $in: _arrSucursales },
+			almacen_id: { $in: _arrAlmacenes }
 		};
-		if(fechaI!=null && fechaI!=fechaF){
+		if (fechaI != null && fechaI != fechaF) {
 			let rango = {
-				$gte:new Date(fechaI), //grater than
-				$lt:new Date(fechaF) //less than
+				$gte: new Date(fechaI), //grater than
+				$lt: new Date(fechaF) //less than
 			};
 			filtroEntrada["fechaEntrada"] = rango;
 			filtroSalida["fechaSalida"] = rango;
-			
+
 			let entradas = await Entrada.find(filtroEntrada).exec();
 			let salidas = await Salida.find(filtroSalida).exec();
-			
 
-			let arrEntradas = entradas.map(x=>x._id);
-			let arrSalidas = salidas.map(x=>x._id);
-			
 
-			if(tipo == "ENTRADA"){
+			let arrEntradas = entradas.map(x => x._id);
+			let arrSalidas = salidas.map(x => x._id);
+
+
+			if (tipo == "ENTRADA") {
 				filtro = {
-					entrada_id:{$in:arrEntradas}
+					entrada_id: { $in: arrEntradas }
 				};
-			}else if(tipo == "SALIDA"){
+			} else if (tipo == "SALIDA") {
 				filtro = {
-					salida_id:{$in:arrSalidas}
+					salida_id: { $in: arrSalidas }
 				};
-			}else{
+			} else {
 				filtro = {
-					$or:[
-					{entrada_id:{$in:arrEntradas}},
-					{salida_id:{$in:arrSalidas}}
+					$or: [
+						{ entrada_id: { $in: arrEntradas } },
+						{ salida_id: { $in: arrSalidas } }
 					]
 				};
 			}
 		}
-		
+
 		MovimientoInventario.find(filtro)
-		.populate({
-			path:'producto_id'
-		})
-		.populate({
-			path:'entrada_id'
-		})
-		.populate({
-			path:'salida_id'
-		})
-		.populate({
-			path:'almacen_id'
-		})
-		.populate({
-			path:'clienteFiscal_id'
-		})
-		.populate({
-			path:'posicion_id'
-		})
-		.then((movimientos)=>{
-			res.status(200).send(movimientos);
-		})
-		.catch((err)=>{
-			res.status(500).send(err);
-		});
+			.populate({
+				path: 'producto_id'
+			})
+			.populate({
+				path: 'entrada_id'
+			})
+			.populate({
+				path: 'salida_id'
+			})
+			.populate({
+				path: 'almacen_id'
+			})
+			.populate({
+				path: 'clienteFiscal_id'
+			})
+			.populate({
+				path: 'posicion_id'
+			})
+			.then((movimientos) => {
+				res.status(200).send(movimientos);
+			})
+			.catch((err) => {
+				res.status(500).send(err);
+			});
 
 	}
 }
 
-module.exports={
+module.exports = {
 	get,
 	getByIDs_cte_suc_alm,
 	getByProducto,
