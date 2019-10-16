@@ -131,9 +131,8 @@ async function save(req, res) {
 
 	pasillos.forEach(function(posiciones){
 		counter += posiciones.lenght;
-		console.log(counter);
 	});
-
+	
 	nAlmacen.save()
 		.then((data) => {
 			for (let pasillo of pasillos) {
@@ -144,13 +143,15 @@ async function save(req, res) {
 						}
 					});
 			}
+			let jAlmacen = JSON.parse(JSON.stringify(nAlmacen));
 			jAlmacen['pasillos_count'] = pasillos.length;
 			jAlmacen['posiciones_count'] = counter;
 
-			res.status(200).send(data);
+			res.status(200).send(jAlmacen);
 		})
 		.catch((error) => {
 			res.status(500).send(error);
+			console.log(error);
 		});
 }
 
