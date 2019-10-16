@@ -124,9 +124,15 @@ function getUbicaciones(req, res) {
 async function save(req, res) {
 	let pasillos = req.body.pasillos;
 	let nAlmacen = new Almacen(req.body);
+	let counter = 0;
 
 	nAlmacen.statusReg = "ACTIVO";
 	nAlmacen.fechaAlta = new Date();
+
+	pasillos.forEach(function(posiciones){
+		counter += posiciones.lenght;
+		console.log(counter);
+	});
 
 	nAlmacen.save()
 		.then((data) => {
@@ -138,6 +144,9 @@ async function save(req, res) {
 						}
 					});
 			}
+			jAlmacen['pasillos_count'] = pasillos.length;
+			jAlmacen['posiciones_count'] = counter;
+
 			res.status(200).send(data);
 		})
 		.catch((error) => {
