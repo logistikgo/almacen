@@ -129,10 +129,10 @@ async function save(req, res) {
 	nAlmacen.statusReg = "ACTIVO";
 	nAlmacen.fechaAlta = new Date();
 
-	pasillos.forEach(function(posiciones){
-		counter += posiciones.lenght;
+	pasillos.forEach(function(element){
+		counter += element.posiciones.length;
 	});
-	
+
 	nAlmacen.save()
 		.then((data) => {
 			for (let pasillo of pasillos) {
@@ -151,7 +151,6 @@ async function save(req, res) {
 		})
 		.catch((error) => {
 			res.status(500).send(error);
-			console.log(error);
 		});
 }
 
