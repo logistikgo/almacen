@@ -64,9 +64,8 @@ app.post('/api/saveUsuario', Usuario.save);
 app.post('/api/deleteUsuario', Usuario._delete);
 app.post('/api/updateUsuario', Usuario.update);
 
-app.get('/api/entradas', Entrada.get);
 app.get('/api/entradaByID', Entrada.getEntradaByID);
-app.get('/api/getEntradasByIDs',Entrada.getEntradasByIDs);
+app.get('/api/entradas',Entrada.get);
 app.get('/api/getSalidasByEntradaId', Entrada.getSalidasByEntradaID);
 app.get('/api/getDeliveryGroups',Helper.GetDeliveryGroups);
 app.post('/api/entrada', Entrada.save);

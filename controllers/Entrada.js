@@ -10,7 +10,6 @@ const MovimientoInventarioModel = require('../models/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const Pasillo = require('../models/Pasillo');
 
-
 //METODOS NUEVOS CON LA ESTRUCTURA
 function get1(req, res) {
 	//Entrada.
@@ -22,27 +21,27 @@ function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
 }
 
-function get(req, res) {
-	Entrada.find({})
-		.populate({
-			path: 'partidas',
-			model: 'Partida'
-		})
-		.populate({
-			path: 'partidas',
-			populate: {
-				path: 'producto_id'
-			}
-		})
-		.then((entradas) => {
-			res.status(200).send(entradas);
-		})
-		.catch((error) => {
-			res.status(500).send(error);
-		});
-};
+// function get(req, res) {
+// 	Entrada.find({})
+// 		.populate({
+// 			path: 'partidas',
+// 			model: 'Partida'
+// 		})
+// 		.populate({
+// 			path: 'partidas',
+// 			populate: {
+// 				path: 'producto_id'
+// 			}
+// 		})
+// 		.then((entradas) => {
+// 			res.status(200).send(entradas);
+// 		})
+// 		.catch((error) => {
+// 			res.status(500).send(error);
+// 		});
+// };
 
-async function getEntradasByIDs(req, res) {
+async function get(req, res) {
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
@@ -52,17 +51,15 @@ async function getEntradasByIDs(req, res) {
 
 	let filter = {
 		sucursal_id: _idSucursal,
-		tipo: _tipo
+		tipo: _tipo,
+		status: _status
 	};
 
 	if (!_interfaz) { //Esta condicion determina si la funcion esta siendo usa de la interfaz o de la aplicacion
-		if (!_status) //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
+		if (_status == "APLICADA" || _status == "FINALIZADO") //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
 		{
 			filter["clienteFiscal_id"] = _idClienteFiscal;
 			filter["almacen_id"] = _idAlmacen;
-			filter["status"] = { $in: ["APLICADA"]};
-		} else {
-			filter["status"] = _status;
 		}
 	}
 	else {
@@ -137,7 +134,7 @@ function getPartidaById(req, res) {
 
 function getSalidasByEntradaID(req, res) {
 	let _id = req.query.entrada_id;
-	
+
 	Salida.find({ entrada_id: _id })
 		.then((salidas) => {
 			//console.log(salidas);
@@ -184,15 +181,15 @@ async function save(req, res) {
 
 async function saveEntradaAutomatica(req, res) {
 
-	let partidas = await PartidaModel.find({'InfoPedidos.IDPedido' : {$in : req.body.arrIDPedidos}}).lean().exec();
-	
+	let partidas = await PartidaModel.find({ 'InfoPedidos.IDPedido': { $in: req.body.arrIDPedidos } }).lean().exec();
+
 	//let isEntrada = await validaEntradaDuplicado(bodyParams.embarque); //Valida si ya existe
 
-	
+
 	if (partidas && partidas.length > 0) {
 		let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([req.body.IDClienteFiscal]);
 		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([req.body.IDSucursal]);
-		
+
 		let nEntrada = new Entrada();
 
 		nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
@@ -201,9 +198,9 @@ async function saveEntradaAutomatica(req, res) {
 		});
 		nEntrada.clienteFiscal_id = arrClientes[0];
 		nEntrada.sucursal_id = arrSucursales[0];
-		nEntrada.status = "SIN_POSICIONAR"; 
+		nEntrada.status = "SIN_POSICIONAR";
 		nEntrada.tipo = "NORMAL";
-		nEntrada.partidas = partidas.map(x=> x._id);
+		nEntrada.partidas = partidas.map(x => x._id);
 		nEntrada.nombreUsuario = req.body.nombreUsuario;
 		nEntrada.tracto = req.body.placasTrailer;
 		nEntrada.remolque = req.body.placasRemolque;
@@ -216,8 +213,8 @@ async function saveEntradaAutomatica(req, res) {
 
 		nEntrada.save()
 			.then(async (entrada) => {
-				
-				await Partida.asignarEntrada(partidas.map(x=> x._id.toString()),entrada._id.toString());
+
+				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
 				for (let itemPartida of partidas) {
 					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 				}
@@ -372,7 +369,6 @@ module.exports = {
 	getEntradaByID,
 	save,
 	update,
-	getEntradasByIDs,
 	getPartidaById,
 	validaEntrada,
 	saveEntradaAutomatica,
