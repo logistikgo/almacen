@@ -360,12 +360,14 @@ async function getByProductoEmbalaje(req, res) {
             })
         .where(embalajesxSalir).gt(0)
         .exec();
+
+        
     partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id
         && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id);
 
-
+        
     partidas = partidas.sort(sortByfechaEntadaAsc);
-
+    
     let partidasActuales = [];
 
     try {
@@ -374,8 +376,9 @@ async function getByProductoEmbalaje(req, res) {
         if (isPEPS == false.toString()) {
             partidas.forEach(partida => {
                 let subConsecutivo = 0;
-                console.log(partida.lote);
+                console.log("Posiciones",partida.posiciones.filter(x=> !x.isEmpty));
                 partida.posiciones.filter(x => !x.isEmpty).forEach(posicion => {
+                    console.log("Posicion n",posicion.nivel)
                     let auxPartida = {
                         lote: partida.lote,
                         clave: partida.clave,
@@ -402,7 +405,7 @@ async function getByProductoEmbalaje(req, res) {
                         fechaEntrada: partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
                         entrada_id: partida.entrada_id != undefined ? partida.entrada_id._id : ""
                     };
-
+                    console.log(auxPartida);
                     subConsecutivo += 1;
                     partidasActuales.push(auxPartida);
                 });
@@ -416,7 +419,7 @@ async function getByProductoEmbalaje(req, res) {
          * del embalaje para cada posicion, dependiendo de su disponibilidad
          */
 
-        console.log(cantidadRestante);
+        console.log("Cantidad restante",cantidadRestante);
         partidas.forEach(partida => {
             let subConsecutivo = 0;
 
