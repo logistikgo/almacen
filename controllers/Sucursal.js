@@ -6,11 +6,15 @@ const Interfaz_ALM_XD = require('../models/Interfaz_ALM_XD');
 
 async function get(req, res) {
     let _arrClientesFiscales = req.query.arrClientesFiscales;
-    //let sucursaless = Helpers.getSucursalesXD();
-    Sucursal.find({
-        arrClienteFiscales: { $in: _arrClientesFiscales },
+
+    let filtro = {
         statusReg: "ACTIVO"
-    })
+    };
+
+    if (_arrClientesFiscales != undefined && _arrClientesFiscales.length > 0)
+        filtro.arrClienteFiscales = { $in: _arrClientesFiscales };
+
+    Sucursal.find(filtro)
         .then((sucursales) => {
             res.status(200).send(sucursales);
         })
