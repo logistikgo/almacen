@@ -54,29 +54,40 @@ function getById(req, res) {
 function getCatalogo(req, res) {
 	let _arrSucursales = req.query.arrSucursales;
 
-	Almacen.find({
-		sucursal_id: { $in: _arrSucursales },
+	let filtro = {
 		statusReg: "ACTIVO"
-	}, async (err, almacenes) => {
-		if (err)
-			return res.status(500).send({ message: "Error" });
+	};
 
-		let resAlmacenes = [];
+	if (_arrSucursales != undefined && _arrSucursales.length > 0)
+		filtro.sucursal_id = { $in: _arrSucursales };
 
-		for (let almacen of almacenes) {
-			let jAlmacen = JSON.parse(JSON.stringify(almacen));
+	Almacen.find(filtro)
+		.populate({
+			path: 'sucursal_id',
+			model: 'Sucursal'
+		})
+		.then(async (almacenes) => {
+			let resAlmacenes = [];
 
-			let cantPasillos = await PasilloModel.find({ "almacen_id": new ObjectId(almacen._id) }).count();
-			let cantPosiciones = await PosicionModel.find({ "almacen_id": new ObjectId(almacen._id) }).count();
+			for (let almacen of almacenes) {
+				let jAlmacen = JSON.parse(JSON.stringify(almacen));
 
-			jAlmacen['pasillos_count'] = cantPasillos;
-			jAlmacen['posiciones_count'] = cantPosiciones;
+				let cantPasillos = await PasilloModel.find({ "almacen_id": new ObjectId(almacen._id) }).count();
+				let cantPosiciones = await PosicionModel.find({ "almacen_id": new ObjectId(almacen._id) }).count();
 
-			resAlmacenes.push(jAlmacen);
-		}
+				jAlmacen['pasillos_count'] = cantPasillos;
+				jAlmacen['posiciones_count'] = cantPosiciones;
 
-		res.status(200).send(resAlmacenes);
-	});
+				resAlmacenes.push(jAlmacen);
+			}
+
+			res.status(200).send(resAlmacenes);
+		})
+		.catch((error) => {
+			return res.status(500).send({
+				message: error
+			});
+		});
 }
 
 function get(req, res) {
@@ -124,13 +135,13 @@ function getUbicaciones(req, res) {
 async function save(req, res) {
 	let pasillos = req.body.pasillos;
 	let nAlmacen = new Almacen(req.body);
-	let counter = 0;
+	let counterPosiciones = 0;
 
 	nAlmacen.statusReg = "ACTIVO";
 	nAlmacen.fechaAlta = new Date();
 
-	pasillos.forEach(function(element){
-		counter += element.posiciones.length;
+	pasillos.forEach(function (element) {
+		counterPosiciones += element.posiciones.length;
 	});
 
 	nAlmacen.save()
@@ -145,7 +156,7 @@ async function save(req, res) {
 			}
 			let jAlmacen = JSON.parse(JSON.stringify(nAlmacen));
 			jAlmacen['pasillos_count'] = pasillos.length;
-			jAlmacen['posiciones_count'] = counter;
+			jAlmacen['posiciones_count'] = counterPosiciones;
 
 			res.status(200).send(jAlmacen);
 		})
