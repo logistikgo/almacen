@@ -86,10 +86,10 @@ async function put(arrPartidas, salida_id) {
 }
 
 async function post(arrPartidas, entrada_id) {
-
     var arrPartidas_id = [];
 
     await Helper.asyncForEach(arrPartidas, async function (partida) {
+        console.log(partida);
         let nPartida = new Partida(partida);
         nPartida.entrada_id = entrada_id;
         await nPartida.save().then((partida) => {
@@ -97,7 +97,6 @@ async function post(arrPartidas, entrada_id) {
         });
     });
     return arrPartidas_id;
-
 }
 
 async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
@@ -110,12 +109,12 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
      * 
      */
 
-     
+
     let partidasEdited = [];
     await Helper.asyncForEach(partidas, async function (partida) {
         let infoPedidosActual = partida.InfoPedidos.filter(x => arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
 
-        
+
         let embalajesTotales = {};
         let embalajesxPosicion = [];
 
@@ -123,11 +122,11 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
         infoPedidosActual.forEach(function (infoPedido) {
             infoPedido.status = "COMPLETO";
 
-            if(partida.status != "SELECCIONADA"){
+            if (partida.status != "SELECCIONADA") {
                 infoPedido.embalajesEnSalidasxPosicion = [];
-                partida.posiciones.forEach(posicion=>{
+                partida.posiciones.forEach(posicion => {
                     let embalajesxPosicionCurrent = {
-                        embalajes : posicion.embalajesxSalir,
+                        embalajes: posicion.embalajesxSalir,
                         posicion_id: posicion.posicion_id,
                         posicion: posicion.posicion,
                         pasillo_id: posicion.pasillo_id,
@@ -181,42 +180,42 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
             embalajes: embalajesTotales, //Los embalajes totales
             salidaxPosiciones: posicionesDistintas //Las posiciones involucradas de esos embalajes totales
         };
-        
+
         partida.salidas_id.push(Jsonsalida_id);
         partida.embalajesEnSalida = embalajesTotales;
         partida.embalajesEnSalidaxPosicion = posicionesDistintas;
 
         //Actualiza embalajesAlmacen
-        if(partida.status == "SELECCIONADA"){
+        if (partida.status == "SELECCIONADA") {
             for (let x in partida.embalajesAlmacen) {
                 partida.embalajesAlmacen[x] -= embalajesTotales[x];
             }
         }
 
         //Se debera updatear embalajesxSalir y los embalajes de las posiciones a cero
-        if(partida.status != "SELECCIONADA") {
+        if (partida.status != "SELECCIONADA") {
             partida.isEmpty = true;
-            for(let x in partida.embalajesxSalir){
+            for (let x in partida.embalajesxSalir) {
                 partida.embalajesxSalir[x] = 0;
             }
-            for(let i = 0; i < partida.posiciones.length;i++){
+            for (let i = 0; i < partida.posiciones.length; i++) {
                 partida.posiciones[i].isEmpty = true;
-                for(let x in partida.posiciones[i].embalajesxSalir){
+                for (let x in partida.posiciones[i].embalajesxSalir) {
                     partida.posiciones[i].embalajesxSalir[x] = 0;
-                }   
+                }
             }
         }
-        
+
         let PartidaFound = await Partida.findOne({ _id: partida._id }).exec();
 
         PartidaFound.salidas_id = partida.salidas_id;
         PartidaFound.InfoPedidos = partida.InfoPedidos;
-        if(partida.status == "SELECCIONADA") PartidaFound.embalajesAlmacen = partida.embalajesAlmacen;
-        if(partida.status != "SELECCIONADA") PartidaFound.embalajesxSalir = partida.embalajesxSalir;
-        if(partida.status != "SELECCIONADA") PartidaFound.posiciones = partida.posiciones;
-        if(partida.status != "SELECCIONADA") PartidaFound.isEmpty = partida.isEmpty;
+        if (partida.status == "SELECCIONADA") PartidaFound.embalajesAlmacen = partida.embalajesAlmacen;
+        if (partida.status != "SELECCIONADA") PartidaFound.embalajesxSalir = partida.embalajesxSalir;
+        if (partida.status != "SELECCIONADA") PartidaFound.posiciones = partida.posiciones;
+        if (partida.status != "SELECCIONADA") PartidaFound.isEmpty = partida.isEmpty;
 
-        
+
         if (partida.status == "SELECCIONADA" && Helper.Compare(partida.embalajesxSalir, partida.embalajesAlmacen)) {
             delete partida.embalajesAlmacen;
             PartidaFound.embalajesAlmacen = undefined;
@@ -230,7 +229,7 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
     //Para todas las partidas que fueron editadas, se obtiene el atributo entrada_id
     //Y se ejecuta un distinct para obtener valores unicos, posteriormente se updatean las Entradas a
     //isEmpty = true, en el caso de que todas sus partidas esten vacias.
-    let entradas_id = partidasEdited.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
+    let entradas_id = partidasEdited.map(x => x.entrada_id.toString()).filter(Helper.distinct);
     Helper.asyncForEach(entradas_id, async function (entrada_id) {
         await setIsEmptyEntrada(entrada_id);
     });
@@ -281,7 +280,6 @@ async function getBySalida(req, res) {
 
     res.status(200).send(partidas);
 }
-
 
 function isEmptyPartida(partida) {
     let contEmbalajesCero = 0;
@@ -361,13 +359,13 @@ async function getByProductoEmbalaje(req, res) {
         .where(embalajesxSalir).gt(0)
         .exec();
 
-        
+
     partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id
         && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id);
 
-        
+
     partidas = partidas.sort(sortByfechaEntadaAsc);
-    
+
     let partidasActuales = [];
 
     try {
@@ -376,9 +374,9 @@ async function getByProductoEmbalaje(req, res) {
         if (isPEPS == false.toString()) {
             partidas.forEach(partida => {
                 let subConsecutivo = 0;
-                console.log("Posiciones",partida.posiciones.filter(x=> !x.isEmpty));
+                console.log("Posiciones", partida.posiciones.filter(x => !x.isEmpty));
                 partida.posiciones.filter(x => !x.isEmpty).forEach(posicion => {
-                    console.log("Posicion n",posicion.nivel)
+                    console.log("Posicion n", posicion.nivel)
                     let auxPartida = {
                         lote: partida.lote,
                         clave: partida.clave,
@@ -419,7 +417,7 @@ async function getByProductoEmbalaje(req, res) {
          * del embalaje para cada posicion, dependiendo de su disponibilidad
          */
 
-        console.log("Cantidad restante",cantidadRestante);
+        console.log("Cantidad restante", cantidadRestante);
         partidas.forEach(partida => {
             let subConsecutivo = 0;
 
@@ -600,16 +598,16 @@ async function save(req, res) {
      * en la plataforma de Crossdock (XD)
      */
     let DuplicatedException = {
-        name:        "Server Error", 
-        level:       "Show Stopper", 
-        message:     "There are objects with the same attribute IDPedido, thus they cannot be created.", 
+        name: "Server Error",
+        level: "Show Stopper",
+        message: "There are objects with the same attribute IDPedido, thus they cannot be created.",
         htmlMessage: "Error detected. There are objects with the same attribute IDPedido.",
-        toString:    function(){return this.name + ": " + this.message;} 
+        toString: function () { return this.name + ": " + this.message; }
     };
 
     try {
-        let partidasCheck = await Partida.find({ 'InfoPedidos.IDPedido': { $in: req.body.IDPedido }}).exec();
-        if(partidasCheck.length > 0) throw DuplicatedException;
+        let partidasCheck = await Partida.find({ 'InfoPedidos.IDPedido': { $in: req.body.IDPedido } }).exec();
+        if (partidasCheck.length > 0) throw DuplicatedException;
 
         var arrPartidas_id = [];
         let arrPartidas = req.body.partidas;
@@ -671,7 +669,7 @@ async function _update(req, res) {
                 InfoPedidos: partida.InfoPedidos,
                 isEmpty: partida.isEmpty,
                 posiciones: partida.posiciones,
-                status : "SELECCIONADA"
+                status: "SELECCIONADA"
             };
 
             let partidaUpdated = await Partida.findOneAndUpdate({ _id: partida._id.toString() }, { $set: changes }, { new: true });
@@ -794,9 +792,9 @@ async function updatePartidaEmbalajes(partida, bodyParams) {
     }
 }
 
-async function asignarEntrada(arrPartidas_id,entrada_id){
-    await Helper.asyncForEach(arrPartidas_id,async function(partida_id){
-        await Partida.updateOne({_id : partida_id},{$set :{entrada_id : entrada_id,status: "ASIGNADA"}}).exec();
+async function asignarEntrada(arrPartidas_id, entrada_id) {
+    await Helper.asyncForEach(arrPartidas_id, async function (partida_id) {
+        await Partida.updateOne({ _id: partida_id }, { $set: { entrada_id: entrada_id, status: "ASIGNADA" } }).exec();
     });
 }
 
