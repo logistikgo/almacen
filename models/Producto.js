@@ -38,6 +38,7 @@ const Producto = Schema({
 	presentacion_id: {type:Schema.ObjectId, ref:"Presentacion"},
 	valor:Number,
 	embalajes:{},
+	embalajesAlmacen : {},
 	embalajesRechazo:{},
 	arrClientesFiscales_id:[	
 		{type: Schema.ObjectId, ref: "ClienteFiscal"}
