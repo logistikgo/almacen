@@ -323,23 +323,20 @@ async function setIsEmptyEntrada(entrada_id) {
 }
 
 async function getByProductoEmbalaje(req, res) {
-
     /**
      * Obtiene las partidas por SKU, y genera los embalajes que se sacaran dependiendo
      * de la disponibilidad de los embalajes existentes
      */
 
-    let producto_id = req.params.producto_id; //Hexa
-    let embalaje = req.params.embalaje; //tarimas, piezas
+    let producto_id = req.query.producto_id; //Hexa
+    let embalaje = req.query.embalaje; //tarimas, piezas
     let embalajesxSalir = "embalajesxSalir." + embalaje; //"embalajesxSalir.tarimas"
-    let clienteFiscal_id = req.params.clienteFiscal_id; //He
-    let sucursal_id = req.params.sucursal_id;
-    let almacen_id = req.params.almacen_id;
-    let cantidad = req.params.cantidad;
+    let clienteFiscal_id = req.query.clienteFiscal_id; //He
+    let sucursal_id = req.query.sucursal_id;
+    let almacen_id = req.query.almacen_id;
+    let cantidad = req.query.cantidad;
     let cantidadRestante = parseFloat(cantidad);
-    let isPEPS = req.params.isPEPS;
-
-
+    let algoritmoSalida = req.query.algoritmoSalida;
 
     /**
      * Se obtienen las partidas necesarias para la cantidad deseada
@@ -360,21 +357,43 @@ async function getByProductoEmbalaje(req, res) {
         .exec();
 
 
-    partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id
-        && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id);
+    partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id);
 
+    console.log(algoritmoSalida);
+    if (algoritmoSalida !== undefined && algoritmoSalida.length > 0) {
+        algoritmoSalida.sort(function (a, b) {
+            if (a.prioridad > b.prioridad) {
+                return 1;
+            }
+            else if (a.prioridad < b.prioridad) {
+                return -1;
+            }
+            return 0;
+        });
 
-    partidas = partidas.sort(sortByfechaEntadaAsc);
+        if (algoritmoSalida[0].algoritmo === "PEPS") {
+            console.log("PEPS");
+            partidas = partidas.sort(function (a, b) {
+                return new Date(a.entrada_id.fechaEntrada) - new Date(b.entrada_id.fechaEntrada);
+            });
+        }
+        else if (algoritmoSalida[0].algoritmo === "CADUCIDAD") {
+            console.log("CADUCIDAD");
+            partidas = partidas.sort(function (a, b) {
+                return new Date(a.fechaCaducidad) - new Date(b.fechaCaducidad);
+            });
+        }
+    }
 
     let partidasActuales = [];
 
     try {
-        //Validacion para Clientes fiscales que no utilicen algoritmo PEPS
-        console.log("isPEPS", isPEPS, isPEPS == false.toString());
-        if (isPEPS == false.toString()) {
+        //Validacion para Clientes fiscales que no utilicen ningun algoritmo
+        console.log(algoritmoSalida === undefined ||  algoritmoSalida.length < 1);
+        if (algoritmoSalida === undefined ||  algoritmoSalida.length < 1) {
             partidas.forEach(partida => {
                 let subConsecutivo = 0;
-                console.log("Posiciones", partida.posiciones.filter(x => !x.isEmpty));
+                //console.log("Posiciones", partida.posiciones.filter(x => !x.isEmpty));
                 partida.posiciones.filter(x => !x.isEmpty).forEach(posicion => {
                     console.log("Posicion n", posicion.nivel)
                     let auxPartida = {
@@ -403,7 +422,7 @@ async function getByProductoEmbalaje(req, res) {
                         fechaEntrada: partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
                         entrada_id: partida.entrada_id != undefined ? partida.entrada_id._id : ""
                     };
-                    console.log(auxPartida);
+                    //console.log(auxPartida);
                     subConsecutivo += 1;
                     partidasActuales.push(auxPartida);
                 });

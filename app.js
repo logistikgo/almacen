@@ -73,10 +73,6 @@ app.put('/api/entrada', Entrada.update);
 app.post('/api/entradaAutomatica', Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada', Entrada.validaEntrada);
 
-app.get('/api/partidasByIDs', Partida.getPartidasByIDs);
-//app.get('/api/partida', Entrada.getPartidaById);
-//app.put('/api/partida', Entrada.updatePartida);
-
 app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
 app.get('/api/getSalidasByIDs', Salida.getSalidasByIDs);
@@ -148,10 +144,13 @@ app.get('/api/columnasOperacion/:idTable/:clienteFiscal_id/:sucursal_id/:almacen
 
 app.get('/api/getSucursalALM', Interfaz_ALM_XD.getIDSucursalALMAPI);
 
+app.get('/api/partidasByIDs', Partida.getPartidasByIDs);
+//app.get('/api/partida', Entrada.getPartidaById);
+//app.put('/api/partida', Entrada.updatePartida);
 app.get('/api/partida/:filtro', Partida.get);
 app.get('/api/partida/entrada/:entrada_id', Partida.getByEntrada);
 app.get('/api/partida/salida/:salida_id', Partida.getBySalida);
-app.get('/api/partidas/:producto_id/:embalaje/:clienteFiscal_id/:sucursal_id/:almacen_id/:cantidad/:isPEPS', Partida.getByProductoEmbalaje);
+app.get('/api/partidas', Partida.getByProductoEmbalaje);
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
 app.put('/api/partida/:_id', Partida._put);
 app.post('/api/partida', Partida.save);
