@@ -362,35 +362,47 @@ async function getByProductoEmbalaje(req, res) {
     console.log(algoritmoSalida);
     if (algoritmoSalida !== undefined && algoritmoSalida.length > 0) {
         algoritmoSalida.sort(function (a, b) {
-            if (a.prioridad > b.prioridad) {
-                return 1;
-            }
-            else if (a.prioridad < b.prioridad) {
-                return -1;
-            }
+            if (a.prioridad > b.prioridad) return 1;
+            else if (a.prioridad < b.prioridad) return -1;
             return 0;
         });
 
-        if (algoritmoSalida[0].algoritmo === "PEPS") {
-            console.log("PEPS");
+        if (algoritmoSalida[0].algoritmo === "PEPS")
             partidas = partidas.sort(function (a, b) {
-                return new Date(a.entrada_id.fechaEntrada) - new Date(b.entrada_id.fechaEntrada);
+                if (new Date(a.entrada_id.fechaEntrada) < new Date(b.entrada_id.fechaEntrada)) return -1;
+                if (new Date(a.entrada_id.fechaEntrada) > new Date(b.entrada_id.fechaEntrada)) return 1;
+                else {
+                    if (algoritmoSalida.length > 1) {
+                        if (algoritmoSalida[1].algoritmo === "CADUCIDAD") {
+                            if (new Date(a.fechaCaducidad) < new Date(b.fechaCaducidad)) return -1;
+                            else if (new Date(a.fechaCaducidad) > new Date(b.fechaCaducidad)) return 1;
+                        }
+                    }
+                    return 0;
+                }
             });
-        }
-        else if (algoritmoSalida[0].algoritmo === "CADUCIDAD") {
-            console.log("CADUCIDAD");
+        else if (algoritmoSalida[0].algoritmo === "CADUCIDAD")
             partidas = partidas.sort(function (a, b) {
-                return new Date(a.fechaCaducidad) - new Date(b.fechaCaducidad);
+                if (new Date(a.fechaCaducidad) < new Date(b.fechaCaducidad)) return -1;
+                if (new Date(a.fechaCaducidad) > new Date(b.fechaCaducidad)) return 1;
+                else {
+                    if (algoritmoSalida.length > 1) {
+                        if (algoritmoSalida[1].algoritmo === "PEPS") {
+                            if (new Date(a.entrada_id.fechaEntrada) < new Date(b.entrada_id.fechaEntrada)) return -1;
+                            else if (new Date(a.entrada_id.fechaEntrada) > new Date(b.entrada_id.fechaEntrada)) return 1;
+                        }
+                    }
+                    return 0;
+                }
             });
-        }
     }
 
     let partidasActuales = [];
 
     try {
         //Validacion para Clientes fiscales que no utilicen ningun algoritmo
-        console.log(algoritmoSalida === undefined ||  algoritmoSalida.length < 1);
-        if (algoritmoSalida === undefined ||  algoritmoSalida.length < 1) {
+        console.log(algoritmoSalida === undefined || algoritmoSalida.length < 1);
+        if (algoritmoSalida === undefined || algoritmoSalida.length < 1) {
             partidas.forEach(partida => {
                 let subConsecutivo = 0;
                 //console.log("Posiciones", partida.posiciones.filter(x => !x.isEmpty));
