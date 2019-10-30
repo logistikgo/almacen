@@ -359,14 +359,16 @@ async function getByProductoEmbalaje(req, res) {
 
     partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id);
 
-    console.log(algoritmoSalida);
+    //console.log(algoritmoSalida);
     if (algoritmoSalida !== undefined && algoritmoSalida.length > 0) {
+        //Ordena por prioridad apor prioridad los algoritmos
         algoritmoSalida.sort(function (a, b) {
             if (a.prioridad > b.prioridad) return 1;
             else if (a.prioridad < b.prioridad) return -1;
             return 0;
         });
 
+        //Ordena las partidas dependiendo del algoritmo
         if (algoritmoSalida[0].algoritmo === "PEPS")
             partidas = partidas.sort(function (a, b) {
                 if (new Date(a.entrada_id.fechaEntrada) < new Date(b.entrada_id.fechaEntrada)) return -1;
@@ -522,7 +524,6 @@ async function getPartidasByIDs(req, res) {
     /**
      * Obtiene las partidas con respecto a los filtros de cliente fiscal, sucursal y almacen
      */
-
 
     let arrClientesFiscales_id = req.query.arrClientesFiscales_id;
     let arrSucursales_id = req.query.arrSucursales_id;
@@ -691,7 +692,6 @@ async function _update(req, res) {
         let arrPartidas = req.body.partidas;
         let arrPartidasUpdated = [];
 
-
         await Helper.asyncForEach(arrPartidas, async function (partida) {
 
             let changes = {
@@ -707,14 +707,12 @@ async function _update(req, res) {
             arrPartidasUpdated.push(partidaUpdated);
 
         });
+        
         if (arrPartidas.length == arrPartidasUpdated.length) {
             res.status(200).send(arrPartidasUpdated);
         } else {
             res.status(304).send({ message: "Not all data was succesfully updated" });
         }
-
-
-
     }
     catch (e) {
         res.status(500).send(e);
@@ -737,12 +735,12 @@ function _put(req, res) {
             }
 
             if (partida.posiciones != bodyParams.posiciones) {
-                //console.log("Posicion");
+                console.log("Posicion");
                 partida.posiciones = bodyParams.posiciones;
             }
 
             if (partida.valor != bodyParams.valor) {
-                //console.log("Valor");
+                console.log("Valor");
                 partida.valor = bodyParams.valor;
             }
 
@@ -750,7 +748,7 @@ function _put(req, res) {
 
             await Partida.updateOne({ _id: partida._id }, { $set: partida })
                 .then((item) => {
-                    //console.log("complete");
+                    console.log("complete");
                     res.status(200).send(partida);
                 })
                 .catch((error) => {

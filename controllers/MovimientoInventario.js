@@ -78,7 +78,6 @@ async function saveEntrada(itemPartida, entrada_id) {
 	nMovimiento.embalajes = itemPartida.embalajesEntrada;
 	nMovimiento.signo = 1;
 
-
 	if (entrada.tipo != "RECHAZO") {
 		nMovimiento.tipo = "ENTRADA";
 	} else {
@@ -86,7 +85,6 @@ async function saveEntrada(itemPartida, entrada_id) {
 	}
 
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
-
 
 	if (entrada.status != "SIN_POSICIONAR") {
 
@@ -102,8 +100,6 @@ async function saveEntrada(itemPartida, entrada_id) {
 			await updateExistenciaPosicion(1, jsonFormatPosicion, itemPartida.producto_id);
 		});
 	}
-
-
 
 	await nMovimiento.save()
 		.then(async (movimiento) => {
