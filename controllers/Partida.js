@@ -707,7 +707,7 @@ async function _update(req, res) {
             arrPartidasUpdated.push(partidaUpdated);
 
         });
-        
+
         if (arrPartidas.length == arrPartidasUpdated.length) {
             res.status(200).send(arrPartidasUpdated);
         } else {
@@ -729,7 +729,7 @@ function _put(req, res) {
             let isEquals = await equalsEmbalajes(partida, bodyParams);
 
             if (!isEquals) {
-                await updatePartidaEmbalajes(partida, bodyParams);
+                //await updatePartidaEmbalajes(partida, bodyParams);
                 //let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
                 //console.log(resMovimietno);
             }

@@ -218,8 +218,7 @@ async function save(req,res) {
 		res.status(200).send(productoStored);				
 		
 		MovimientoInventario.saveExistenciaInicial(productoStored._id, req.body.embalajes,
-			req.body.existenciaPesoBruto, req.body.existenciaPesoNeto,
-			req.body.idClienteFiscal,req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id)
+			req.body.existenciaPesoBruto, req.body.existenciaPesoNeto,req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id)
 	})
 	.catch((err)=>{
 		res.status(500).send({"message":"Error save producto", "error":err});

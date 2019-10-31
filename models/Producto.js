@@ -7,7 +7,6 @@ const Helper = require('../helpers');
 const Entrada = require('./Entrada');
 
 const Producto = Schema({
-	idClienteFiscal:Number,
 	idProducto:Number,
 	clave: String,
 	usuarioAlta_id : Number,
@@ -42,7 +41,9 @@ const Producto = Schema({
 	embalajesRechazo:{},
 	arrClientesFiscales_id:[	
 		{type: Schema.ObjectId, ref: "ClienteFiscal"}
-	]
+	],
+
+	idClienteFiscal:Number
 },
 {collection:'Productos'}
 );

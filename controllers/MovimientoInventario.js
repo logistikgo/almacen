@@ -23,7 +23,9 @@ async function saveSalida(itemPartida, salida_id) {
 		nMovimiento.tipo = "SALIDA_RECHAZO"
 	}
 
-	nMovimiento.idClienteFiscal = salida.idClienteFiscal;
+	//DEPURACION DE CODIGO
+	//nMovimiento.idClienteFiscal = salida.idClienteFiscal;
+
 	nMovimiento.clienteFiscal_id = salida.clienteFiscal_id;
 	nMovimiento.idSucursal = salida.idSucursal;
 	nMovimiento.sucursal_id = salida.sucursal_id;
@@ -69,7 +71,6 @@ async function saveEntrada(itemPartida, entrada_id) {
 
 	nMovimiento.producto_id = itemPartida.producto_id;
 	nMovimiento.entrada_id = entrada_id;
-	nMovimiento.idClienteFiscal = entrada.idClienteFiscal;
 	nMovimiento.clienteFiscal_id = entrada.clienteFiscal_id;
 	nMovimiento.idSucursal = entrada.idSucursal;
 	nMovimiento.sucursal_id = entrada.sucursal_id;
@@ -77,6 +78,10 @@ async function saveEntrada(itemPartida, entrada_id) {
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.embalajes = itemPartida.embalajesEntrada;
 	nMovimiento.signo = 1;
+	
+	//DEPURACION DE CODIGO
+	//nMovimiento.idClienteFiscal = entrada.idClienteFiscal;
+
 
 	if (entrada.tipo != "RECHAZO") {
 		nMovimiento.tipo = "ENTRADA";
@@ -87,7 +92,6 @@ async function saveEntrada(itemPartida, entrada_id) {
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
 
 	if (entrada.status != "SIN_POSICIONAR") {
-
 		await Helper.asyncForEach(itemPartida.posiciones, async function (posicionxPartida) {
 			let jsonFormatPosicion = {
 				posicion_id: posicionxPartida.posicion_id,
@@ -126,7 +130,6 @@ async function saveAjuste(req, res) {
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = bodyParams.producto_id;
-	nMovimiento.idClienteFiscal = bodyParams.idClienteFiscal;
 	nMovimiento.sucursal_id = bodyParams.sucursal_id;
 	nMovimiento.almacen_id = bodyParams.almacen_id;
 	nMovimiento.fechaMovimiento = new Date();
@@ -138,6 +141,9 @@ async function saveAjuste(req, res) {
 	nMovimiento.posicion = bodyParams.posicion;
 	nMovimiento.posicion_id = bodyParams.posicion_id;
 	nMovimiento.nivel = bodyParams.nivel;
+	
+	//DEPURACION DE CODIGO	
+	//nMovimiento.idClienteFiscal = bodyParams.idClienteFiscal;
 
 	let item = {
 		producto_id: bodyParams.producto_id,
@@ -162,7 +168,7 @@ async function saveAjuste(req, res) {
 		});
 }
 
-function saveExistenciaInicial(producto_id, embalajes, pesoBruto, pesoNeto, idClienteFiscal, clienteFiscal_id, sucursal_id, almacen_id) {
+function saveExistenciaInicial(producto_id, embalajes, pesoBruto, pesoNeto, clienteFiscal_id, sucursal_id, almacen_id) {
 	let nMovimiento = new MovimientoInventario();
 	nMovimiento.producto_id = producto_id;
 	nMovimiento.fechaMovimiento = new Date();
@@ -171,10 +177,12 @@ function saveExistenciaInicial(producto_id, embalajes, pesoBruto, pesoNeto, idCl
 	nMovimiento.pesoNeto = pesoNeto;
 	nMovimiento.signo = 1;
 	nMovimiento.tipo = "EXISTENCIA_INICIAL";
-	nMovimiento.idClienteFiscal = idClienteFiscal;
 	nMovimiento.clienteFiscal_id = clienteFiscal_id;
 	nMovimiento.sucursal_id = sucursal_id;
 	nMovimiento.almacen_id = almacen_id;
+
+	//DEPURACION DE CODIGO	
+	//nMovimiento.idClienteFiscal = idClienteFiscal;
 
 	nMovimiento.save();
 }
