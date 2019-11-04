@@ -2,11 +2,11 @@
 
 const Partida = require('../models/Partida');
 const Salida = require('../models/Salida');
-const Helper = require('../helpers');
 const Entrada = require('../models/Entrada');
+const EmbalajesModel = require('../models/Embalaje');
+const Helper = require('../helpers');
 const NullParamsException = { error: "NullParamsException" };
 const BreakException = { info: "Break" };
-const EmbalajesModel = require('../models/Embalaje');
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
@@ -34,25 +34,51 @@ function get(req, res) {
     }
 }
 
+async function getByEntrada(req, res) {
+    let entrada_id = req.params.entrada_id;
+
+    Partida.find({ entrada_id: entrada_id })
+        .then((partidas) => {
+            res.status(200).send(partidas);
+        })
+        .catch((error) => {
+            res.status(500).send(error);
+        });
+}
+
+async function getBySalida(req, res) {
+    let salida_id = req.params.salida_id;
+    let salida = await Salida.findOne({ _id: salida_id }).exec();
+    let partidas_id = salida.partidas;
+
+    let partidas = [];
+
+    await Helper.asyncForEach(partidas_id, async function (partida_id) {
+        let partidaFound = await Partida.findOne({ _id: partida_id }).exec();
+        let partida = JSON.parse(JSON.stringify(partidaFound));
+        let salida_idFound = partida.salidas_id.find(x => x.salida_id.toString() == salida_id.toString());
+        partida.pesoBrutoEnSalida = salida_idFound.pesoBruto;
+        partida.pesoNetoEnSalida = salida_idFound.pesoNeto;
+        partida.embalajesEnSalida = salida_idFound.embalajes;
+        partidas.push(partida);
+    });
+
+    res.status(200).send(partidas);
+}
+
+/* Guarda para cada partida, las cantidades restantes y updatea la Entrada isEmpty a true
+si todas las partidas estan vacias */
 async function put(arrPartidas, salida_id) {
-
-    /**
-     * Guarda para cada partida, las cantidades restantes y updatea la Entrada isEmpty a true
-     * si todas las partidas estan vacias
-     */
-
     var arrPartidas_id = [];
     let entradas_id = arrPartidas.length > 0 ? arrPartidas.map(x => x.entrada_id) : undefined;
 
     await Helper.asyncForEach(arrPartidas, async function (partida) {
-
         arrPartidas_id.push(partida._id);
         let jsonSalida_id = {
             salida_id: salida_id,
             embalajes: partida.embalajesEnSalida,
             salidaxPosiciones: partida.embalajesEnSalidaxPosicion
         };
-
 
         let partidaFound = await Partida.findOne({ _id: partida._id });
 
@@ -99,21 +125,14 @@ async function post(arrPartidas, entrada_id) {
     return arrPartidas_id;
 }
 
+/* Para todas las partidas donde InfoPedidos.IDPedido se incluya en arrIDPedidos
+ Obtiene la informacion de los embalajes y las posiciones que salieron para cada Pedido procedente del
+ atributo InfoPedidos. Obtiene el total de embalajes que salieron y las posiciones para agregar 
+ un nuevo elemento al atributo salidas_id. */
 async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
-
-    /**
-     * Para todas las partidas donde InfoPedidos.IDPedido se incluya en arrIDPedidos
-     * Obtiene la informacion de los embalajes y las posiciones que salieron para cada Pedido procedente del
-     * atributo InfoPedidos. Obtiene el total de embalajes que salieron y las posiciones para agregar 
-     * un nuevo elemento al atributo salidas_id. 
-     * 
-     */
-
-
     let partidasEdited = [];
     await Helper.asyncForEach(partidas, async function (partida) {
         let infoPedidosActual = partida.InfoPedidos.filter(x => arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
-
 
         let embalajesTotales = {};
         let embalajesxPosicion = [];
@@ -237,48 +256,19 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
 }
 
 async function addSalida(salida, _id) {
-
     await Partida.findOne({ _id: _id }).then((partida) => {
-
         partida.salidas_id.push(salida);
         partida.save();
-
     })
         .catch((error) => {
             res.status(500).send(error);
         });
 }
 
-async function getByEntrada(req, res) {
-    let entrada_id = req.params.entrada_id;
-
-    Partida.find({ entrada_id: entrada_id })
-        .then((partidas) => {
-            res.status(200).send(partidas);
-        })
-        .catch((error) => {
-            res.status(500).send(error);
-        });
-}
-
-async function getBySalida(req, res) {
-    let salida_id = req.params.salida_id;
-    let salida = await Salida.findOne({ _id: salida_id }).exec();
-    let partidas_id = salida.partidas;
-
-    let partidas = [];
-
-    await Helper.asyncForEach(partidas_id, async function (partida_id) {
-        let partidaFound = await Partida.findOne({ _id: partida_id }).exec();
-        let partida = JSON.parse(JSON.stringify(partidaFound));
-        let salida_idFound = partida.salidas_id.find(x => x.salida_id.toString() == salida_id.toString());
-        partida.pesoBrutoEnSalida = salida_idFound.pesoBruto;
-        partida.pesoNetoEnSalida = salida_idFound.pesoNeto;
-        partida.embalajesEnSalida = salida_idFound.embalajes;
-        partidas.push(partida);
+async function asignarEntrada(arrPartidas_id, entrada_id) {
+    await Helper.asyncForEach(arrPartidas_id, async function (partida_id) {
+        await Partida.updateOne({ _id: partida_id }, { $set: { entrada_id: entrada_id, status: "ASIGNADA" } }).exec();
     });
-
-    res.status(200).send(partidas);
 }
 
 function isEmptyPartida(partida) {
@@ -322,12 +312,9 @@ async function setIsEmptyEntrada(entrada_id) {
     }
 }
 
+/* Obtiene las partidas por SKU, y genera los embalajes que se sacaran dependiendo
+de la disponibilidad de los embalajes existentes. */
 async function getByProductoEmbalaje(req, res) {
-    /**
-     * Obtiene las partidas por SKU, y genera los embalajes que se sacaran dependiendo
-     * de la disponibilidad de los embalajes existentes
-     */
-
     let producto_id = req.query.producto_id; //Hexa
     let embalaje = req.query.embalaje; //tarimas, piezas
     let embalajesxSalir = "embalajesxSalir." + embalaje; //"embalajesxSalir.tarimas"
@@ -355,7 +342,6 @@ async function getByProductoEmbalaje(req, res) {
             })
         .where(embalajesxSalir).gt(0)
         .exec();
-
 
     partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id);
 
@@ -519,12 +505,8 @@ async function getByProductoEmbalaje(req, res) {
     }
 }
 
+/* Obtiene las partidas con respecto a los filtros de cliente fiscal, sucursal y almacen. */
 async function getPartidasByIDs(req, res) {
-
-    /**
-     * Obtiene las partidas con respecto a los filtros de cliente fiscal, sucursal y almacen
-     */
-
     let arrClientesFiscales_id = req.query.arrClientesFiscales_id;
     let arrSucursales_id = req.query.arrSucursales_id;
     let arrAlmacenes_id = req.query.arrAlmacenes_id;
@@ -598,17 +580,6 @@ async function getPartidasByIDs(req, res) {
     }
 }
 
-function sortByfechaEntadaDesc(a, b) {
-    if (a.entrada_id.fechaEntrada < b.entrada_id.fechaEntrada) {
-        return 1;
-    }
-    if (a.entrada_id.fechaEntrada > b.entrada_id.fechaEntrada) {
-        return -1;
-    }
-
-    return 0;
-}
-
 function sortByfechaEntadaAsc(a, b) {
     if (a.fechaEntrada == undefined || a.fechaEntrada == null || b.fechaEntrada == undefined || b.fechaEntrada == null) {
         return -1;
@@ -623,12 +594,9 @@ function sortByfechaEntadaAsc(a, b) {
     return 0;
 }
 
+/* Esta funcion es utilizada para guardar las partidas generadas desde un pedido
+en la plataforma de Crossdock (XD). */
 async function save(req, res) {
-
-    /**
-     * Esta funcion es utilizada para guardar las partidas generadas desde un pedido
-     * en la plataforma de Crossdock (XD)
-     */
     let DuplicatedException = {
         name: "Server Error",
         level: "Show Stopper",
@@ -656,13 +624,9 @@ async function save(req, res) {
     }
 }
 
+/* Esta funcion obtiene las partidas que estan asignadas
+con uno o varios pedidos */
 async function getByPedido(req, res) {
-
-    /**
-     * Esta funcion obtiene las partidas que estan asignadas
-     * con uno o varios pedidos
-     */
-
     try {
         Partida.find({ 'InfoPedidos.IDPedido': { $in: req.query.arrIDPedidos } }).then(function (partidas) {
             let NPartidas = [];
@@ -679,15 +643,11 @@ async function getByPedido(req, res) {
     }
 }
 
+/* Esta funcion actualiza las existencias de la partida
+por un monto menor en cantidad de los embalajes
+Se utiliza al hacer un pedido con partidas ya existentes.
+Indicando que ese pedido es para una salida en ALM */
 async function _update(req, res) {
-
-    /**
-     * Esta funcion actualiza las existencias de la partida
-     * por un monto menor en cantidad de los embalajes
-     * Se utiliza al hacer un pedido con partidas ya existentes.
-     * Indicando que ese pedido es para una salida en ALM
-     */
-
     try {
         let arrPartidas = req.body.partidas;
         let arrPartidasUpdated = [];
@@ -717,115 +677,146 @@ async function _update(req, res) {
     catch (e) {
         res.status(500).send(e);
     }
-
 }
 
-function _put(req, res) {
-    let partida_id = req.params._id;
-    let bodyParams = req.body;
+async function posicionar(partidas) {
+    let pasilloBahia = await Pasillo.findOne({
+        isBahia: true,
+        statusReg: "ACTIVO"
+    }).populate({
+        path: 'posiciones.posicion_id'
+    }).exec();
+    //console.log(pasilloBahia);
 
-    Partida.findOne({ _id: partida_id })
-        .then(async (partida) => {
-            let isEquals = await equalsEmbalajes(partida, bodyParams);
+    let posicionBahia = pasilloBahia.posiciones[0].posicion_id;
+    //console.log(posicionBahia);
 
-            if (!isEquals) {
-                //await updatePartidaEmbalajes(partida, bodyParams);
-                //let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
-                //console.log(resMovimietno);
-            }
-
-            if (partida.posiciones != bodyParams.posiciones) {
-                console.log("Posicion");
-                partida.posiciones = bodyParams.posiciones;
-            }
-
-            if (partida.valor != bodyParams.valor) {
-                console.log("Valor");
-                partida.valor = bodyParams.valor;
-            }
-
+    for (let partida of partidas) {
+        if (partida.posiciones.length == 0) {
+            let jPosicionBahia = {
+                embalajesEntrada: partida.embalajesEntrada,
+                embalajesxSalir: partida.embalajesxSalir,
+                pasillo: pasilloBahia.nombre,
+                pasillo_id: pasilloBahia._id,
+                posicion: posicionBahia.nombre,
+                posicion_id: posicionBahia._id,
+                nivel_id: posicionBahia.niveles[0]._id,
+                nivel: posicionBahia.niveles[0].nombre,
+                ubicacion: pasilloBahia.nombre + posicionBahia.niveles[0].nombre + posicionBahia.nombre
+            };
+            partida.posiciones.push(jPosicionBahia);
             //console.log(partida);
 
-            await Partida.updateOne({ _id: partida._id }, { $set: partida })
-                .then((item) => {
-                    console.log("complete");
-                    res.status(200).send(partida);
-                })
-                .catch((error) => {
-                    res.status(500).send(error);
-                });
+            await Partida.updateOne({ _id: partida._id }, { $set: { posiciones: partida.posiciones } });
+        }
+    }
+}
+
+function _put(jNewPartida) {
+    Partida.findOne({ _id: jNewPartida._id })
+        .then(async (partida) => {
+            console.log(partida);
+            console.log(jNewPartida);
+
+            // let isEquals = await equalsEmbalajes(partida, jNewPartida);
+            // partida.lote = jNewPartida.lote;
+            // partida.producto_id = jNewPartida.producto_id;
+            // partida.clave
+            // if (!isEquals) {
+            //     //await updatePartidaEmbalajes(partida, bodyParams);
+            //     //let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
+            //     //console.log(resMovimietno);
+            // }
+            // if (partida.posiciones != bodyParams.posiciones) {
+            //     console.log("Posicion");
+            //     partida.posiciones = bodyParams.posiciones;
+            // }
+            // if (partida.valor != bodyParams.valor) {
+            //     console.log("Valor");
+            //     partida.valor = bodyParams.valor;
+            // }
+
+            await Partida.updateOne({ _id: partida._id }, { $set: jNewPartida }).exec();
         });
 }
+
+/////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
+
+// function sortByfechaEntadaDesc(a, b) {
+//     if (a.entrada_id.fechaEntrada < b.entrada_id.fechaEntrada) {
+//         return 1;
+//     }
+//     if (a.entrada_id.fechaEntrada > b.entrada_id.fechaEntrada) {
+//         return -1;
+//     }
+
+//     return 0;
+// }
 
 //Campara los embalajes actuales con los nuevos para determinar el signo
 // false = diferentes
 // true = iguales
-async function equalsEmbalajes(partida, bodyParams) {
-    let embalajes = await getEmbalajes();
-    let res = true;
-    for (let embalaje of embalajes) {
-        if (bodyParams.embalajes[embalaje.clave] == undefined)
-            bodyParams.embalajes[embalaje.clave] = 0;
+// async function equalsEmbalajes(partida, jNewPartida) {
+//     let embalajes = await getEmbalajes();
+//     let res = true;
+//     for (let embalaje of embalajes) {
+//         if (jNewPartida.embalajes[embalaje.clave] == undefined)
+//             jNewPartida.embalajes[embalaje.clave] = 0;
 
-        if (partida.embalajesEntrada[embalaje.clave] == undefined)
-            partida.embalajesEntrada[embalaje.clave] = 0;
+//         if (partida.embalajesEntrada[embalaje.clave] == undefined)
+//             partida.embalajesEntrada[embalaje.clave] = 0;
 
-        if (partida.embalajesEntrada[embalaje.clave] != bodyParams.embalajes[embalaje.clave]) {
-            res = false;
-            break;
-        }
-    }
-    return await res;
-}
+//         if (partida.embalajesEntrada[embalaje.clave] != jNewPartida.embalajes[embalaje.clave]) {
+//             res = false;
+//             break;
+//         }
+//     }
+//     return await res;
+// }
 
-async function getEmbalajes() {
-    let res;
-    res = await EmbalajesModel.find({ status: "ACTIVO" }).exec();
-    return res;
-}
+// async function getEmbalajes() {
+//     let res;
+//     res = await EmbalajesModel.find({ status: "ACTIVO" }).exec();
+//     return res;
+// }
+
+
+// async function updatePartidaEmbalajes(partida, bodyParams) {
+//     //console.log("Embalajes");
+//     let embalajes = await getEmbalajes();
+
+//     for (let embalaje of embalajes) {
+//         if (bodyParams.embalajes[embalaje.clave] == undefined)
+//             bodyParams.embalajes[embalaje.clave] = 0;
+
+//         if (partida.embalajes[embalaje.clave] == undefined)
+//             partida.embalajes[embalaje.clave] = 0;
+
+//         partida.embalajes[embalaje.clave] = bodyParams.embalajes[embalaje.clave];
+//     }
+// }
 
 //Updatea los cambios hechos en la partida en su respectivo movimiento
-async function updateMovimiento(entrada_id, clave_partida, bodyParams) {
-    let itemMovimiento = {
-        embalajes: bodyParams.embalajes,
-        pesoBruto: bodyParams.pesoBruto,
-        pesoNeto: bodyParams.pesoNeto,
-        pasillo: bodyParams.pasillo,
-        pasillo_id: bodyParams.pasillo_id,
-        posicion: bodyParams.posicion,
-        posicion_id: bodyParams.posicion_id,
-        nivel: bodyParams.nivel,
-    };
+// async function updateMovimiento(entrada_id, clave_partida, bodyParams) {
+//     let itemMovimiento = {
+//         embalajes: bodyParams.embalajes,
+//         pesoBruto: bodyParams.pesoBruto,
+//         pesoNeto: bodyParams.pesoNeto,
+//         pasillo: bodyParams.pasillo,
+//         pasillo_id: bodyParams.pasillo_id,
+//         posicion: bodyParams.posicion,
+//         posicion_id: bodyParams.posicion_id,
+//         nivel: bodyParams.nivel,
+//     };
 
-    await MovimientoInventarioModel.updateOne({ entrada_id: entrada_id, clave_partida: clave_partida }, { $set: itemMovimiento })
-        .then((item) => {
-            return true;
-        })
-        .catch((error) => {
-            return false;
-        });
-}
-
-async function updatePartidaEmbalajes(partida, bodyParams) {
-    //console.log("Embalajes");
-    let embalajes = await getEmbalajes();
-
-    for (let embalaje of embalajes) {
-        if (bodyParams.embalajes[embalaje.clave] == undefined)
-            bodyParams.embalajes[embalaje.clave] = 0;
-
-        if (partida.embalajes[embalaje.clave] == undefined)
-            partida.embalajes[embalaje.clave] = 0;
-
-        partida.embalajes[embalaje.clave] = bodyParams.embalajes[embalaje.clave];
-    }
-}
-
-async function asignarEntrada(arrPartidas_id, entrada_id) {
-    await Helper.asyncForEach(arrPartidas_id, async function (partida_id) {
-        await Partida.updateOne({ _id: partida_id }, { $set: { entrada_id: entrada_id, status: "ASIGNADA" } }).exec();
-    });
-}
+//     await MovimientoInventarioModel.updateOne({ entrada_id: entrada_id, clave_partida: clave_partida }, { $set: itemMovimiento })
+//         .then((item) => {
+//             return true;
+//         })
+//         .catch((error) => {
+//             return false;
+//         });
+// }
 
 module.exports = {
     get,
@@ -839,6 +830,7 @@ module.exports = {
     save,
     getByPedido,
     _update,
+    posicionar,
     _put,
     updateForSalidaAutomatica,
     asignarEntrada

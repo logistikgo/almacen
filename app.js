@@ -19,11 +19,11 @@ const Posicion = require('./controllers/Posicion');
 const Embalaje = require('./controllers/Embalaje');
 const Presentacion = require('./controllers/Presentacion');
 const Pasillo = require('./controllers/Pasillo');
-//const PrePartida = require('./controllers/PrePartida');
 const Partida = require('./controllers/Partida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
 const ColumnasxOperacion = require("./controllers/ColumnasxOperacion");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
+//const PrePartida = require('./controllers/PrePartida');
 
 //const dotenv = require('dotenv'); //Used for environment variables
 //dotenv.config();
@@ -64,8 +64,8 @@ app.post('/api/saveUsuario', Usuario.save);
 app.post('/api/deleteUsuario', Usuario._delete);
 app.post('/api/updateUsuario', Usuario.update);
 
-app.get('/api/entradaByID', Entrada.getEntradaByID);
 app.get('/api/entradas', Entrada.get);
+app.get('/api/entrada', Entrada.getById);
 app.get('/api/getSalidasByEntradaId', Entrada.getSalidasByEntradaID);
 app.get('/api/getDeliveryGroups', Helper.GetDeliveryGroups);
 app.post('/api/entrada', Entrada.save);
@@ -94,7 +94,6 @@ app.post('/api/sucursal', Sucursal.save);
 app.put('/api/sucursal', Sucursal.update);
 app.delete('/api/sucursal', Sucursal._delete);
 
-//app.get('/api/getAlmacenes',Almacen.getAlmacenes);
 app.get('/api/getAlmacen/:idAlmacen', Almacen.getAlmacen);
 app.get('/api/almacen', Almacen.getById);
 app.get('/api/almacenes', Almacen.get);
@@ -104,6 +103,7 @@ app.put('/api/almacen', Almacen.update);
 app.delete('/api/almacen', Almacen._delete);
 app.get('/api/validaPosicion/:posicion/:nivel/:almacen_id', Almacen.validaPosicion);
 app.get('/api/ubicaciones', Almacen.getUbicaciones);
+//app.get('/api/getAlmacenes',Almacen.getAlmacenes);
 
 app.post('/api/evidencia', Evidencia.saveEvidencia);
 app.get('/api/evidencias', Evidencia.getEvidenciasByID);
@@ -134,27 +134,27 @@ app.get('/api/pasillos', Pasillo.get);
 app.get('/api/pasillo', Pasillo.getById);
 app.get('/api/posicionesNom', Pasillo.getPosiciones);
 
-//app.post('/api/prepartida',PrePartida.savePartidasPedido);
-// app.get('/api/prepartida',PrePartida.get);
-// app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
-// app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
-
 app.get('/api/columnas', ColumnasxUsuario.getColumns);
 app.get('/api/columnasOperacion/:idTable/:clienteFiscal_id/:sucursal_id/:almacen_id', ColumnasxOperacion.get);
 
 app.get('/api/getSucursalALM', Interfaz_ALM_XD.getIDSucursalALMAPI);
 
 app.get('/api/partidasByIDs', Partida.getPartidasByIDs);
-//app.get('/api/partida', Entrada.getPartidaById);
-//app.put('/api/partida', Entrada.updatePartida);
 app.get('/api/partida/:filtro', Partida.get);
 app.get('/api/partida/entrada/:entrada_id', Partida.getByEntrada);
 app.get('/api/partida/salida/:salida_id', Partida.getBySalida);
 app.get('/api/partidas', Partida.getByProductoEmbalaje);
-//app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
-app.put('/api/partida/:_id', Partida._put);
 app.post('/api/partida', Partida.save);
 app.get('/api/partida/pedido/get', Partida.getByPedido);
 app.put('/api/partida/pedido/update', Partida._update);
+//app.get('/api/partida', Entrada.getPartidaById);
+//app.put('/api/partida', Entrada.updatePartida);
+//app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
+// app.put('/api/partida/:_id', Partida._put);
+
+//app.post('/api/prepartida',PrePartida.savePartidasPedido);
+// app.get('/api/prepartida',PrePartida.get);
+// app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
+// app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 
 module.exports = app;
