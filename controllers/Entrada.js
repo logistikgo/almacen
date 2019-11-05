@@ -8,7 +8,6 @@ const Helper = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
-const Pasillo = require('../models/Pasillo');
 
 function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");

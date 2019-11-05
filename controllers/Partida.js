@@ -3,7 +3,8 @@
 const Partida = require('../models/Partida');
 const Salida = require('../models/Salida');
 const Entrada = require('../models/Entrada');
-const EmbalajesModel = require('../models/Embalaje');
+const Pasillo = require('../models/Pasillo');
+const Posicion = require('./Posicion');
 const Helper = require('../helpers');
 const NullParamsException = { error: "NullParamsException" };
 const BreakException = { info: "Break" };
@@ -686,10 +687,8 @@ async function posicionar(partidas) {
     }).populate({
         path: 'posiciones.posicion_id'
     }).exec();
-    //console.log(pasilloBahia);
 
     let posicionBahia = pasilloBahia.posiciones[0].posicion_id;
-    //console.log(posicionBahia);
 
     for (let partida of partidas) {
         if (partida.posiciones.length == 0) {
@@ -705,38 +704,27 @@ async function posicionar(partidas) {
                 ubicacion: pasilloBahia.nombre + posicionBahia.niveles[0].nombre + posicionBahia.nombre
             };
             partida.posiciones.push(jPosicionBahia);
-            //console.log(partida);
-
-            await Partida.updateOne({ _id: partida._id }, { $set: { posiciones: partida.posiciones } });
         }
+        for (let posicion of partida.posiciones) {
+            await Posicion.updateExistencia(1, posicion, partida.producto_id);
+        }
+
+        await Partida.updateOne({ _id: partida._id }, { $set: { posiciones: partida.posiciones } });
     }
 }
 
 function _put(jNewPartida) {
     Partida.findOne({ _id: jNewPartida._id })
         .then(async (partida) => {
-            console.log(partida);
-            console.log(jNewPartida);
+            try {
+                console.log(partida);
+                console.log(jNewPartida);
 
-            // let isEquals = await equalsEmbalajes(partida, jNewPartida);
-            // partida.lote = jNewPartida.lote;
-            // partida.producto_id = jNewPartida.producto_id;
-            // partida.clave
-            // if (!isEquals) {
-            //     //await updatePartidaEmbalajes(partida, bodyParams);
-            //     //let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
-            //     //console.log(resMovimietno);
-            // }
-            // if (partida.posiciones != bodyParams.posiciones) {
-            //     console.log("Posicion");
-            //     partida.posiciones = bodyParams.posiciones;
-            // }
-            // if (partida.valor != bodyParams.valor) {
-            //     console.log("Valor");
-            //     partida.valor = bodyParams.valor;
-            // }
+                await Partida.updateOne({ _id: partida._id }, { $set: jNewPartida }).exec();
+            }
+            catch (e) {
 
-            await Partida.updateOne({ _id: partida._id }, { $set: jNewPartida }).exec();
+            }
         });
 }
 
@@ -751,71 +739,6 @@ function _put(jNewPartida) {
 //     }
 
 //     return 0;
-// }
-
-//Campara los embalajes actuales con los nuevos para determinar el signo
-// false = diferentes
-// true = iguales
-// async function equalsEmbalajes(partida, jNewPartida) {
-//     let embalajes = await getEmbalajes();
-//     let res = true;
-//     for (let embalaje of embalajes) {
-//         if (jNewPartida.embalajes[embalaje.clave] == undefined)
-//             jNewPartida.embalajes[embalaje.clave] = 0;
-
-//         if (partida.embalajesEntrada[embalaje.clave] == undefined)
-//             partida.embalajesEntrada[embalaje.clave] = 0;
-
-//         if (partida.embalajesEntrada[embalaje.clave] != jNewPartida.embalajes[embalaje.clave]) {
-//             res = false;
-//             break;
-//         }
-//     }
-//     return await res;
-// }
-
-// async function getEmbalajes() {
-//     let res;
-//     res = await EmbalajesModel.find({ status: "ACTIVO" }).exec();
-//     return res;
-// }
-
-
-// async function updatePartidaEmbalajes(partida, bodyParams) {
-//     //console.log("Embalajes");
-//     let embalajes = await getEmbalajes();
-
-//     for (let embalaje of embalajes) {
-//         if (bodyParams.embalajes[embalaje.clave] == undefined)
-//             bodyParams.embalajes[embalaje.clave] = 0;
-
-//         if (partida.embalajes[embalaje.clave] == undefined)
-//             partida.embalajes[embalaje.clave] = 0;
-
-//         partida.embalajes[embalaje.clave] = bodyParams.embalajes[embalaje.clave];
-//     }
-// }
-
-//Updatea los cambios hechos en la partida en su respectivo movimiento
-// async function updateMovimiento(entrada_id, clave_partida, bodyParams) {
-//     let itemMovimiento = {
-//         embalajes: bodyParams.embalajes,
-//         pesoBruto: bodyParams.pesoBruto,
-//         pesoNeto: bodyParams.pesoNeto,
-//         pasillo: bodyParams.pasillo,
-//         pasillo_id: bodyParams.pasillo_id,
-//         posicion: bodyParams.posicion,
-//         posicion_id: bodyParams.posicion_id,
-//         nivel: bodyParams.nivel,
-//     };
-
-//     await MovimientoInventarioModel.updateOne({ entrada_id: entrada_id, clave_partida: clave_partida }, { $set: itemMovimiento })
-//         .then((item) => {
-//             return true;
-//         })
-//         .catch((error) => {
-//             return false;
-//         });
 // }
 
 module.exports = {

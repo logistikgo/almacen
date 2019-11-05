@@ -4,15 +4,17 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const MovimientoInventario = Schema({
-	producto_id: { type: Schema.ObjectId, ref: "Producto" },
-	clienteFiscal_id: { type: Schema.ObjectId, ref: "ClienteFiscal" },
-	almacen_id: { type: Schema.ObjectId, ref: "Almacen" },
-	sucursal_id: { type: Schema.ObjectId, ref: "Sucursal" },
-	entrada_id: { type: Schema.ObjectId, ref: "Entrada" },
-	salida_id: { type: Schema.ObjectId, ref: "Salida" },
-	fechaMovimiento: Date,
 	signo: Number,
 	tipo: String,
+	//partida_id: { type: Schema.ObjectId, ref: "Partida" },
+	// Con partida_id ya no serian necesarios los siguientes atributos
+	producto_id: { type: Schema.ObjectId, ref: "Producto" },
+	sucursal_id: { type: Schema.ObjectId, ref: "Sucursal" },
+	almacen_id: { type: Schema.ObjectId, ref: "Almacen" },
+	clienteFiscal_id: { type: Schema.ObjectId, ref: "ClienteFiscal" },
+	fechaMovimiento: Date,
+	entrada_id: { type: Schema.ObjectId, ref: "Entrada" },
+	salida_id: { type: Schema.ObjectId, ref: "Salida" },
 	embalajes: {},
 	posiciones: [
 		{
