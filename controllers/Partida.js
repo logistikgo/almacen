@@ -680,8 +680,9 @@ async function _update(req, res) {
     }
 }
 
-async function posicionar(partidas) {
+async function posicionar(partidas, almacen_id) {
     let pasilloBahia = await Pasillo.findOne({
+        almacen_id: almacen_id,
         isBahia: true,
         statusReg: "ACTIVO"
     }).populate({
@@ -711,7 +712,7 @@ async function posicionar(partidas) {
         }
         else {
             let antiguaPartida = await Partida.findOne({ _id: partida._id });
-            console.log(antiguaPartida);
+            //console.log(antiguaPartida);
             if (partida.posiciones.length > 0)
                 for (let posicion of antiguaPartida.posiciones) {
                     await Posicion.updateExistencia(-1, posicion, partida.producto_id);

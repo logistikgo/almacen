@@ -190,7 +190,7 @@ async function update(req, res) {
 	req.body.fechaAlta = new Date();
 
 	if (req.body.status == "SIN_POSICIONAR") {
-		Partida.posicionar(req.body.partidasJson);
+		Partida.posicionar(req.body.partidasJson, bodyParams.almacen_id);
 
 		//Updatea los movimientos de esta entrada, les asigna el campo almacen_id y clienteFiscal_id
 		MovimientoInventarioModel.find({ entrada_id: entrada_id })
