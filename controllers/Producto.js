@@ -56,6 +56,47 @@ async function getExistenciasByAlmacen(req,res){
 	}
 }
 
+async function getExistenciasAlmacen(almacen_id,producto){
+	
+	let producto_id = producto._id;
+	let NullParamsException = {};
+	try
+	{
+		if(almacen_id == undefined || almacen_id == "") throw NullParamsException;
+		if(producto_id == undefined || producto_id == "") throw NullParamsException;
+
+		
+		let existencias = {};
+		for(let x in producto.embalajes){
+			existencias[x] = 0;
+		}
+		
+
+		let partidas = await Partida
+        .find({ producto_id: producto_id, isEmpty: false })
+        .populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id')
+		.exec();
+		
+		partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.almacen_id == almacen_id);
+
+		partidas.forEach(function(partida){
+			for(let x in partida.embalajesxSalir){
+				if(existencias[x] == undefined) existencias[x] = 0;
+
+				if(partida.embalajesAlmacen != undefined)
+					existencias[x] += partida.embalajesAlmacen[x];
+				else
+					existencias[x] += partida.embalajesxSalir[x];
+			}
+		});
+
+		return existencias;
+	}
+	catch(error){
+		throw error;
+	}
+}
+
 function getById(req, res) {
 	let idProducto = req.query.idProducto;
 	
@@ -90,12 +131,14 @@ function getByClave(req,res){
 
 function getByIDsClientesFiscales(req,res){
 	let _arrClienteFiscales = req.query.arrClientesFiscales;
+
 	Producto.find({arrClientesFiscales_id:{$in:_arrClienteFiscales},"statusReg":"ACTIVO"})
 	.populate({
 		path:'presentacion_id', 
 		model: 'Presentacion'
 	})
 	.then((productos)=>{
+		
 		res.status(200).send(productos);
 	})
 	.catch((err)=>{
@@ -139,13 +182,22 @@ async function getALM_XD(req,res){
 
 function getByIDClienteFiscal(req, res) {
 	let _idClienteFiscal = req.params.idClienteFiscal;
+	let almacen_id = req.query.almacen_id;
+	
 	Producto.find({arrClientesFiscales_id:{$in:[_idClienteFiscal]}, statusReg:"ACTIVO"})
 	.populate({
 		path:'presentacion_id', 
 		model: 'Presentacion'
 	})
-	.then((producto) => {
-		res.status(200).send(producto);
+	.then(async (productos) => {
+
+		if(almacen_id != undefined){
+			await Helpers.asyncForEach(productos,async function(producto){
+				
+				producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id,producto);
+			});
+		}
+		res.status(200).send(productos);
 	})
 	.catch((error) => {
 		return res.status(500).send(error);
@@ -166,8 +218,7 @@ async function save(req,res) {
 		res.status(200).send(productoStored);				
 		
 		MovimientoInventario.saveExistenciaInicial(productoStored._id, req.body.embalajes,
-			req.body.existenciaPesoBruto, req.body.existenciaPesoNeto,
-			req.body.idClienteFiscal,req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id)
+			req.body.existenciaPesoBruto, req.body.existenciaPesoNeto,req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id)
 	})
 	.catch((err)=>{
 		res.status(500).send({"message":"Error save producto", "error":err});

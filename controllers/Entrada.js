@@ -8,38 +8,10 @@ const Helper = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
-const Pasillo = require('../models/Pasillo');
-
-//METODOS NUEVOS CON LA ESTRUCTURA
-function get1(req, res) {
-	//Entrada.
-}
-
-//FIN METODOS NUEVOS CON LA ESTRUCTURA
 
 function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
 }
-
-// function get(req, res) {
-// 	Entrada.find({})
-// 		.populate({
-// 			path: 'partidas',
-// 			model: 'Partida'
-// 		})
-// 		.populate({
-// 			path: 'partidas',
-// 			populate: {
-// 				path: 'producto_id'
-// 			}
-// 		})
-// 		.then((entradas) => {
-// 			res.status(200).send(entradas);
-// 		})
-// 		.catch((error) => {
-// 			res.status(500).send(error);
-// 		});
-// };
 
 async function get(req, res) {
 	let _idClienteFiscal = req.query.idClienteFiscal;
@@ -81,7 +53,7 @@ async function get(req, res) {
 		});
 }
 
-function getEntradaByID(req, res) {
+function getById(req, res) {
 
 	let _id = req.query.id;
 
@@ -106,32 +78,6 @@ function getEntradaByID(req, res) {
 		});
 }
 
-function getPartidaById(req, res) {
-	let params = req.query;
-	let entrada_id = params.entrada_id;
-	let clave_partida = params.clave_partida;
-
-	Entrada.findOne({ _id: entrada_id })
-		.populate({
-			path: 'partidas',
-			model: 'Partida'
-		})
-		.populate({
-			path: 'partidas',
-			populate: {
-				path: 'producto_id'
-			}
-		})
-		.then((entrada) => {
-			let partida = entrada.partidas.find(x => x.clave_partida == clave_partida);
-
-			res.status(200).send(partida);
-		})
-		.catch((error) => {
-			res.status(500).send(error);
-		});
-}
-
 function getSalidasByEntradaID(req, res) {
 	let _id = req.query.entrada_id;
 
@@ -145,13 +91,11 @@ function getSalidasByEntradaID(req, res) {
 		});
 }
 
+/**
+ * Guarda una nueva entrada en la base de datos
+ * Asi mismo, guarda cada una de las partidas y un movimiento de inventario
+ */
 async function save(req, res) {
-
-	/**
-	 * Guarda una nueva entrada en la base de datos
-	 * Asi mismo, guarda cada una de las partidas y un movimiento de inventario
-	 */
-
 	let nEntrada = new Entrada(req.body);
 
 	nEntrada.fechaAlta = new Date();
@@ -180,11 +124,9 @@ async function save(req, res) {
 }
 
 async function saveEntradaAutomatica(req, res) {
-
 	let partidas = await PartidaModel.find({ 'InfoPedidos.IDPedido': { $in: req.body.arrIDPedidos } }).lean().exec();
 
 	//let isEntrada = await validaEntradaDuplicado(bodyParams.embarque); //Valida si ya existe
-
 
 	if (partidas && partidas.length > 0) {
 		let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([req.body.IDClienteFiscal]);
@@ -248,38 +190,7 @@ async function update(req, res) {
 	req.body.fechaAlta = new Date();
 
 	if (req.body.status == "SIN_POSICIONAR") {
-		let pasilloBahia = await Pasillo.findOne({
-			isBahia: true,
-			statusReg: "ACTIVO"
-		}).populate({
-			path: 'posiciones.posicion_id'
-		}).exec();
-		//console.log(pasilloBahia);
-
-		let posicionBahia = pasilloBahia.posiciones[0].posicion_id;
-		//console.log(posicionBahia);
-
-		for (let partida of req.body.partidasJson) {
-			//console.log(partida);
-			let clave_partida = partida.clave_partida;
-			if (partida.posiciones.length == 0) {
-				let jPosicionBahia = {
-					embalajesEntrada: partida.embalajesEntrada,
-					embalajesxSalir: partida.embalajesxSalir,
-					pasillo: pasilloBahia.nombre,
-					pasillo_id: pasilloBahia._id,
-					posicion: posicionBahia.nombre,
-					posicion_id: posicionBahia._id,
-					nivel_id: posicionBahia.niveles[0]._id,
-					nivel: posicionBahia.niveles[0].nombre,
-					ubicacion: pasilloBahia.nombre + posicionBahia.niveles[0].nombre + posicionBahia.nombre
-				};
-				partida.posiciones.push(jPosicionBahia);
-				//console.log(partida);
-
-				await PartidaModel.updateOne({ _id: partida._id }, { $set: { posiciones: partida.posiciones } });
-			}
-		}
+		Partida.posicionar(req.body.partidasJson, bodyParams.almacen_id);
 
 		//Updatea los movimientos de esta entrada, les asigna el campo almacen_id y clienteFiscal_id
 		MovimientoInventarioModel.find({ entrada_id: entrada_id })
@@ -297,6 +208,12 @@ async function update(req, res) {
 
 		if (partidasPosicionadas.length == req.body.partidasJson.length && req.body.item != undefined && req.body.item != null && req.body.item != "")
 			req.body.status = "APLICADA";
+	}
+	else {
+		console.log("EDIT PARTIDA");
+		for (let partida of req.body.partidasJson) {
+			Partida._put(partida);
+		}
 	}
 
 	Entrada.updateOne(
@@ -364,13 +281,68 @@ async function validaEntrada(req, res) {
 	}
 }
 
+/////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
+
+//METODOS NUEVOS CON LA ESTRUCTURA
+// function get1(req, res) {
+// 	//Entrada.
+// }
+
+//FIN METODOS NUEVOS CON LA ESTRUCTURA
+
+// function get(req, res) {
+// 	Entrada.find({})
+// 		.populate({
+// 			path: 'partidas',
+// 			model: 'Partida'
+// 		})
+// 		.populate({
+// 			path: 'partidas',
+// 			populate: {
+// 				path: 'producto_id'
+// 			}
+// 		})
+// 		.then((entradas) => {
+// 			res.status(200).send(entradas);
+// 		})
+// 		.catch((error) => {
+// 			res.status(500).send(error);
+// 		});
+// };
+
+// function getPartidaById(req, res) {
+// 	let params = req.query;
+// 	let entrada_id = params.entrada_id;
+// 	let clave_partida = params.clave_partida;
+
+// 	Entrada.findOne({ _id: entrada_id })
+// 		.populate({
+// 			path: 'partidas',
+// 			model: 'Partida'
+// 		})
+// 		.populate({
+// 			path: 'partidas',
+// 			populate: {
+// 				path: 'producto_id'
+// 			}
+// 		})
+// 		.then((entrada) => {
+// 			let partida = entrada.partidas.find(x => x.clave_partida == clave_partida);
+
+// 			res.status(200).send(partida);
+// 		})
+// 		.catch((error) => {
+// 			res.status(500).send(error);
+// 		});
+// }
+
 module.exports = {
 	get,
-	getEntradaByID,
+	getById,
 	save,
 	update,
-	getPartidaById,
 	validaEntrada,
 	saveEntradaAutomatica,
 	getSalidasByEntradaID
+	// getPartidaById,
 }
