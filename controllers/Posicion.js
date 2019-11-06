@@ -96,7 +96,6 @@ function getPosicionesxProducto(req, res) {
 		.then((posiciones) => {
 			let resPosiciones = [];
 
-
 			for (let posicion of posiciones) {
 				let jPosicion = {
 					pasillo: posicion.pasillo_id.nombre,
@@ -108,7 +107,11 @@ function getPosicionesxProducto(req, res) {
 				jPosicion.embalajes = new Object();
 
 				let niveles = posicion.niveles.filter(async (x) => {
-					let producto = x.productos.filter(x => x.producto_id._id.toString() == producto_id.toString());
+					let producto = x.productos.filter((p) => {
+						if (p.producto_id != null)
+							return p.producto_id._id.toString() == producto_id.toString();
+						return false;
+					});
 
 					if (producto.length > 0) {
 						for (let embalaje of Object.keys(producto[0].embalajes)) {
@@ -255,16 +258,18 @@ async function updateExistencia(signo, posicionxPartida, producto_id) {
 	console.log(posicionxPartida);
 	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
 	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
+	console.log(nivel);
 
 	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == producto_id.toString()) != undefined) {
 		let producto = nivel.productos.find(x => x.producto_id.toString() == producto_id.toString());
+		console.log(producto);
 		let flagEmbalajes = 0;
 
-		for (let embalaje in posicionxPartida.embalajes) {
+		for (let embalaje in posicionxPartida.embalajesEntrada) {
 			if (producto.embalajes[embalaje] == undefined) {
 				producto.embalajes[embalaje] = 0;
 			}
-			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajes[embalaje]);
+			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajesEntrada[embalaje]);
 
 			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
 		}
@@ -277,9 +282,11 @@ async function updateExistencia(signo, posicionxPartida, producto_id) {
 	else {
 		nivel.productos.push({
 			producto_id: producto_id,
-			embalajes: posicionxPartida.embalajes
+			embalajes: posicionxPartida.embalajesEntrada
 		});
 	}
+
+	console.log(nivel);
 
 	let item = {
 		niveles: posicion.niveles

@@ -704,9 +704,22 @@ async function posicionar(partidas) {
                 ubicacion: pasilloBahia.nombre + posicionBahia.niveles[0].nombre + posicionBahia.nombre
             };
             partida.posiciones.push(jPosicionBahia);
+
+            for (let posicion of partida.posiciones) {
+                await Posicion.updateExistencia(1, posicion, partida.producto_id);
+            }
         }
-        for (let posicion of partida.posiciones) {
-            await Posicion.updateExistencia(1, posicion, partida.producto_id);
+        else {
+            let antiguaPartida = await Partida.findOne({ _id: partida._id });
+            console.log(antiguaPartida);
+            if (partida.posiciones.length > 0)
+                for (let posicion of antiguaPartida.posiciones) {
+                    await Posicion.updateExistencia(-1, posicion, partida.producto_id);
+                }
+
+            for (let posicion of partida.posiciones) {
+                await Posicion.updateExistencia(1, posicion, partida.producto_id);
+            }
         }
 
         await Partida.updateOne({ _id: partida._id }, { $set: { posiciones: partida.posiciones } });
