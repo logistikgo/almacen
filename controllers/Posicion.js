@@ -120,7 +120,7 @@ function getPosicionesxProducto(req, res) {
 							else
 								jPosicion.embalajes[embalaje] += producto[0].embalajes[embalaje];
 
-							console.log(jPosicion.embalajes);
+							// console.log(jPosicion.embalajes);
 						}
 					}
 
@@ -251,18 +251,14 @@ function _delete(req, res) {
 
 }
 
+/* Esta funcion actualiza las existencias en las posiciones dentro del almacen */
 async function updateExistencia(signo, posicionxPartida, producto_id) {
-	/**
-	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
-	 */
-	console.log(posicionxPartida);
+	// console.log(posicionxPartida);
 	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
 	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
-	console.log(nivel);
 
 	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == producto_id.toString()) != undefined) {
 		let producto = nivel.productos.find(x => x.producto_id.toString() == producto_id.toString());
-		console.log(producto);
 		let flagEmbalajes = 0;
 
 		for (let embalaje in posicionxPartida.embalajesEntrada) {
@@ -285,8 +281,6 @@ async function updateExistencia(signo, posicionxPartida, producto_id) {
 			embalajes: posicionxPartida.embalajesEntrada
 		});
 	}
-
-	console.log(nivel);
 
 	let item = {
 		niveles: posicion.niveles
