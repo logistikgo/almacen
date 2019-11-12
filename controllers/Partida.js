@@ -360,8 +360,9 @@ async function getByProductoEmbalaje(req, res) {
             })
         .where(embalajesxSalir).gt(0)
         .exec();
-    partidas = partidas.filter(x.tipo == "EXISTENCIA_INICIAL" || (x => x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id
-        && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id));
+    
+    partidas = partidas.filter(x => x.tipo == "EXISTENCIA_INICIAL" || (x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id
+            && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id));
 
 
     partidas = partidas.sort(sortByfechaEntadaAsc);
