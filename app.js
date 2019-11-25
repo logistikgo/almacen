@@ -23,10 +23,9 @@ const Partida = require('./controllers/Partida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
 const ColumnasxOperacion = require("./controllers/ColumnasxOperacion");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
-//const PrePartida = require('./controllers/PrePartida');
+const TarifaPES = require('./controllers/TarifaPES');
 
-//const dotenv = require('dotenv'); //Used for environment variables
-//dotenv.config();
+
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -156,5 +155,7 @@ app.put('/api/partida/pedido/update', Partida._update);
 // app.get('/api/prepartida',PrePartida.get);
 // app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
 // app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
+
+app.get('/api/tarifaPES',TarifaPES.get);
 
 module.exports = app;
