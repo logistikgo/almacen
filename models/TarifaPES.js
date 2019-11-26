@@ -14,7 +14,8 @@ const TarifaPES = Schema({
     fechaAlta : {type : Date, default : new Date()},
     fechaBaja : Date,
     status : {type: String, default : "ACTIVO"}
-},{
+},
+{
     collection : 'TarifasPES'
 });
 
