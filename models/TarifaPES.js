@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const TarifaPES = Schema({
-    cliente_id : {type: ObjectId,ref : 'ClienteFiscal'},
+    cliente_id : {type: Schema.ObjectId,ref : 'ClienteFiscal'},
     tipoCambio : String,
     precioPosicion : Number,
     precioEntrada : Number,

@@ -156,6 +156,10 @@ app.put('/api/partida/pedido/update', Partida._update);
 // app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
 // app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 
+//Tarifas
 app.get('/api/tarifaPES',TarifaPES.get);
+app.post('/api/tarifaPES',TarifaPES.post);
+app.put('/api/tarifaPES',TarifaPES.put);
+app.delete('/api/tarifaPES',TarifaPES._delete);
 
 module.exports = app;
