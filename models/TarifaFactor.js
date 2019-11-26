@@ -3,12 +3,11 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const TarifaPES = Schema({
+const TarifaFactor = Schema({
     cliente_id : {type: Schema.ObjectId,ref : 'ClienteFiscal'},
+    embalaje_id : {type: Schema.ObjectId,ref : 'Embalaje'},
     tipoCambio : String,
-    precioPosicion : Number,
-    precioEntrada : Number,
-    precioSalida : Number,
+    factor : Number,
     usuarioAlta_id : Number,
     usuarioBaja_id : Number,
     fechaAlta : {type : Date, default : new Date()},
@@ -16,7 +15,7 @@ const TarifaPES = Schema({
     status : {type: String, default : "ACTIVO"}
 },
 {
-    collection : 'TarifasPES'
+    collection : 'TarifasFactor'
 });
 
-module.exports = mongoose.model('TarifaPES',TarifaPES);
+module.exports = mongoose.model('TarifaFactor',TarifaFactor);
