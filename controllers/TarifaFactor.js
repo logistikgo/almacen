@@ -9,10 +9,10 @@ function get(req,res){
     .then(tarifas=> {
         res.status(200).send(tarifas);
     })
-    .catch(error)
-    { 
+    .catch(error=>{ 
         res.status(500).send(error); 
-    }
+    });
+    
 }
 
 function post(req,res){

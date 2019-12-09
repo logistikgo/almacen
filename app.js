@@ -158,12 +158,12 @@ app.put('/api/partida/pedido/update', Partida._update);
 // app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 
 //Tarifas
-app.get('/api/tarifaPES',TarifaPES.get);
+app.get('/api/tarifaPES/:cliente_id',TarifaPES.get);
 app.post('/api/tarifaPES',TarifaPES.post);
 app.put('/api/tarifaPES',TarifaPES.put);
 app.delete('/api/tarifaPES',TarifaPES._delete);
 
-app.get('/api/tarifaFactor',TarifaFactor.get);
+app.get('/api/tarifaFactor/:cliente_id',TarifaFactor.get);
 app.post('/api/tarifaFactor',TarifaFactor.post);
 app.put('/api/tarifaFactor',TarifaFactor.put);
 app.delete('/api/tarifaFactor',TarifaFactor._delete);
