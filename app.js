@@ -25,6 +25,7 @@ const ColumnasxOperacion = require("./controllers/ColumnasxOperacion");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
 const TarifaPES = require('./controllers/TarifaPES');
 const TarifaFactor = require('./controllers/TarifaFactor');
+const TarifaFija = require('./controllers/TarifaFija');
 
 
 
@@ -167,5 +168,7 @@ app.get('/api/tarifaFactor',TarifaFactor.get);
 app.post('/api/tarifaFactor',TarifaFactor.post);
 app.put('/api/tarifaFactor',TarifaFactor.put);
 app.delete('/api/tarifaFactor',TarifaFactor._delete);
+
+app.post('/api/tarifaFija', TarifaFija.save);
 
 module.exports = app;
