@@ -15,8 +15,11 @@
     });
  }
 
- function post (req, res) {
-     let newTarifaFija = new TarifaFija(req,body);
+ function save (req, res) {
+     let newTarifaFija = new TarifaFija(req.body);
+     
+     newTarifaFija.fechaAlta = new Date();
+
      newTarifaFija.save()
      .then(saved => {
          res.status(200).send(saved);
@@ -51,7 +54,7 @@
 
  module.exports = {
      get,
-     post,
+     save,
      edit,
      remove
  }
