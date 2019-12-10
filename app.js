@@ -26,6 +26,7 @@ const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
 const TarifaPES = require('./controllers/TarifaPES');
 const TarifaFactor = require('./controllers/TarifaFactor');
 const TarifaFija = require('./controllers/TarifaFija');
+const TarifaDXP = require('./controllers/TarifaDXP');
 
 
 
@@ -170,5 +171,10 @@ app.put('/api/tarifaFactor',TarifaFactor.put);
 app.delete('/api/tarifaFactor',TarifaFactor._delete);
 
 app.post('/api/tarifaFija', TarifaFija.save);
+app.get('/api/tarifaFija/:cliente_id', TarifaFija.get);
+app.delete('/api/tarifaFija/:_id', TarifaFija.remove);
+
+app.get('/api/tarifaDXP/:cliente_id', TarifaDXP.get);
+app.post('/api/tarifaDXP', TarifaDXP.save);
 
 module.exports = app;
