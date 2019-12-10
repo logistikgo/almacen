@@ -161,8 +161,8 @@ app.put('/api/partida/pedido/update', Partida._update);
 //Tarifas
 app.get('/api/tarifaPES/:cliente_id',TarifaPES.get);
 app.post('/api/tarifaPES',TarifaPES.post);
-app.put('/api/tarifaPES',TarifaPES.put);
-app.delete('/api/tarifaPES',TarifaPES._delete);
+app.put('/api/tarifaPES/:_id',TarifaPES.put);
+app.delete('/api/tarifaPES/:_id',TarifaPES._delete);
 
 app.get('/api/tarifaFactor/:cliente_id',TarifaFactor.get);
 app.post('/api/tarifaFactor',TarifaFactor.post);

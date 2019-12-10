@@ -6,6 +6,10 @@ function get(req,res){
 
     let cliente_id = req.params.cliente_id;
     TarifaPES.find({cliente_id : cliente_id})
+    .populate({
+        'path' : 'clienteFiscal_id',
+        'select' : 'nombreCorto nombreComercial clave'
+    })
     .then(tarifas=> {
         res.status(200).send(tarifas);
     })
@@ -45,8 +49,9 @@ function _delete(req,res){
 
     let _id = req.params._id;
 
-    TarifaPES.updateOne({_id : _id},{$set : {status : "BAJA"} })
+    TarifaPES.findOneAndUpdate({_id : _id},{$set : {status : "BAJA"} },{new : true})
     .then(edited=>{
+        
         res.status(200).send(edited);
     })
     .catch(error=>{
