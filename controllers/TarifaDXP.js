@@ -27,7 +27,19 @@ function save (req, res) {
     });
 }
 
+function _delete (req, res) {
+    let delete_id = req.params._id;
+    TarifaDXP.findOneAndUpdate({_id : delete_id}, {$set: {statusReg : "BAJA"}})
+    .then(edited => {
+        res.status(200).send(edited)
+    })
+    .catch(error => {
+        res.status(500).send(error);
+    });
+}
+
 module.exports = {
     get,
-    save
+    save,
+    _delete
 }

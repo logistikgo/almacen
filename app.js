@@ -172,9 +172,10 @@ app.delete('/api/tarifaFactor',TarifaFactor._delete);
 
 app.post('/api/tarifaFija', TarifaFija.save);
 app.get('/api/tarifaFija/:cliente_id', TarifaFija.get);
-app.delete('/api/tarifaFija/:_id', TarifaFija.remove);
+app.delete('/api/tarifaFija/:_id', TarifaFija._delete);
 
 app.get('/api/tarifaDXP/:cliente_id', TarifaDXP.get);
 app.post('/api/tarifaDXP', TarifaDXP.save);
+app.delete('/api/tarifaDXP/:_id', TarifaDXP._delete);
 
 module.exports = app;

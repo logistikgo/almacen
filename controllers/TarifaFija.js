@@ -29,7 +29,7 @@
      });
  }
 
- function remove (req, res) {
+ function _delete (req, res) {
      let delete_id = req.params._id;
      TarifaFija.findOneAndUpdate({_id : delete_id}, {$set: {status : "BAJA"}})
      .then(edited => {
@@ -43,5 +43,5 @@
  module.exports = {
      get,
      save,
-     remove
+     _delete
  }
