@@ -168,7 +168,7 @@ app.delete('/api/tarifaPES/:_id',TarifaPES._delete);
 app.get('/api/tarifaFactor/:cliente_id',TarifaFactor.get);
 app.post('/api/tarifaFactor',TarifaFactor.post);
 app.put('/api/tarifaFactor',TarifaFactor.put);
-app.delete('/api/tarifaFactor',TarifaFactor._delete);
+app.delete('/api/tarifaFactor/:_id',TarifaFactor._delete);
 
 app.post('/api/tarifaFija', TarifaFija.save);
 app.get('/api/tarifaFija/:cliente_id', TarifaFija.get);

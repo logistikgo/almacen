@@ -6,6 +6,10 @@ function get(req,res){
 
     let cliente_id = req.params.cliente_id;
     TarifaFactor.find({cliente_id : cliente_id})
+    .populate({
+        path :"embalaje_id",
+        select : 'nombre clave'
+    })
     .then(tarifas=> {
         res.status(200).send(tarifas);
     })
@@ -21,7 +25,15 @@ function post(req,res){
 
     nTarifaPES.save()
     .then(saved=> {
-        res.status(201).send(saved);
+        TarifaFactor.findOne({_id : saved._id})
+        .populate({
+            path :"embalaje_id",
+            select : 'nombre clave'
+        })
+        .then(data=>{
+            res.status(201).send(data);
+        });
+        
     })
     .catch(error=>{
         req.status(500).send(error);
