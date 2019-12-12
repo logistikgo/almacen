@@ -27,8 +27,7 @@ const TarifaPES = require('./controllers/TarifaPES');
 const TarifaFactor = require('./controllers/TarifaFactor');
 const TarifaFija = require('./controllers/TarifaFija');
 const TarifaDXP = require('./controllers/TarifaDXP');
-
-
+const FolioIngreso = require('./controllers/FolioIngreso');
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -160,15 +159,15 @@ app.put('/api/partida/pedido/update', Partida._update);
 // app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
 
 //Tarifas
-app.get('/api/tarifaPES/:cliente_id',TarifaPES.get);
-app.post('/api/tarifaPES',TarifaPES.post);
-app.put('/api/tarifaPES/:_id',TarifaPES.put);
-app.delete('/api/tarifaPES/:_id',TarifaPES._delete);
+app.get('/api/tarifaPES/:cliente_id', TarifaPES.get);
+app.post('/api/tarifaPES', TarifaPES.post);
+app.put('/api/tarifaPES/:_id', TarifaPES.put);
+app.delete('/api/tarifaPES/:_id', TarifaPES._delete);
 
-app.get('/api/tarifaFactor/:cliente_id',TarifaFactor.get);
-app.post('/api/tarifaFactor',TarifaFactor.post);
-app.put('/api/tarifaFactor',TarifaFactor.put);
-app.delete('/api/tarifaFactor/:_id',TarifaFactor._delete);
+app.get('/api/tarifaFactor/:cliente_id', TarifaFactor.get);
+app.post('/api/tarifaFactor', TarifaFactor.post);
+app.put('/api/tarifaFactor', TarifaFactor.put);
+app.delete('/api/tarifaFactor/:_id', TarifaFactor._delete);
 
 app.post('/api/tarifaFija', TarifaFija.save);
 app.get('/api/tarifaFija/:cliente_id', TarifaFija.get);
@@ -177,5 +176,10 @@ app.delete('/api/tarifaFija/:_id', TarifaFija._delete);
 app.get('/api/tarifaDXP/:cliente_id', TarifaDXP.get);
 app.post('/api/tarifaDXP', TarifaDXP.save);
 app.delete('/api/tarifaDXP/:_id', TarifaDXP._delete);
+
+app.get('/api/foliosIngresos', FolioIngreso.get);
+app.post('/api/folioIngreso', FolioIngreso.save);
+app.put('/api/folioIngreso', FolioIngreso.update);
+app.delete('/api/folioIngreso', FolioIngreso.delete);
 
 module.exports = app;
