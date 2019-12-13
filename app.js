@@ -180,6 +180,6 @@ app.delete('/api/tarifaDXP/:_id', TarifaDXP._delete);
 app.get('/api/foliosIngresos', FolioIngreso.get);
 app.post('/api/folioIngreso', FolioIngreso.save);
 app.put('/api/folioIngreso', FolioIngreso.update);
-app.delete('/api/folioIngreso', FolioIngreso.delete);
+app.delete('/api/folioIngreso', FolioIngreso._delete);
 
 module.exports = app;
