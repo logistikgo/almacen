@@ -16,7 +16,10 @@ const FolioIngreso = Schema(
         usuarioAlta: String,
 		usuarioAlta_id: Number,
 		fechaAlta: Date
+    },
+    {
+        collection: 'FoliosIngreso'
     }
 );
 
-module.exports = mongoose.model('FolioIngreso', FoliosIngresos);
+module.exports = mongoose.model('FolioIngreso', FolioIngreso);

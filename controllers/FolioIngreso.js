@@ -15,7 +15,7 @@ function update(req, res){
 
 }
 
-function _delete(res, res){
+function _delete(req, res){
 
 }
 
