@@ -9,6 +9,7 @@ const TarifaFija = Schema({
     precio: Number,
     periodo: String,
     usuarioAlta_id: Number,
+	usuarioAlta: String,
     fechaAlta: {type: Date, default: Date.now},
     usuarioBaja_id: Number,
     fechaBaja: {type: Date},

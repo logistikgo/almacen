@@ -8,6 +8,7 @@ const TarifaDXP = Schema({
     tipoCambio: String,
     precioPorDia: Number,
     usuarioAlta_id: Number,
+	usuarioAlta: String,
     fechaAlta: {type: Date, default: Date.now},
     usuarioBaja_id: Number,
     fechaBaja: {type: Date},
