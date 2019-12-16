@@ -1,47 +1,58 @@
 'use strict'
 
- const TarifaFija = require('../models/TarifaFija');
+const TarifaFija = require('../models/TarifaFija');
 
- function get (req, res) {
+function get(req, res) {
+    TarifaFija.find({ statusReg: "ACTIVO" })
+        .then(data => {
+            res.status(200).send(data);
+        })
+        .catch(error => {
+            res.status(500).send(error);
+        });
+}
 
+function getByCliente(req, res) {
     let cliente_id = req.params.cliente_id;
 
-    TarifaFija.find({cliente_id: cliente_id, status:"ACTIVO"})
-    .then(data => {
-        res.status(200).send(data);
-    })
-    .catch(error => {
-        res.status(500).send(error);
-    });
- }
+    TarifaFija.find({ cliente_id: cliente_id, statusReg: "ACTIVO" })
+        .then(data => {
+            let tarifa = data.first();
+            res.status(200).send(data);
+        })
+        .catch(error => {
+            res.status(500).send(error);
+        });
+}
 
- function save (req, res) {
-     let newTarifaFija = new TarifaFija(req.body);
-     
-     newTarifaFija.fechaAlta = new Date();
+function save(req, res) {
+    let newTarifaFija = new TarifaFija(req.body);
 
-     newTarifaFija.save()
-     .then(saved => {
-         res.status(200).send(saved);
-     })
-     .catch(error => {
-         res.status(500).send(error);
-     });
- }
+    newTarifaFija.fechaAlta = new Date();
 
- function _delete (req, res) {
-     let delete_id = req.params._id;
-     TarifaFija.findOneAndUpdate({_id : delete_id}, {$set: {status : "BAJA"}})
-     .then(edited => {
-         res.status(200).send(edited)
-     })
-     .catch(error => {
-         res.status(500).send(error);
-     });
- }
+    newTarifaFija.save()
+        .then(saved => {
+            res.status(200).send(saved);
+        })
+        .catch(error => {
+            res.status(500).send(error);
+        });
+}
 
- module.exports = {
-     get,
-     save,
-     _delete
- }
+function _delete(req, res) {
+    let delete_id = req.params._id;
+    TarifaFija.findOneAndUpdate({ _id: delete_id }, { $set: { statusReg: "BAJA" } })
+        .then(edited => {
+            res.status(200).send(edited)
+        })
+        .catch(error => {
+            res.status(500).send(error);
+        });
+}
+
+module.exports = {
+    get,
+    getByCliente,
+    save,
+    _delete
+}

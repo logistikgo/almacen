@@ -3,6 +3,10 @@
 const FolioInreso = require('../models/FolioIngreso');
 const Helpers = require('../helpers');
 
+async function getNextID() {
+	return await Helper.getNextID(FolioInreso, "folio");
+}
+
 function get(req, res) {
     FolioInreso.find({})
         .then(folios => {
@@ -13,8 +17,10 @@ function get(req, res) {
         })
 }
 
-function save(req, res) {
+async function save(req, res) {
     let nFolioIngreso = new FolioInreso(req.body);
+
+    nFolioIngreso.folio = await getNextID();
 
     nFolioIngreso.save()
         .then(folio => {

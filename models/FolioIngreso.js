@@ -11,11 +11,11 @@ const FolioIngreso = Schema(
         tipoTarifa: String,
         total: Number,
         fechaInicio: Date,
-        fechaFin: { type: Date, default: new Date() },
+        fechaFin: Date,
         statusReg: { type: String, default: "ACTIVO" },
         usuarioAlta: String,
         usuarioAlta_id: Number,
-        fechaAlta: Date
+        fechaAlta: { type: Date, default: new Date() }
     },
     {
         collection: 'FoliosIngreso'
