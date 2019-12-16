@@ -6,16 +6,16 @@ const Schema = mongoose.Schema;
 const FolioIngreso = Schema(
     {
         folio: String,
-        cliente_id: {type: Schema.ObjectId, ref:'ClienteFiscal'},
+        cliente_id: { type: Schema.ObjectId, ref: 'ClienteFiscal' },
         tarifa_id: Schema.ObjectId,
         tipoTarifa: String,
         total: Number,
         fechaInicio: Date,
-        fechaFin: Date,
-        statusReg:String,
+        fechaFin: { type: Date, default: new Date() },
+        statusReg: { type: String, default: "ACTIVO" },
         usuarioAlta: String,
-		usuarioAlta_id: Number,
-		fechaAlta: Date
+        usuarioAlta_id: Number,
+        fechaAlta: Date
     },
     {
         collection: 'FoliosIngreso'
