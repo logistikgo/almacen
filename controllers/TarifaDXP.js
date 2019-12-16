@@ -20,9 +20,13 @@ function getByCliente(req, res) {
     let cliente_id = req.params.cliente_id;
 
     TarifaDXP.find({ cliente_id: cliente_id, statusReg: "ACTIVO" })
-        .sort({ fechaAlta: -1 })
-        .then(data => {
-            let tarifa = data.first();
+        .sort({ "fechaAlta": -1 })
+        .limit(1)
+        .populate({
+            'path': 'cliente_id',
+            'select': 'nombreCorto nombreComercial clave'
+        })
+        .then(tarifa => {
             res.status(200).send(tarifa);
         })
         .catch(error => {

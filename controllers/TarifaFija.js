@@ -20,9 +20,14 @@ function getByCliente(req, res) {
     let cliente_id = req.params.cliente_id;
 
     TarifaFija.find({ cliente_id: cliente_id, statusReg: "ACTIVO" })
-        .then(data => {
-            let tarifa = data.first();
-            res.status(200).send(data);
+        .sort({ "fechaAlta": -1 })
+        .limit(1)
+        .populate({
+            'path': 'cliente_id',
+            'select': 'nombreCorto nombreComercial clave'
+        })
+        .then(tarifa => {
+            res.status(200).send(tarifa);
         })
         .catch(error => {
             res.status(500).send(error);
