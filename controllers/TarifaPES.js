@@ -3,11 +3,9 @@
 const TarifaPES = require('../models/TarifaPES');
 
 function get(req, res) {
-    let cliente_id = req.params.cliente_id;
-
-    TarifaPES.find({ cliente_id: cliente_id, statusReg: "ACTIVO" })
+    TarifaPES.find({ statusReg: "ACTIVO" })
         .populate({
-            'path': 'clienteFiscal_id',
+            'path': 'cliente_id',
             'select': 'nombreCorto nombreComercial clave'
         })
         .then(tarifas => {
@@ -19,7 +17,9 @@ function get(req, res) {
 }
 
 function getByCliente(req, res) {
-    TarifaPES.find({ statusReg: "ACTIVO" })
+    let cliente_id = req.params.cliente_id;
+
+    TarifaPES.find({cliente_id: cliente_id, statusReg: "ACTIVO" })
         .populate({
             'path': 'cliente_id',
             'select': 'nombreCorto nombreComercial clave'
