@@ -20,6 +20,10 @@ function get(req, res) {
 
 function getByCliente(req, res) {
     TarifaPES.find({ statusReg: "ACTIVO" })
+        .populate({
+            'path': 'cliente_id',
+            'select': 'nombreCorto nombreComercial clave'
+        })
         .then(tarifas => {
             let tarifa = tarifas.first();
             res.status(200).send(tarifas);

@@ -4,6 +4,10 @@ const TarifaFija = require('../models/TarifaFija');
 
 function get(req, res) {
     TarifaFija.find({ statusReg: "ACTIVO" })
+        .populate({
+            'path': 'cliente_id',
+            'select': 'nombreCorto nombreComercial clave'
+        })
         .then(data => {
             res.status(200).send(data);
         })

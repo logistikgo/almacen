@@ -5,6 +5,10 @@ const TarifaFactor = require('../models/TarifaFactor');
 function get(req, res) {
     TarifaFactor.find({ statusReg: "ACTIVO" })
         .populate({
+            'path': 'cliente_id',
+            'select': 'nombreCorto nombreComercial clave'
+        })
+        .populate({
             path: "embalaje_id",
             select: 'nombre clave'
         })

@@ -4,6 +4,10 @@ const TarifaDXP = require('../models/TarifaDXP');
 
 function get(req, res) {
     TarifaDXP.find({ statusReg: "ACTIVO" })
+        .populate({
+            'path': 'cliente_id',
+            'select': 'nombreCorto nombreComercial clave'
+        })
         .then(data => {
             res.status(200).send(data);
         })
