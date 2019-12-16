@@ -10,6 +10,7 @@ const TarifaPES = Schema(
         precioPosicion: Number,
         precioEntrada: Number,
         precioSalida: Number,
+        usuarioAlta: String,
         usuarioAlta_id: Number,
         usuarioBaja_id: Number,
         fechaAlta: { type: Date, default: new Date() },

@@ -9,6 +9,7 @@ const TarifaFactor = Schema(
         embalaje_id: { type: Schema.ObjectId, ref: 'Embalaje' },
         tipoCambio: String,
         factor: Number,
+        usuarioAlta: String,
         usuarioAlta_id: Number,
         usuarioBaja_id: Number,
         fechaAlta: { type: Date, default: new Date() },
