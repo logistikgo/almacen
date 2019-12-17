@@ -86,6 +86,7 @@ app.get('/api/clienteFiscal', CteFiscal.getByIDCteFiscal);
 app.post('/api/saveCteFiscal', CteFiscal.save);
 app.delete('/api/deleteCteFiscal', CteFiscal._delete);
 app.put('/api/clienteFiscal', CteFiscal.update);
+app.get('/api/getCteFiscalByTarifa/:tipoTarifaPrecio', CteFiscal.getByTarifa);
 
 app.get('/api/sucursales', Sucursal.get);
 app.get('/api/sucursalesXD', Helper.getSucursalesXD);
