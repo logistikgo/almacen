@@ -1,14 +1,19 @@
 'use strict'
 
 const FolioInreso = require('../models/FolioIngreso');
+const ClienteFiscal = require('../models/ClienteFiscal');
 const Helpers = require('../helpers');
 
 async function getNextID() {
-	return await Helper.getNextID(FolioInreso, "folio");
+    return await Helpers.getNextID(FolioInreso, "folio");
 }
 
 function get(req, res) {
     FolioInreso.find({})
+        .populate({
+            'path': 'cliente_id',
+            'select': 'nombreCorto nombreComercial clave'
+        })
         .then(folios => {
             res.status(200).send(folios);
         })
@@ -21,12 +26,26 @@ async function save(req, res) {
     let nFolioIngreso = new FolioInreso(req.body);
 
     nFolioIngreso.folio = await getNextID();
+    nFolioIngreso.fechaInicio = new Date(req.body.fechaInicio);
+    nFolioIngreso.fechaFin = new Date(req.body.fechaFin);
+
+    console.log(nFolioIngreso);
 
     nFolioIngreso.save()
         .then(folio => {
-            res.status(201).send(folio);
+            ClienteFiscal.populate(folio, {
+                path: "cliente_id",
+                'select': 'nombreCorto nombreComercial clave'
+            },
+                function (err, folio) {
+                    console.log(folio);
+                    res.status(201).send(folio);
+                }
+            );
         })
         .catch(error => {
+            console.log(error);
+
             res.status(500).send(error);
         })
 }

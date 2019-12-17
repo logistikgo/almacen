@@ -174,7 +174,7 @@ async function getNextID(dataContext, field) {
 
 	if (lastUser.length > 0)
 		max = (lastUser[0])[field];
-
+		
 	//console.log(max);
 
 	return max + 1;

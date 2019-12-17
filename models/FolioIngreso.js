@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 
 const FolioIngreso = Schema(
     {
-        folio: String,
+        folio: Number,
         cliente_id: { type: Schema.ObjectId, ref: 'ClienteFiscal' },
         tarifa_id: Schema.ObjectId,
         tipoTarifa: String,
@@ -18,7 +18,7 @@ const FolioIngreso = Schema(
         fechaAlta: { type: Date, default: new Date() }
     },
     {
-        collection: 'FoliosIngreso'
+        collection: 'FoliosIngresos'
     }
 );
 
