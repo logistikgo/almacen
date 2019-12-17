@@ -23,10 +23,11 @@ const Partida = require('./controllers/Partida');
 const ColumnasxUsuario = require("./controllers/ColumnasxUsuario");
 const ColumnasxOperacion = require("./controllers/ColumnasxOperacion");
 const Interfaz_ALM_XD = require('./controllers/Interfaz_ALM_XD');
-//const PrePartida = require('./controllers/PrePartida');
-
-//const dotenv = require('dotenv'); //Used for environment variables
-//dotenv.config();
+const TarifaPES = require('./controllers/TarifaPES');
+const TarifaFactor = require('./controllers/TarifaFactor');
+const TarifaFija = require('./controllers/TarifaFija');
+const TarifaDXP = require('./controllers/TarifaDXP');
+const FolioIngreso = require('./controllers/FolioIngreso');
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -85,6 +86,7 @@ app.get('/api/clienteFiscal', CteFiscal.getByIDCteFiscal);
 app.post('/api/saveCteFiscal', CteFiscal.save);
 app.delete('/api/deleteCteFiscal', CteFiscal._delete);
 app.put('/api/clienteFiscal', CteFiscal.update);
+app.get('/api/getCteFiscalByTarifa/:tipoTarifaPrecio', CteFiscal.getByTarifa);
 
 app.get('/api/sucursales', Sucursal.get);
 app.get('/api/sucursalesXD', Helper.getSucursalesXD);
@@ -156,5 +158,33 @@ app.put('/api/partida/pedido/update', Partida._update);
 // app.get('/api/prepartida',PrePartida.get);
 // app.get('/api/pedidosPosicionados',PrePartida.getPedidosPosicionados);
 // app.post('/api/updatePartidasSalida',Salida.updatePartidasSalidaAPI);
+
+//Tarifas
+app.get('/api/tarifaPES', TarifaPES.get);
+app.get('/api/tarifaPES/:cliente_id', TarifaPES.getByCliente);
+app.post('/api/tarifaPES', TarifaPES.post);
+app.put('/api/tarifaPES/:_id', TarifaPES.put);
+app.delete('/api/tarifaPES/:_id', TarifaPES._delete);
+
+app.get('/api/tarifaFactor', TarifaFactor.get);
+app.get('/api/tarifaFactor/:cliente_id', TarifaFactor.getByCliente);
+app.post('/api/tarifaFactor', TarifaFactor.post);
+app.put('/api/tarifaFactor', TarifaFactor.put);
+app.delete('/api/tarifaFactor/:_id', TarifaFactor._delete);
+
+app.get('/api/tarifaFija', TarifaFija.get);
+app.get('/api/tarifaFija/:cliente_id', TarifaFija.getByCliente);
+app.post('/api/tarifaFija', TarifaFija.save);
+app.delete('/api/tarifaFija/:_id', TarifaFija._delete);
+
+app.get('/api/tarifaDXP', TarifaDXP.get);
+app.get('/api/tarifaDXP/:cliente_id', TarifaDXP.getByCliente);
+app.post('/api/tarifaDXP', TarifaDXP.save);
+app.delete('/api/tarifaDXP/:_id', TarifaDXP._delete);
+
+app.get('/api/foliosIngresos', FolioIngreso.get);
+app.post('/api/folioIngreso', FolioIngreso.save);
+app.put('/api/folioIngreso/:_id', FolioIngreso.update);
+app.delete('/api/folioIngreso/:_id', FolioIngreso._delete);
 
 module.exports = app;

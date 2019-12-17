@@ -42,6 +42,8 @@ async function get(req, res) {
 
 	}
 
+	console.log(filter);
+
 	Entrada.find(filter).sort({ fechaEntrada: -1 })
 		.populate({
 			path: 'partidas.producto_id',
