@@ -91,10 +91,23 @@ function _delete(req, res) {
 
 }
 
+function getByTarifa(req, res) {
+	let tipoTarifaPrecio = req.params.tipoTarifaPrecio;
+
+	CteFiscal.find({tipoTarifaPrecio : tipoTarifaPrecio})
+	.then((cliente) => {
+		res.status(200).send(cliente);
+	})
+	.catch((error) => {
+		res.status(500).send(error);
+	});
+}
+
 module.exports = {
 	get,
 	getByIDCteFiscal,
 	save,
 	_delete,
-	update
+	update,
+	getByTarifa
 }
