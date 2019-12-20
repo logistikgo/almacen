@@ -9,7 +9,10 @@ const FolioIngreso = Schema(
         cliente_id: { type: Schema.ObjectId, ref: 'ClienteFiscal' },
         tarifa_id: Schema.ObjectId,
         tipoTarifa: String,
-        total: Number,
+        total: Number, //Subtotal
+        //Iva
+        //Retencion?
+        //Total
         fechaInicio: Date,
         fechaFin: Date,
         statusReg: { type: String, default: "ACTIVO" },

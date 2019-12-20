@@ -24,14 +24,16 @@ function get(req, res) {
 function getByCliente(req, res) {
     let cliente_id = req.params.cliente_id;
 
-    console.log(cliente_id);
-
     TarifaFactor.find({ cliente_id: cliente_id, statusReg: "ACTIVO" })
         .sort({ "fechaAlta": -1 })
         .limit(1)
         .populate({
             'path': 'cliente_id',
             'select': 'nombreCorto nombreComercial clave'
+        })
+        .populate({
+            path: "embalaje_id",
+            select: 'nombre clave'
         })
         .then(tarifa => {
             res.status(200).send(tarifa);
