@@ -1,6 +1,7 @@
 'use strict'
 
 const TarifaPES = require('../models/TarifaPES');
+const ClienteFiscal = require("../models/ClienteFiscal");
 
 function get(req, res) {
     TarifaPES.find({ statusReg: "ACTIVO" })
@@ -39,10 +40,17 @@ function post(req, res) {
 
     nTarifaPES.save()
         .then(saved => {
-            res.status(201).send(saved);
+            ClienteFiscal.populate(saved, {
+                path: "cliente_id",
+                'select':'nombreCorto'
+            },
+                function(error, saved) {
+                    res.status(200).send(saved);
+                }
+            );
         })
         .catch(error => {
-            req.status(500).send(error);
+            res.status(500).send(error);
         });
 }
 
