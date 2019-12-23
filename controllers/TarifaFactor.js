@@ -53,19 +53,14 @@ function post(req, res) {
                     path: "embalaje_id",
                     'select': 'nombre clave'
                 })
+                .populate({
+                    path: "cliente_id",
+                'select':'nombreCorto'
+                })
                 .then(data => {
                     res.status(201).send(data);
                 });
-            ClienteFiscal.populate(saved, {
-                path: "cliente_id",
-                'select':'nombreCorto'
-            },
-                function(error, saved) {
-                    res.status(200).send(saved);
-                }
-            );
         })
-        
         .catch(error => {
             req.status(500).send(error);
         });
