@@ -22,4 +22,20 @@ const TarifaPES = Schema(
     }
 );
 
+var autoPopulateCliente = function(next) {
+    this.populate({
+        path : 'cliente_id',
+        select : 'nombreCorto nombreComercial clave'
+    });
+    next();
+  };
+  
+  TarifaPES.
+    pre('find',autoPopulateCliente);
+  TarifaPES.post('save', function(doc, next) {
+        doc.populate('cliente_id').execPopulate().then(function() {
+          next();
+        });
+      });
+
 module.exports = mongoose.model('TarifaPES', TarifaPES);

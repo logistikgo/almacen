@@ -1,6 +1,7 @@
 'use strict'
 
 const TarifaDXP = require('../models/TarifaDXP');
+const ClienteFiscal = require("../models/ClienteFiscal");
 
 function get(req, res) {
     TarifaDXP.find({ statusReg: "ACTIVO" })
@@ -40,7 +41,14 @@ function save(req, res) {
     nTarifaDXP.fechaAlta = new Date();
     nTarifaDXP.save()
         .then(saved => {
-            res.status(200).send(saved);
+            ClienteFiscal.populate(saved, {
+                path: "cliente_id",
+                'select':'nombreCorto'
+            },
+                function(error, saved) {
+                    res.status(200).send(saved);
+                }
+            );
         })
         .catch(error => {
             res.status(500).send(error);

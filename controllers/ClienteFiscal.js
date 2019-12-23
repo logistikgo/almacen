@@ -94,7 +94,7 @@ function _delete(req, res) {
 function getByTarifa(req, res) {
 	let tipoTarifaPrecio = req.params.tipoTarifaPrecio;
 
-	CteFiscal.find({tipoTarifaPrecio : tipoTarifaPrecio})
+	CteFiscal.find({tipoTarifaPrecio : tipoTarifaPrecio, statusReg: "ACTIVO"})
 	.then((cliente) => {
 		res.status(200).send(cliente);
 	})

@@ -1,6 +1,7 @@
 'use strict'
 
 const TarifaFactor = require('../models/TarifaFactor');
+const ClienteFiscal = require("../models/ClienteFiscal");
 
 function get(req, res) {
     TarifaFactor.find({ statusReg: "ACTIVO" })
@@ -23,14 +24,16 @@ function get(req, res) {
 function getByCliente(req, res) {
     let cliente_id = req.params.cliente_id;
 
-    console.log(cliente_id);
-
     TarifaFactor.find({ cliente_id: cliente_id, statusReg: "ACTIVO" })
         .sort({ "fechaAlta": -1 })
         .limit(1)
         .populate({
             'path': 'cliente_id',
             'select': 'nombreCorto nombreComercial clave'
+        })
+        .populate({
+            path: "embalaje_id",
+            select: 'nombre clave'
         })
         .then(tarifa => {
             res.status(200).send(tarifa);
@@ -41,19 +44,22 @@ function getByCliente(req, res) {
 }
 
 function post(req, res) {
-    let nTarifaPES = new TarifaFactor(req.body);
+    let nTarifa = new TarifaFactor(req.body);
 
-    nTarifaPES.save()
+    nTarifa.save()
         .then(saved => {
             TarifaFactor.findOne({ _id: saved._id })
                 .populate({
                     path: "embalaje_id",
-                    select: 'nombre clave'
+                    'select': 'nombre clave'
+                })
+                .populate({
+                    path: "cliente_id",
+                'select':'nombreCorto'
                 })
                 .then(data => {
                     res.status(201).send(data);
                 });
-
         })
         .catch(error => {
             req.status(500).send(error);
