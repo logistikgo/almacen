@@ -29,8 +29,6 @@ async function save(req, res) {
     nFolioIngreso.fechaInicio = new Date(req.body.fechaInicio);
     nFolioIngreso.fechaFin = new Date(req.body.fechaFin);
 
-    console.log(nFolioIngreso);
-
     nFolioIngreso.save()
         .then(folio => {
             ClienteFiscal.populate(folio, {
@@ -38,14 +36,11 @@ async function save(req, res) {
                 'select': 'nombreCorto nombreComercial clave'
             },
                 function (err, folio) {
-                    console.log(folio);
                     res.status(201).send(folio);
                 }
             );
         })
         .catch(error => {
-            console.log(error);
-
             res.status(500).send(error);
         })
 }
