@@ -1,18 +1,10 @@
 'use strict'
 
 const TarifaFactor = require('../models/TarifaFactor');
-const ClienteFiscal = require("../models/ClienteFiscal");
+const ClienteFiscal = require('../controllers/ClienteFiscal');
 
 function get(req, res) {
     TarifaFactor.find({ statusReg: "ACTIVO" })
-        .populate({
-            'path': 'cliente_id',
-            'select': 'nombreCorto nombreComercial clave'
-        })
-        .populate({
-            path: "embalaje_id",
-            select: 'nombre clave'
-        })
         .then(tarifas => {
             res.status(200).send(tarifas);
         })
@@ -32,8 +24,8 @@ function getByCliente(req, res) {
             'select': 'nombreCorto nombreComercial clave'
         })
         .populate({
-            path: "embalaje_id",
-            select: 'nombre clave'
+            'path': "embalaje_id",
+            'select': 'nombre clave'
         })
         .then(tarifa => {
             res.status(200).send(tarifa);
@@ -48,21 +40,11 @@ function post(req, res) {
 
     nTarifa.save()
         .then(saved => {
-            TarifaFactor.findOne({ _id: saved._id })
-                .populate({
-                    path: "embalaje_id",
-                    'select': 'nombre clave'
-                })
-                .populate({
-                    path: "cliente_id",
-                'select':'nombreCorto'
-                })
-                .then(data => {
-                    res.status(201).send(data);
-                });
+            res.status(201).send(saved);
         })
         .catch(error => {
-            req.status(500).send(error);
+            console.log(error);
+            res.status(500).send(error);
         });
 }
 
@@ -81,8 +63,9 @@ function put(req, res) {
 function _delete(req, res) {
     let _id = req.params._id;
 
-    TarifaFactor.updateOne({ _id: _id }, { $set: { statusReg: "BAJA" } })
+    TarifaFactor.findOneAndUpdate({ _id: _id }, { $set: { statusReg: "BAJA" } })
         .then(edited => {
+            ClienteFiscal.removeTarifa(edited.cliente_id);
             res.status(200).send(edited);
         })
         .catch(error => {

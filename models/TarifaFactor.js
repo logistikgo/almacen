@@ -3,6 +3,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const ClienteFiscal = require('../controllers/ClienteFiscal');
+
 const TarifaFactor = Schema(
     {
         cliente_id: { type: Schema.ObjectId, ref: 'ClienteFiscal' },
@@ -20,5 +22,25 @@ const TarifaFactor = Schema(
         collection: 'TarifasFactor'
     }
 );
+
+var autoPopulate = function(next) {
+    this.populate({
+        path: 'cliente_id',
+        select: 'nombreCorto nombreComercial clave'
+    })
+    .populate({
+        path: 'embalaje_id',
+        select: 'nombre clave'
+    });
+    next();
+};
+
+TarifaFactor.pre('find', autoPopulate);
+TarifaFactor.post('save', function(doc, next) {
+    doc.populate('cliente_id').populate('embalaje_id').execPopulate().then(function() {
+        ClienteFiscal.setHasTarifa(doc.cliente_id);
+        next();
+    });
+});
 
 module.exports = mongoose.model('TarifaFactor', TarifaFactor);

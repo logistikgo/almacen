@@ -1,7 +1,7 @@
 'use strict'
 
 const TarifaDXP = require('../models/TarifaDXP');
-const ClienteFiscal = require("../models/ClienteFiscal");
+const ClienteFiscal = require('../controllers/ClienteFiscal');
 
 function get(req, res) {
     TarifaDXP.find({ statusReg: "ACTIVO" })
@@ -37,18 +37,10 @@ function getByCliente(req, res) {
 
 function save(req, res) {
     let nTarifaDXP = new TarifaDXP(req.body);
-
-    nTarifaDXP.fechaAlta = new Date();
+    
     nTarifaDXP.save()
         .then(saved => {
-            ClienteFiscal.populate(saved, {
-                path: "cliente_id",
-                'select':'nombreCorto'
-            },
-                function(error, saved) {
-                    res.status(200).send(saved);
-                }
-            );
+            res.status(200).send(saved);
         })
         .catch(error => {
             res.status(500).send(error);
@@ -57,8 +49,9 @@ function save(req, res) {
 
 function _delete(req, res) {
     let delete_id = req.params._id;
-    TarifaDXP.findOneAndUpdate({ _id: delete_id }, { $set: { statusReg: "BAJA" } })
+    TarifaDXP.findOneAndUpdate({ _id: delete_id }, { $set: { statusReg: "BAJA" }})
         .then(edited => {
+            ClienteFiscal.removeTarifa(edited.cliente_id);
             res.status(200).send(edited)
         })
         .catch(error => {
