@@ -1,7 +1,6 @@
 'use strict'
 
 const TarifaPES = require('../models/TarifaPES');
-const ClienteFiscal = require("../models/ClienteFiscal");
 
 function get(req, res) {
     TarifaPES.find({ statusReg: "ACTIVO" })

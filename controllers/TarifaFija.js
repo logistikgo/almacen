@@ -1,7 +1,6 @@
 'use strict'
 
 const TarifaFija = require('../models/TarifaFija');
-const ClienteFiscal = require("../models/ClienteFiscal");
 
 function get(req, res) {
     TarifaFija.find({ statusReg: "ACTIVO" })
@@ -23,10 +22,6 @@ function getByCliente(req, res) {
     TarifaFija.find({ cliente_id: cliente_id, statusReg: "ACTIVO" })
         .sort({ "fechaAlta": -1 })
         .limit(1)
-        .populate({
-            'path': 'cliente_id',
-            'select': 'nombreCorto nombreComercial clave'
-        })
         .then(tarifa => {
             res.status(200).send(tarifa);
         })
@@ -39,17 +34,9 @@ function save(req, res) {
     let newTarifaFija = new TarifaFija(req.body);
 
     newTarifaFija.fechaAlta = new Date();
-
     newTarifaFija.save()
         .then(saved => {
-            ClienteFiscal.populate(saved, {
-                path: "cliente_id",
-                'select':'nombreCorto'
-            },
-                function(error, saved) {
-                    res.status(200).send(saved);
-                }
-            );
+            res.status(200).send(saved);
         })
         .catch(error => {
             res.status(500).send(error);

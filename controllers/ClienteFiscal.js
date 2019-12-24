@@ -1,10 +1,10 @@
 'use strict'
-const CteFiscal = require('../models/ClienteFiscal');
+const ClienteFiscal = require('../models/ClienteFiscal');
 const Helper = require('../helpers');
 const Interfaz_ALM_XD = require('../models/Interfaz_ALM_XD');
 
 async function getNextID() {
-	return await Helper.getNextID(CteFiscal, "idCliente");
+	return await Helper.getNextID(ClienteFiscal, "idCliente");
 }
 
 function get(req, res) {
@@ -14,7 +14,7 @@ function get(req, res) {
 		statusReg: "ACTIVO"
 	};
 
-	CteFiscal.find(jFilter).sort({ nombreCorto: 1 })
+	ClienteFiscal.find(jFilter).sort({ nombreCorto: 1 })
 		.then((cliente) => {
 			res.status(200).send(cliente);
 		})
@@ -23,10 +23,10 @@ function get(req, res) {
 		});
 }
 
-function getByIDCteFiscal(req, res) {
+function getByIDClienteFiscal(req, res) {
 	let _id = req.query.id;
 
-	CteFiscal.findOne({ _id: _id })
+	ClienteFiscal.findOne({ _id: _id })
 		.then((clienteFiscal) => {
 			res.status(200).send(clienteFiscal);
 
@@ -36,7 +36,7 @@ function getByIDCteFiscal(req, res) {
 }
 
 async function save(req, res) {
-	let nCliente = new CteFiscal(req.body);
+	let nCliente = new ClienteFiscal(req.body);
 
 	let IDClienteXD = req.body.IDClienteXD;
 
@@ -67,7 +67,7 @@ function update(req, res) {
 	let _id = req.body.id;
 	req.body.fechaEdita = new Date();
 
-	CteFiscal.updateOne({ _id: _id }, { $set: req.body })
+	ClienteFiscal.updateOne({ _id: _id }, { $set: req.body })
 		.then((updated) => {
 			res.status(200).send(updated);
 		}).catch((error) => {
@@ -82,7 +82,7 @@ function _delete(req, res) {
 		statusReg: "BAJA",
 		fechaElimina: new Date()
 	}
-	CteFiscal.updateOne({ _id: _id }, { $set: item })
+	ClienteFiscal.updateOne({ _id: _id }, { $set: item })
 		.then((cliente) => {
 			res.status(200).send(cliente);
 		}).catch((error) => {
@@ -94,7 +94,7 @@ function _delete(req, res) {
 function getByTarifa(req, res) {
 	let tipoTarifaPrecio = req.params.tipoTarifaPrecio;
 
-	CteFiscal.find({tipoTarifaPrecio : tipoTarifaPrecio, statusReg: "ACTIVO"})
+	ClienteFiscal.find({tipoTarifaPrecio : tipoTarifaPrecio, statusReg: "ACTIVO", hasTarifa: false})
 	.then((cliente) => {
 		res.status(200).send(cliente);
 	})
@@ -103,11 +103,16 @@ function getByTarifa(req, res) {
 	});
 }
 
+function setHasTarifa(_id) {
+	ClienteFiscal.updateOne({_id: _id}, {$set: {hasTarifa: true}}).exec();
+}
+
 module.exports = {
 	get,
-	getByIDCteFiscal,
+	getByIDClienteFiscal,
 	save,
 	_delete,
 	update,
-	getByTarifa
+	getByTarifa,
+	setHasTarifa
 }

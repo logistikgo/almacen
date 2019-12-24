@@ -1,17 +1,12 @@
 'use strict'
 
 const TarifaFactor = require('../models/TarifaFactor');
-const ClienteFiscal = require("../models/ClienteFiscal");
 
 function get(req, res) {
     TarifaFactor.find({ statusReg: "ACTIVO" })
         .populate({
-            'path': 'cliente_id',
-            'select': 'nombreCorto nombreComercial clave'
-        })
-        .populate({
-            path: "embalaje_id",
-            select: 'nombre clave'
+            'path': 'embalaje_id',
+            'select': 'nombre clave'
         })
         .then(tarifas => {
             res.status(200).send(tarifas);
@@ -58,7 +53,7 @@ function post(req, res) {
                 'select':'nombreCorto'
                 })
                 .then(data => {
-                    res.status(201).send(data);
+                    res.status(201).send(saved);
                 });
         })
         .catch(error => {

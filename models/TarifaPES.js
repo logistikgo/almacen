@@ -3,6 +3,8 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const ClienteFiscal = require('../controllers/ClienteFiscal');
+
 const TarifaPES = Schema(
     {
         cliente_id: { type: Schema.ObjectId, ref: 'ClienteFiscal' },
@@ -34,6 +36,7 @@ var autoPopulateCliente = function(next) {
     pre('find',autoPopulateCliente);
   TarifaPES.post('save', function(doc, next) {
         doc.populate('cliente_id').execPopulate().then(function() {
+          ClienteFiscal.setHasTarifa(doc.cliente_id);
           next();
         });
       });
