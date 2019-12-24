@@ -23,17 +23,21 @@ const TarifaFactor = Schema(
     }
 );
 
-var autoPopulate = function() {
+var autoPopulate = function(next) {
     this.populate({
         path: 'cliente_id',
         select: 'nombreCorto nombreComercial clave'
+    })
+    .populate({
+        path: 'embalaje_id',
+        select: 'nombre clave'
     });
     next();
 };
 
 TarifaFactor.pre('find', autoPopulate);
 TarifaFactor.post('save', function(doc, next) {
-    doc.populate('cliente_id').execPopulate().then(function() {
+    doc.populate('cliente_id').populate('embalaje_id').execPopulate().then(function() {
         ClienteFiscal.setHasTarifa(doc.cliente_id);
         next();
     });

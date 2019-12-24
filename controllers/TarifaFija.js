@@ -1,6 +1,7 @@
 'use strict'
 
 const TarifaFija = require('../models/TarifaFija');
+const ClienteFiscal = require('../controllers/ClienteFiscal');
 
 function get(req, res) {
     TarifaFija.find({ statusReg: "ACTIVO" })
@@ -47,7 +48,8 @@ function _delete(req, res) {
     let delete_id = req.params._id;
     TarifaFija.findOneAndUpdate({ _id: delete_id }, { $set: { statusReg: "BAJA" } })
         .then(edited => {
-            res.status(200).send(edited)
+            ClienteFiscal.removeTarifa(edited.cliente_id);
+            res.status(200).send(edited);
         })
         .catch(error => {
             res.status(500).send(error);

@@ -107,6 +107,10 @@ function setHasTarifa(_id) {
 	ClienteFiscal.updateOne({_id: _id}, {$set: {hasTarifa: true}}).exec();
 }
 
+function removeTarifa(_id) {
+	ClienteFiscal.updateOne({_id: _id}, {$set: {hasTarifa: false}}).exec();
+}
+
 module.exports = {
 	get,
 	getByIDClienteFiscal,
@@ -114,5 +118,6 @@ module.exports = {
 	_delete,
 	update,
 	getByTarifa,
-	setHasTarifa
+	setHasTarifa,
+	removeTarifa
 }

@@ -1,6 +1,7 @@
 'use strict'
 
 const TarifaDXP = require('../models/TarifaDXP');
+const ClienteFiscal = require('../controllers/ClienteFiscal');
 
 function get(req, res) {
     TarifaDXP.find({ statusReg: "ACTIVO" })
@@ -48,8 +49,9 @@ function save(req, res) {
 
 function _delete(req, res) {
     let delete_id = req.params._id;
-    TarifaDXP.findOneAndUpdate({ _id: delete_id }, { $set: { statusReg: "BAJA" } })
+    TarifaDXP.findOneAndUpdate({ _id: delete_id }, { $set: { statusReg: "BAJA" }})
         .then(edited => {
+            ClienteFiscal.removeTarifa(edited.cliente_id);
             res.status(200).send(edited)
         })
         .catch(error => {
