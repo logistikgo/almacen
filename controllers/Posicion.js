@@ -96,7 +96,6 @@ function getPosicionesxProducto(req, res) {
 		.then((posiciones) => {
 			let resPosiciones = [];
 
-
 			for (let posicion of posiciones) {
 				let jPosicion = {
 					pasillo: posicion.pasillo_id.nombre,
@@ -108,7 +107,11 @@ function getPosicionesxProducto(req, res) {
 				jPosicion.embalajes = new Object();
 
 				let niveles = posicion.niveles.filter(async (x) => {
-					let producto = x.productos.filter(x => x.producto_id._id.toString() == producto_id.toString());
+					let producto = x.productos.filter((p) => {
+						if (p.producto_id != null)
+							return p.producto_id._id.toString() == producto_id.toString();
+						return false;
+					});
 
 					if (producto.length > 0) {
 						for (let embalaje of Object.keys(producto[0].embalajes)) {
@@ -117,7 +120,7 @@ function getPosicionesxProducto(req, res) {
 							else
 								jPosicion.embalajes[embalaje] += producto[0].embalajes[embalaje];
 
-							console.log(jPosicion.embalajes);
+							// console.log(jPosicion.embalajes);
 						}
 					}
 
@@ -248,6 +251,44 @@ function _delete(req, res) {
 
 }
 
+/* Esta funcion actualiza las existencias en las posiciones dentro del almacen */
+async function updateExistencia(signo, posicionxPartida, producto_id) {
+	// console.log(posicionxPartida);
+	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
+	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
+
+	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == producto_id.toString()) != undefined) {
+		let producto = nivel.productos.find(x => x.producto_id.toString() == producto_id.toString());
+		let flagEmbalajes = 0;
+
+		for (let embalaje in posicionxPartida.embalajesEntrada) {
+			if (producto.embalajes[embalaje] == undefined) {
+				producto.embalajes[embalaje] = 0;
+			}
+			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajesEntrada[embalaje]);
+
+			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
+		}
+
+		if (flagEmbalajes == 0) {
+			// let index = posicion.niveles.productos.indexOf(producto);
+			// posicion.niveles.productos.splice(index, 1);
+		}
+	}
+	else {
+		nivel.productos.push({
+			producto_id: producto_id,
+			embalajes: posicionxPartida.embalajesEntrada
+		});
+	}
+
+	let item = {
+		niveles: posicion.niveles
+	};
+
+	await Posicion.updateOne({ _id: posicionxPartida.posicion_id }, { $set: item });
+}
+
 module.exports = {
 	get,
 	getxPasillo,
@@ -257,5 +298,6 @@ module.exports = {
 	getPosicionAutomatica,
 	save,
 	update,
-	_delete
+	_delete,
+	updateExistencia
 }

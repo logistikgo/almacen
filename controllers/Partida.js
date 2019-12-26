@@ -2,11 +2,12 @@
 
 const Partida = require('../models/Partida');
 const Salida = require('../models/Salida');
-const Helper = require('../helpers');
 const Entrada = require('../models/Entrada');
+const Pasillo = require('../models/Pasillo');
+const Posicion = require('./Posicion');
+const Helper = require('../helpers');
 const NullParamsException = { error: "NullParamsException" };
 const BreakException = { info: "Break" };
-const EmbalajesModel = require('../models/Embalaje');
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
@@ -34,25 +35,51 @@ function get(req, res) {
     }
 }
 
+async function getByEntrada(req, res) {
+    let entrada_id = req.params.entrada_id;
+
+    Partida.find({ entrada_id: entrada_id })
+        .then((partidas) => {
+            res.status(200).send(partidas);
+        })
+        .catch((error) => {
+            res.status(500).send(error);
+        });
+}
+
+async function getBySalida(req, res) {
+    let salida_id = req.params.salida_id;
+    let salida = await Salida.findOne({ _id: salida_id }).exec();
+    let partidas_id = salida.partidas;
+
+    let partidas = [];
+
+    await Helper.asyncForEach(partidas_id, async function (partida_id) {
+        let partidaFound = await Partida.findOne({ _id: partida_id }).exec();
+        let partida = JSON.parse(JSON.stringify(partidaFound));
+        let salida_idFound = partida.salidas_id.find(x => x.salida_id.toString() == salida_id.toString());
+        partida.pesoBrutoEnSalida = salida_idFound.pesoBruto;
+        partida.pesoNetoEnSalida = salida_idFound.pesoNeto;
+        partida.embalajesEnSalida = salida_idFound.embalajes;
+        partidas.push(partida);
+    });
+
+    res.status(200).send(partidas);
+}
+
+/* Guarda para cada partida, las cantidades restantes y updatea la Entrada isEmpty a true
+si todas las partidas estan vacias */
 async function put(arrPartidas, salida_id) {
-
-    /**
-     * Guarda para cada partida, las cantidades restantes y updatea la Entrada isEmpty a true
-     * si todas las partidas estan vacias
-     */
-
     var arrPartidas_id = [];
     let entradas_id = arrPartidas.length > 0 ? arrPartidas.map(x => x.entrada_id) : undefined;
 
     await Helper.asyncForEach(arrPartidas, async function (partida) {
-
         arrPartidas_id.push(partida._id);
         let jsonSalida_id = {
             salida_id: salida_id,
             embalajes: partida.embalajesEnSalida,
             salidaxPosiciones: partida.embalajesEnSalidaxPosicion
         };
-
 
         let partidaFound = await Partida.findOne({ _id: partida._id });
 
@@ -86,10 +113,10 @@ async function put(arrPartidas, salida_id) {
 }
 
 async function post(arrPartidas, entrada_id) {
-
     var arrPartidas_id = [];
 
     await Helper.asyncForEach(arrPartidas, async function (partida) {
+        console.log(partida);
         let nPartida = new Partida(partida);
         nPartida.entrada_id = entrada_id;
         await nPartida.save().then((partida) => {
@@ -97,25 +124,17 @@ async function post(arrPartidas, entrada_id) {
         });
     });
     return arrPartidas_id;
-
 }
 
+/* Para todas las partidas donde InfoPedidos.IDPedido se incluya en arrIDPedidos
+ Obtiene la informacion de los embalajes y las posiciones que salieron para cada Pedido procedente del
+ atributo InfoPedidos. Obtiene el total de embalajes que salieron y las posiciones para agregar 
+ un nuevo elemento al atributo salidas_id. */
 async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
-
-    /**
-     * Para todas las partidas donde InfoPedidos.IDPedido se incluya en arrIDPedidos
-     * Obtiene la informacion de los embalajes y las posiciones que salieron para cada Pedido procedente del
-     * atributo InfoPedidos. Obtiene el total de embalajes que salieron y las posiciones para agregar 
-     * un nuevo elemento al atributo salidas_id. 
-     * 
-     */
-
-     
     let partidasEdited = [];
     await Helper.asyncForEach(partidas, async function (partida) {
         let infoPedidosActual = partida.InfoPedidos.filter(x => arrIDPedidos.includes(x.IDPedido) && x.status == "PENDIENTE");
 
-        
         let embalajesTotales = {};
         let embalajesxPosicion = [];
 
@@ -123,11 +142,11 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
         infoPedidosActual.forEach(function (infoPedido) {
             infoPedido.status = "COMPLETO";
 
-            if(partida.status != "SELECCIONADA"){
+            if (partida.status != "SELECCIONADA") {
                 infoPedido.embalajesEnSalidasxPosicion = [];
-                partida.posiciones.forEach(posicion=>{
+                partida.posiciones.forEach(posicion => {
                     let embalajesxPosicionCurrent = {
-                        embalajes : posicion.embalajesxSalir,
+                        embalajes: posicion.embalajesxSalir,
                         posicion_id: posicion.posicion_id,
                         posicion: posicion.posicion,
                         pasillo_id: posicion.pasillo_id,
@@ -181,42 +200,42 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
             embalajes: embalajesTotales, //Los embalajes totales
             salidaxPosiciones: posicionesDistintas //Las posiciones involucradas de esos embalajes totales
         };
-        
+
         partida.salidas_id.push(Jsonsalida_id);
         partida.embalajesEnSalida = embalajesTotales;
         partida.embalajesEnSalidaxPosicion = posicionesDistintas;
 
         //Actualiza embalajesAlmacen
-        if(partida.status == "SELECCIONADA"){
+        if (partida.status == "SELECCIONADA") {
             for (let x in partida.embalajesAlmacen) {
                 partida.embalajesAlmacen[x] -= embalajesTotales[x];
             }
         }
 
         //Se debera updatear embalajesxSalir y los embalajes de las posiciones a cero
-        if(partida.status != "SELECCIONADA") {
+        if (partida.status != "SELECCIONADA") {
             partida.isEmpty = true;
-            for(let x in partida.embalajesxSalir){
+            for (let x in partida.embalajesxSalir) {
                 partida.embalajesxSalir[x] = 0;
             }
-            for(let i = 0; i < partida.posiciones.length;i++){
+            for (let i = 0; i < partida.posiciones.length; i++) {
                 partida.posiciones[i].isEmpty = true;
-                for(let x in partida.posiciones[i].embalajesxSalir){
+                for (let x in partida.posiciones[i].embalajesxSalir) {
                     partida.posiciones[i].embalajesxSalir[x] = 0;
-                }   
+                }
             }
         }
-        
+
         let PartidaFound = await Partida.findOne({ _id: partida._id }).exec();
 
         PartidaFound.salidas_id = partida.salidas_id;
         PartidaFound.InfoPedidos = partida.InfoPedidos;
-        if(partida.status == "SELECCIONADA") PartidaFound.embalajesAlmacen = partida.embalajesAlmacen;
-        if(partida.status != "SELECCIONADA") PartidaFound.embalajesxSalir = partida.embalajesxSalir;
-        if(partida.status != "SELECCIONADA") PartidaFound.posiciones = partida.posiciones;
-        if(partida.status != "SELECCIONADA") PartidaFound.isEmpty = partida.isEmpty;
+        if (partida.status == "SELECCIONADA") PartidaFound.embalajesAlmacen = partida.embalajesAlmacen;
+        if (partida.status != "SELECCIONADA") PartidaFound.embalajesxSalir = partida.embalajesxSalir;
+        if (partida.status != "SELECCIONADA") PartidaFound.posiciones = partida.posiciones;
+        if (partida.status != "SELECCIONADA") PartidaFound.isEmpty = partida.isEmpty;
 
-        
+
         if (partida.status == "SELECCIONADA" && Helper.Compare(partida.embalajesxSalir, partida.embalajesAlmacen)) {
             delete partida.embalajesAlmacen;
             PartidaFound.embalajesAlmacen = undefined;
@@ -230,7 +249,7 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
     //Para todas las partidas que fueron editadas, se obtiene el atributo entrada_id
     //Y se ejecuta un distinct para obtener valores unicos, posteriormente se updatean las Entradas a
     //isEmpty = true, en el caso de que todas sus partidas esten vacias.
-    let entradas_id = partidasEdited.map(x=> x.entrada_id.toString()).filter(Helper.distinct);
+    let entradas_id = partidasEdited.map(x => x.entrada_id.toString()).filter(Helper.distinct);
     Helper.asyncForEach(entradas_id, async function (entrada_id) {
         await setIsEmptyEntrada(entrada_id);
     });
@@ -238,50 +257,20 @@ async function updateForSalidaAutomatica(partidas, arrIDPedidos, salida_id) {
 }
 
 async function addSalida(salida, _id) {
-
     await Partida.findOne({ _id: _id }).then((partida) => {
-
         partida.salidas_id.push(salida);
         partida.save();
-
     })
         .catch((error) => {
             res.status(500).send(error);
         });
 }
 
-async function getByEntrada(req, res) {
-    let entrada_id = req.params.entrada_id;
-
-    Partida.find({ entrada_id: entrada_id })
-        .then((partidas) => {
-            res.status(200).send(partidas);
-        })
-        .catch((error) => {
-            res.status(500).send(error);
-        });
-}
-
-async function getBySalida(req, res) {
-    let salida_id = req.params.salida_id;
-    let salida = await Salida.findOne({ _id: salida_id }).exec();
-    let partidas_id = salida.partidas;
-
-    let partidas = [];
-
-    await Helper.asyncForEach(partidas_id, async function (partida_id) {
-        let partidaFound = await Partida.findOne({ _id: partida_id }).exec();
-        let partida = JSON.parse(JSON.stringify(partidaFound));
-        let salida_idFound = partida.salidas_id.find(x => x.salida_id.toString() == salida_id.toString());
-        partida.pesoBrutoEnSalida = salida_idFound.pesoBruto;
-        partida.pesoNetoEnSalida = salida_idFound.pesoNeto;
-        partida.embalajesEnSalida = salida_idFound.embalajes;
-        partidas.push(partida);
+async function asignarEntrada(arrPartidas_id, entrada_id) {
+    await Helper.asyncForEach(arrPartidas_id, async function (partida_id) {
+        await Partida.updateOne({ _id: partida_id }, { $set: { entrada_id: entrada_id, status: "ASIGNADA" } }).exec();
     });
-
-    res.status(200).send(partidas);
 }
-
 
 function isEmptyPartida(partida) {
     let contEmbalajesCero = 0;
@@ -324,24 +313,18 @@ async function setIsEmptyEntrada(entrada_id) {
     }
 }
 
+/* Obtiene las partidas por SKU, y genera los embalajes que se sacaran dependiendo
+de la disponibilidad de los embalajes existentes. */
 async function getByProductoEmbalaje(req, res) {
-
-    /**
-     * Obtiene las partidas por SKU, y genera los embalajes que se sacaran dependiendo
-     * de la disponibilidad de los embalajes existentes
-     */
-
-    let producto_id = req.params.producto_id; //Hexa
-    let embalaje = req.params.embalaje; //tarimas, piezas
+    let producto_id = req.query.producto_id; //Hexa
+    let embalaje = req.query.embalaje; //tarimas, piezas
     let embalajesxSalir = "embalajesxSalir." + embalaje; //"embalajesxSalir.tarimas"
-    let clienteFiscal_id = req.params.clienteFiscal_id; //He
-    let sucursal_id = req.params.sucursal_id;
-    let almacen_id = req.params.almacen_id;
-    let cantidad = req.params.cantidad;
+    let clienteFiscal_id = req.query.clienteFiscal_id; //He
+    let sucursal_id = req.query.sucursal_id;
+    let almacen_id = req.query.almacen_id;
+    let cantidad = req.query.cantidad;
     let cantidadRestante = parseFloat(cantidad);
-    let isPEPS = req.params.isPEPS;
-
-
+    let algoritmoSalida = req.query.algoritmoSalida;
 
     /**
      * Se obtienen las partidas necesarias para la cantidad deseada
@@ -360,23 +343,66 @@ async function getByProductoEmbalaje(req, res) {
             })
         .where(embalajesxSalir).gt(0)
         .exec();
+<<<<<<< HEAD
     
     partidas = partidas.filter(x => x.tipo == "EXISTENCIA_INICIAL" || (x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id
             && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id));
+=======
+>>>>>>> demo
 
+    partidas = partidas.filter(x => x.tipo == "EXISTENCIA_INICIAL" || (x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id));
 
-    partidas = partidas.sort(sortByfechaEntadaAsc);
+    //console.log(algoritmoSalida);
+    if (algoritmoSalida !== undefined && algoritmoSalida.length > 0) {
+        //Ordena por prioridad apor prioridad los algoritmos
+        algoritmoSalida.sort(function (a, b) {
+            if (a.prioridad > b.prioridad) return 1;
+            else if (a.prioridad < b.prioridad) return -1;
+            return 0;
+        });
+
+        //Ordena las partidas dependiendo del algoritmo
+        if (algoritmoSalida[0].algoritmo === "PEPS")
+            partidas = partidas.sort(function (a, b) {
+                if (new Date(a.entrada_id.fechaEntrada) < new Date(b.entrada_id.fechaEntrada)) return -1;
+                if (new Date(a.entrada_id.fechaEntrada) > new Date(b.entrada_id.fechaEntrada)) return 1;
+                else {
+                    if (algoritmoSalida.length > 1) {
+                        if (algoritmoSalida[1].algoritmo === "CADUCIDAD") {
+                            if (new Date(a.fechaCaducidad) < new Date(b.fechaCaducidad)) return -1;
+                            else if (new Date(a.fechaCaducidad) > new Date(b.fechaCaducidad)) return 1;
+                        }
+                    }
+                    return 0;
+                }
+            });
+        else if (algoritmoSalida[0].algoritmo === "CADUCIDAD")
+            partidas = partidas.sort(function (a, b) {
+                if (new Date(a.fechaCaducidad) < new Date(b.fechaCaducidad)) return -1;
+                if (new Date(a.fechaCaducidad) > new Date(b.fechaCaducidad)) return 1;
+                else {
+                    if (algoritmoSalida.length > 1) {
+                        if (algoritmoSalida[1].algoritmo === "PEPS") {
+                            if (new Date(a.entrada_id.fechaEntrada) < new Date(b.entrada_id.fechaEntrada)) return -1;
+                            else if (new Date(a.entrada_id.fechaEntrada) > new Date(b.entrada_id.fechaEntrada)) return 1;
+                        }
+                    }
+                    return 0;
+                }
+            });
+    }
 
     let partidasActuales = [];
 
     try {
-        //Validacion para Clientes fiscales que no utilicen algoritmo PEPS
-        console.log("isPEPS", isPEPS, isPEPS == false.toString());
-        if (isPEPS == false.toString()) {
+        //Validacion para Clientes fiscales que no utilicen ningun algoritmo
+        console.log(algoritmoSalida === undefined || algoritmoSalida.length < 1);
+        if (algoritmoSalida === undefined || algoritmoSalida.length < 1) {
             partidas.forEach(partida => {
                 let subConsecutivo = 0;
-                console.log(partida.lote);
+                //console.log("Posiciones", partida.posiciones.filter(x => !x.isEmpty));
                 partida.posiciones.filter(x => !x.isEmpty).forEach(posicion => {
+                    console.log("Posicion n", posicion.nivel)
                     let auxPartida = {
                         lote: partida.lote,
                         clave: partida.clave,
@@ -403,7 +429,7 @@ async function getByProductoEmbalaje(req, res) {
                         fechaEntrada: partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
                         entrada_id: partida.entrada_id != undefined ? partida.entrada_id._id : ""
                     };
-
+                    //console.log(auxPartida);
                     subConsecutivo += 1;
                     partidasActuales.push(auxPartida);
                 });
@@ -417,7 +443,7 @@ async function getByProductoEmbalaje(req, res) {
          * del embalaje para cada posicion, dependiendo de su disponibilidad
          */
 
-        console.log(cantidadRestante);
+        console.log("Cantidad restante", cantidadRestante);
         partidas.forEach(partida => {
             let subConsecutivo = 0;
 
@@ -486,13 +512,8 @@ async function getByProductoEmbalaje(req, res) {
     }
 }
 
+/* Obtiene las partidas con respecto a los filtros de cliente fiscal, sucursal y almacen. */
 async function getPartidasByIDs(req, res) {
-
-    /**
-     * Obtiene las partidas con respecto a los filtros de cliente fiscal, sucursal y almacen
-     */
-
-
     let arrClientesFiscales_id = req.query.arrClientesFiscales_id;
     let arrSucursales_id = req.query.arrSucursales_id;
     let arrAlmacenes_id = req.query.arrAlmacenes_id;
@@ -566,17 +587,6 @@ async function getPartidasByIDs(req, res) {
     }
 }
 
-function sortByfechaEntadaDesc(a, b) {
-    if (a.entrada_id.fechaEntrada < b.entrada_id.fechaEntrada) {
-        return 1;
-    }
-    if (a.entrada_id.fechaEntrada > b.entrada_id.fechaEntrada) {
-        return -1;
-    }
-
-    return 0;
-}
-
 function sortByfechaEntadaAsc(a, b) {
     if (a.fechaEntrada == undefined || a.fechaEntrada == null || b.fechaEntrada == undefined || b.fechaEntrada == null) {
         return -1;
@@ -591,23 +601,20 @@ function sortByfechaEntadaAsc(a, b) {
     return 0;
 }
 
+/* Esta funcion es utilizada para guardar las partidas generadas desde un pedido
+en la plataforma de Crossdock (XD). */
 async function save(req, res) {
-
-    /**
-     * Esta funcion es utilizada para guardar las partidas generadas desde un pedido
-     * en la plataforma de Crossdock (XD)
-     */
     let DuplicatedException = {
-        name:        "Server Error", 
-        level:       "Show Stopper", 
-        message:     "There are objects with the same attribute IDPedido, thus they cannot be created.", 
+        name: "Server Error",
+        level: "Show Stopper",
+        message: "There are objects with the same attribute IDPedido, thus they cannot be created.",
         htmlMessage: "Error detected. There are objects with the same attribute IDPedido.",
-        toString:    function(){return this.name + ": " + this.message;} 
+        toString: function () { return this.name + ": " + this.message; }
     };
 
     try {
-        let partidasCheck = await Partida.find({ 'InfoPedidos.IDPedido': { $in: req.body.IDPedido }}).exec();
-        if(partidasCheck.length > 0) throw DuplicatedException;
+        let partidasCheck = await Partida.find({ 'InfoPedidos.IDPedido': { $in: req.body.IDPedido } }).exec();
+        if (partidasCheck.length > 0) throw DuplicatedException;
 
         var arrPartidas_id = [];
         let arrPartidas = req.body.partidas;
@@ -624,13 +631,9 @@ async function save(req, res) {
     }
 }
 
+/* Esta funcion obtiene las partidas que estan asignadas
+con uno o varios pedidos */
 async function getByPedido(req, res) {
-
-    /**
-     * Esta funcion obtiene las partidas que estan asignadas
-     * con uno o varios pedidos
-     */
-
     try {
         Partida.find({ 'InfoPedidos.IDPedido': { $in: req.query.arrIDPedidos } }).then(function (partidas) {
             let NPartidas = [];
@@ -647,19 +650,14 @@ async function getByPedido(req, res) {
     }
 }
 
+/* Esta funcion actualiza las existencias de la partida
+por un monto menor en cantidad de los embalajes
+Se utiliza al hacer un pedido con partidas ya existentes.
+Indicando que ese pedido es para una salida en ALM */
 async function _update(req, res) {
-
-    /**
-     * Esta funcion actualiza las existencias de la partida
-     * por un monto menor en cantidad de los embalajes
-     * Se utiliza al hacer un pedido con partidas ya existentes.
-     * Indicando que ese pedido es para una salida en ALM
-     */
-
     try {
         let arrPartidas = req.body.partidas;
         let arrPartidasUpdated = [];
-
 
         await Helper.asyncForEach(arrPartidas, async function (partida) {
 
@@ -669,134 +667,99 @@ async function _update(req, res) {
                 InfoPedidos: partida.InfoPedidos,
                 isEmpty: partida.isEmpty,
                 posiciones: partida.posiciones,
-                status : "SELECCIONADA"
+                status: "SELECCIONADA"
             };
 
             let partidaUpdated = await Partida.findOneAndUpdate({ _id: partida._id.toString() }, { $set: changes }, { new: true });
             arrPartidasUpdated.push(partidaUpdated);
 
         });
+
         if (arrPartidas.length == arrPartidasUpdated.length) {
             res.status(200).send(arrPartidasUpdated);
         } else {
             res.status(304).send({ message: "Not all data was succesfully updated" });
         }
-
-
-
     }
     catch (e) {
         res.status(500).send(e);
     }
-
 }
 
-function _put(req, res) {
-    let partida_id = req.params._id;
-    let bodyParams = req.body;
+async function posicionar(partidas, almacen_id) {
+    let pasilloBahia = await Pasillo.findOne({
+        almacen_id: almacen_id,
+        isBahia: true,
+        statusReg: "ACTIVO"
+    }).populate({
+        path: 'posiciones.posicion_id'
+    }).exec();
 
-    Partida.findOne({ _id: partida_id })
-        .then(async (partida) => {
-            let isEquals = await equalsEmbalajes(partida, bodyParams);
+    let posicionBahia = pasilloBahia.posiciones[0].posicion_id;
 
-            if (!isEquals) {
-                await updatePartidaEmbalajes(partida, bodyParams);
-                //let resMovimietno = await updateMovimiento(entrada_id, clave_partida, bodyParams);
-                //console.log(resMovimietno);
+    for (let partida of partidas) {
+        if (partida.posiciones.length == 0) {
+            let jPosicionBahia = {
+                embalajesEntrada: partida.embalajesEntrada,
+                embalajesxSalir: partida.embalajesxSalir,
+                pasillo: pasilloBahia.nombre,
+                pasillo_id: pasilloBahia._id,
+                posicion: posicionBahia.nombre,
+                posicion_id: posicionBahia._id,
+                nivel_id: posicionBahia.niveles[0]._id,
+                nivel: posicionBahia.niveles[0].nombre,
+                ubicacion: pasilloBahia.nombre + posicionBahia.niveles[0].nombre + posicionBahia.nombre
+            };
+            partida.posiciones.push(jPosicionBahia);
+
+            for (let posicion of partida.posiciones) {
+                await Posicion.updateExistencia(1, posicion, partida.producto_id);
             }
-
-            if (partida.posiciones != bodyParams.posiciones) {
-                //console.log("Posicion");
-                partida.posiciones = bodyParams.posiciones;
-            }
-
-            if (partida.valor != bodyParams.valor) {
-                //console.log("Valor");
-                partida.valor = bodyParams.valor;
-            }
-
-            //console.log(partida);
-
-            await Partida.updateOne({ _id: partida._id }, { $set: partida })
-                .then((item) => {
-                    //console.log("complete");
-                    res.status(200).send(partida);
-                })
-                .catch((error) => {
-                    res.status(500).send(error);
-                });
-        });
-}
-
-//Campara los embalajes actuales con los nuevos para determinar el signo
-// false = diferentes
-// true = iguales
-async function equalsEmbalajes(partida, bodyParams) {
-    let embalajes = await getEmbalajes();
-    let res = true;
-    for (let embalaje of embalajes) {
-        if (bodyParams.embalajes[embalaje.clave] == undefined)
-            bodyParams.embalajes[embalaje.clave] = 0;
-
-        if (partida.embalajesEntrada[embalaje.clave] == undefined)
-            partida.embalajesEntrada[embalaje.clave] = 0;
-
-        if (partida.embalajesEntrada[embalaje.clave] != bodyParams.embalajes[embalaje.clave]) {
-            res = false;
-            break;
         }
+        else {
+            let antiguaPartida = await Partida.findOne({ _id: partida._id });
+            //console.log(antiguaPartida);
+            if (partida.posiciones.length > 0)
+                for (let posicion of antiguaPartida.posiciones) {
+                    await Posicion.updateExistencia(-1, posicion, partida.producto_id);
+                }
+
+            for (let posicion of partida.posiciones) {
+                await Posicion.updateExistencia(1, posicion, partida.producto_id);
+            }
+        }
+
+        await Partida.updateOne({ _id: partida._id }, { $set: { posiciones: partida.posiciones } });
     }
-    return await res;
 }
 
-async function getEmbalajes() {
-    let res;
-    res = await EmbalajesModel.find({ status: "ACTIVO" }).exec();
-    return res;
-}
+function _put(jNewPartida) {
+    Partida.findOne({ _id: jNewPartida._id })
+        .then(async (partida) => {
+            try {
+                console.log(partida);
+                console.log(jNewPartida);
 
-//Updatea los cambios hechos en la partida en su respectivo movimiento
-async function updateMovimiento(entrada_id, clave_partida, bodyParams) {
-    let itemMovimiento = {
-        embalajes: bodyParams.embalajes,
-        pesoBruto: bodyParams.pesoBruto,
-        pesoNeto: bodyParams.pesoNeto,
-        pasillo: bodyParams.pasillo,
-        pasillo_id: bodyParams.pasillo_id,
-        posicion: bodyParams.posicion,
-        posicion_id: bodyParams.posicion_id,
-        nivel: bodyParams.nivel,
-    };
+                await Partida.updateOne({ _id: partida._id }, { $set: jNewPartida }).exec();
+            }
+            catch (e) {
 
-    await MovimientoInventarioModel.updateOne({ entrada_id: entrada_id, clave_partida: clave_partida }, { $set: itemMovimiento })
-        .then((item) => {
-            return true;
-        })
-        .catch((error) => {
-            return false;
+            }
         });
 }
 
-async function updatePartidaEmbalajes(partida, bodyParams) {
-    //console.log("Embalajes");
-    let embalajes = await getEmbalajes();
+/////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
-    for (let embalaje of embalajes) {
-        if (bodyParams.embalajes[embalaje.clave] == undefined)
-            bodyParams.embalajes[embalaje.clave] = 0;
+// function sortByfechaEntadaDesc(a, b) {
+//     if (a.entrada_id.fechaEntrada < b.entrada_id.fechaEntrada) {
+//         return 1;
+//     }
+//     if (a.entrada_id.fechaEntrada > b.entrada_id.fechaEntrada) {
+//         return -1;
+//     }
 
-        if (partida.embalajes[embalaje.clave] == undefined)
-            partida.embalajes[embalaje.clave] = 0;
-
-        partida.embalajes[embalaje.clave] = bodyParams.embalajes[embalaje.clave];
-    }
-}
-
-async function asignarEntrada(arrPartidas_id,entrada_id){
-    await Helper.asyncForEach(arrPartidas_id,async function(partida_id){
-        await Partida.updateOne({_id : partida_id},{$set :{entrada_id : entrada_id,status: "ASIGNADA"}}).exec();
-    });
-}
+//     return 0;
+// }
 
 module.exports = {
     get,
@@ -810,6 +773,7 @@ module.exports = {
     save,
     getByPedido,
     _update,
+    posicionar,
     _put,
     updateForSalidaAutomatica,
     asignarEntrada
