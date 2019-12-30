@@ -61,7 +61,6 @@ function getClientes(req, res) {
         });
 }
 
-
 async function save(req, res) {
     let nSucursal = new Sucursal();
     let params = req.body;
