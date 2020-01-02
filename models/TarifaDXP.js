@@ -22,17 +22,17 @@ const TarifaDXP = Schema(
     }
 );
 
-var autoPopulateCliente = function(next) {
+var autoPopulateCliente = function (next) {
     this.populate({
-        path : 'cliente_id',
-        select : 'nombreCorto nombreComercial clave'
+        path: 'cliente_id',
+        select: 'nombreCorto nombreComercial clave'
     });
     next();
-  };
+};
 
-TarifaDXP.pre('find',autoPopulateCliente);
-TarifaDXP.post('save', function(doc, next) {
-    doc.populate('cliente_id').execPopulate().then(function() {
+TarifaDXP.pre('find', autoPopulateCliente);
+TarifaDXP.post('save', function (doc, next) {
+    doc.populate('cliente_id').execPopulate().then(function () {
         ClienteFiscal.setHasTarifa(doc.cliente_id);
         next();
     });

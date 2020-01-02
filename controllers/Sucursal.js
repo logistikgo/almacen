@@ -61,7 +61,6 @@ function getClientes(req, res) {
         });
 }
 
-
 async function save(req, res) {
     let nSucursal = new Sucursal();
     let params = req.body;
@@ -125,8 +124,7 @@ function update(req, res) {
         })
         .catch((error) => {
             res.status(500).send(error);
-        })
-    //test
+        });
 }
 
 function _delete(req, res) {

@@ -1,6 +1,6 @@
 'use strict'
 
-const Almacen = require('../models/Almacen'); //Se hace este cambio unicamente para dev
+const Almacen = require('../models/Almacen');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../models/MovimientoInventario');
 
@@ -62,10 +62,10 @@ function getCatalogo(req, res) {
 		filtro.sucursal_id = { $in: _arrSucursales };
 
 	Almacen.find(filtro)
-		.populate({
-			path: 'sucursal_id',
-			model: 'Sucursal'
-		})
+		// .populate({
+		// 	path: 'sucursal_id',
+		// 	model: 'Sucursal'
+		// })
 		.then(async (almacenes) => {
 			let resAlmacenes = [];
 
@@ -136,9 +136,6 @@ async function save(req, res) {
 	let pasillos = req.body.pasillos;
 	let nAlmacen = new Almacen(req.body);
 	let counterPosiciones = 0;
-
-	nAlmacen.statusReg = "ACTIVO";
-	nAlmacen.fechaAlta = new Date();
 
 	pasillos.forEach(function (element) {
 		counterPosiciones += element.posiciones.length;
@@ -228,8 +225,8 @@ function validaPosicion(req, res) {
 	let _nivel = req.params.nivel;
 	let _almacen = req.params.almacen_id;
 
-	console.log(_posicion);
-	console.log(_nivel);
+	// console.log(_posicion);
+	// console.log(_nivel);
 
 	MovimientoInventario.find({ posicion: _posicion, nivel: _nivel, almacen_id: _almacen })
 		.then((data) => {
