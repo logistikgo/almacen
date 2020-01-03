@@ -28,6 +28,7 @@ const TarifaFactor = require('./controllers/TarifaFactor');
 const TarifaFija = require('./controllers/TarifaFija');
 const TarifaDXP = require('./controllers/TarifaDXP');
 const FolioIngreso = require('./controllers/FolioIngreso');
+const TiempoCargaDescarga = require('./controllers/TiempoCargaDescarga');
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -186,5 +187,10 @@ app.get('/api/foliosIngresos', FolioIngreso.get);
 app.post('/api/folioIngreso', FolioIngreso.save);
 app.put('/api/folioIngreso/:_id', FolioIngreso.update);
 app.delete('/api/folioIngreso/:_id', FolioIngreso._delete);
+
+app.get('/api/tiempoCargaDescarga', TiempoCargaDescarga.get);
+app.post('/api/tiempoCargaDescarga', TiempoCargaDescarga.save);
+app.put('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga.update);
+app.delete('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga._delete);
 
 module.exports = app;
