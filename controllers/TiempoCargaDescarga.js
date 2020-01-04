@@ -4,6 +4,7 @@ const TiempoCargaDescarga = require('../models/TiempoCargaDescarga');
 
 function get(req, res) {
 
+    // TiempoCargaDescarga.find({statusReg:})
 }
 
 async function save(req, res) {
