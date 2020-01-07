@@ -188,7 +188,7 @@ app.post('/api/folioIngreso', FolioIngreso.save);
 app.put('/api/folioIngreso/:_id', FolioIngreso.update);
 app.delete('/api/folioIngreso/:_id', FolioIngreso._delete);
 
-app.get('/api/tiempoCargaDescarga', TiempoCargaDescarga.get);
+app.get('/api/tiemposCargaDescarga', TiempoCargaDescarga.get);
 app.post('/api/tiempoCargaDescarga', TiempoCargaDescarga.save);
 app.put('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga.update);
 app.delete('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga._delete);
