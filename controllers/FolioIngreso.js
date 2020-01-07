@@ -25,7 +25,7 @@ function get(req, res) {
 async function save(req, res) {
     let nFolioIngreso = new FolioInreso(req.body);
 
-    nFolioIngreso.folio = await getNextID();
+    // nFolioIngreso.folio = await getNextID();
     nFolioIngreso.fechaInicio = new Date(req.body.fechaInicio);
     nFolioIngreso.fechaFin = new Date(req.body.fechaFin);
 

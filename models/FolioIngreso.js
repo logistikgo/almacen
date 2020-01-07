@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 
 const FolioIngreso = Schema(
     {
-        folio: Number,
+        folio: String,
         cliente_id: { type: Schema.ObjectId, ref: 'ClienteFiscal' },
         tarifa_id: Schema.ObjectId,
         tipoTarifa: String,
