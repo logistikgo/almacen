@@ -2,11 +2,6 @@
 
 const FolioInreso = require('../models/FolioIngreso');
 const ClienteFiscal = require('../models/ClienteFiscal');
-const Helpers = require('../helpers');
-
-async function getNextID() {
-    return await Helpers.getNextID(FolioInreso, "folio");
-}
 
 function get(req, res) {
     FolioInreso.find({})
@@ -25,7 +20,6 @@ function get(req, res) {
 async function save(req, res) {
     let nFolioIngreso = new FolioInreso(req.body);
 
-    // nFolioIngreso.folio = await getNextID();
     nFolioIngreso.fechaInicio = new Date(req.body.fechaInicio);
     nFolioIngreso.fechaFin = new Date(req.body.fechaFin);
 
@@ -42,7 +36,7 @@ async function save(req, res) {
         })
         .catch(error => {
             res.status(500).send(error);
-        })
+        });
 }
 
 function update(req, res) {
