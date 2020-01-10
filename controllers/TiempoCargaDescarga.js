@@ -24,7 +24,7 @@ async function save(req, res) {
     let nTiempo = new TiempoCargaDescarga(req.body);
 
     nTiempo.consecutivo = await getNextID();
-    nTiempo.folio = `${nTiempo.consecutivo}`;
+    nTiempo.folio = `LK8-${nTiempo.consecutivo}`;
 
     nTiempo.save()
         .then(tiempo => {
