@@ -11,6 +11,7 @@ const TiempoCargaDescarga = Schema({
     fin: Date,
     tiempo: String,
     entrada_id: { type: Schema.ObjectId, ref: "Entrada" },
+    salida_id: { type: Schema.ObjectId, ref: "Salida" },
     almacen_id: { type: Schema.ObjectId, ref: 'Almacen' },
     status: { type: String, default: "SIN ASIGNAR" },
     usuarioAlta: String,

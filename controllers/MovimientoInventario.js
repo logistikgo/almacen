@@ -78,10 +78,9 @@ async function saveEntrada(itemPartida, entrada_id) {
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.embalajes = itemPartida.embalajesEntrada;
 	nMovimiento.signo = 1;
-	
+
 	//DEPURACION DE CODIGO
 	//nMovimiento.idClienteFiscal = entrada.idClienteFiscal;
-
 
 	if (entrada.tipo != "RECHAZO") {
 		nMovimiento.tipo = "ENTRADA";
@@ -141,7 +140,7 @@ async function saveAjuste(req, res) {
 	nMovimiento.posicion = bodyParams.posicion;
 	nMovimiento.posicion_id = bodyParams.posicion_id;
 	nMovimiento.nivel = bodyParams.nivel;
-	
+
 	//DEPURACION DE CODIGO	
 	//nMovimiento.idClienteFiscal = bodyParams.idClienteFiscal;
 
