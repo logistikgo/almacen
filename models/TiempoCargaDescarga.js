@@ -10,15 +10,16 @@ const TiempoCargaDescarga = Schema({
     inicio: Date,
     fin: Date,
     tiempo: String,
-    almacen_id: {type: Schema.ObjectId, ref: 'Almacen'},
+    entrada_id: { type: Schema.ObjectId, ref: "Entrada" },
+    almacen_id: { type: Schema.ObjectId, ref: 'Almacen' },
     status: { type: String, default: "SIN ASIGNAR" },
     usuarioAlta: String,
     usuarioAlta_id: Number,
-    fechaAlta:  { type: Date, default: Date.now },
+    fechaAlta: { type: Date, default: Date.now },
     statusReg: { type: String, default: "ACTIVO" }
 },
-{
-    collection: 'TiempoCargaDescarga'
-});
+    {
+        collection: 'TiempoCargaDescarga'
+    });
 
 module.exports = mongoose.model('TiempoCargaDescarga', TiempoCargaDescarga);

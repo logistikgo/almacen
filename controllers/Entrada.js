@@ -8,6 +8,7 @@ const Helper = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
+const TiempoCargaDescarga = require('../controllers/TiempoCargaDescarga');
 
 function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
@@ -72,6 +73,10 @@ function getById(req, res) {
 			path: 'clienteFiscal_id',
 			model: 'ClienteFiscal'
 		})
+		.populate({
+			path: 'tiempoDescarga_id',
+			model: 'TiempoCargaDescarga'
+		})
 		.then((entrada) => {
 			res.status(200).send(entrada);
 		})
@@ -100,7 +105,6 @@ function getSalidasByEntradaID(req, res) {
 async function save(req, res) {
 	let nEntrada = new Entrada(req.body);
 
-	nEntrada.fechaAlta = new Date();
 	nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
@@ -108,10 +112,11 @@ async function save(req, res) {
 
 	nEntrada.save()
 		.then(async (entrada) => {
-
 			for (let itemPartida of req.body.partidasJson) {
 				await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 			}
+
+			TiempoCargaDescarga.setStatus(entrada.tiempoDescarga_id, { entrada_id: entrada._id, status: "ASIGNADO" });
 
 			let partidas = await Partida.post(req.body.partidasJson, entrada._id);
 			entrada.partidas = partidas;
