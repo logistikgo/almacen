@@ -116,7 +116,7 @@ async function post(arrPartidas, entrada_id) {
     var arrPartidas_id = [];
 
     await Helper.asyncForEach(arrPartidas, async function (partida) {
-        console.log(partida);
+        //console.log(partida);
         let nPartida = new Partida(partida);
         nPartida.entrada_id = entrada_id;
         await nPartida.save().then((partida) => {
