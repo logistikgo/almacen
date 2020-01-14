@@ -21,6 +21,18 @@ function get(req, res) {
         });
 }
 
+function getById(req, res) {
+    let _id = req.params._id;
+
+    TiempoCargaDescarga.findOne({ _id: _id })
+        .then(tiempo => {
+            res.status(200).send(tiempo);
+        })
+        .catch(error => {
+            res.status(500).send(error);
+        })
+}
+
 async function save(req, res) {
     let nTiempo = new TiempoCargaDescarga(req.body);
 
@@ -43,15 +55,32 @@ function setStatus(_id, options) {
 }
 
 function update(req, res) {
+    let _id = req.params._id;
+    req.body.fechaAlta = new Date();
 
+    TiempoCargaDescarga.updateOne({ _id: _id }, { $set: req.body })
+        .then((tiempo) => {
+            res.status(200).send(tiempo);
+        })
+        .catch((error) => {
+            res.status(500).send(error);
+        });
 }
 
 function _delete(req, res) {
+    let _id = req.params._id;
 
+    TiempoCargaDescarga.updateOne({ _id: _id }, { $set: { statusReg: "BAJA" } })
+        .then((tiempo) => {
+            res.status(200).send(almacen);
+        }).catch((err) => {
+            res.status(500).send({ message: "Error al eliminar" });
+        });
 }
 
 module.exports = {
     get,
+    getById,
     save,
     setStatus,
     update,

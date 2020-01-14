@@ -213,11 +213,12 @@ function _delete(req, res) {
 		statusReg: "BAJA"
 	}
 
-	Almacen.updateOne({ _id: almacen_id }, { $set: item }).then((almacen) => {
-		res.status(200).send(almacen);
-	}).catch((err) => {
-		res.status(500).send({ message: "Error al eliminar" });
-	});
+	Almacen.updateOne({ _id: almacen_id }, { $set: item })
+		.then((almacen) => {
+			res.status(200).send(almacen);
+		}).catch((err) => {
+			res.status(500).send({ message: "Error al eliminar" });
+		});
 }
 
 function validaPosicion(req, res) {
