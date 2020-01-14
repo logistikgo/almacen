@@ -162,6 +162,7 @@ app.put('/api/partida/pedido/update', Partida._update);
 
 //Tarifas
 app.get('/api/tarifaPES', TarifaPES.get);
+app.get('/api/tarifaPES/:_id', TarifaPES.getByID);
 app.get('/api/tarifaPES/:cliente_id', TarifaPES.getByCliente);
 app.post('/api/tarifaPES', TarifaPES.post);
 app.put('/api/tarifaPES/:_id', TarifaPES.put);
@@ -174,11 +175,13 @@ app.put('/api/tarifaFactor', TarifaFactor.put);
 app.delete('/api/tarifaFactor/:_id', TarifaFactor._delete);
 
 app.get('/api/tarifaFija', TarifaFija.get);
+app.get('/api/tarifaFija/:_id', TarifaFija.getByID);
 app.get('/api/tarifaFija/:cliente_id', TarifaFija.getByCliente);
 app.post('/api/tarifaFija', TarifaFija.save);
 app.delete('/api/tarifaFija/:_id', TarifaFija._delete);
 
 app.get('/api/tarifaDXP', TarifaDXP.get);
+app.get('/api/tarifaDXP/:_id', TarifaDXP.getByID);
 app.get('/api/tarifaDXP/:cliente_id', TarifaDXP.getByCliente);
 app.post('/api/tarifaDXP', TarifaDXP.save);
 app.delete('/api/tarifaDXP/:_id', TarifaDXP._delete);
