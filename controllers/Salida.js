@@ -66,6 +66,20 @@ function getByID(req, res) {
 		.catch(error => res.status(500).send(error));
 }
 
+function getxRangoFechas(req, res) {
+	let fechaInicio = new Date(req.query.fechaInicio);
+	let fechaFin = new Date(req.query.fechaFin);
+	let clienteFiscal_id = req.query.clienteFiscal_id;
+
+	Salida.find({ clienteFiscal_id: clienteFiscal_id, fechaSalida: { $gte: fechaInicio, $lt: fechaFin } })
+		.then((salidas) => {
+			res.status(200).send(salidas);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
+}
+
 async function save(req, res) {
 	let nSalida = new Salida(req.body);
 
@@ -85,7 +99,7 @@ async function save(req, res) {
 			let partidas = await Partida.put(req.body.jsonPartidas, salida._id);
 			salida.partidas = partidas;
 			// console.log(partidas);
-			
+
 			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
 			await Salida.updateOne({ _id: salida._id }, { $set: { partidas: partidas } }).then((updated) => {
 				res.status(200).send(salida);
@@ -183,8 +197,6 @@ async function updatePartidasSalidaAPI(req, res) {
 		}).catch((error) => {
 			res.status(500).send(error);
 		});
-
-
 }
 
 async function saveSalidasEnEntrada(entrada_id, salida_id) {
@@ -287,6 +299,7 @@ function getPartidasDeEntrada(partidasDeEntrada, partidasDeSalida) {
 module.exports = {
 	get,
 	getByID,
+	getxRangoFechas,
 	save,
 	getSalidasByIDs,
 	saveSalidaAutomatica,

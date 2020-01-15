@@ -40,7 +40,6 @@ async function get(req, res) {
 		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([_idSucursal]);
 		filter.clienteFiscal_id = arrClientes[0];
 		filter.sucursal_id = arrSucursales[0];
-
 	}
 
 	console.log(filter);
@@ -57,7 +56,6 @@ async function get(req, res) {
 }
 
 function getById(req, res) {
-
 	let _id = req.query.id;
 
 	Entrada.findOne({ _id: _id })
@@ -92,6 +90,20 @@ function getSalidasByEntradaID(req, res) {
 		.then((salidas) => {
 			//console.log(salidas);
 			res.status(200).send(salidas);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
+}
+
+function getxRangoFechas(req, res) {
+	let fechaInicio = new Date(req.query.fechaInicio);
+	let fechaFin = new Date(req.query.fechaFin);
+	let clienteFiscal_id = req.query.clienteFiscal_id;
+
+	Entrada.find({clienteFiscal_id: clienteFiscal_id, fechaEntrada: { $gte: fechaInicio, $lt: fechaFin } })
+		.then((entradas) => {
+			res.status(200).send(entradas);
 		})
 		.catch((error) => {
 			res.status(500).send(error);
@@ -346,6 +358,7 @@ async function validaEntrada(req, res) {
 module.exports = {
 	get,
 	getById,
+	getxRangoFechas,
 	save,
 	update,
 	validaEntrada,
