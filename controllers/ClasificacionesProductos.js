@@ -39,7 +39,7 @@ function save(req, res) {
 function update(req, res) {
     let _id = req.params._id;
 
-    ClasificacionesProductos.updateOne({ _id: _id, { $set: req.body })
+    ClasificacionesProductos.updateOne({ _id: _id}, { $set: req.body })
         .then((data) => {
             res.status(200).send(data);
         })
