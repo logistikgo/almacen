@@ -201,10 +201,10 @@ app.post('/api/tiempoCargaDescarga', TiempoCargaDescarga.save);
 app.put('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga.update);
 app.delete('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga._delete);
 
-app.get('/api/ClasificacionesProductos', ClasificacionesProductos.get);
-app.get('/api/ClasificacionesProductos/:_id', ClasificacionesProductos.getById);
-app.post('/api/ClasificacionesProductos', ClasificacionesProductos.save);
-app.put('/api/ClasificacionesProductos/:_id', ClasificacionesProductos.update);
-app.delete('/api/ClasificacionesProductos/:_id', ClasificacionesProductos._delete);
+app.get('/api/clasificacionesProductos', ClasificacionesProductos.get);
+app.get('/api/clasificacionesProductos/:_id', ClasificacionesProductos.getById);
+app.post('/api/clasificacionesProductos', ClasificacionesProductos.save);
+app.put('/api/clasificacionesProductos/:_id', ClasificacionesProductos.update);
+app.delete('/api/clasificacionesProductos/:_id', ClasificacionesProductos._delete);
 
 module.exports = app;
