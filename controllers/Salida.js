@@ -72,6 +72,10 @@ function getxRangoFechas(req, res) {
 	let clienteFiscal_id = req.query.clienteFiscal_id;
 
 	Salida.find({ clienteFiscal_id: clienteFiscal_id, fechaSalida: { $gte: fechaInicio, $lt: fechaFin } })
+		.populate({
+			path: 'partidas',
+			model: 'Partida'
+		})
 		.then((salidas) => {
 			res.status(200).send(salidas);
 		})

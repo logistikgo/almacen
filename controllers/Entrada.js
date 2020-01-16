@@ -42,8 +42,6 @@ async function get(req, res) {
 		filter.sucursal_id = arrSucursales[0];
 	}
 
-	console.log(filter);
-
 	Entrada.find(filter).sort({ fechaEntrada: -1 })
 		.populate({
 			path: 'partidas.producto_id',
@@ -101,7 +99,11 @@ function getxRangoFechas(req, res) {
 	let fechaFin = new Date(req.query.fechaFin);
 	let clienteFiscal_id = req.query.clienteFiscal_id;
 
-	Entrada.find({clienteFiscal_id: clienteFiscal_id, fechaEntrada: { $gte: fechaInicio, $lt: fechaFin } })
+	Entrada.find({ clienteFiscal_id: clienteFiscal_id, fechaEntrada: { $gte: fechaInicio, $lt: fechaFin } })
+		.populate({
+			path: 'partidas',
+			model: 'Partida'
+		})
 		.then((entradas) => {
 			res.status(200).send(entradas);
 		})
