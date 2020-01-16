@@ -29,6 +29,7 @@ const TarifaFija = require('./controllers/TarifaFija');
 const TarifaDXP = require('./controllers/TarifaDXP');
 const FolioIngreso = require('./controllers/FolioIngreso');
 const TiempoCargaDescarga = require('./controllers/TiempoCargaDescarga');
+const ClasificacionesProductos = require('./controllers/ClasificacionesProductos');
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -199,5 +200,11 @@ app.get('/api/tiemposCargaDescarga/:_id', TiempoCargaDescarga.getById);
 app.post('/api/tiempoCargaDescarga', TiempoCargaDescarga.save);
 app.put('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga.update);
 app.delete('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga._delete);
+
+app.get('/api/ClasificacionesProductos', ClasificacionesProductos.get);
+app.get('/api/ClasificacionesProductos/:_id', ClasificacionesProductos.getById);
+app.post('/api/ClasificacionesProductos', ClasificacionesProductos.save);
+app.put('/api/ClasificacionesProductos/:_id', ClasificacionesProductos.update);
+app.delete('/api/ClasificacionesProductos/:_id', ClasificacionesProductos._delete);
 
 module.exports = app;
