@@ -25,6 +25,8 @@ function getById(req, res) {
 }
 
 function save(req, res) {
+    req.body.fechaAlta = new Date();
+    
     let nClasificacion = new ClasificacionesProductos(req.body);
 
     nClasificacion.save()

@@ -5,7 +5,6 @@ const Schema = mongoose.Schema;
 
 const ClasificacionesProductos = Schema(
     {
-        clave: String,
         nombre: String,
         subclasificacion: [{
             clave: String,
