@@ -7,7 +7,6 @@ const Helpers = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario')
 
 function get(req, res) {
-
 	Producto.find({ statusReg: "ACTIVO" })
 		.populate({
 			path: 'presentacion_id',
