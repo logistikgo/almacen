@@ -7,7 +7,6 @@ const ClasificacionesProductos = Schema(
     {
         nombre: String,
         subclasificacion: [{
-            clave: String,
             nombre: String,
         }],
         usuarioAlta: String,
