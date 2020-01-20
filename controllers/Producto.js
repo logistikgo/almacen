@@ -55,19 +55,16 @@ async function getExistenciasByAlmacen(req, res) {
 }
 
 async function getExistenciasAlmacen(almacen_id, producto) {
-
 	let producto_id = producto._id;
 	let NullParamsException = {};
 	try {
 		if (almacen_id == undefined || almacen_id == "") throw NullParamsException;
 		if (producto_id == undefined || producto_id == "") throw NullParamsException;
 
-
 		let existencias = {};
 		for (let x in producto.embalajes) {
 			existencias[x] = 0;
 		}
-
 
 		let partidas = await Partida
 			.find({ producto_id: producto_id, isEmpty: false })
@@ -205,7 +202,6 @@ async function save(req, res) {
 	req.body.idProducto = await Helpers.getNextID(Producto, "idProducto");
 	req.body.statusReg = "ACTIVO";
 	req.body.valor = 0;
-	req.body.fechaAlta = new Date();
 	req.body.embalajesRechazo = req.body.embalajes;
 
 	let nProducto = new Producto(req.body);
