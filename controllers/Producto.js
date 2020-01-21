@@ -1,4 +1,5 @@
 'use strict'
+
 const Producto = require('../models/Producto');
 const Entrada = require('../models/Entrada');
 const Partida = require('../models/Partida');
@@ -57,6 +58,7 @@ async function getExistenciasByAlmacen(req, res) {
 async function getExistenciasAlmacen(almacen_id, producto) {
 	let producto_id = producto._id;
 	let NullParamsException = {};
+
 	try {
 		if (almacen_id == undefined || almacen_id == "") throw NullParamsException;
 		if (producto_id == undefined || producto_id == "") throw NullParamsException;
@@ -153,7 +155,6 @@ function getByIDClienteFiscal(req, res) {
 		.catch((error) => {
 			return res.status(500).send(error);
 		});
-
 }
 
 async function getALM_XD(req, res) {
@@ -200,7 +201,6 @@ function getByIDClienteFiscal(req, res) {
 
 async function save(req, res) {
 	req.body.idProducto = await Helpers.getNextID(Producto, "idProducto");
-	req.body.statusReg = "ACTIVO";
 	req.body.valor = 0;
 	req.body.embalajesRechazo = req.body.embalajes;
 
@@ -214,7 +214,8 @@ async function save(req, res) {
 				req.body.existenciaPesoBruto, req.body.existenciaPesoNeto, req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id)
 		})
 		.catch((err) => {
-			res.status(500).send({ "message": "Error save producto", "error": err });
+			console.log(err);
+			res.status(500).send(err);
 		});
 }
 

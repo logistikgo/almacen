@@ -15,6 +15,9 @@ const Producto = Schema({
 	arrClientesFiscales_id: [
 		{ type: Schema.ObjectId, ref: "ClienteFiscal" }
 	],
+	diasCaducidad: Number,
+	stockMinimo: Number,
+	stockMaximo: Number,
 	isUnidadesMedida: Boolean,
 	embalajeBase: String,
 	embalajeBase_id: { type: Schema.ObjectId, ref: "Embalaje" },
@@ -42,12 +45,10 @@ const Producto = Schema({
 	fechaUltimaSalidaRechazo: Date,
 	fechaBaja: Date,
 	statusReg: { type: String, default: "ACTIVO" },
-	valor: Number,
 	//DEPURAR LOS SIGUIENTES CAMPOS (AUN SE USAN?)
+	valor: Number,
 	existenciaPesoBruto: Number,
 	existenciaPesoNeto: Number,
-	stockMaximo: Number,
-	stockMinimo: Number,
 	idProducto: Number,
 	existencia: Number,
 	existenciaTarimas: Number,
