@@ -42,6 +42,7 @@ const Partida = Schema(
         embalajesxSalir: {},
         embalajesAlmacen: {},
         lote: String,
+        fechaProduccion: Date,
         fechaCaducidad: Date,
         valor: { type: Number, default: 0 },
         InfoPedidos: [

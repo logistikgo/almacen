@@ -4,7 +4,18 @@ const TarifaPES = require('../models/TarifaPES');
 const ClienteFiscal = require('../controllers/ClienteFiscal');
 
 function get(req, res) {
-    TarifaPES.find({ statusReg: "ACTIVO" })
+    TarifaPES.find({statusReg: "ACTIVO" })
+        .then(tarifas => {
+            res.status(200).send(tarifas);
+        })
+        .catch(error => {
+            res.status(500).send(error);
+        });
+}
+
+function getByID(req, res) {
+    let _id = req.params._id;
+    TarifaPES.findOne({_id: _id, statusReg: "ACTIVO" })
         .then(tarifas => {
             res.status(200).send(tarifas);
         })
@@ -67,6 +78,7 @@ function _delete(req, res) {
 
 module.exports = {
     get,
+    getByID,
     getByCliente,
     post,
     put,

@@ -29,6 +29,7 @@ const TarifaFija = require('./controllers/TarifaFija');
 const TarifaDXP = require('./controllers/TarifaDXP');
 const FolioIngreso = require('./controllers/FolioIngreso');
 const TiempoCargaDescarga = require('./controllers/TiempoCargaDescarga');
+const ClasificacionesProductos = require('./controllers/ClasificacionesProductos');
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -69,6 +70,7 @@ app.post('/api/updateUsuario', Usuario.update);
 app.get('/api/entradas', Entrada.get);
 app.get('/api/entrada', Entrada.getById);
 app.get('/api/getSalidasByEntradaId', Entrada.getSalidasByEntradaID);
+app.get('/api/getEntradasxRangoFechas', Entrada.getxRangoFechas);
 app.get('/api/getDeliveryGroups', Helper.GetDeliveryGroups);
 app.post('/api/entrada', Entrada.save);
 app.put('/api/entrada', Entrada.update);
@@ -78,6 +80,7 @@ app.post('/api/validaEntrada', Entrada.validaEntrada);
 app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
 app.get('/api/getSalidasByIDs', Salida.getSalidasByIDs);
+app.get('/api/getSalidasxRangoFechas', Salida.getxRangoFechas);
 app.post('/api/salida', Salida.save);
 app.post('/api/salidaAutomatica', Salida.saveSalidaAutomatica);
 
@@ -150,6 +153,7 @@ app.get('/api/partidas', Partida.getByProductoEmbalaje);
 app.post('/api/partida', Partida.save);
 app.get('/api/partida/pedido/get', Partida.getByPedido);
 app.put('/api/partida/pedido/update', Partida._update);
+
 //app.get('/api/partida', Entrada.getPartidaById);
 //app.put('/api/partida', Entrada.updatePartida);
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
@@ -162,24 +166,27 @@ app.put('/api/partida/pedido/update', Partida._update);
 
 //Tarifas
 app.get('/api/tarifaPES', TarifaPES.get);
-app.get('/api/tarifaPES/:cliente_id', TarifaPES.getByCliente);
+app.get('/api/tarifaPES/:_id', TarifaPES.getByID);
+app.get('/api/tarifaPES/cliente/:cliente_id', TarifaPES.getByCliente);
 app.post('/api/tarifaPES', TarifaPES.post);
 app.put('/api/tarifaPES/:_id', TarifaPES.put);
 app.delete('/api/tarifaPES/:_id', TarifaPES._delete);
 
 app.get('/api/tarifaFactor', TarifaFactor.get);
-app.get('/api/tarifaFactor/:cliente_id', TarifaFactor.getByCliente);
+app.get('/api/tarifaFactor/cliente/:cliente_id', TarifaFactor.getByCliente);
 app.post('/api/tarifaFactor', TarifaFactor.post);
 app.put('/api/tarifaFactor', TarifaFactor.put);
 app.delete('/api/tarifaFactor/:_id', TarifaFactor._delete);
 
 app.get('/api/tarifaFija', TarifaFija.get);
-app.get('/api/tarifaFija/:cliente_id', TarifaFija.getByCliente);
+app.get('/api/tarifaFija/:_id', TarifaFija.getByID);
+app.get('/api/tarifaFija/cliente/:cliente_id', TarifaFija.getByCliente);
 app.post('/api/tarifaFija', TarifaFija.save);
 app.delete('/api/tarifaFija/:_id', TarifaFija._delete);
 
 app.get('/api/tarifaDXP', TarifaDXP.get);
-app.get('/api/tarifaDXP/:cliente_id', TarifaDXP.getByCliente);
+app.get('/api/tarifaDXP/:_id', TarifaDXP.getByID);
+app.get('/api/tarifaDXP/cliente/:cliente_id', TarifaDXP.getByCliente);
 app.post('/api/tarifaDXP', TarifaDXP.save);
 app.delete('/api/tarifaDXP/:_id', TarifaDXP._delete);
 
@@ -193,5 +200,11 @@ app.get('/api/tiemposCargaDescarga/:_id', TiempoCargaDescarga.getById);
 app.post('/api/tiempoCargaDescarga', TiempoCargaDescarga.save);
 app.put('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga.update);
 app.delete('/api/tiempoCargaDescarga/:_id', TiempoCargaDescarga._delete);
+
+app.get('/api/clasificacionesProductos', ClasificacionesProductos.get);
+app.get('/api/clasificacionesProductos/:_id', ClasificacionesProductos.getById);
+app.post('/api/clasificacionesProductos', ClasificacionesProductos.save);
+app.put('/api/clasificacionesProductos/:_id', ClasificacionesProductos.update);
+app.delete('/api/clasificacionesProductos/:_id', ClasificacionesProductos._delete);
 
 module.exports = app;

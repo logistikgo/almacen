@@ -1,4 +1,5 @@
 'use strict'
+
 const Producto = require('../models/Producto');
 const Entrada = require('../models/Entrada');
 const Partida = require('../models/Partida');
@@ -7,11 +8,14 @@ const Helpers = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario')
 
 function get(req, res) {
-
 	Producto.find({ statusReg: "ACTIVO" })
 		.populate({
 			path: 'presentacion_id',
 			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
 		})
 		.then((producto) => {
 			res.status(200).send(producto);
@@ -56,19 +60,17 @@ async function getExistenciasByAlmacen(req, res) {
 }
 
 async function getExistenciasAlmacen(almacen_id, producto) {
-
 	let producto_id = producto._id;
 	let NullParamsException = {};
+
 	try {
 		if (almacen_id == undefined || almacen_id == "") throw NullParamsException;
 		if (producto_id == undefined || producto_id == "") throw NullParamsException;
-
 
 		let existencias = {};
 		for (let x in producto.embalajes) {
 			existencias[x] = 0;
 		}
-
 
 		let partidas = await Partida
 			.find({ producto_id: producto_id, isEmpty: false })
@@ -103,6 +105,10 @@ function getById(req, res) {
 			path: 'presentacion_id',
 			model: 'Presentacion'
 		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
 		.then((producto) => {
 			res.status(200).send(producto);
 		})
@@ -118,6 +124,10 @@ function getByClave(req, res) {
 		.populate({
 			path: 'presentacion_id',
 			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
 		})
 		.then((producto) => {
 			res.status(200).send(producto);
@@ -135,6 +145,10 @@ function getByIDsClientesFiscales(req, res) {
 			path: 'presentacion_id',
 			model: 'Presentacion'
 		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
 		.then((productos) => {
 
 			res.status(200).send(productos);
@@ -151,13 +165,16 @@ function getByIDClienteFiscal(req, res) {
 			path: 'presentacion_id',
 			model: 'Presentacion'
 		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
 		.then((producto) => {
 			res.status(200).send(producto);
 		})
 		.catch((error) => {
 			return res.status(500).send(error);
 		});
-
 }
 
 async function getALM_XD(req, res) {
@@ -169,6 +186,10 @@ async function getALM_XD(req, res) {
 		.populate({
 			path: 'presentacion_id',
 			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
 		})
 		.then((productos) => {
 			res.status(200).send(productos);
@@ -187,6 +208,10 @@ function getByIDClienteFiscal(req, res) {
 			path: 'presentacion_id',
 			model: 'Presentacion'
 		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
 		.then(async (productos) => {
 
 			if (almacen_id != undefined) {
@@ -204,9 +229,7 @@ function getByIDClienteFiscal(req, res) {
 
 async function save(req, res) {
 	req.body.idProducto = await Helpers.getNextID(Producto, "idProducto");
-	req.body.statusReg = "ACTIVO";
 	req.body.valor = 0;
-	req.body.fechaAlta = new Date();
 	req.body.embalajesRechazo = req.body.embalajes;
 
 	let nProducto = new Producto(req.body);
@@ -216,10 +239,10 @@ async function save(req, res) {
 			res.status(200).send(productoStored);
 
 			MovimientoInventario.saveExistenciaInicial(productoStored._id, req.body.embalajes,
-				req.body.existenciaPesoBruto, req.body.existenciaPesoNeto, req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id)
+				req.body.existenciaPesoBruto, req.body.existenciaPesoNeto, req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id);
 		})
 		.catch((err) => {
-			res.status(500).send({ "message": "Error save producto", "error": err });
+			res.status(500).send(err);
 		});
 }
 
@@ -241,7 +264,6 @@ function validaProducto(req, res) {
 
 	Producto.find({ clave: _clave, statusReg: "ACTIVO" })
 		.then((producto) => {
-			console.log(producto.length);
 			if (producto.length === 0) {
 				res.status(200).send(true);
 			}

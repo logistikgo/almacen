@@ -326,6 +326,8 @@ async function getByProductoEmbalaje(req, res) {
     let cantidadRestante = parseFloat(cantidad);
     let algoritmoSalida = req.query.algoritmoSalida;
 
+    console.log(cantidadRestante);
+
     /**
      * Se obtienen las partidas necesarias para la cantidad deseada
      * Se obtienen las partidas que no estan vacias, que tienen existencias por salir
@@ -345,6 +347,8 @@ async function getByProductoEmbalaje(req, res) {
         .exec();
 
     partidas = partidas.filter(x => x.tipo == "EXISTENCIA_INICIAL" || (x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id));
+
+    console.log(partidas);
 
     //console.log(algoritmoSalida);
     if (algoritmoSalida !== undefined && algoritmoSalida.length > 0) {

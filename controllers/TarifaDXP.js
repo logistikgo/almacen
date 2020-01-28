@@ -17,6 +17,21 @@ function get(req, res) {
         });
 }
 
+function getByID(req, res) {
+    let _id = req.params._id;
+    TarifaDXP.findOne({_id: _id, statusReg: "ACTIVO" })
+        .populate({
+            'path': 'cliente_id',
+            'select': 'nombreCorto nombreComercial clave'
+        })
+        .then(data => {
+            res.status(200).send(data);
+        })
+        .catch(error => {
+            res.status(500).send(error);
+        });
+}
+
 function getByCliente(req, res) {
     let cliente_id = req.params.cliente_id;
 
@@ -61,6 +76,7 @@ function _delete(req, res) {
 
 module.exports = {
     get,
+    getByID,
     getByCliente,
     save,
     _delete
