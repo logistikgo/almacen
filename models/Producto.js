@@ -63,4 +63,11 @@ const Producto = Schema({
 	{ collection: 'Productos' }
 );
 
+Producto.post('save', function(doc, next){
+	doc.populate('clasificacion_id').execPopulate()
+		.then(function(){
+			next();
+		});
+});
+
 module.exports = mongoose.model('Producto', Producto);
