@@ -16,7 +16,7 @@ async function getNextID() {
 	return await Helpers.getNextID(Almacen, "idAlmacen");
 }
 
-function getAlmacenes(req, res) {
+function getAlmacenesFull(req, res) {
 	Almacen.find({ statusReg: "ACTIVO" }).
 		then((almacenes) => {
 			res.status(200).send(almacenes)
@@ -244,7 +244,7 @@ function validaPosicion(req, res) {
 }
 
 module.exports = {
-	getAlmacenes,
+	getAlmacenesFull,
 	getAlmacen,
 	getById,
 	get,
