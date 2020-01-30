@@ -16,7 +16,8 @@ const TarifaFija = Schema(
         fechaAlta: { type: Date, default: Date.now },
         usuarioBaja_id: Number,
         fechaBaja: { type: Date },
-        statusReg: { type: String, default: "ACTIVO" }
+        statusReg: { type: String, default: "ACTIVO" },
+        almacen_id: {type: Schema.ObjectId, ref: 'Almacen'}
     },
     {
         collection: 'TarifasFija'
@@ -38,5 +39,22 @@ TarifaFija.post('save', function(doc, next) {
         next();
     });
 });
+
+var autoPopulateAlmacen = function (next) {
+    this.populate({
+      path: 'almacen_id',
+      select: 'nombre'
+    });
+    next();
+  };
+  
+  TarifaFija.pre('find', autoPopulateAlmacen);
+  
+  TarifaFija.post('save', function (doc, next) {
+    doc.populate('almacen_id').execPopulate()
+      .then(function () {
+        next();
+      });
+  });
 
 module.exports = mongoose.model('TarifaFija', TarifaFija);

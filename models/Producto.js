@@ -16,8 +16,6 @@ const Producto = Schema({
 		{ type: Schema.ObjectId, ref: "ClienteFiscal" }
 	],
 	diasCaducidad: Number,
-	stockMinimo: Number,
-	stockMaximo: Number,
 	isUnidadesMedida: Boolean,
 	embalajeBase: String,
 	embalajeBase_id: { type: Schema.ObjectId, ref: "Embalaje" },

@@ -15,7 +15,8 @@ const TarifaDXP = Schema(
         fechaAlta: { type: Date, default: Date.now },
         usuarioBaja_id: Number,
         fechaBaja: { type: Date },
-        statusReg: { type: String, default: "ACTIVO" }
+        statusReg: { type: String, default: "ACTIVO" },
+        almacen_id: {type: Schema.ObjectId, ref: 'Almacen'}
     },
     {
         collection: 'TarifasDXP'
@@ -37,5 +38,22 @@ TarifaDXP.post('save', function (doc, next) {
         next();
     });
 });
+
+var autoPopulateAlmacen = function (next) {
+    this.populate({
+      path: 'almacen_id',
+      select: 'nombre'
+    });
+    next();
+  };
+  
+  TarifaDXP.pre('find', autoPopulateAlmacen);
+  
+  TarifaDXP.post('save', function (doc, next) {
+    doc.populate('almacen_id').execPopulate()
+      .then(function () {
+        next();
+      });
+  });
 
 module.exports = mongoose.model('TarifaDXP', TarifaDXP);

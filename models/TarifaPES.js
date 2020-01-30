@@ -43,4 +43,21 @@ TarifaPES.post('save', function (doc, next) {
     });
 });
 
+var autoPopulateAlmacen = function (next) {
+  this.populate({
+    path: 'almacen_id',
+    select: 'nombre'
+  });
+  next();
+};
+
+TarifaPES.pre('find', autoPopulateAlmacen);
+
+TarifaPES.post('save', function (doc, next) {
+  doc.populate('almacen_id').execPopulate()
+    .then(function () {
+      next();
+    });
+});
+
 module.exports = mongoose.model('TarifaPES', TarifaPES);
