@@ -207,5 +207,6 @@ app.get('/api/clasificacionesProductos/:_id', ClasificacionesProductos.getById);
 app.post('/api/clasificacionesProductos', ClasificacionesProductos.save);
 app.put('/api/clasificacionesProductos/:_id', ClasificacionesProductos.update);
 app.delete('/api/clasificacionesProductos/:_id', ClasificacionesProductos._delete);
+app.get('/api/getValidaClasificacion', ClasificacionesProductos.getValidaClasificacion);
 
 module.exports = app;
