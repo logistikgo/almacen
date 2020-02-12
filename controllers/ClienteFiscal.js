@@ -114,7 +114,7 @@ function removeTarifa(_id) {
 function getValidacionCliente(req, res) {
 	let nCliente = new ClienteFiscal(req.body);
 
-	ClienteFiscal.find({nombreCorto: nCliente.nombreCorto})
+	ClienteFiscal.find({rfc: nCliente.rfc})
 	.then((cliente) => {
 		res.status(200).send(cliente);
 	})
