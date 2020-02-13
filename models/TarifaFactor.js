@@ -16,7 +16,8 @@ const TarifaFactor = Schema(
         usuarioBaja_id: Number,
         fechaAlta: { type: Date, default: new Date() },
         fechaBaja: Date,
-        statusReg: { type: String, default: "ACTIVO" }
+        statusReg: { type: String, default: "ACTIVO" },
+        almacen_id: {type: Schema.ObjectId, ref: 'Almacen'}
     },
     {
         collection: 'TarifasFactor'
@@ -42,5 +43,22 @@ TarifaFactor.post('save', function(doc, next) {
         next();
     });
 });
+
+var autoPopulateAlmacen = function (next) {
+    this.populate({
+      path: 'almacen_id',
+      select: 'nombre'
+    });
+    next();
+  };
+  
+  TarifaFactor.pre('find', autoPopulateAlmacen);
+  
+  TarifaFactor.post('save', function (doc, next) {
+    doc.populate('almacen_id').execPopulate()
+      .then(function () {
+        next();
+      });
+  });
 
 module.exports = mongoose.model('TarifaFactor', TarifaFactor);

@@ -111,6 +111,18 @@ function removeTarifa(_id) {
 	ClienteFiscal.updateOne({_id: _id}, {$set: {hasTarifa: false}}).exec();
 }
 
+function getValidacionCliente(req, res) {
+	let nCliente = new ClienteFiscal(req.body);
+
+	ClienteFiscal.find({rfc: nCliente.rfc})
+	.then((cliente) => {
+		res.status(200).send(cliente);
+	})
+	.catch((error) => {
+		res.status(500).send(error);
+	})
+}
+
 module.exports = {
 	get,
 	getByIDClienteFiscal,
@@ -119,5 +131,6 @@ module.exports = {
 	update,
 	getByTarifa,
 	setHasTarifa,
-	removeTarifa
+	removeTarifa,
+	getValidacionCliente
 }

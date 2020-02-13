@@ -2,6 +2,8 @@
 
 const ClasificacionesProductos = require('../models/ClasificacionesProductos');
 
+var arrClasificaciones=[];
+
 function get(req, res) {
     ClasificacionesProductos.find({ statusReg: "ACTIVO" })
         .then((data) => {
@@ -62,10 +64,57 @@ function _delete(req, res) {
         })
 }
 
+const busquedaArr = (arreglo, busqueda, izquierda, derecha) => {
+    if (izquierda > derecha)
+        return -1;
+    let indiceMitad = Math.floor((derecha + izquierda) / 2);
+    let mitad = arreglo[indiceMitad];
+
+    if (busqueda === mitad)
+        return indiceMitad;
+    else {
+        if (busqueda > mitad) {
+            izquierda = indiceMitad + 1
+            return busquedaArr(arreglo, busqueda, izquierda, derecha);
+        } 
+        else {
+            derecha = indiceMitad - 1
+            return busquedaArr(arreglo, busqueda, izquierda, derecha);
+        }
+    }
+}
+
+async function getValidaClasificacion(req, res) {
+    let arr = req.query.subclasificacion;
+
+    await ClasificacionesProductos.aggregate([{$unwind: "$subclasificacion"}, {$project: {_id:0, nombre:"$subclasificacion.nombre"}}],
+    function (err, res) {
+        var array=[];
+        if(res) {
+            res.forEach(
+                function(clasificacion) {
+                    array.push(clasificacion.nombre);
+                }
+            );
+            array.sort();
+            arrClasificaciones = array;
+        }
+        else
+            console.log(err);
+    })
+    arr.forEach(element => {
+        if(busquedaArr(arrClasificaciones, element.nombre, 0, arrClasificaciones.length-1) != -1) {
+            res.status(500).send("ERROR BACKEND");
+        }
+    })
+    res.status(200).send("SUCCESS BACKEND");
+}
+
 module.exports ={
     get,
     getById,
     save,
     update,
-    _delete
+    _delete,
+    getValidaClasificacion
 }

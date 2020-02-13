@@ -16,8 +16,6 @@ const Producto = Schema({
 		{ type: Schema.ObjectId, ref: "ClienteFiscal" }
 	],
 	diasCaducidad: Number,
-	stockMinimo: Number,
-	stockMaximo: Number,
 	isUnidadesMedida: Boolean,
 	embalajeBase: String,
 	embalajeBase_id: { type: Schema.ObjectId, ref: "Embalaje" },
@@ -62,5 +60,12 @@ const Producto = Schema({
 },
 	{ collection: 'Productos' }
 );
+
+Producto.post('save', function(doc, next){
+	doc.populate('clasificacion_id').execPopulate()
+		.then(function(){
+			next();
+		});
+});
 
 module.exports = mongoose.model('Producto', Producto);

@@ -91,6 +91,7 @@ app.post('/api/saveCteFiscal', CteFiscal.save);
 app.delete('/api/deleteCteFiscal', CteFiscal._delete);
 app.put('/api/clienteFiscal', CteFiscal.update);
 app.get('/api/getCteFiscalByTarifa/:tipoTarifaPrecio', CteFiscal.getByTarifa);
+app.post('/api/getValidacionCliente', CteFiscal.getValidacionCliente);
 
 app.get('/api/sucursales', Sucursal.get);
 app.get('/api/sucursalesXD', Helper.getSucursalesXD);
@@ -109,7 +110,7 @@ app.put('/api/almacen', Almacen.update);
 app.delete('/api/almacen', Almacen._delete);
 app.get('/api/validaPosicion/:posicion/:nivel/:almacen_id', Almacen.validaPosicion);
 app.get('/api/ubicaciones', Almacen.getUbicaciones);
-//app.get('/api/getAlmacenes',Almacen.getAlmacenes);
+app.get('/api/getAlmacenesFull',Almacen.getAlmacenesFull);
 
 app.post('/api/evidencia', Evidencia.saveEvidencia);
 app.get('/api/evidencias', Evidencia.getEvidenciasByID);
@@ -206,5 +207,6 @@ app.get('/api/clasificacionesProductos/:_id', ClasificacionesProductos.getById);
 app.post('/api/clasificacionesProductos', ClasificacionesProductos.save);
 app.put('/api/clasificacionesProductos/:_id', ClasificacionesProductos.update);
 app.delete('/api/clasificacionesProductos/:_id', ClasificacionesProductos._delete);
+app.get('/api/getValidaClasificacion', ClasificacionesProductos.getValidaClasificacion);
 
 module.exports = app;
