@@ -9,6 +9,10 @@ const Partida = Schema(
         clave: String,
         descripcion: String,
         entrada_id: { type: Schema.ObjectId, ref: 'Entrada' },
+        lote: String,
+        fechaProduccion: Date,
+        fechaCaducidad: Date,
+        valor: { type: Number, default: 0 },
         salidas_id:
             [
                 {
@@ -41,10 +45,6 @@ const Partida = Schema(
         embalajesEntrada: {},
         embalajesxSalir: {},
         embalajesAlmacen: {},
-        lote: String,
-        fechaProduccion: Date,
-        fechaCaducidad: Date,
-        valor: { type: Number, default: 0 },
         InfoPedidos: [
             {
                 IDPedido: Number,
