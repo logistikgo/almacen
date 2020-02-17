@@ -56,7 +56,9 @@ const Producto = Schema({
 	peso: Number,
 	embalajesAlmacen: {},
 	embalajesRechazo: {},
-	idClienteFiscal: Number
+	idClienteFiscal: Number,
+	vidaAnaquel: Number,
+	garantiaFrescura: Number
 },
 	{ collection: 'Productos' }
 );
