@@ -17,7 +17,12 @@ const TiempoCargaDescarga = Schema({
     usuarioAlta: String,
     usuarioAlta_id: Number,
     fechaAlta: { type: Date, default: Date.now },
-    statusReg: { type: String, default: "ACTIVO" }
+    statusReg: { type: String, default: "ACTIVO" },
+    transportista: String,
+    unidad: String,
+    placas: String,
+    tracto: String,
+    remolque: String
 },
     {
         collection: 'TiempoCargaDescarga'
