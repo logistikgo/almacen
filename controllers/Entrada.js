@@ -302,6 +302,38 @@ async function validaEntrada(req, res) {
 	}
 }
 
+function getEntradasReporte(req, res) {
+	var arrPartidas = [];
+	console.log("Cliente Fiscal: "+req.body.clienteFiscal_id);
+
+	let filter = {
+		clienteFiscal_id: req.body.clienteFiscal_id,
+		isEmpty: false
+	}
+
+	Entrada.find({filter})
+	.then((entradas) => {
+		console.log("Entradas"+entradas);
+		entradas.forEach(entrada => {
+			let partida = entrada.partidasSalida;
+			console.log("La supuesta partida: "+partida);
+			partida.forEach(elemPartida => {
+				if(elemPartida.isEmpty == false) {
+					console.log(elemPartida);
+					arrPartidas.push(elemPartida);
+				}
+			});
+		});
+		console.log(arrPartidas);
+		res.status(400).send(arrPartidas);
+		
+	})
+	.catch((error) => {
+		console.log(error);
+		res.status(500).send(error);
+	})
+}
+
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -365,6 +397,7 @@ module.exports = {
 	update,
 	validaEntrada,
 	saveEntradaAutomatica,
-	getSalidasByEntradaID
+	getSalidasByEntradaID,
+	getEntradasReporte
 	// getPartidaById,
 }
