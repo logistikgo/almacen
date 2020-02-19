@@ -15,7 +15,6 @@ const Producto = Schema({
 	arrClientesFiscales_id: [
 		{ type: Schema.ObjectId, ref: "ClienteFiscal" }
 	],
-	diasCaducidad: Number,
 	isUnidadesMedida: Boolean,
 	embalajeBase: String,
 	embalajeBase_id: { type: Schema.ObjectId, ref: "Embalaje" },
@@ -58,7 +57,9 @@ const Producto = Schema({
 	embalajesRechazo: {},
 	idClienteFiscal: Number,
 	vidaAnaquel: Number,
-	garantiaFrescura: Number
+	garantiaFrescura: Number,
+	alertaAmarilla: Number,
+	alertaRoja: Number
 },
 	{ collection: 'Productos' }
 );

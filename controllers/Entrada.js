@@ -304,32 +304,28 @@ async function validaEntrada(req, res) {
 
 function getEntradasReporte(req, res) {
 	var arrPartidas = [];
-	console.log("Cliente Fiscal: "+req.body.clienteFiscal_id);
 
 	let filter = {
 		clienteFiscal_id: req.body.clienteFiscal_id,
 		isEmpty: false
 	}
 
-	Entrada.find({filter})
+	Entrada.find(filter, {partidas: 1, _id: 0})
+	.populate({
+		path: 'partidas',
+		model: 'Partida'
+	})
 	.then((entradas) => {
-		console.log("Entradas"+entradas);
-		entradas.forEach(entrada => {
-			let partida = entrada.partidasSalida;
-			console.log("La supuesta partida: "+partida);
-			partida.forEach(elemPartida => {
-				if(elemPartida.isEmpty == false) {
-					console.log(elemPartida);
-					arrPartidas.push(elemPartida);
-				}
-			});
+		var setEntradas = JSON.parse(JSON.stringify(entradas));
+		setEntradas.forEach(entrada => {
+			var partida = JSON.parse(JSON.stringify(entrada.partidas));
+			partida.forEach(elem => {
+				arrPartidas.push(elem);
+			})
 		});
-		console.log(arrPartidas);
-		res.status(400).send(arrPartidas);
-		
+		res.status(200).send(arrPartidas);
 	})
 	.catch((error) => {
-		console.log(error);
 		res.status(500).send(error);
 	})
 }
