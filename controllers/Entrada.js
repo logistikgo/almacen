@@ -310,7 +310,7 @@ function getEntradasReporte(req, res) {
 		isEmpty: false
 	}
 
-	Entrada.find(filter, {partidas: 1, _id: 0})
+	Entrada.find(filter, {partidas: 1, _id: 0, fechaAlta: 1})
 	.populate({
 		path: 'partidas',
 		model: 'Partida'
@@ -318,8 +318,11 @@ function getEntradasReporte(req, res) {
 	.then((entradas) => {
 		var setEntradas = JSON.parse(JSON.stringify(entradas));
 		setEntradas.forEach(entrada => {
+			var fechaAlta = entrada.fechaAlta;
 			var partida = JSON.parse(JSON.stringify(entrada.partidas));
+			partida = JSON.parse(JSON.stringify(partida));
 			partida.forEach(elem => {
+				elem.fechaProduccion =  fechaAlta;
 				arrPartidas.push(elem);
 			})
 		});
