@@ -317,6 +317,10 @@ function getEntradasReporte(req, res) {
 		populate: {
 			path: 'producto_id',
 			model: 'Producto'
+		},
+		populate: {
+			path: 'entrada_id',
+			model: 'Entrada'
 		}
 	})
 	.then((entradas) => {
