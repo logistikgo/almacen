@@ -309,23 +309,23 @@ function getEntradasReporte(req, res) {
 	let subclasificacion = req.body.subclasificacion;
 	let reporte = 0;
 
+	console.log(clasificacion);
+	console.log(subclasificacion);
+
 	let filter = {
 		clienteFiscal_id: req.body.clienteFiscal_id,
 		isEmpty: false
 	}
 
+
 	Entrada.find(filter, {partidas: 1, _id: 0, fechaAlta: 1})
 	.populate({
 		path: 'partidas',
-		model: 'Partida',
-		populate: {
-			path: 'producto_id',
-			model: 'Producto'
-		},
 		populate: {
 			path: 'entrada_id',
-			model: 'Entrada'
-		},
+			model: 'Entrada',
+			select: 'stringFolio'
+		}
 	})
 	.then((entradas) => {
 		var setEntradas = JSON.parse(JSON.stringify(entradas));
@@ -336,13 +336,12 @@ function getEntradasReporte(req, res) {
 				arrPartidas.push(elem);
 			})		
 		});
-
 		if(clasificacion != undefined && subclasificacion != undefined) {
 			reporte = 1;
 			arrPartidas.forEach(element => {
-				var elem = JSON.parse(JSON.stringify(element));
-				if(elem.producto_id.clasificacion == clasificacion && elem.producto_id.subclasificacion == subclasificacion) {
-					arrPartidasFilter.push(elem);
+				console.log("Elemento Clasificacion: "+element.producto_id.clasificacion_id);
+				if(element.producto_id.clasificacion_id == clasificacion && element.producto_id.subclasificacion_id == subclasificacion) {
+					arrPartidasFilter.push(element);
 				}
 			});
 		}
