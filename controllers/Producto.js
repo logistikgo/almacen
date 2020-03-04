@@ -1,4 +1,5 @@
 'use strict'
+
 const Producto = require('../models/Producto');
 const Entrada = require('../models/Entrada');
 const Partida = require('../models/Partida');
@@ -7,42 +8,44 @@ const Helpers = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario')
 
 function get(req, res) {
-	
-	Producto.find({statusReg:"ACTIVO"})
-	.populate({
-		path:'presentacion_id', 
-		model: 'Presentacion'
-	})
-	.then((producto) => {
-		res.status(200).send(producto);
-	})
-	.catch((error) => {
-		return res.status(500).send(error);
-	});
+	Producto.find({ statusReg: "ACTIVO" })
+		.populate({
+			path: 'presentacion_id',
+			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
+		.then((producto) => {
+			res.status(200).send(producto);
+		})
+		.catch((error) => {
+			return res.status(500).send(error);
+		});
 }
 
-async function getExistenciasByAlmacen(req,res){
+async function getExistenciasByAlmacen(req, res) {
 	let almacen_id = req.params.almacen_id;
 	let producto_id = req.params.producto_id;
 	let NullParamsException = {};
-	try
-	{
-		if(almacen_id == undefined || almacen_id == "") throw NullParamsException;
-		if(producto_id == undefined || producto_id == "") throw NullParamsException;
+	try {
+		if (almacen_id == undefined || almacen_id == "") throw NullParamsException;
+		if (producto_id == undefined || producto_id == "") throw NullParamsException;
 
-		let producto = await Producto.findOne({_id : producto_id}).exec();
+		let producto = await Producto.findOne({ _id: producto_id }).exec();
 		let existencias = {};
-		for(let x in producto.embalajes){
+		for (let x in producto.embalajes) {
 			existencias[x] = 0;
 		}
-		let entradas = await Entrada.find({almacen_id : almacen_id});
-		let entradas_id = entradas.map(x=> x._id);
-		let partidas = await Partida.find({entrada_id: { $in: entradas_id },producto_id : producto_id, isEmpty:false });
-		partidas.forEach(function(partida){
-			for(let x in partida.embalajesxSalir){
-				if(existencias[x] == undefined) existencias[x] = 0;
+		let entradas = await Entrada.find({ almacen_id: almacen_id });
+		let entradas_id = entradas.map(x => x._id);
+		let partidas = await Partida.find({ entrada_id: { $in: entradas_id }, producto_id: producto_id, isEmpty: false });
+		partidas.forEach(function (partida) {
+			for (let x in partida.embalajesxSalir) {
+				if (existencias[x] == undefined) existencias[x] = 0;
 
-				if(partida.embalajesAlmacen != undefined)
+				if (partida.embalajesAlmacen != undefined)
 					existencias[x] += partida.embalajesAlmacen[x];
 				else
 					existencias[x] += partida.embalajesxSalir[x];
@@ -51,39 +54,36 @@ async function getExistenciasByAlmacen(req,res){
 
 		res.status(200).send(existencias);
 	}
-	catch(error){
+	catch (error) {
 		res.status(500).send(error);
 	}
 }
 
-async function getExistenciasAlmacen(almacen_id,producto){
-	
+async function getExistenciasAlmacen(almacen_id, producto) {
 	let producto_id = producto._id;
 	let NullParamsException = {};
-	try
-	{
-		if(almacen_id == undefined || almacen_id == "") throw NullParamsException;
-		if(producto_id == undefined || producto_id == "") throw NullParamsException;
 
-		
+	try {
+		if (almacen_id == undefined || almacen_id == "") throw NullParamsException;
+		if (producto_id == undefined || producto_id == "") throw NullParamsException;
+
 		let existencias = {};
-		for(let x in producto.embalajes){
+		for (let x in producto.embalajes) {
 			existencias[x] = 0;
 		}
-		
 
 		let partidas = await Partida
-        .find({ producto_id: producto_id, isEmpty: false })
-        .populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id')
-		.exec();
-		
+			.find({ producto_id: producto_id, isEmpty: false })
+			.populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id')
+			.exec();
+
 		partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.almacen_id == almacen_id);
 
-		partidas.forEach(function(partida){
-			for(let x in partida.embalajesxSalir){
-				if(existencias[x] == undefined) existencias[x] = 0;
+		partidas.forEach(function (partida) {
+			for (let x in partida.embalajesxSalir) {
+				if (existencias[x] == undefined) existencias[x] = 0;
 
-				if(partida.embalajesAlmacen != undefined)
+				if (partida.embalajesAlmacen != undefined)
 					existencias[x] += partida.embalajesAlmacen[x];
 				else
 					existencias[x] += partida.embalajesxSalir[x];
@@ -92,181 +92,202 @@ async function getExistenciasAlmacen(almacen_id,producto){
 
 		return existencias;
 	}
-	catch(error){
+	catch (error) {
 		throw error;
 	}
 }
 
 function getById(req, res) {
 	let idProducto = req.query.idProducto;
-	
-	Producto.findOne({_id:idProducto})
-	.populate({
-		path:'presentacion_id', 
-		model: 'Presentacion'
-	})
-	.then((producto) => {
-		res.status(200).send(producto);
-	})
-	.catch((error) => {
-		res.status(500).send(error);
-	});
+
+	Producto.findOne({ _id: idProducto })
+		.populate({
+			path: 'presentacion_id',
+			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
+		.then((producto) => {
+			res.status(200).send(producto);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
 }
 
-function getByClave(req,res){
+function getByClave(req, res) {
 	let _clave = req.params.clave;
 
-	Producto.findOne({clave:_clave})
-	.populate({
-		path:'presentacion_id', 
-		model: 'Presentacion'
-	})
-	.then((producto) => {
-		res.status(200).send(producto);
-	})
-	.catch((error) => {
-		res.status(500).send(error);
-	});
+	Producto.findOne({ clave: _clave })
+		.populate({
+			path: 'presentacion_id',
+			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
+		.then((producto) => {
+			res.status(200).send(producto);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
 }
 
-function getByIDsClientesFiscales(req,res){
+function getByIDsClientesFiscales(req, res) {
 	let _arrClienteFiscales = req.query.arrClientesFiscales;
 
-	Producto.find({arrClientesFiscales_id:{$in:_arrClienteFiscales},"statusReg":"ACTIVO"})
-	.populate({
-		path:'presentacion_id', 
-		model: 'Presentacion'
-	})
-	.then((productos)=>{
-		
-		res.status(200).send(productos);
-	})
-	.catch((err)=>{
-		res.status(500).send({message:"Error", error:err});
-	});
+	Producto.find({ arrClientesFiscales_id: { $in: _arrClienteFiscales }, "statusReg": "ACTIVO" })
+		.populate({
+			path: 'presentacion_id',
+			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
+		.then((productos) => {
+
+			res.status(200).send(productos);
+		})
+		.catch((err) => {
+			res.status(500).send({ message: "Error", error: err });
+		});
 }
 
 function getByIDClienteFiscal(req, res) {
 	let _idClienteFiscal = req.params.idClienteFiscal;
-	Producto.find({arrClientesFiscales_id:{$in:[_idClienteFiscal]}, statusReg:"ACTIVO"})
-	.populate({
-		path:'presentacion_id', 
-		model: 'Presentacion'
-	})
-	.then((producto) => {
-		res.status(200).send(producto);
-	})
-	.catch((error) => {
-		return res.status(500).send(error);
-	});
-	
+	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
+		.populate({
+			path: 'presentacion_id',
+			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
+		.then((producto) => {
+			res.status(200).send(producto);
+		})
+		.catch((error) => {
+			return res.status(500).send(error);
+		});
 }
 
-async function getALM_XD(req,res){
-	let _arrClientesFiscalesXD= req.query.arrClientesFiscales;
-	
+async function getALM_XD(req, res) {
+	let _arrClientesFiscalesXD = req.query.arrClientesFiscales;
+
 	let _arrClientesFiscalesALM = await Interfaz_ALM_XD.getIDClienteALM(_arrClientesFiscalesXD);
-	
-	Producto.find({arrClientesFiscales_id:{$in:_arrClientesFiscalesALM},"statusReg":"ACTIVO"})
-	.populate({
-		path:'presentacion_id', 
-		model: 'Presentacion'
-	})
-	.then((productos)=>{
-		res.status(200).send(productos);
-	})
-	.catch((err)=>{
-		res.status(500).send({message:"Error", error:err});
-	});
+
+	Producto.find({ arrClientesFiscales_id: { $in: _arrClientesFiscalesALM }, "statusReg": "ACTIVO" })
+		.populate({
+			path: 'presentacion_id',
+			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
+		.then((productos) => {
+			res.status(200).send(productos);
+		})
+		.catch((err) => {
+			res.status(500).send({ message: "Error", error: err });
+		});
 }
 
 function getByIDClienteFiscal(req, res) {
 	let _idClienteFiscal = req.params.idClienteFiscal;
 	let almacen_id = req.query.almacen_id;
-	
-	Producto.find({arrClientesFiscales_id:{$in:[_idClienteFiscal]}, statusReg:"ACTIVO"})
-	.populate({
-		path:'presentacion_id', 
-		model: 'Presentacion'
-	})
-	.then(async (productos) => {
 
-		if(almacen_id != undefined){
-			await Helpers.asyncForEach(productos,async function(producto){
-				
-				producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id,producto);
-			});
-		}
-		res.status(200).send(productos);
-	})
-	.catch((error) => {
-		return res.status(500).send(error);
-	});
+	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
+		.populate({
+			path: 'presentacion_id',
+			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
+		.then(async (productos) => {
+
+			if (almacen_id != undefined) {
+				await Helpers.asyncForEach(productos, async function (producto) {
+
+					producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
+				});
+			}
+			res.status(200).send(productos);
+		})
+		.catch((error) => {
+			return res.status(500).send(error);
+		});
 }
 
-async function save(req,res) {
+async function save(req, res) {
 	req.body.idProducto = await Helpers.getNextID(Producto, "idProducto");
-	req.body.statusReg = "ACTIVO";
 	req.body.valor = 0;
-	req.body.fechaAlta = new Date();
 	req.body.embalajesRechazo = req.body.embalajes;
+
+	console.log(req.body.presentacion);
 
 	let nProducto = new Producto(req.body);
 
 	nProducto.save()
-	.then((productoStored)=>{	
-		res.status(200).send(productoStored);				
-		
-		MovimientoInventario.saveExistenciaInicial(productoStored._id, req.body.embalajes,
-			req.body.existenciaPesoBruto, req.body.existenciaPesoNeto,req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id)
-	})
-	.catch((err)=>{
-		res.status(500).send({"message":"Error save producto", "error":err});
-	});
+		.then((productoStored) => {
+			res.status(200).send(productoStored);
+
+			MovimientoInventario.saveExistenciaInicial(productoStored._id, req.body.embalajes,
+				req.body.existenciaPesoBruto, req.body.existenciaPesoNeto, req.body.clienteFiscal_id, req.body.sucursal_id, req.body.almacen_id);
+		})
+		.catch((err) => {
+			res.status(500).send(err);
+		});
 }
 
-function update(req, res){
+function update(req, res) {
 	let _id = req.params._id;
 	req.body.fechaEdita = new Date();
 
-	Producto.updateOne({_id: _id},{$set: req.body})
-	.then((producto)=>{
-		res.status(200).send(producto);
-	})
-	.catch((error)=>{
-		res.status(500).send(error);
-	});
+	Producto.updateOne({ _id: _id }, { $set: req.body })
+		.then((producto) => {
+			res.status(200).send(producto);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
 }
 
-function validaProducto(req,res){
+function validaProducto(req, res) {
 	let _clave = req.params.clave;
 
-	Producto.find({clave:_clave,statusReg:"ACTIVO"})
-	.then((producto)=>{
-		console.log(producto.length);
-		if(producto.length===0){
-			res.status(200).send(true);
-		}
-		else
-		{
-			res.status(200).send(false);
-		}
-	})
-	.catch((err)=>{
-		res.status(500).send({message:"Error en validaProducto","error":err});
-	});
+	Producto.find({ clave: _clave, statusReg: "ACTIVO" })
+		.then((producto) => {
+			if (producto.length === 0) {
+				res.status(200).send(true);
+			}
+			else {
+				res.status(200).send(false);
+			}
+		})
+		.catch((err) => {
+			res.status(500).send({ message: "Error en validaProducto", "error": err });
+		});
 }
 
-function _delete(req,res) {
+function _delete(req, res) {
 	let _idProducto = req.body.idProducto;
 
-	Producto.updateOne({_id:_idProducto},{$set: {statusReg:"BAJA"}})
-	.then((producto)=>{
-		res.status(200).send(producto);
-	})
-	.catch((error)=>{
-		res.status(500).send(error);
-	});
+	Producto.updateOne({ _id: _idProducto }, { $set: { statusReg: "BAJA" } })
+		.then((producto) => {
+			res.status(200).send(producto);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
 }
 
 module.exports = {

@@ -13,4 +13,4 @@ const Interfaz_ALM_XD = Schema({
 {collection:'Interfaz_ALM_XD'}
 );
 
-module.exports = mongoose.model('Interfaz_ALM_XD',Interfaz_ALM_XD);
+module.exports = mongoose.model('Interfaz_ALM_XD', Interfaz_ALM_XD);

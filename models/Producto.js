@@ -4,45 +4,71 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const Producto = Schema({
-	idProducto: Number,
 	clave: String,
-	usuarioAlta_id: Number,
+	descripcion: String,
+	clasificacion: String,
+	clasificacion_id: { type: Schema.ObjectId, ref: "ClasificacionesProductos" },
+	subclasificacion: String,
+	subclasificacion_id: Schema.ObjectId,
+	presentacion: String,
+	presentacion_id: { type: Schema.ObjectId, ref: "Presentacion" },
+	arrClientesFiscales_id: [
+		{ type: Schema.ObjectId, ref: "ClienteFiscal" }
+	],
+	isUnidadesMedida: Boolean,
+	embalajeBase: String,
+	embalajeBase_id: { type: Schema.ObjectId, ref: "Embalaje" },
+	arrEquivalencias: [{
+		cantidad: Number,
+		embalaje: String,
+		embalaje_id: { type: Schema.ObjectId, ref: "Embalaje" },
+		cantidadEquivalencia: Number,
+		embalajeEquivalencia: String,
+		embalajeEquivalencia_id: { type: Schema.ObjectId, ref: "Embalaje" },
+	}],
+	isSeries: Boolean,
+	isPedimentos: Boolean,
+	isLotes: Boolean,
+	sucursal_id: { type: Schema.ObjectId, ref: "Sucursal" },
+	almacen_id: { type: Schema.ObjectId, ref: "Almacen" },
+	clienteFiscal_id: { type: Schema.ObjectId, ref: "ClienteFiscal" },
+	embalajes: {},
 	usuarioAlta: String,
-	fechaAlta: Date,
+	usuarioAlta_id: Number,
+	fechaAlta: { type: Date, default: Date.now },
 	fechaUltimaEntrada: Date,
 	fechaUltimaEntradaRechazo: Date,
 	fechaUltimaSalida: Date,
 	fechaUltimaSalidaRechazo: Date,
 	fechaBaja: Date,
-	clave: String,
-	descripcion: String,
+	statusReg: { type: String, default: "ACTIVO" },
+	//DEPURAR LOS SIGUIENTES CAMPOS (AUN SE USAN?)
+	valor: Number,
+	existenciaPesoBruto: Number,
+	existenciaPesoNeto: Number,
+	idProducto: Number,
 	existencia: Number,
 	existenciaTarimas: Number,
 	existenciaCajas: Number,
-	existenciaPesoBruto: Number,
-	existenciaPesoNeto: Number,
 	pesoBrutoRechazo: Number,
 	pesoNetoRechazo: Number,
 	peso: Number,
-	stockMaximo: Number,
-	stockMinimo: Number,
-	statusReg: String,
-	sucursal_id: { type: Schema.ObjectId, ref: "Sucursal" },
-	almacen_id: { type: Schema.ObjectId, ref: "Almacen" },
-	clienteFiscal_id: { type: Schema.ObjectId, ref: "ClienteFiscal" },
-	presentacion: String,
-	presentacion_id: { type: Schema.ObjectId, ref: "Presentacion" },
-	valor: Number,
-	embalajes: {},
 	embalajesAlmacen: {},
 	embalajesRechazo: {},
-	arrClientesFiscales_id: [
-		{ type: Schema.ObjectId, ref: "ClienteFiscal" }
-	],
-
-	idClienteFiscal: Number
+	idClienteFiscal: Number,
+	vidaAnaquel: Number,
+	garantiaFrescura: Number,
+	alertaAmarilla: Number,
+	alertaRoja: Number
 },
 	{ collection: 'Productos' }
 );
+
+Producto.post('save', function(doc, next){
+	doc.populate('clasificacion_id').execPopulate()
+		.then(function(){
+			next();
+		});
+});
 
 module.exports = mongoose.model('Producto', Producto);

@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 
 const Sucursal = Schema({
     idSucursal: Number,
-    arrClienteFiscales: [{type:Schema.ObjectId,ref:'ClienteFiscal'}],
+    arrClienteFiscales: [{ type: Schema.ObjectId, ref: 'ClienteFiscal' }],
     usuarioAlta_id: Number,
     fechaAlta: Date,
     usuarioAlta: String,
@@ -18,8 +18,10 @@ const Sucursal = Schema({
     estado: String,
     cp: Number,
     statusReg: String
-}, {
-    collection: 'Sucursales'
-});
+},
+    {
+        collection: 'Sucursales'
+    }
+);
 
 module.exports = mongoose.model('Sucursal', Sucursal);

@@ -8,6 +8,7 @@ const Helper = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
+const TiempoCargaDescarga = require('../controllers/TiempoCargaDescarga');
 
 function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
@@ -39,10 +40,7 @@ async function get(req, res) {
 		let arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([_idSucursal]);
 		filter.clienteFiscal_id = arrClientes[0];
 		filter.sucursal_id = arrSucursales[0];
-
 	}
-
-	console.log(filter);
 
 	Entrada.find(filter).sort({ fechaEntrada: -1 })
 		.populate({
@@ -56,7 +54,6 @@ async function get(req, res) {
 }
 
 function getById(req, res) {
-
 	let _id = req.query.id;
 
 	Entrada.findOne({ _id: _id })
@@ -71,6 +68,10 @@ function getById(req, res) {
 		.populate({
 			path: 'clienteFiscal_id',
 			model: 'ClienteFiscal'
+		})
+		.populate({
+			path: 'tiempoDescarga_id',
+			model: 'TiempoCargaDescarga'
 		})
 		.then((entrada) => {
 			res.status(200).send(entrada);
@@ -93,6 +94,24 @@ function getSalidasByEntradaID(req, res) {
 		});
 }
 
+function getxRangoFechas(req, res) {
+	let fechaInicio = new Date(req.query.fechaInicio);
+	let fechaFin = new Date(req.query.fechaFin);
+	let clienteFiscal_id = req.query.clienteFiscal_id;
+
+	Entrada.find({ clienteFiscal_id: clienteFiscal_id, fechaEntrada: { $gte: fechaInicio, $lt: fechaFin } })
+		.populate({
+			path: 'partidas',
+			model: 'Partida'
+		})
+		.then((entradas) => {
+			res.status(200).send(entradas);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
+}
+
 /**
  * Guarda una nueva entrada en la base de datos
  * Asi mismo, guarda cada una de las partidas y un movimiento de inventario
@@ -100,7 +119,6 @@ function getSalidasByEntradaID(req, res) {
 async function save(req, res) {
 	let nEntrada = new Entrada(req.body);
 
-	nEntrada.fechaAlta = new Date();
 	nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
@@ -108,10 +126,11 @@ async function save(req, res) {
 
 	nEntrada.save()
 		.then(async (entrada) => {
-
 			for (let itemPartida of req.body.partidasJson) {
 				await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 			}
+
+			TiempoCargaDescarga.setStatus(entrada.tiempoDescarga_id, { entrada_id: entrada._id, status: "ASIGNADO" });
 
 			let partidas = await Partida.post(req.body.partidasJson, entrada._id);
 			entrada.partidas = partidas;
@@ -283,6 +302,57 @@ async function validaEntrada(req, res) {
 	}
 }
 
+function getEntradasReporte(req, res) {
+	var arrPartidas = [];
+	var arrPartidasFilter = [];
+	let clasificacion = req.body.clasificacion;
+	let subclasificacion = req.body.subclasificacion;
+	let reporte = 0;
+
+	console.log(clasificacion);
+	console.log(subclasificacion);
+
+	let filter = {
+		clienteFiscal_id: req.body.clienteFiscal_id,
+		isEmpty: false
+	}
+
+
+	Entrada.find(filter, {partidas: 1, _id: 0, fechaAlta: 1})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'entrada_id',
+			model: 'Entrada',
+			select: 'stringFolio'
+		}
+	})
+	.then((entradas) => {
+		var setEntradas = JSON.parse(JSON.stringify(entradas));
+		setEntradas.forEach(entrada => {
+			var partida = JSON.parse(JSON.stringify(entrada.partidas));
+			partida = JSON.parse(JSON.stringify(partida));
+			partida.forEach(elem => {
+				arrPartidas.push(elem);
+			})		
+		});
+		if(clasificacion != undefined && subclasificacion != undefined) {
+			reporte = 1;
+			arrPartidas.forEach(element => {
+				console.log("Elemento Clasificacion: "+element.producto_id.clasificacion_id);
+				if(element.producto_id.clasificacion_id == clasificacion && element.producto_id.subclasificacion_id == subclasificacion) {
+					arrPartidasFilter.push(element);
+				}
+			});
+		}
+		res.status(200).send(reporte == 1 ? arrPartidasFilter : arrPartidas);
+	})
+	.catch((error) => {
+		console.log(error);
+		res.status(500).send(error);
+	})
+}
+
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -341,10 +411,12 @@ async function validaEntrada(req, res) {
 module.exports = {
 	get,
 	getById,
+	getxRangoFechas,
 	save,
 	update,
 	validaEntrada,
 	saveEntradaAutomatica,
-	getSalidasByEntradaID
+	getSalidasByEntradaID,
+	getEntradasReporte
 	// getPartidaById,
 }
