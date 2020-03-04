@@ -304,6 +304,10 @@ async function validaEntrada(req, res) {
 
 function getEntradasReporte(req, res) {
 	var arrPartidas = [];
+	var arrPartidasFilter = [];
+	let clasificacion = req.body.clasificacion;
+	let subclasificacion = req.body.subclasificacion;
+	let reporte = 0;
 
 	let filter = {
 		clienteFiscal_id: req.body.clienteFiscal_id,
@@ -321,7 +325,7 @@ function getEntradasReporte(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada'
-		}
+		},
 	})
 	.then((entradas) => {
 		var setEntradas = JSON.parse(JSON.stringify(entradas));
@@ -330,11 +334,22 @@ function getEntradasReporte(req, res) {
 			partida = JSON.parse(JSON.stringify(partida));
 			partida.forEach(elem => {
 				arrPartidas.push(elem);
-			})
+			})		
 		});
-		res.status(200).send(arrPartidas);
+
+		if(clasificacion != undefined && subclasificacion != undefined) {
+			reporte = 1;
+			arrPartidas.forEach(element => {
+				var elem = JSON.parse(JSON.stringify(element));
+				if(elem.producto_id.clasificacion == clasificacion && elem.producto_id.subclasificacion == subclasificacion) {
+					arrPartidasFilter.push(elem);
+				}
+			});
+		}
+		res.status(200).send(reporte == 1 ? arrPartidasFilter : arrPartidas);
 	})
 	.catch((error) => {
+		console.log(error);
 		res.status(500).send(error);
 	})
 }
