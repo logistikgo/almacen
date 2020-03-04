@@ -72,8 +72,9 @@ app.get('/api/entrada', Entrada.getById);
 app.get('/api/getSalidasByEntradaId', Entrada.getSalidasByEntradaID);
 app.get('/api/getEntradasxRangoFechas', Entrada.getxRangoFechas);
 app.get('/api/getDeliveryGroups', Helper.GetDeliveryGroups);
-app.post('/api/entrada', Entrada.save);
+app.post('/api/getEntradasReporte', Entrada.getEntradasReporte);
 app.put('/api/entrada', Entrada.update);
+app.post('/api/entrada', Entrada.save);
 app.post('/api/entradaAutomatica', Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada', Entrada.validaEntrada);
 
