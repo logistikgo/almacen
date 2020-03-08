@@ -83,6 +83,7 @@ app.get('/api/salidaByID/:salida_id', Salida.getByID);
 app.get('/api/getSalidasByIDs', Salida.getSalidasByIDs);
 app.get('/api/getSalidasxRangoFechas', Salida.getxRangoFechas);
 app.post('/api/salida', Salida.save);
+app.put('/api/salida', Salida.update);
 app.post('/api/salidaAutomatica', Salida.saveSalidaAutomatica);
 
 app.get('/api/getCtesFiscales', CteFiscal.get);
