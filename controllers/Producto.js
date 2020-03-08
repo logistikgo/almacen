@@ -29,6 +29,7 @@ async function getExistenciasByAlmacen(req, res) {
 	let almacen_id = req.params.almacen_id;
 	let producto_id = req.params.producto_id;
 	let NullParamsException = {};
+
 	try {
 		if (almacen_id == undefined || almacen_id == "") throw NullParamsException;
 		if (producto_id == undefined || producto_id == "") throw NullParamsException;
@@ -41,6 +42,7 @@ async function getExistenciasByAlmacen(req, res) {
 		let entradas = await Entrada.find({ almacen_id: almacen_id });
 		let entradas_id = entradas.map(x => x._id);
 		let partidas = await Partida.find({ entrada_id: { $in: entradas_id }, producto_id: producto_id, isEmpty: false });
+
 		partidas.forEach(function (partida) {
 			for (let x in partida.embalajesxSalir) {
 				if (existencias[x] == undefined) existencias[x] = 0;
