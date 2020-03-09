@@ -39,6 +39,7 @@ async function saveSalida(itemPartida, salida_id) {
 			nivel: posicionxSalida.nivel,
 			embalajes: posicionxSalida.embalajes
 		};
+		console.log(itemPartida.producto_id._id);
 
 		await updateExistenciaPosicion(-1, jsonFormatPosicion, itemPartida.producto_id);
 	});
@@ -237,11 +238,21 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 	/**
 	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
 	 */
+	console.log(signo);
 	console.log(posicionxPartida);
 	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
 	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
+	console.log(nivel);
+	console.log(nivel.productos.find((x) => {
+		console.log(x.producto_id.toString());
+		console.log(producto_id.toString());
+		console.log(x.producto_id.toString() == producto_id.toString());
+
+		x.producto_id.toString() == producto_id.toString()
+	}));
 
 	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == producto_id.toString()) != undefined) {
+		
 		let producto = nivel.productos.find(x => x.producto_id.toString() == producto_id.toString());
 		let flagEmbalajes = 0;
 
@@ -250,7 +261,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 				producto.embalajes[embalaje] = 0;
 			}
 			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajes[embalaje]);
-
+			console.log(producto.embalajes[embalaje]);
 			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
 		}
 
@@ -260,6 +271,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 		}
 	}
 	else {
+		console.log("no hay producto igual");
 		nivel.productos.push({
 			producto_id: producto_id,
 			embalajes: posicionxPartida.embalajes
