@@ -114,6 +114,23 @@ async function save(req, res) {
 		});
 }
 
+async function update(req, res) {
+	let bodyParams = req.body;
+	let salida_id = bodyParams.salidaid;
+
+	bodyParams.fechaSalida = new Date(bodyParams.fechaSalida);
+	bodyParams.fechaAlta = new Date();
+
+	Salida.updateOne(
+		{ _id: salida_id },
+		{ $set: req.body })
+		.then((salida) => {
+			res.status(200).send(salida);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
+}
 
 function isEmptyPartida(partida) {
 	let contEmbalajesCero = 0;
@@ -204,7 +221,6 @@ async function updatePartidasSalidaAPI(req, res) {
 }
 
 async function saveSalidasEnEntrada(entrada_id, salida_id) {
-
 	let entradas = await Entrada.find({ _id: { $in: entrada_id } }).exec();
 	console.log("ENTRADAS ENCONTRADAS DEL ARREGLO");
 	console.log(entrada_id);
@@ -219,7 +235,6 @@ async function saveSalidasEnEntrada(entrada_id, salida_id) {
 }
 
 async function saveSalidaAutomatica(req, res) {
-
 	let partidas = await PartidaModel.find({ 'InfoPedidos.IDPedido': { $in: req.body.arrIDPedidos }, isEmpty: false }).lean().exec();
 
 	if (partidas && partidas.length > 0) {
@@ -283,8 +298,6 @@ async function saveSalidaAutomatica(req, res) {
 	}
 }
 
-
-
 function getPartidasDeEntrada(partidasDeEntrada, partidasDeSalida) {
 	let IDSPartida = partidasDeSalida.map(x => x._id.toString());
 
@@ -305,6 +318,7 @@ module.exports = {
 	getByID,
 	getxRangoFechas,
 	save,
+	update,
 	getSalidasByIDs,
 	saveSalidaAutomatica,
 	updatePartidasSalidaAPI

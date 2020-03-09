@@ -5,6 +5,7 @@ const Salida = require('../models/Salida');
 const Entrada = require('../models/Entrada');
 const Pasillo = require('../models/Pasillo');
 const Posicion = require('./Posicion');
+const MovimientoInventarioController = require('./MovimientoInventario');
 const Helper = require('../helpers');
 const NullParamsException = { error: "NullParamsException" };
 const BreakException = { info: "Break" };
@@ -746,6 +747,52 @@ function _put(jNewPartida) {
         });
 }
 
+async function updatePosicionPartida(req, res) {
+    let bodyParams = req.body;
+    let partida_id = bodyParams.partida_id;
+
+    console.log(partida_id);
+
+    let partida = await Partida.findOne({ _id: partida_id }).exec();
+
+    let currentPosicion = {
+        posicion_id: partida.posiciones[0].posicion_id,
+        nivel: partida.posiciones[0].nivel,
+        embalajes: partida.posiciones[0].embalajesxSalir
+    }
+
+    await MovimientoInventarioController.updateExistenciaPosicion(-1, currentPosicion, partida.producto_id);
+
+    let newPosicion = {
+        posicion_id: bodyParams.posicion_id,
+        nivel: bodyParams.nivel,
+        embalajes: partida.posiciones[0].embalajesxSalir
+    }
+    await MovimientoInventarioController.updateExistenciaPosicion(1, newPosicion, partida.producto_id);
+
+    Partida.updateOne(
+        {
+            _id: partida_id
+        },
+        {
+            $set: {
+                "posiciones.0.pasillo": bodyParams.pasillo,
+                "posiciones.0.pasillo_id": bodyParams.pasillo_id,
+                "posiciones.0.posicion": bodyParams.posicion,
+                "posiciones.0.posicion_id": bodyParams.posicion_id,
+                "posiciones.0.nivel": bodyParams.nivel,
+                "posiciones.0.nivel_id": bodyParams.nivel_id
+            }
+        }
+    )
+        .then((partida) => {
+            res.status(200).send(partida);
+        })
+        .catch((error) => {
+            res.status(500).send(error);
+        });
+}
+
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 // function sortByfechaEntadaDesc(a, b) {
@@ -774,5 +821,6 @@ module.exports = {
     posicionar,
     _put,
     updateForSalidaAutomatica,
-    asignarEntrada
+    asignarEntrada,
+    updatePosicionPartida
 }

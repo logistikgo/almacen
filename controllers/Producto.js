@@ -29,6 +29,7 @@ async function getExistenciasByAlmacen(req, res) {
 	let almacen_id = req.params.almacen_id;
 	let producto_id = req.params.producto_id;
 	let NullParamsException = {};
+
 	try {
 		if (almacen_id == undefined || almacen_id == "") throw NullParamsException;
 		if (producto_id == undefined || producto_id == "") throw NullParamsException;
@@ -41,6 +42,7 @@ async function getExistenciasByAlmacen(req, res) {
 		let entradas = await Entrada.find({ almacen_id: almacen_id });
 		let entradas_id = entradas.map(x => x._id);
 		let partidas = await Partida.find({ entrada_id: { $in: entradas_id }, producto_id: producto_id, isEmpty: false });
+
 		partidas.forEach(function (partida) {
 			for (let x in partida.embalajesxSalir) {
 				if (existencias[x] == undefined) existencias[x] = 0;
@@ -53,6 +55,29 @@ async function getExistenciasByAlmacen(req, res) {
 		});
 
 		res.status(200).send(existencias);
+	}
+	catch (error) {
+		res.status(500).send(error);
+	}
+}
+
+async function getPartidasxProductoenExistencia(req, res) {
+	let producto_id = req.params.producto_id;
+	let NullParamsException = {};
+
+	try {
+		if (producto_id == undefined || producto_id == "")
+			throw NullParamsException;
+
+		let partidas = await Partida
+			.find({ producto_id: producto_id, isEmpty: false })
+			.populate({
+				path: 'entrada_id',
+				model: 'Entrada',
+				select: 'stringFolio'
+			});
+
+		res.status(200).send(partidas);
 	}
 	catch (error) {
 		res.status(500).send(error);
@@ -301,5 +326,6 @@ module.exports = {
 	getByIDsClientesFiscales,
 	getByClave,
 	getALM_XD,
-	getExistenciasByAlmacen
+	getExistenciasByAlmacen,
+	getPartidasxProductoenExistencia
 }

@@ -18,7 +18,7 @@ const TarifaPES = Schema(
     fechaAlta: { type: Date, default: new Date() },
     fechaBaja: Date,
     statusReg: { type: String, default: "ACTIVO" },
-    almacen_id: {type: Schema.ObjectId, ref: 'Almacen'}
+    almacen_id: { type: Schema.ObjectId, ref: 'Almacen' }
   },
   {
     collection: 'TarifasPES'
