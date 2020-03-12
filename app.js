@@ -54,6 +54,7 @@ app.get('/api/validaProducto/:clave', Producto.validaProducto);
 app.get('/api/getProductos', Producto.getByIDsClientesFiscales);
 app.get('/api/getProductosALMXD', Producto.getALM_XD);
 app.get('/api/getExistenciasByAlmacen/:almacen_id/:producto_id', Producto.getExistenciasByAlmacen);
+app.get('/api/getPartidasxProductoenExistencia/:producto_id', Producto.getPartidasxProductoenExistencia);
 
 app.get('/api/movimientosInventarioByProducto', MovimientosInventario.getByProducto);
 app.get('/api/posicionesxProducto', MovimientosInventario.getPosicionesByProducto);
@@ -156,6 +157,7 @@ app.get('/api/partidas', Partida.getByProductoEmbalaje);
 app.post('/api/partida', Partida.save);
 app.get('/api/partida/pedido/get', Partida.getByPedido);
 app.put('/api/partida/pedido/update', Partida._update);
+app.put('/api/posicionPartida', Partida.updatePosicionPartida)
 
 //app.get('/api/partida', Entrada.getPartidaById);
 //app.put('/api/partida', Entrada.updatePartida);

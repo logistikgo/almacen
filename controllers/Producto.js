@@ -61,6 +61,29 @@ async function getExistenciasByAlmacen(req, res) {
 	}
 }
 
+async function getPartidasxProductoenExistencia(req, res) {
+	let producto_id = req.params.producto_id;
+	let NullParamsException = {};
+
+	try {
+		if (producto_id == undefined || producto_id == "")
+			throw NullParamsException;
+
+		let partidas = await Partida
+			.find({ producto_id: producto_id, isEmpty: false })
+			.populate({
+				path: 'entrada_id',
+				model: 'Entrada',
+				select: 'stringFolio'
+			});
+
+		res.status(200).send(partidas);
+	}
+	catch (error) {
+		res.status(500).send(error);
+	}
+}
+
 async function getExistenciasAlmacen(almacen_id, producto) {
 	let producto_id = producto._id;
 	let NullParamsException = {};
@@ -303,5 +326,6 @@ module.exports = {
 	getByIDsClientesFiscales,
 	getByClave,
 	getALM_XD,
-	getExistenciasByAlmacen
+	getExistenciasByAlmacen,
+	getPartidasxProductoenExistencia
 }
