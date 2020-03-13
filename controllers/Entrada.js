@@ -309,48 +309,50 @@ function getEntradasReporte(req, res) {
 	let subclasificacion = req.body.subclasificacion;
 	let reporte = 0;
 
-	console.log(clasificacion);
-	console.log(subclasificacion);
-
 	let filter = {
 		clienteFiscal_id: req.body.clienteFiscal_id,
 		isEmpty: false
 	}
 
 
-	Entrada.find(filter, { partidas: 1, _id: 0, fechaAlta: 1 })
-		.populate({
-			path: 'partidas',
-			populate: {
-				path: 'entrada_id',
-				model: 'Entrada',
-				select: 'stringFolio'
-			}
-		})
-		.then((entradas) => {
-			var setEntradas = JSON.parse(JSON.stringify(entradas));
-			setEntradas.forEach(entrada => {
-				var partida = JSON.parse(JSON.stringify(entrada.partidas));
-				partida = JSON.parse(JSON.stringify(partida));
-				partida.forEach(elem => {
+	Entrada.find(filter, {partidas: 1, _id: 0, fechaAlta: 1})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'entrada_id',
+			model: 'Entrada',
+			select: 'stringFolio'
+		}
+	})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'producto_id',
+			model: 'Producto',
+		}
+	})
+	.then((entradas) => {
+		entradas.forEach(entrada => {
+			var partida = entrada.partidas;
+			//console.log(partida);
+			partida.forEach(elem => {
+				if(elem.isEmpty == false)
 					arrPartidas.push(elem);
-				})
+			})		
+		});
+		if(clasificacion != undefined && subclasificacion != undefined) {
+			reporte = 1;
+			arrPartidas.forEach(element => {
+				if(element.producto_id.clasificacion_id == clasificacion && element.producto_id.subclasificacion_id == subclasificacion) {
+					arrPartidasFilter.push(element);
+				}
 			});
-			if (clasificacion != undefined && subclasificacion != undefined) {
-				reporte = 1;
-				arrPartidas.forEach(element => {
-					console.log("Elemento Clasificacion: " + element.producto_id.clasificacion_id);
-					if (element.producto_id.clasificacion_id == clasificacion && element.producto_id.subclasificacion_id == subclasificacion) {
-						arrPartidasFilter.push(element);
-					}
-				});
-			}
-			res.status(200).send(reporte == 1 ? arrPartidasFilter : arrPartidas);
-		})
-		.catch((error) => {
-			console.log(error);
-			res.status(500).send(error);
-		})
+		}
+		res.status(200).send(reporte == 1 ? arrPartidasFilter : arrPartidas);
+	})
+	.catch((error) => {
+		res.status(500).send(error);
+	})
 }
 
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////

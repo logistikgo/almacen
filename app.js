@@ -141,6 +141,7 @@ app.put('/api/presentacion', Presentacion.update);
 app.delete('/api/presentacion', Presentacion._delete);
 
 app.get('/api/pasillos', Pasillo.get);
+app.get('/api/pasillosDisponibles', Pasillo.getDisponibles);
 app.get('/api/pasillo', Pasillo.getById);
 app.get('/api/posicionesNom', Pasillo.getPosiciones);
 

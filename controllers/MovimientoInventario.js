@@ -238,21 +238,21 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 	/**
 	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
 	 */
-	console.log(signo);
-	console.log(posicionxPartida);
+	//console.log(signo);
+	//console.log(posicionxPartida);
 	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
 	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
-	console.log(nivel);
-	console.log(nivel.productos.find((x) => {
-		console.log(x.producto_id.toString());
-		console.log(producto_id.toString());
-		console.log(x.producto_id.toString() == producto_id.toString());
+	//console.log(nivel);
+	//console.log(nivel.productos.find((x) => {
+	//	console.log(x.producto_id.toString());
+	//	console.log(producto_id.toString());
+	//	console.log(x.producto_id.toString() == producto_id.toString());
 
-		x.producto_id.toString() == producto_id.toString()
-	}));
+	//	x.producto_id.toString() == producto_id.toString()
+	//}));
 
 	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == producto_id.toString()) != undefined) {
-		
+
 		let producto = nivel.productos.find(x => x.producto_id.toString() == producto_id.toString());
 		let flagEmbalajes = 0;
 
@@ -261,22 +261,23 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 				producto.embalajes[embalaje] = 0;
 			}
 			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajes[embalaje]);
-			console.log(producto.embalajes[embalaje]);
 			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
 		}
 
 		if (flagEmbalajes == 0) {
-			// let index = posicion.niveles.productos.indexOf(producto);
-			// posicion.niveles.productos.splice(index, 1);
+			let index = nivel.productos.indexOf(producto);
+			nivel.productos.splice(index, 1);
 		}
 	}
-	else {
-		console.log("no hay producto igual");
+	else if (signo > 0) {
+		//console.log("No hay producto igual");
 		nivel.productos.push({
 			producto_id: producto_id,
 			embalajes: posicionxPartida.embalajes
 		});
 	}
+
+	//console.log(posicion.niveles);
 
 	let item = {
 		niveles: posicion.niveles
