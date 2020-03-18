@@ -252,7 +252,6 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 	//}));
 
 	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == producto_id.toString()) != undefined) {
-
 		let producto = nivel.productos.find(x => x.producto_id.toString() == producto_id.toString());
 		let flagEmbalajes = 0;
 
@@ -260,11 +259,15 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 			if (producto.embalajes[embalaje] == undefined) {
 				producto.embalajes[embalaje] = 0;
 			}
+			// console.log(signo * posicionxPartida.embalajes[embalaje]);
 			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajes[embalaje]);
-			flagEmbalajes = producto.embalajes[embalaje] > 0 ? flagEmbalajes++ : flagEmbalajes;
+			// console.log(producto.embalajes[embalaje]);
+			flagEmbalajes = producto.embalajes[embalaje] > 0 ? ++flagEmbalajes : flagEmbalajes;
+			// console.log(flagEmbalajes);
 		}
 
-		if (flagEmbalajes == 0) {
+		if (flagEmbalajes == 0 && signo < 0) {
+			// console.log("Flag is 0");
 			let index = nivel.productos.indexOf(producto);
 			nivel.productos.splice(index, 1);
 		}
