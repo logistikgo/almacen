@@ -30,6 +30,10 @@ const TarifaDXP = require('./controllers/TarifaDXP');
 const FolioIngreso = require('./controllers/FolioIngreso');
 const TiempoCargaDescarga = require('./controllers/TiempoCargaDescarga');
 const ClasificacionesProductos = require('./controllers/ClasificacionesProductos');
+const CostoDXP = require('./controllers/CostoDXP');
+const CostoFactor = require('./controllers/CostoFactor');
+const CostoFija = require('./controllers/CostoFija');
+const CostoDXP = require('./controllers/CostoPES');
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -214,5 +218,12 @@ app.post('/api/clasificacionesProductos', ClasificacionesProductos.save);
 app.put('/api/clasificacionesProductos/:_id', ClasificacionesProductos.update);
 app.delete('/api/clasificacionesProductos/:_id', ClasificacionesProductos._delete);
 app.get('/api/getValidaClasificacion', ClasificacionesProductos.getValidaClasificacion);
+
+app.get('/api/costosDXP', CostoDXP.get);
+app.get('/api/costoDXP', CostoDXP.getById);
+app.post('/api/costoDXP', CostoDXP.save);
+app.put('/api/costoDXP', CostoDXP.update);
+app.delete('/api/costoDXP', CostoDXP._delete);
+
 
 module.exports = app;
