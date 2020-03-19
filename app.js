@@ -113,7 +113,7 @@ app.put('/api/almacen', Almacen.update);
 app.delete('/api/almacen', Almacen._delete);
 app.get('/api/validaPosicion/:posicion/:nivel/:almacen_id', Almacen.validaPosicion);
 app.get('/api/ubicaciones', Almacen.getUbicaciones);
-app.get('/api/getAlmacenesFull',Almacen.getAlmacenesFull);
+app.get('/api/getAlmacenesFull', Almacen.getAlmacenesFull);
 
 app.post('/api/evidencia', Evidencia.saveEvidencia);
 app.get('/api/evidencias', Evidencia.getEvidenciasByID);
