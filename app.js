@@ -220,22 +220,27 @@ app.delete('/api/clasificacionesProductos/:_id', ClasificacionesProductos._delet
 app.get('/api/getValidaClasificacion', ClasificacionesProductos.getValidaClasificacion);
 
 app.get('/api/costosDXP', CostoDXP.get);
-app.get('/api/costoDXP', CostoDXP.getById);
+app.get('/api/costoDXP/:_id', CostoDXP.getById);
 app.post('/api/costoDXP', CostoDXP.save);
-app.put('/api/costoDXP', CostoDXP.update);
-app.delete('/api/costoDXP', CostoDXP._delete);
+app.put('/api/costoDXP/:_id', CostoDXP.update);
+app.delete('/api/costoDXP/:_id', CostoDXP._delete);
 
 app.get('/api/costosFactor', CostoFactor.get);
-app.get('/api/costoFactor', CostoFactor.getById);
+app.get('/api/costoFactor/:_id', CostoFactor.getById);
 app.post('/api/costoFactor', CostoFactor.save);
-app.put('/api/costoFactor', CostoFactor.update);
-app.delete('/api/costoFactor', CostoFactor._delete);
+app.put('/api/costoFactor/:_id', CostoFactor.update);
+app.delete('/api/costoFactor/:_id', CostoFactor._delete);
 
 app.get('/api/costosFija', CostoFija.get);
-app.get('/api/costoFija', CostoFija.getById);
+app.get('/api/costoFija/:_id', CostoFija.getById);
 app.post('/api/costoFija', CostoFija.save);
-app.put('/api/costoFija', CostoFija.update);
-app.delete('/api/costoFija', CostoFija._delete);
+app.put('/api/costoFija/:_id', CostoFija.update);
+app.delete('/api/costoFija/:_id', CostoFija._delete);
 
+app.get('/api/costosPES', CostoPES.get);
+app.get('/api/costoPES/:_id', CostoPES.getById);
+app.post('/api/costoPES', CostoPES.save);
+app.put('/api/costoPES/:_id', CostoPES.update);
+app.delete('/api/costoPES/:_id', CostoPES._delete);
 
 module.exports = app;
