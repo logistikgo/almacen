@@ -33,7 +33,7 @@ const ClasificacionesProductos = require('./controllers/ClasificacionesProductos
 const CostoDXP = require('./controllers/CostoDXP');
 const CostoFactor = require('./controllers/CostoFactor');
 const CostoFija = require('./controllers/CostoFija');
-const CostoDXP = require('./controllers/CostoPES');
+const CostoPES = require('./controllers/CostoPES');
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -224,6 +224,12 @@ app.get('/api/costoDXP', CostoDXP.getById);
 app.post('/api/costoDXP', CostoDXP.save);
 app.put('/api/costoDXP', CostoDXP.update);
 app.delete('/api/costoDXP', CostoDXP._delete);
+
+app.get('/api/costosFactor', CostoFactor.get);
+app.get('/api/costoFactor', CostoFactor.getById);
+app.post('/api/costoFactor', CostoFactor.save);
+app.put('/api/costoFactor', CostoFactor.update);
+app.delete('/api/costoFactor', CostoFactor._delete);
 
 
 module.exports = app;
