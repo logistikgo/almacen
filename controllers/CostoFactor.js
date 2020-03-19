@@ -1,6 +1,6 @@
 'use strict'
 
-const CostoFactor = require('../models//CostoFactor');
+const CostoFactor = require('../models/CostoFactor');
 
 function get(req, res) {
     CostoFactor.find({ statusReg: "ACTIVO" })

@@ -231,5 +231,11 @@ app.post('/api/costoFactor', CostoFactor.save);
 app.put('/api/costoFactor', CostoFactor.update);
 app.delete('/api/costoFactor', CostoFactor._delete);
 
+app.get('/api/costosFija', CostoFija.get);
+app.get('/api/costoFija', CostoFija.getById);
+app.post('/api/costoFija', CostoFija.save);
+app.put('/api/costoFija', CostoFija.update);
+app.delete('/api/costoFija', CostoFija._delete);
+
 
 module.exports = app;
