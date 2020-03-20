@@ -6,12 +6,12 @@ const ColumnasxTipoUsuario = require("../controllers/ColumnasxTipoUsuario");
 async function get(idUsuario, idTable) {
     let resColumnas;
 
-    await ColumnasxUsuario.findOne({idUsuario: idUsuario, idTabla: idTable})
-    .then((columnas) => {
-        resColumnas = columnas;
-    })
-    .catch((error) => {
-    });
+    await ColumnasxUsuario.findOne({ idUsuario: idUsuario, idTabla: idTable })
+        .then((columnas) => {
+            resColumnas = columnas;
+        })
+        .catch((error) => {
+        });
 
     return resColumnas;
 }
@@ -22,17 +22,17 @@ async function getColumns(req, res) {
     let idTable = req.query.idTable;
     let columnas;
 
-    try{
+    try {
         columnas = await get(idUsuario, idTable);
 
-        if(columnas == null){
+        if (columnas == null) {
             columnas = await ColumnasxTipoUsuario.get(tipousuario, idTable);
         }
         columnas = columnas == null ? [] : columnas.columnas;
-        
+
         res.status(200).send(columnas);
     }
-    catch(e){
+    catch (e) {
         res.status(500).send(e);
     }
 }

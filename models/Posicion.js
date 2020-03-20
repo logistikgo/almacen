@@ -8,8 +8,9 @@ const Posicion = Schema(
 		nombre: String,
 		niveles: [{
 			nombre: String,
+			isCandadoDisponibilidad: Boolean,
 			productos: [{
-				producto_id:{type:Schema.ObjectId, ref:"Producto"},
+				producto_id: { type: Schema.ObjectId, ref: "Producto" },
 				embalajes: {},
 				pesoBruto: Number,
 				pesoNeto: Number
@@ -17,10 +18,10 @@ const Posicion = Schema(
 		}],
 		estatus: String,
 		almacen_id: {
-			type:Schema.ObjectId, 
-			ref:'Almacen'
+			type: Schema.ObjectId,
+			ref: 'Almacen'
 		},
-		pasillo_id: {type:Schema.ObjectId, ref:"Pasillo"},
+		pasillo_id: { type: Schema.ObjectId, ref: "Pasillo" },
 		fechaAlta: Date,
 		usuarioAlta_id: Number,
 		usuarioAla: String,

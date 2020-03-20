@@ -7,12 +7,12 @@ const Pasillo = Schema(
 	{
 		nombre: String,
 		almacen_id: {
-			type:Schema.ObjectId, 
-			ref:'Almacen'
+			type: Schema.ObjectId,
+			ref: 'Almacen'
 		},
 		posiciones: [{
 			posicion_id: {
-				type: Schema.ObjectId, 
+				type: Schema.ObjectId,
 				ref: "Posicion"
 			},
 			prioridad: Number
