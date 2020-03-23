@@ -94,33 +94,33 @@ function _delete(req, res) {
 function getByTarifa(req, res) {
 	let tipoTarifaPrecio = req.params.tipoTarifaPrecio;
 
-	ClienteFiscal.find({tipoTarifaPrecio : tipoTarifaPrecio, statusReg: "ACTIVO", hasTarifa: false})
-	.then((cliente) => {
-		res.status(200).send(cliente);
-	})
-	.catch((error) => {
-		res.status(500).send(error);
-	});
+	ClienteFiscal.find({ tipoTarifaPrecio: tipoTarifaPrecio, statusReg: "ACTIVO", hasTarifa: false })
+		.then((cliente) => {
+			res.status(200).send(cliente);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
 }
 
 function setHasTarifa(_id) {
-	ClienteFiscal.updateOne({_id: _id}, {$set: {hasTarifa: true}}).exec();
+	ClienteFiscal.updateOne({ _id: _id }, { $set: { hasTarifa: true } }).exec();
 }
 
 function removeTarifa(_id) {
-	ClienteFiscal.updateOne({_id: _id}, {$set: {hasTarifa: false}}).exec();
+	ClienteFiscal.updateOne({ _id: _id }, { $set: { hasTarifa: false } }).exec();
 }
 
 function getValidacionCliente(req, res) {
 	let nCliente = new ClienteFiscal(req.body);
 
-	ClienteFiscal.find({rfc: nCliente.rfc})
-	.then((cliente) => {
-		res.status(200).send(cliente);
-	})
-	.catch((error) => {
-		res.status(500).send(error);
-	})
+	ClienteFiscal.find({ rfc: nCliente.rfc })
+		.then((cliente) => {
+			res.status(200).send(cliente);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		})
 }
 
 module.exports = {
