@@ -324,38 +324,43 @@ function getReportePartidas(req, res) {
 	})
 	.then((salidas) => {
 		salidas.forEach(salida => {
-			let paramsSalida = {
-				_id: salida._id,
-				stringFolio: salida.stringFolio,
-				fechaAlta: salida.fechaAlta,
-				fechaSalida: salida.fechaSalida,
-				transportista: salida.transportista,
-				placas: salida.placas,
-				placasRemolque: salida.placasRemolque,
-				placasTrailer: salida.placasTrailer,
-				embarco: salida.embarco,
-				operador: salida.operador,
-				referencia: salida.referencia,
-				item: salida.item
-			}
+			
 			partidas = salida.partidas;
 
 			partidas.forEach((partida) => {
-				paramsSalida.clave = partida.clave;
-				paramsSalida.lote = partida.lote;
-				paramsSalida.descripcion = partida.descripcion;
-				paramsSalida.posiciones = partida.posiciones;
-				
+				let embalajes;
 				salidas_id = partida.salidas_id;
 
 				salidas_id.forEach(elem => {
 					let elemId = elem.salida_id;
-					let paramId = paramsSalida._id;
+					let paramId = salida._id;
 					if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
-						paramsSalida.embalajes = elem.embalajes;
+						embalajes = elem.embalajes;
 					}
 				})
+
+				var paramsSalida = {
+					_id: salida._id,
+					stringFolio: salida.stringFolio,
+					fechaAlta: salida.fechaAlta,
+					fechaSalida: salida.fechaSalida,
+					transportista: salida.transportista,
+					placas: salida.placas,
+					placasRemolque: salida.placasRemolque,
+					placasTrailer: salida.placasTrailer,
+					embarco: salida.embarco,
+					operador: salida.operador,
+					referencia: salida.referencia,
+					item: salida.item,
+					clave: partida.clave,
+					lote: partida.lote,
+					descripcion: partida.descripcion,
+					posiciones: partida.posiciones,
+					embalajes: embalajes
+				}
+
 				arrPartidas.push(paramsSalida);
+
 			})
 		})
 		res.status(200).send(arrPartidas);
