@@ -87,6 +87,7 @@ app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
 app.get('/api/getSalidasByIDs', Salida.getSalidasByIDs);
 app.get('/api/getSalidasxRangoFechas', Salida.getxRangoFechas);
+app.get('/api/getSalidasReporte', Salida.getReportePartidas);
 app.post('/api/salida', Salida.save);
 app.put('/api/salida', Salida.update);
 app.post('/api/salidaAutomatica', Salida.saveSalidaAutomatica);
