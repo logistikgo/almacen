@@ -2,7 +2,7 @@
 
 const ColumnasxOperacion = require('../models/ColumnasxOperacion');
 
-function get(req,res){
+function get(req, res) {
     let tabla = req.params.idTable;
     let clienteFiscal_id = req.params.clienteFiscal_id;
     let sucursal_id = req.params.sucursal_id;
@@ -14,10 +14,10 @@ function get(req,res){
         almacen_id: almacen_id,
         idTabla: tabla
     })
-    .then((columnas)=>{
-        console.log(columnas);
-        res.status(200).send(columnas);
-    })
+        .then((columnas) => {
+            console.log(columnas);
+            res.status(200).send(columnas);
+        })
 }
 
 module.exports = {

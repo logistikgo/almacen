@@ -334,7 +334,6 @@ function getEntradasReporte(req, res) {
 	.then((entradas) => {
 		entradas.forEach(entrada => {
 			var partida = entrada.partidas;
-			//console.log(partida);
 			partida.forEach(elem => {
 				if(elem.isEmpty == false)
 					arrPartidas.push(elem);

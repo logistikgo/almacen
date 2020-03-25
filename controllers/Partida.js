@@ -68,6 +68,62 @@ async function getBySalida(req, res) {
     res.status(200).send(partidas);
 }
 
+function getBySalidaConIDCarga(req, res) {
+    let salida_id = req.params.salida_id;
+    let campoOrderIDCarga = req.query.campoOrderIDCarga;
+    let tipoOrderIDCarga = req.query.tipoOrderIDCarga;
+
+    Salida.findOne({ _id: salida_id })
+        .populate({
+            path: 'partidas',
+            model: 'Partida'
+        })
+        .then(async (salida) => {
+            let partidas = salida.partidas;
+            let resPartidas = [];
+            let i = 1;
+
+            if (campoOrderIDCarga != undefined && tipoOrderIDCarga != undefined) {
+                partidas.sort(function (a, b) {
+                    if (a[campoOrderIDCarga] > b[campoOrderIDCarga])
+                        return 1;
+                    if (a[campoOrderIDCarga] < b[campoOrderIDCarga])
+                        return -1;
+                    return 0;
+                });
+
+                if (tipoOrderIDCarga == -1)
+                    partidas.reverse();
+            }
+
+            await Helper.asyncForEach(partidas, async function (partida) {
+                if (campoOrderIDCarga != undefined && tipoOrderIDCarga != undefined) {
+                    partida.posicionCarga = i;
+                    resPartidas.push(partida);
+                    i++;
+                }
+                else
+                    if (partida.posicionCarga !== undefined)
+                        resPartidas.push(partida);
+            });
+
+            res.status(200).send(resPartidas);
+        });
+}
+
+async function saveIDCarga(req, res){
+    let partidas = req.body.partidas;
+    console.log(partidas);
+    let resPartidas = [];
+
+    await Helper.asyncForEach(partidas, async function (partida) {
+        await Partida.updateOne({ _id: partida._id }, { $set: { posicionCarga: partida.posicionCarga} }).exec();
+        resPartidas.push(partida);
+    });
+
+    res.status(200).send(resPartidas);
+}
+
 /* Guarda para cada partida, las cantidades restantes y updatea la Entrada isEmpty a true
 si todas las partidas estan vacias */
 async function put(arrPartidas, salida_id) {
@@ -812,6 +868,8 @@ module.exports = {
     addSalida,
     getByEntrada,
     getBySalida,
+    getBySalidaConIDCarga,
+    saveIDCarga,
     put,
     getByProductoEmbalaje,
     getPartidasByIDs,
