@@ -67,7 +67,8 @@ const Partida = Schema(
         isEmpty: { type: Boolean, default: false },
         origen: { type: String, default: "ALM" },
         tipo: { type: String, default: "NORMAL" },
-        status: { type: String, default: "ASIGNADA" }
+        status: { type: String, default: "ASIGNADA" },
+        posicionCarga: Number
     },
     {
         collection: 'Partidas'

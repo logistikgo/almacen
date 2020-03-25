@@ -94,6 +94,7 @@ async function save(req, res) {
 
 	nSalida.save()
 		.then(async (salida) => {
+			//si es pedido, no hace afectacion de existencias
 			for (let itemPartida of req.body.jsonPartidas) {
 				await MovimientoInventario.saveSalida(itemPartida, salida.id);
 			}
@@ -311,6 +312,65 @@ function getPartidasDeEntrada(partidasDeEntrada, partidasDeSalida) {
 	return partidas;
 }
 
+function getReportePartidas(req, res) {
+	var arrPartidas = [];
+	var partidas = [];
+	var salidas_id = [];
+
+	Salida.find({clienteFiscal_id: req.query.clienteFiscal_id})
+	.populate({
+		path: 'partidas',
+		model: 'Partida',
+	})
+	.then((salidas) => {
+		salidas.forEach(salida => {
+			
+			partidas = salida.partidas;
+
+			partidas.forEach((partida) => {
+				let embalajes;
+				salidas_id = partida.salidas_id;
+
+				salidas_id.forEach(elem => {
+					let elemId = elem.salida_id;
+					let paramId = salida._id;
+					if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
+						embalajes = elem.embalajes;
+					}
+				})
+
+				var paramsSalida = {
+					_id: salida._id,
+					stringFolio: salida.stringFolio,
+					fechaAlta: salida.fechaAlta,
+					fechaSalida: salida.fechaSalida,
+					transportista: salida.transportista,
+					placas: salida.placas,
+					placasRemolque: salida.placasRemolque,
+					placasTrailer: salida.placasTrailer,
+					embarco: salida.embarco,
+					operador: salida.operador,
+					referencia: salida.referencia,
+					item: salida.item,
+					clave: partida.clave,
+					lote: partida.lote,
+					descripcion: partida.descripcion,
+					posiciones: partida.posiciones,
+					embalajes: embalajes
+				}
+
+				arrPartidas.push(paramsSalida);
+
+			})
+		})
+		res.status(200).send(arrPartidas);
+	})
+	.catch((error) => {
+		res.status(500).send(error);
+		console.log(error);
+	});
+}
+
 
 
 module.exports = {
@@ -321,5 +381,6 @@ module.exports = {
 	update,
 	getSalidasByIDs,
 	saveSalidaAutomatica,
-	updatePartidasSalidaAPI
+	updatePartidasSalidaAPI,
+	getReportePartidas
 }
