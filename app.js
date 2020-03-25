@@ -160,6 +160,8 @@ app.get('/api/partidasByIDs', Partida.getPartidasByIDs);
 app.get('/api/partida/:filtro', Partida.get);
 app.get('/api/partida/entrada/:entrada_id', Partida.getByEntrada);
 app.get('/api/partida/salida/:salida_id', Partida.getBySalida);
+app.get('/api/partida/salida/idcarga/:salida_id', Partida.getBySalidaConIDCarga);
+app.put('/api/partida/saveIDCarga', Partida.saveIDCarga);
 app.get('/api/partidas', Partida.getByProductoEmbalaje);
 app.post('/api/partida', Partida.save);
 app.get('/api/partida/pedido/get', Partida.getByPedido);
