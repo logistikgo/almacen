@@ -59,7 +59,9 @@ const Producto = Schema({
 	vidaAnaquel: Number,
 	garantiaFrescura: Number,
 	alertaAmarilla: Number,
-	alertaRoja: Number
+	alertaRoja: Number,
+	isSafetyStock: Boolean,
+	safetystock: Number
 },
 	{ collection: 'Productos' }
 );
