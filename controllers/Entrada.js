@@ -181,6 +181,7 @@ async function saveEntradaAutomatica(req, res) {
 				for (let itemPartida of partidas) {
 					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 				}
+				console.log(entrada);
 				res.status(200).send(entrada);
 			})
 			.catch((error) => {
@@ -206,7 +207,9 @@ async function validaEntradaDuplicado(embarque) {
 async function update(req, res) {
 	let bodyParams = req.body;
 	let entrada_id = bodyParams.entrada_id;
+	console.log("1");
 
+	
 	req.body.fechaEntrada = new Date(bodyParams.fechaEntrada);
 	req.body.fechaAlta = new Date();
 
@@ -223,7 +226,6 @@ async function update(req, res) {
 					movimiento.save();
 				});
 			});
-
 		//Validacion de cambio de status
 		let partidasPosicionadas = (req.body.partidasJson).filter(x => x.posiciones.length > 0);
 
@@ -231,12 +233,20 @@ async function update(req, res) {
 			req.body.status = "APLICADA";
 	}
 	else {
-		console.log("EDIT PARTIDA");
 		for (let partida of req.body.partidasJson) {
 			Partida._put(partida);
 		}
 	}
-
+	//***----begintemporal---***//
+	for (let itemPartida of req.body.partidasJson) 
+	{
+		if(!("_id" in itemPartida)){
+			console.log("movimiento");
+			await MovimientoInventario.saveEntrada(itemPartida, entrada_id);
+		}
+	}
+	let partidas = await Partida.post(req.body.partidasJson, entrada_id);
+	//***----Endtemporal---***//
 	Entrada.updateOne(
 		{ _id: entrada_id },
 		{ $set: req.body })
