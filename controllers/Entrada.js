@@ -237,15 +237,15 @@ async function update(req, res) {
 			Partida._put(partida);
 		}
 	}
-	//***----begintemporal---***//
-	for (let itemPartida of req.body.partidasJson) 
-	{
-		if(!("_id" in itemPartida)){
-			console.log("movimiento");
-			await MovimientoInventario.saveEntrada(itemPartida, entrada_id);
-		}
-	}
-	let partidas = await Partida.post(req.body.partidasJson, entrada_id);
+	// //***----begintemporal---***//
+	// for (let itemPartida of req.body.partidasJson) 
+	// {
+	// 	if(!("_id" in itemPartida)){
+	// 		console.log("movimiento");
+	// 		await MovimientoInventario.saveEntrada(itemPartida, entrada_id);
+	// 	}
+	// }
+	// let partidas = await Partida.post(req.body.partidasJson, entrada_id);
 	//***----Endtemporal---***//
 	Entrada.updateOne(
 		{ _id: entrada_id },

@@ -171,11 +171,11 @@ async function put(arrPartidas, salida_id) {
 
 async function post(arrPartidas, entrada_id) {
     var arrPartidas_id = [];
-    console.log("adssssssssssssssssssssssssssssssssssssssssssssssss");
+    //console.log("adssssssssssssssssssssssssssssssssssssssssssssssss");
     await Helper.asyncForEach(arrPartidas, async function (partida) {
-        console.log(partida);
+        //console.log(partida);
         if(!("_id" in partida)){
-            console.log("introooooooooooooooooooooooo");
+            //console.log("introooooooooooooooooooooooo");
             let nPartida = new Partida(partida);
             nPartida.entrada_id = entrada_id;
             await nPartida.save().then((partida) => {
@@ -184,7 +184,7 @@ async function post(arrPartidas, entrada_id) {
         }
 
     });
-    console.log("ENNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNDDDDDDDDDDDDD");
+    //console.log("ENNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNDDDDDDDDDDDDD");
     return arrPartidas_id;
 }
 
