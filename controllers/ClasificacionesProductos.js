@@ -2,7 +2,7 @@
 
 const ClasificacionesProductos = require('../models/ClasificacionesProductos');
 
-var arrClasificaciones=[];
+var arrClasificaciones = [];
 
 function get(req, res) {
     ClasificacionesProductos.find({ statusReg: "ACTIVO" })
@@ -28,7 +28,7 @@ function getById(req, res) {
 
 function save(req, res) {
     req.body.fechaAlta = new Date();
-    
+
     let nClasificacion = new ClasificacionesProductos(req.body);
 
     nClasificacion.save()
@@ -43,7 +43,7 @@ function save(req, res) {
 function update(req, res) {
     let _id = req.params._id;
 
-    ClasificacionesProductos.updateOne({ _id: _id}, { $set: req.body })
+    ClasificacionesProductos.updateOne({ _id: _id }, { $set: req.body })
         .then((data) => {
             res.status(200).send(data);
         })
@@ -76,7 +76,7 @@ const busquedaArr = (arreglo, busqueda, izquierda, derecha) => {
         if (busqueda > mitad) {
             izquierda = indiceMitad + 1
             return busquedaArr(arreglo, busqueda, izquierda, derecha);
-        } 
+        }
         else {
             derecha = indiceMitad - 1
             return busquedaArr(arreglo, busqueda, izquierda, derecha);
@@ -87,30 +87,30 @@ const busquedaArr = (arreglo, busqueda, izquierda, derecha) => {
 async function getValidaClasificacion(req, res) {
     let arr = req.query.subclasificacion;
 
-    await ClasificacionesProductos.aggregate([{$unwind: "$subclasificacion"}, {$project: {_id:0, nombre:"$subclasificacion.nombre"}}],
-    function (err, res) {
-        var array=[];
-        if(res) {
-            res.forEach(
-                function(clasificacion) {
-                    array.push(clasificacion.nombre);
-                }
-            );
-            array.sort();
-            arrClasificaciones = array;
-        }
-        else
-            console.log(err);
-    })
+    await ClasificacionesProductos.aggregate([{ $unwind: "$subclasificacion" }, { $project: { _id: 0, nombre: "$subclasificacion.nombre" } }],
+        function (err, res) {
+            var array = [];
+            if (res) {
+                res.forEach(
+                    function (clasificacion) {
+                        array.push(clasificacion.nombre);
+                    }
+                );
+                array.sort();
+                arrClasificaciones = array;
+            }
+            else
+                console.log(err);
+        })
     arr.forEach(element => {
-        if(busquedaArr(arrClasificaciones, element.nombre, 0, arrClasificaciones.length-1) != -1) {
+        if (busquedaArr(arrClasificaciones, element.nombre, 0, arrClasificaciones.length - 1) != -1) {
             res.status(500).send("ERROR BACKEND");
         }
     })
     res.status(200).send("SUCCESS BACKEND");
 }
 
-module.exports ={
+module.exports = {
     get,
     getById,
     save,

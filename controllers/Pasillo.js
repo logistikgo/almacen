@@ -93,28 +93,29 @@ function getDisponibles(req, res) {
 			let disponibles = [];
 
 			for (let pasillo of data) {
-				let isAgregado = false;
 				for (let pos of pasillo.posiciones) {
 					let posicion = pos.posicion_id;
-
-					//posicion.niveles.find(x=>(x) || ());
-					for (let nivel of posicion.niveles) {
-
-
-						if (disponibles.find(x => x == pasillo) != undefined)
+					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false || x.productos.length == 0) != undefined) {
+						if (disponibles.find(x => x == pasillo) == undefined)
 							disponibles.push(pasillo);
 						else
 							break;
 					}
+					// for (let nivel of posicion.niveles) {
+					// 	if (nivel.isCandadoDisponibilidad == false || nivel.productos.length == 0) {
+					// 		if (disponibles.find(x => x == pasillo) == undefined)
+					// 			disponibles.push(pasillo);
+					// 		else
+					// 			break;
+					// 	}
+					// }
 				}
 			}
 
-			res.status(200).send(posiciones);
+			res.status(200).send(disponibles);
 		})
 		.catch((error) => {
-			return res.status(500).send({
-				message: error
-			});
+			res.status(500).send(error);
 		});
 }
 

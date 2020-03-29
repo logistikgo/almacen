@@ -43,6 +43,42 @@ function getxPasillo(req, res) {
 		})
 }
 
+function getxPasilloDisponibles(req, res) {
+	let pasillo_id = req.query.pasillo_id;
+
+	Posicion.find({
+		pasillo_id: new ObjectId(pasillo_id),
+		statusReg: "ACTIVO"
+	})
+		.sort({ nombre: 1 })
+		.then((posiciones) => {
+			let disponibles = [];
+
+			for (let pos of posiciones) {
+				if (pos.niveles.find(x => x.isCandadoDisponibilidad == false || x.productos.length == 0) != undefined) {
+					if (disponibles.find(x => x == pos) == undefined)
+						disponibles.push(pos);
+					else
+						break;
+				}
+
+				// for (let nivel of pos.niveles) {
+				// 	if (nivel.isCandadoDisponibilidad == false || nivel.productos.length == 0) {
+				// 		if (disponibles.find(x => x == pos) == undefined)
+				// 			disponibles.push(pos);
+				// 		else
+				// 			break;
+				// 	}
+				// }
+			}
+
+			res.status(200).send(disponibles);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		})
+}
+
 function getById(req, res) {
 	let idPosicion = req.query.idPosicion;
 
@@ -185,7 +221,12 @@ function getPosicionAutomatica(req, res) {
 						};
 
 						if (posiciones.length < cantidad)
-							posiciones.push(posicionNomenclatura);
+							if(nivel.isCandadoDisponibilidad!=undefined) {
+								if(nivel.isCandadoDisponibilidad ==false)
+									posiciones.push(posicionNomenclatura);
+							}
+							else
+								posiciones.push(posicionNomenclatura);
 						else
 							break;
 					}
@@ -292,6 +333,7 @@ async function updateExistencia(signo, posicionxPartida, producto_id) {
 module.exports = {
 	get,
 	getxPasillo,
+	getxPasilloDisponibles,
 	getById,
 	getNivel,
 	getPosicionesxProducto,
