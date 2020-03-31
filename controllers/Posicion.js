@@ -221,7 +221,12 @@ function getPosicionAutomatica(req, res) {
 						};
 
 						if (posiciones.length < cantidad)
-							posiciones.push(posicionNomenclatura);
+							if(nivel.isCandadoDisponibilidad!=undefined) {
+								if(nivel.isCandadoDisponibilidad ==false)
+									posiciones.push(posicionNomenclatura);
+							}
+							else
+								posiciones.push(posicionNomenclatura);
 						else
 							break;
 					}
