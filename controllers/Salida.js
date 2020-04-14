@@ -118,7 +118,6 @@ async function save(req, res) {
 async function update(req, res) {
 	let bodyParams = req.body;
 	let salida_id = bodyParams.salidaid;
-
 	bodyParams.fechaSalida = new Date(bodyParams.fechaSalida);
 	bodyParams.fechaAlta = new Date();
 
@@ -356,6 +355,7 @@ function getReportePartidas(req, res) {
 					lote: partida.lote,
 					descripcion: partida.descripcion,
 					posiciones: partida.posiciones,
+					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes
 				}
 
