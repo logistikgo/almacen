@@ -118,8 +118,13 @@ async function save(req, res) {
 async function update(req, res) {
 	let bodyParams = req.body;
 	let salida_id = bodyParams.salidaid;
+	
 	bodyParams.fechaSalida = new Date(bodyParams.fechaSalida);
 	bodyParams.fechaAlta = new Date();
+
+	for (let partida of req.body.jsonPartidas) {
+		Partida._put(partida);
+	}
 
 	Salida.updateOne(
 		{ _id: salida_id },

@@ -468,6 +468,7 @@ async function getByProductoEmbalaje(req, res) {
                         lote: partida.lote,
                         clave: partida.clave,
                         descripcion: partida.descripcion,
+                        fechaCaducidad: partida.fechaCaducidad ? partida.fechaCaducidad : "",
                         isEmpty: partida.isEmpty,
                         _id: partida._id,
                         _idLocal: partida._id + '/' + subConsecutivo,
