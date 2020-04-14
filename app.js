@@ -35,10 +35,8 @@ const CostoFactor = require('./controllers/CostoFactor');
 const CostoFija = require('./controllers/CostoFija');
 const CostoPES = require('./controllers/CostoPES');
 
-app.use(bodyParser.urlencoded({
-	extended: false
-}));
-app.use(bodyParser.json());
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 
 app.use(function (req, res, next) {
 	res.header("Access-Control-Allow-Origin", "*");
@@ -167,6 +165,7 @@ app.post('/api/partida', Partida.save);
 app.get('/api/partida/pedido/get', Partida.getByPedido);
 app.put('/api/partida/pedido/update', Partida._update);
 app.put('/api/posicionPartida', Partida.updatePosicionPartida)
+app.put('/api/partida/updateCajasPedidas', Partida.updateCajasPedidas);
 
 //app.get('/api/partida', Entrada.getPartidaById);
 //app.put('/api/partida', Entrada.updatePartida);
