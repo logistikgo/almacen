@@ -167,6 +167,7 @@ app.post('/api/partida', Partida.save);
 app.get('/api/partida/pedido/get', Partida.getByPedido);
 app.put('/api/partida/pedido/update', Partida._update);
 app.put('/api/posicionPartida', Partida.updatePosicionPartida)
+app.put('/api/partida/updateCajasPedidas', Partida.updateCajasPedidas);
 
 //app.get('/api/partida', Entrada.getPartidaById);
 //app.put('/api/partida', Entrada.updatePartida);

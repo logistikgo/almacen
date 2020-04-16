@@ -41,6 +41,7 @@ async function getByEntrada(req, res) {
 
     Partida.find({ entrada_id: entrada_id })
         .then((partidas) => {
+            console.log(partidas);
             res.status(200).send(partidas);
         })
         .catch((error) => {
@@ -467,6 +468,7 @@ async function getByProductoEmbalaje(req, res) {
                         lote: partida.lote,
                         clave: partida.clave,
                         descripcion: partida.descripcion,
+                        fechaCaducidad: partida.fechaCaducidad ? partida.fechaCaducidad : "",
                         isEmpty: partida.isEmpty,
                         _id: partida._id,
                         _idLocal: partida._id + '/' + subConsecutivo,
@@ -854,6 +856,17 @@ async function updatePosicionPartida(req, res) {
         });
 }
 
+async function updateCajasPedidas(req, res) {
+    let id = req.body.id;
+    console.log(id);
+    await Partida.updateOne({_id: id }, { $set: {"CajasPedidas": { "cajas" : req.body. pedidos} } })
+        .then((partida) => {
+            res.status(200).send(partida);
+        })
+        .catch((error) => {
+            res.status(500).send(error);
+        });
+}
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 // function sortByfechaEntadaDesc(a, b) {
@@ -885,5 +898,6 @@ module.exports = {
     _put,
     updateForSalidaAutomatica,
     asignarEntrada,
-    updatePosicionPartida
+    updatePosicionPartida,
+    updateCajasPedidas
 }

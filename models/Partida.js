@@ -45,6 +45,7 @@ const Partida = Schema(
         embalajesEntrada: {},
         embalajesxSalir: {},
         embalajesAlmacen: {},
+        CajasPedidas:{},
         InfoPedidos: [
             {
                 IDPedido: Number,

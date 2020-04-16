@@ -207,13 +207,12 @@ async function validaEntradaDuplicado(embarque) {
 async function update(req, res) {
 	let bodyParams = req.body;
 	let entrada_id = bodyParams.entrada_id;
-	console.log("1");
 
-	
 	req.body.fechaEntrada = new Date(bodyParams.fechaEntrada);
 	req.body.fechaAlta = new Date();
 
 	if (req.body.status == "SIN_POSICIONAR") {
+		console.log("1");
 		Partida.posicionar(req.body.partidasJson, bodyParams.almacen_id);
 
 		//Updatea los movimientos de esta entrada, les asigna el campo almacen_id y clienteFiscal_id
