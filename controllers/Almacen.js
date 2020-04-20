@@ -10,6 +10,8 @@ const PosicionModel = require('../models/Posicion');
 const Pasillo = require('../controllers/Pasillo');
 const PasilloModel = require('../models/Pasillo');
 
+const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
+
 var ObjectId = (require('mongoose').Types.ObjectId);
 
 async function getNextID() {
@@ -243,6 +245,24 @@ function validaPosicion(req, res) {
 		})
 }
 
+async function getBySurcursalClienteXD(req, res) {
+	let _arrSucursales = await Interfaz_ALM_XD.getIDSucursalALM([req.query.IDSucursal]);
+	let arrClientes = await Interfaz_ALM_XD.getIDClienteALM([req.query.IDClienteFiscal]);
+	let filtro={
+		sucursal_id: { $in: _arrSucursales },
+		statusReg: "ACTIVO"
+	};
+	//if (arrClientes != undefined && arrClientes.length > 0)
+     //   filtro.arrClientes = { $in: arrClientes };
+
+	Almacen.find(filtro, (err, almacenes) => {
+		if (err)
+			return res.status(500).send(err);
+
+		res.status(200).send(almacenes);
+	});
+}
+
 module.exports = {
 	getAlmacenesFull,
 	getAlmacen,
@@ -253,5 +273,6 @@ module.exports = {
 	update,
 	_delete,
 	validaPosicion,
-	getUbicaciones
+	getUbicaciones,
+	getBySurcursalClienteXD
 }
