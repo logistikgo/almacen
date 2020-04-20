@@ -111,6 +111,7 @@ app.delete('/api/sucursal', Sucursal._delete);
 
 app.get('/api/getAlmacen/:idAlmacen', Almacen.getAlmacen);
 app.get('/api/almacen', Almacen.getById);
+app.get('/api/getBySurcursalClienteXD', Almacen.getBySurcursalClienteXD);
 app.get('/api/almacenes', Almacen.get);
 app.get('/api/almacenesCatalogo', Almacen.getCatalogo);
 app.post('/api/saveAlmacen', Almacen.save);
