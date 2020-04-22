@@ -681,7 +681,10 @@ async function save(req, res) {
         var arrPartidas_id = [];
         let arrPartidas = req.body.partidas;
         await Helper.asyncForEach(arrPartidas, async function (partida) {
+            partida.InfoPedidos[0].IDAlmacen=req.body.IDAlmacen;
             let nPartida = new Partida(partida);
+            console.log(nPartida.InfoPedidos[0].IDAlmacen);
+            console.log(nPartida);
             await nPartida.save().then((partida) => {
                 arrPartidas_id.push(partida._id);
             });
