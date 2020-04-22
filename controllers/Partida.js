@@ -341,7 +341,7 @@ function isEmptyPartida(partida) {
 
     for (let embalaje in partida.embalajesxSalir) { tamEmbalajes += 1; } //Se obtiene la cantidad de embalajes
     for (let embalaje in partida.embalajesxSalir) {  //Obtiene la cantidad de embalajes con cero
-        if (partida.embalajesxSalir[embalaje] == 0) contEmbalajesCero += 1;
+        if (partida.embalajesxSalir[embalaje] < 1) contEmbalajesCero += 1;
     }
 
     // Si la cantidad de embalajes es igual a la cantidad de embalajes con cero
