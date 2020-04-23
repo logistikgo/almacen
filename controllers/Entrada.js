@@ -146,8 +146,6 @@ async function save(req, res) {
 
 async function saveEntradaAutomatica(req, res) {
 	var mongoose = require('mongoose');
-	let partidas = await PartidaModel.find({ 'InfoPedidos.IDPedido': { $in: req.body.arrIDPedidos } }).lean().exec();
-
 	//let isEntrada = await validaEntradaDuplicado(bodyParams.embarque); //Valida si ya existe
 
 	if (partidas && partidas.length > 0) {
