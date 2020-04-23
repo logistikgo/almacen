@@ -145,8 +145,7 @@ async function save(req, res) {
 }
 
 async function saveEntradaAutomatica(req, res) {
-	let partidas = await PartidaModel.find({ 'InfoPedidos.IDPedido': { $in: req.body.arrIDPedidos } }).lean().exec();
-
+	var mongoose = require('mongoose');
 	//let isEntrada = await validaEntradaDuplicado(bodyParams.embarque); //Valida si ya existe
 
 	if (partidas && partidas.length > 0) {
@@ -159,6 +158,7 @@ async function saveEntradaAutomatica(req, res) {
 		nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
 			return total + valor;
 		});
+		nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
 		nEntrada.clienteFiscal_id = arrClientes[0];
 		nEntrada.sucursal_id = arrSucursales[0];
 		nEntrada.status = "SIN_POSICIONAR";

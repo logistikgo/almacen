@@ -341,7 +341,7 @@ function isEmptyPartida(partida) {
 
     for (let embalaje in partida.embalajesxSalir) { tamEmbalajes += 1; } //Se obtiene la cantidad de embalajes
     for (let embalaje in partida.embalajesxSalir) {  //Obtiene la cantidad de embalajes con cero
-        if (partida.embalajesxSalir[embalaje] == 0) contEmbalajesCero += 1;
+        if (partida.embalajesxSalir[embalaje] < 1) contEmbalajesCero += 1;
     }
 
     // Si la cantidad de embalajes es igual a la cantidad de embalajes con cero
@@ -681,7 +681,10 @@ async function save(req, res) {
         var arrPartidas_id = [];
         let arrPartidas = req.body.partidas;
         await Helper.asyncForEach(arrPartidas, async function (partida) {
+            partida.InfoPedidos[0].IDAlmacen=req.body.IDAlmacen;
             let nPartida = new Partida(partida);
+            console.log(nPartida.InfoPedidos[0].IDAlmacen);
+            console.log(nPartida);
             await nPartida.save().then((partida) => {
                 arrPartidas_id.push(partida._id);
             });

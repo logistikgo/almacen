@@ -145,7 +145,7 @@ function isEmptyPartida(partida) {
 
 	for (let embalaje in partida.embalajes) { tamEmbalajes += 1; } //Se obtiene la cantidad de embalajes
 	for (let embalaje in partida.embalajes) {  //Obtiene la cantidad de embalajes con cero
-		if (partida.embalajes[embalaje] == 0) contEmbalajesCero += 1;
+		if (partida.embalajes[embalaje] < 1) contEmbalajesCero += 1;
 	}
 
 	if (partida.pesoBruto == 0 && partida.pesoNeto == 0)
@@ -192,7 +192,7 @@ async function updatePartidasSalidaAPI(req, res) {
 		let partidaEncontrada = partidasDeSalida.find(x => x._id.toString() == partidaDeEntrada._id.toString());
 		if (partidaEncontrada != undefined) {
 			for (let embalajeDeSalida in partidaEncontrada.embalajes) {
-				if (partidaDeEntrada.embalajes[embalajeDeSalida]) {
+				if (partidaDeEntrada.embalajes[embalajeDeSalida] && partidaDeEntrada.embalajes[embalajeDeSalida] > 0) {
 					partidaDeEntrada.embalajes[embalajeDeSalida] -= partidaEncontrada.embalajes[embalajeDeSalida];
 				}
 			}

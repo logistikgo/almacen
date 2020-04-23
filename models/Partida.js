@@ -48,6 +48,7 @@ const Partida = Schema(
         CajasPedidas:{},
         InfoPedidos: [
             {
+                IDAlmacen: String,
                 IDPedido: Number,
                 Delivery: String,
                 ClienteOrigen: String,
