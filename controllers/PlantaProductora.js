@@ -4,7 +4,6 @@ const PlantaProductora = require('../models/PlantaProductora');
 
 async function getPlantaProductora(req, res) {
     
-    console.log(req.query);
     PlantaProductora.find({ IdCliente: req.query.idClienteFiscal })
         .then((planta) => {
             console.log(planta);

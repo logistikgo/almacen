@@ -330,8 +330,9 @@ function getEntradasReporte(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio'
-		}
+			select: 'stringFolio DiasTraslado fechaEntrada'
+		},
+		select: 'stringFolio DiasTraslado fechaEntrada'
 	})
 	.populate({
 		path: 'partidas',
