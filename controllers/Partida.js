@@ -408,10 +408,9 @@ async function getByProductoEmbalaje(req, res) {
             })
         .where(embalajesxSalir).gt(0)
         .exec();
-
+    //var testPartidas=[];
     partidas = partidas.filter(x => x.tipo == "EXISTENCIA_INICIAL" || (x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id));
-
-    console.log(partidas);
+    //console.log(partidas);
 
     //console.log(algoritmoSalida);
     if (algoritmoSalida !== undefined && algoritmoSalida.length > 0) {
@@ -493,6 +492,30 @@ async function getByProductoEmbalaje(req, res) {
                     };
                     //console.log(auxPartida);
                     subConsecutivo += 1;
+                    //var band = true;
+                   /* if("tarimas" in auxPartida.embalajesxSalir)
+                    {
+                        if(auxPartida.embalajesxSalir.tarimas<1)
+                            band=false;
+                        else
+                            band=true;
+                    }
+                    if("cajas" in auxPartida.embalajesxSalir)
+                    {
+                        if(auxPartida.embalajesxSalir.cajas<1)
+                            band=false;
+                        else
+                            band=true;
+                    }
+                    if("piezas" in auxPartida.embalajesxSalir)
+                    {
+                        if(auxPartida.embalajesxSalir.piezas<1)
+                            band=false;
+                        else
+                            band=true;
+                    }
+                    console.log("end");*/
+                    //if(band==true)
                     partidasActuales.push(auxPartida);
                 });
             });

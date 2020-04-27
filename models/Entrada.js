@@ -51,6 +51,7 @@ const Entrada = Schema(
 		idSucursal: Number,
 		idAlmacen: Number,
 		isEmpty: { type: Boolean, default: false },
+        DiasTraslado: Number
 		//ATRIBUTOS AUXILIARES
 		// done: Boolean,
 		// donepartida: Boolean,
