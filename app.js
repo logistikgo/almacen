@@ -34,6 +34,7 @@ const CostoDXP = require('./controllers/CostoDXP');
 const CostoFactor = require('./controllers/CostoFactor');
 const CostoFija = require('./controllers/CostoFija');
 const CostoPES = require('./controllers/CostoPES');
+const PlantaProductora = require('./controllers/PlantaProductora');
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -247,5 +248,6 @@ app.get('/api/costoPES/:_id', CostoPES.getById);
 app.post('/api/costoPES', CostoPES.save);
 app.put('/api/costoPES/:_id', CostoPES.update);
 app.delete('/api/costoPES/:_id', CostoPES._delete);
+app.get('/api/getPlantaProductora',PlantaProductora.getPlantaProductora);
 
 module.exports = app;
