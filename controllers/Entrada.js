@@ -21,13 +21,21 @@ async function get(req, res) {
 	let _tipo = req.query.tipo;
 	let _status = req.query.status;
 	let _interfaz = req.query.interfaz;
-
-	let filter = {
-		sucursal_id: _idSucursal,
-		tipo: _tipo,
-		status: _status
-	};
-
+	let filter ="";
+	if(_status != "FINALIZADO"){
+		filter = {
+			sucursal_id: _idSucursal,
+			tipo: _tipo,
+			status: _status
+		};
+	}
+	else
+	{
+		filter = {
+			sucursal_id: _idSucursal,
+			tipo: _tipo
+		};
+	}
 	if (!_interfaz) { //Esta condicion determina si la funcion esta siendo usa de la interfaz o de la aplicacion
 		if (_status == "APLICADA" || _status == "FINALIZADO") //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
 		{
