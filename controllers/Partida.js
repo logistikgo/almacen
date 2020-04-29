@@ -660,7 +660,7 @@ async function getPartidasByIDs(req, res) {
             .populate({
                 path: 'salidas_id.salida_id',
                 model: 'Salida',
-                select: 'folio stringFolio fechaSalida item'
+                select: 'folio stringFolio fechaSalida item embalajes'
             })
             .exec();
 
