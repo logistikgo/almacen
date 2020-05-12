@@ -559,6 +559,7 @@ async function getByProductoEmbalaje(req, res) {
                         posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
                         subConsecutivo: subConsecutivo,
                         fechaEntrada: partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
+                        fechaCaducidad: partida.fechaCaducidad ? partida.fechaCaducidad : "",
                         entrada_id: partida.entrada_id != undefined ? partida.entrada_id._id : ""
                     };
 
