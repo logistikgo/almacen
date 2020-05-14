@@ -331,6 +331,7 @@ function getEntradasReporte(req, res) {
 		isEmpty: false
 	}
 
+	console.log(filter.clienteFiscal_id);
 
 	Entrada.find(filter, {partidas: 1, _id: 0, fechaAlta: 1})
 	.populate({

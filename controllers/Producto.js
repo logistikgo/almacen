@@ -315,6 +315,36 @@ function _delete(req, res) {
 		});
 }
 
+//Obtener equivalencias por producto por bodega
+function getEquivalencias(req, res) {
+	let filter = {
+		almacen_id: req.query.almacen_id,
+		clienteFiscal_id: req.query.clienteFiscal_id,
+		sucursal_id: req.query.sucursal_id
+	} 
+
+	//Array para guardar equivalencias depuradas
+	var equivalenciasRes = [];
+
+	Producto.find(filter)
+		.then((productos) => {
+			productos.forEach(producto =>{
+				if(producto.arrEquivalencias.length > 0) {
+					var arrEquivalencias = producto.arrEquivalencias;
+					arrEquivalencias.forEach(eq => {
+						const found = equivalenciasRes.find(element => element.cantidadEquivalencia == eq.cantidadEquivalencia);
+						if(found == null && found == undefined )
+							equivalenciasRes.push(eq);
+					})
+				}
+			});
+			res.status(200).send(equivalenciasRes);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
+}
+
 module.exports = {
 	get,
 	getById,
@@ -327,5 +357,6 @@ module.exports = {
 	getByClave,
 	getALM_XD,
 	getExistenciasByAlmacen,
-	getPartidasxProductoenExistencia
+	getPartidasxProductoenExistencia,
+	getEquivalencias
 }
