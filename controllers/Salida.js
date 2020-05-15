@@ -376,6 +376,214 @@ function getReportePartidas(req, res) {
 	});
 }
 
+function getExcelSalidas(req, res) {
+	var arrPartidas = [];
+	var partidas = [];
+	var salidas_id = [];
+
+	Salida.find({clienteFiscal_id: req.query.idClienteFiscal})
+	.populate({
+		path: 'partidas',
+		model: 'Partida',
+	})
+	.then((salidas) => {
+		salidas.forEach(salida => {
+			
+			partidas = salida.partidas;
+
+			partidas.forEach((partida) => {
+				let embalajes;
+				salidas_id = partida.salidas_id;
+
+				salidas_id.forEach(elem => {
+					let elemId = elem.salida_id;
+					let paramId = salida._id;
+					if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
+						embalajes = elem.embalajes;
+					}
+				})
+
+				var paramsSalida = {
+					_id: salida._id,
+					stringFolio: salida.stringFolio,
+					fechaAlta: salida.fechaAlta,
+					fechaSalida: salida.fechaSalida,
+					transportista: salida.transportista,
+					placas: salida.placas,
+					placasRemolque: salida.placasRemolque,
+					placasTrailer: salida.placasTrailer,
+					embarco: salida.embarco,
+					operador: salida.operador,
+					referencia: salida.referencia,
+					item: salida.item,
+					clave: partida.clave,
+					lote: partida.lote,
+					descripcion: partida.descripcion,
+					posiciones: partida.posiciones,
+					CajasPedidas: partida.CajasPedidas,
+					embalajes: embalajes
+				}
+
+				arrPartidas.push(paramsSalida);
+
+			})
+		})
+		var excel = require('excel4node');
+        var dateFormat = require('dateformat');
+        var workbook = new excel.Workbook();
+        var tituloStyle = workbook.createStyle({
+          font: {
+            bold: true,
+          },
+          alignment: {
+            wrapText: true,
+            horizontal: 'center',
+          },
+        });
+        var ResultStyle = workbook.createStyle({
+          numberFormat: '#.0%; -#.0%; -',
+          font: {
+            bold: true,
+          },
+          alignment: {
+            wrapText: true,
+            horizontal: 'center',
+          },
+          fill: {
+		    type: 'pattern',
+		    patternType: 'solid',
+		    bgColor: '#FF0000',
+		    fgColor: '#FF0000',
+		  },
+        });
+        var headersStyle = workbook.createStyle({
+          font: {
+            bold: true,
+          },
+          alignment: {
+            wrapText: true,
+            horizontal: 'left',
+          },
+        });
+        var porcentajeStyle = workbook.createStyle({
+            numberFormat: '#.0%; -#.0%; -'
+        });
+        var fitcellStyle = workbook.createStyle({
+            alignment: {
+                wrapText: true,
+            },
+        });
+        var worksheet = workbook.addWorksheet('Partidas');
+        worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
+        worksheet.cell(2, 1).string('Pedido').style(headersStyle);
+        worksheet.cell(2, 2).string('Lote').style(headersStyle);
+        worksheet.cell(2, 3).string('Folio salida').style(headersStyle);
+        worksheet.cell(2, 4).string('Item').style(headersStyle);
+        worksheet.cell(2, 5).string('Clave').style(headersStyle);
+		worksheet.cell(2, 6).string('Descripción').style(headersStyle);
+		worksheet.cell(2, 7).string('Fecha Alta').style(headersStyle);
+		worksheet.cell(2, 8).string('Fecha salida').style(headersStyle);
+		worksheet.cell(2, 9).string('Pzs.').style(headersStyle);
+		worksheet.cell(2, 10).string('T.').style(headersStyle);
+		worksheet.cell(2, 11).string('Cjs.').style(headersStyle);
+		worksheet.cell(2, 12).string('Cjs-Pedido.').style(headersStyle);
+		worksheet.cell(2, 13).string('FillRate').style(headersStyle);
+		worksheet.cell(2, 14).string('Transportista').style(headersStyle);
+		worksheet.cell(2, 15).string('Placas trailer').style(headersStyle);
+		worksheet.cell(2, 16).string('Datos Remolque').style(headersStyle);
+		worksheet.cell(2, 17).string('Embarque').style(headersStyle);
+		worksheet.cell(2, 18).string('Operador').style(headersStyle);
+		worksheet.cell(2, 19).string('Ubicacion').style(headersStyle);
+        let i=3;
+        console.log("test1")
+        arrPartidas.forEach(partidas => 
+        {
+        	worksheet.cell(i, 1).string(partidas.referencia ? partidas.referencia:"");
+        	worksheet.cell(i, 2).string(partidas.lote ? partidas.lote:"");
+        	worksheet.cell(i, 3).string(partidas.stringFolio ? partidas.stringFolio:"");
+        	worksheet.cell(i, 4).string(partidas.item ? partidas.item:"");
+        	worksheet.cell(i, 5).string(partidas.clave ? partidas.clave:"");
+        	worksheet.cell(i, 6).string(partidas.descripcion ? partidas.descripcion:"");
+        	worksheet.cell(i, 7).string(partidas.fechaAlta ? dateFormat(partidas.fechaAlta, "dd/mm/yyyy"):"");
+			worksheet.cell(i, 8).string(partidas.fechaSalida ? dateFormat(partidas.fechaSalida, "dd/mm/yyyy"):"");
+        	if(partidas.embalajes)
+        		worksheet.cell(i, 9).string(partidas.embalajes.piezas ? partidas.embalajes.piezas.toString():"0");
+        	else
+        		worksheet.cell(i, 9).string("0")
+        	if(partidas.embalajes)
+        		worksheet.cell(i, 10).string(partidas.embalajes.tarimas ? partidas.embalajes.tarimas.toString():"0");
+        	else
+        		worksheet.cell(i, 10).string("0")
+        	if(partidas.embalajes)
+        		worksheet.cell(i, 11).string(partidas.embalajes.cajas ? partidas.embalajes.cajas.toString():"0");
+        	else
+        		worksheet.cell(i, 11).string("0")
+        	if(partidas.CajasPedidas)
+        		worksheet.cell(i, 12).string(partidas.CajasPedidas ? partidas.CajasPedidas.cajas.toString():"0");
+        	else
+        		worksheet.cell(i, 12).string("0")
+        	let value = 0
+        	if(partidas.CajasPedidas && partidas.embalajes)
+        		value=(partidas.embalajes.cajas / partidas.CajasPedidas.cajas) ? (partidas.embalajes.cajas / (partidas.CajasPedidas.cajas)) : 0;
+        	
+        	if (value*100 >= 100)
+        	{
+           		ResultStyle = workbook.createStyle({
+           		  numberFormat: '#.0%; -#.0%; -',
+		          font: {
+		            bold: true,
+		          },
+		          alignment: {
+		            wrapText: true,
+		            horizontal: 'center',
+		          },
+		          fill: {
+				    type: 'pattern',
+				    patternType: 'solid',
+				    bgColor: '#008000',
+				    fgColor: '#008000',
+				  },
+		        });
+       		}
+       		else{
+       			
+       			ResultStyle = workbook.createStyle({
+       			  numberFormat: '#.0%; -#.0%; -',
+		          font: {
+		            bold: true,
+		          },
+		          alignment: {
+		            wrapText: true,
+		            horizontal: 'center',
+		          },
+		          fill: {
+				    type: 'pattern',
+				    patternType: 'solid',
+				    bgColor: '#FF0000',
+				    fgColor: '#FF0000',
+				  },
+	        	});
+       		}
+        	worksheet.cell(i, 13).number(value).style(ResultStyle);
+        	worksheet.cell(i, 14).string(partidas.transportista ? partidas.transportista:"");
+        	worksheet.cell(i, 15).string(partidas.placasTrailer ? partidas.placasTrailer:"");
+        	worksheet.cell(i, 16).string(partidas.placasRemolque ? partidas.placasRemolque:"");
+            worksheet.cell(i, 17).string(partidas.embarque ? partidas.embarque:"");
+            worksheet.cell(i, 18).string(partidas.operador ? partidas.operador:"");
+            let res=""
+            if(partidas.posiciones.length === 1) 
+            	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
+            worksheet.cell(i, 19).string(res);
+            i++;
+        });
+        workbook.write('ReporteSalidas'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
+
+	})
+	.catch((error) => {
+		res.status(500).send(error);
+		console.log(error);
+	});
+}
 
 
 module.exports = {
@@ -387,5 +595,6 @@ module.exports = {
 	getSalidasByIDs,
 	saveSalidaAutomatica,
 	updatePartidasSalidaAPI,
-	getReportePartidas
+	getReportePartidas,
+	getExcelSalidas
 }

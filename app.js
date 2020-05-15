@@ -60,6 +60,7 @@ app.get('/api/getProductos', Producto.getByIDsClientesFiscales);
 app.get('/api/getProductosALMXD', Producto.getALM_XD);
 app.get('/api/getExistenciasByAlmacen/:almacen_id/:producto_id', Producto.getExistenciasByAlmacen);
 app.get('/api/getPartidasxProductoenExistencia/:producto_id', Producto.getPartidasxProductoenExistencia);
+app.get('/api/getEquivalencias', Producto.getEquivalencias);
 
 app.get('/api/movimientosInventarioByProducto', MovimientosInventario.getByProducto);
 app.get('/api/posicionesxProducto', MovimientosInventario.getPosicionesByProducto);
@@ -250,4 +251,9 @@ app.put('/api/costoPES/:_id', CostoPES.update);
 app.delete('/api/costoPES/:_id', CostoPES._delete);
 app.get('/api/getPlantaProductora',PlantaProductora.getPlantaProductora);
 
+//excel
+app.get('/api/getExcelByIDs', Partida.getExcelByIDs);
+app.get('/api/getExcelEntradas', Entrada.getExcelEntradas);
+app.get('/api/getExcelCaducidades', Entrada.getExcelCaducidades);
+app.get('/api/getExcelSalidas', Salida.getExcelSalidas);
 module.exports = app;
