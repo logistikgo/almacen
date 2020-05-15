@@ -250,4 +250,9 @@ app.put('/api/costoPES/:_id', CostoPES.update);
 app.delete('/api/costoPES/:_id', CostoPES._delete);
 app.get('/api/getPlantaProductora',PlantaProductora.getPlantaProductora);
 
+//excel
+app.get('/api/getExcelByIDs', Partida.getExcelByIDs);
+app.get('/api/getExcelEntradas', Entrada.getExcelEntradas);
+app.get('/api/getExcelCaducidades', Entrada.getExcelCaducidades);
+app.get('/api/getExcelSalidas', Salida.getExcelSalidas);
 module.exports = app;
