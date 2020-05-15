@@ -490,7 +490,6 @@ console.log(filter)
         arrPartidas.forEach(partidas => 
         {
         	
-        	console.log("test2")
         	let fechaEspRecibo="";
         	let leyenda=0;
         	let diasAlm=0;
@@ -503,25 +502,31 @@ console.log(filter)
         	var diff=0;
         	let hoy=Date.now();
            	let Aging=0;
-        	if(partidas.fechaCaducidad !== undefined)
+        	if(partidas.fechaCaducidad !== undefined && partidas.fechaCaducidad != null)
         	{
+        		console.log(partidas.fechaCaducidad);
+
         		fCaducidad = partidas.fechaCaducidad.getTime();
                 diff = Math.abs(fCaducidad - partidas.entrada_id.fechaEntrada.getTime());
                 diasAlm=Math.floor((hoy - fCaducidad)/ 86400000);
             	diasEnAlm = Math.floor(diff / 86400000);
             	Aging=Math.floor((hoy-partidas.entrada_id.fechaEntrada.getTime())/ 86400000);
         		let fEntrada = partidas.entrada_id.fechaEntrada.getTime();
+                if(partidas.producto_id.garantiaFrescura)
                 fechaFrescura = dateFormat(new Date(fCaducidad - partidas.producto_id.garantiaFrescura * 86400000), "dd/mm/yyyy");
+                if(partidas.producto_id.alertaAmarilla)
                 fechaAlerta1 = dateFormat(new Date(fCaducidad - partidas.producto_id.alertaAmarilla * 86400000), "dd/mm/yyyy");
+            	if(partidas.producto_id.alertaRoja)
             	fechaAlerta2 = dateFormat(new Date(fCaducidad - partidas.producto_id.alertaRoja * 86400000), "dd/mm/yyyy");
+            	if(partidas.producto_id.vidaAnaquel)
             	leyenda = partidas.producto_id.vidaAnaquel- diasEnAlm - 1
-        	}
+        		}
         	if (partidas.fechaCaducidad !== undefined && partidas.entrada_id.DiasTraslado !== undefined) {
-
                 let tiempoTraslado = partidas.producto_id.vidaAnaquel - partidas.entrada_id.DiasTraslado-1;
                 let fechaRecibo = new Date(fCaducidad - tiempoTraslado * 86400000);
                 fechaEspRecibo =dateFormat(fechaRecibo, "dd/mm/yyyy");
             }
+
             worksheet.cell(i, 1).string(partidas.lote ? partidas.lote:"");
             worksheet.cell(i, 2).string(partidas.entrada_id.stringFolio  ? partidas.entrada_id.stringFolio :"");
            	worksheet.cell(i, 3).string(partidas.clave ? partidas.clave:"");
