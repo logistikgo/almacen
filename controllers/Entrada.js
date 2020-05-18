@@ -513,11 +513,11 @@ console.log(filter)
             	Aging=Math.floor((hoy-partidas.entrada_id.fechaEntrada.getTime())/ 86400000);
         		let fEntrada = partidas.entrada_id.fechaEntrada.getTime();
                 if(partidas.producto_id.garantiaFrescura)
-                fechaFrescura = dateFormat(new Date(fCaducidad - partidas.producto_id.garantiaFrescura * 86400000), "dd/mm/yyyy");
+                fechaFrescura = dateFormat(new Date(fCaducidad - (partidas.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
                 if(partidas.producto_id.alertaAmarilla)
-                fechaAlerta1 = dateFormat(new Date(fCaducidad - partidas.producto_id.alertaAmarilla * 86400000), "dd/mm/yyyy");
+                fechaAlerta1 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
             	if(partidas.producto_id.alertaRoja)
-            	fechaAlerta2 = dateFormat(new Date(fCaducidad - partidas.producto_id.alertaRoja * 86400000), "dd/mm/yyyy");
+            	fechaAlerta2 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
             	if(partidas.producto_id.vidaAnaquel)
             	leyenda = partidas.producto_id.vidaAnaquel- diasEnAlm - 1
         		}
@@ -534,8 +534,8 @@ console.log(filter)
            	worksheet.cell(i, 5).number(partidas.embalajesxSalir.piezas ? partidas.embalajesxSalir.piezas:0);
            	worksheet.cell(i, 6).number(partidas.embalajesxSalir.cajas ? partidas.embalajesxSalir.cajas:0);
            	worksheet.cell(i, 7).number(partidas.embalajesxSalir.tarimas ? partidas.embalajesxSalir.tarimas:0);
-           	worksheet.cell(i, 8).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()+ (60 * 60 * 24 * 1000)), "dd/mm/yyyy"):"");
-           	worksheet.cell(i, 9).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()+ (60 * 60 * 24 * 1000)), "dd/mm/yyyy"):"");
+           	worksheet.cell(i, 8).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), "dd/mm/yyyy"):"");
+           	worksheet.cell(i, 9).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), "dd/mm/yyyy"):"");
            	worksheet.cell(i, 10).number(partidas.producto_id.vidaAnaquel ? partidas.producto_id.vidaAnaquel:0);
            	worksheet.cell(i, 11).number(partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0);
            	worksheet.cell(i, 12).string(fechaEspRecibo);
