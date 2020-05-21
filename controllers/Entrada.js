@@ -1,6 +1,7 @@
 'use strict'
 
 const Entrada = require('../models/Entrada');
+const Producto = require('../models/Producto');
 const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
 const PartidaModel = require('../models/Partida');
@@ -187,6 +188,99 @@ async function saveEntradaAutomatica(req, res) {
 
 				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
 				for (let itemPartida of partidas) {
+					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+				}
+				console.log(entrada);
+				res.status(200).send(entrada);
+			})
+			.catch((error) => {
+				res.status(500).send(error);
+			});
+	} else {
+		console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+		res.status(400).send({ message: "Se intenta generar una entrada sin partidas", error: "No se encontró pre-partidas para los IDs de pedidos indicados" });
+	}
+}
+
+async function saveEntradaBabel(req, res) {
+	var mongoose = require('mongoose');
+	//let isEntrada = await validaEntradaDuplicado(bodyParams.embarque); //Valida si ya existe
+	console.log(req.body);
+	var arrPartidas=[];
+	for (var i=4; i<34 ; i++) {
+		if(req.body.Pedido[i].Clave !== undefined)
+		{
+			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
+			//console.log(producto._id)
+			const data={
+				producto_id:producto._id,
+				clave:producto.clave,
+				descripcion:producto.descripcion,
+				origen:"Babel",
+				tipo: "Arrival",
+    			status: "NO ASIGNADA",
+				embalajesEntrada: { cajas:req.body.Pedido[i].Cantidad},
+	        	embalajesxSalir: { cajas:req.body.Pedido[i].Cantidad},
+	        	fechaProduccion: Date.parse(req.body.Pedido[i].Caducidad),
+	        	fechaCaducidad: Date.parse(req.body.Pedido[i].Caducidad),
+	        	lote:req.body.Pedido[i].Lote,
+	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
+	        	valor:0
+	        }
+	        console.log(data.InfoPedidos)
+	        arrPartidas.push(data);
+    	}
+	}
+	console.log("test");
+	console.log(arrPartidas);
+
+    var arrPartidas_id = [];
+    var partidas = [];
+    await Helper.asyncForEach(arrPartidas, async function (partida) {
+        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
+        let nPartida = new PartidaModel(partida);
+        console.log(nPartida.InfoPedidos[0].IDAlmacen);
+        console.log(nPartida);
+        await nPartida.save().then((partida) => {
+        	partidas.push(partida)
+            arrPartidas_id.push(partida._id);
+        });
+    });
+	console.log(arrPartidas_id)
+
+	if (partidas && partidas.length > 0) {
+		let idCliente = req.body.IDClienteFiscal;
+		let idSucursales = req.body.IDSucursal;
+
+		let nEntrada = new Entrada();
+
+		//nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
+		nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+			return total + valor;
+		});
+		nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+		nEntrada.clienteFiscal_id = idCliente;
+		nEntrada.sucursal_id = idSucursales;
+		nEntrada.status = "SIN_POSICIONAR";/*repalce arrival*/
+		nEntrada.tipo = "NORMAL";
+		nEntrada.partidas = partidas.map(x => x._id);
+		nEntrada.nombreUsuario = "BarcelBabel";
+		nEntrada.tracto = req.body.InfoPlanta[14].InfoPedido;
+		nEntrada.remolque = req.body.InfoPlanta[12].InfoPedido;
+		nEntrada.embarque = req.body.InfoPlanta[24].InfoPedido;
+		nEntrada.transportista = req.body.InfoPlanta[18].InfoPedido;
+		nEntrada.ordenCompra=req.body.InfoPlanta[30].InfoPedido;
+		nEntrada.fechaAlta = new Date();
+		nEntrada.idEntrada = await getNextID();
+		nEntrada.folio = await getNextID();
+		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
+		console.log("testEntrada");
+		nEntrada.save()
+			.then(async (entrada) => {
+				console.log("testpartidas");
+				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
+				for (let itemPartida of partidas) {
+					console.log("testMovimientos");
 					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 				}
 				console.log(entrada);
@@ -823,6 +917,7 @@ module.exports = {
 	getSalidasByEntradaID,
 	getEntradasReporte,
 	getExcelEntradas,
-	getExcelCaducidades
+	getExcelCaducidades,
+	saveEntradaBabel
 	// getPartidaById,
 }
