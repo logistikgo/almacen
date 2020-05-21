@@ -256,4 +256,7 @@ app.get('/api/getExcelByIDs', Partida.getExcelByIDs);
 app.get('/api/getExcelEntradas', Entrada.getExcelEntradas);
 app.get('/api/getExcelCaducidades', Entrada.getExcelCaducidades);
 app.get('/api/getExcelSalidas', Salida.getExcelSalidas);
+
+//babel
+app.post('/api/saveEntradaBabel', Entrada.saveEntradaBabel);
 module.exports = app;
