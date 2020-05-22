@@ -1,6 +1,7 @@
 'use strict'
 
 const Entrada = require('../models/Entrada');
+const Producto = require('../models/Producto');
 const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
 const PartidaModel = require('../models/Partida');
@@ -188,6 +189,99 @@ async function saveEntradaAutomatica(req, res) {
 
 				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
 				for (let itemPartida of partidas) {
+					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+				}
+				console.log(entrada);
+				res.status(200).send(entrada);
+			})
+			.catch((error) => {
+				res.status(500).send(error);
+			});
+	} else {
+		console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+		res.status(400).send({ message: "Se intenta generar una entrada sin partidas", error: "No se encontró pre-partidas para los IDs de pedidos indicados" });
+	}
+}
+
+async function saveEntradaBabel(req, res) {
+	var mongoose = require('mongoose');
+	//let isEntrada = await validaEntradaDuplicado(bodyParams.embarque); //Valida si ya existe
+	console.log(req.body);
+	var arrPartidas=[];
+	for (var i=4; i<34 ; i++) {
+		if(req.body.Pedido[i].Clave !== undefined)
+		{
+			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
+			//console.log(producto._id)
+			const data={
+				producto_id:producto._id,
+				clave:producto.clave,
+				descripcion:producto.descripcion,
+				origen:"Babel",
+				tipo: "Arrival",
+    			status: "NO ASIGNADA",
+				embalajesEntrada: { cajas:req.body.Pedido[i].Cantidad},
+	        	embalajesxSalir: { cajas:req.body.Pedido[i].Cantidad},
+	        	fechaProduccion: Date.parse(req.body.Pedido[i].Caducidad),
+	        	fechaCaducidad: Date.parse(req.body.Pedido[i].Caducidad),
+	        	lote:req.body.Pedido[i].Lote,
+	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
+	        	valor:0
+	        }
+	        console.log(data.InfoPedidos)
+	        arrPartidas.push(data);
+    	}
+	}
+	console.log("test");
+	console.log(arrPartidas);
+
+    var arrPartidas_id = [];
+    var partidas = [];
+    await Helper.asyncForEach(arrPartidas, async function (partida) {
+        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
+        let nPartida = new PartidaModel(partida);
+        console.log(nPartida.InfoPedidos[0].IDAlmacen);
+        console.log(nPartida);
+        await nPartida.save().then((partida) => {
+        	partidas.push(partida)
+            arrPartidas_id.push(partida._id);
+        });
+    });
+	console.log(arrPartidas_id)
+
+	if (partidas && partidas.length > 0) {
+		let idCliente = req.body.IDClienteFiscal;
+		let idSucursales = req.body.IDSucursal;
+
+		let nEntrada = new Entrada();
+
+		//nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
+		nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+			return total + valor;
+		});
+		nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+		nEntrada.clienteFiscal_id = idCliente;
+		nEntrada.sucursal_id = idSucursales;
+		nEntrada.status = "SIN_POSICIONAR";/*repalce arrival*/
+		nEntrada.tipo = "NORMAL";
+		nEntrada.partidas = partidas.map(x => x._id);
+		nEntrada.nombreUsuario = "BarcelBabel";
+		nEntrada.tracto = req.body.InfoPlanta[14].InfoPedido;
+		nEntrada.remolque = req.body.InfoPlanta[12].InfoPedido;
+		nEntrada.embarque = req.body.InfoPlanta[24].InfoPedido;
+		nEntrada.transportista = req.body.InfoPlanta[18].InfoPedido;
+		nEntrada.ordenCompra=req.body.InfoPlanta[30].InfoPedido;
+		nEntrada.fechaAlta = new Date();
+		nEntrada.idEntrada = await getNextID();
+		nEntrada.folio = await getNextID();
+		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
+		console.log("testEntrada");
+		nEntrada.save()
+			.then(async (entrada) => {
+				console.log("testpartidas");
+				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
+				for (let itemPartida of partidas) {
+					console.log("testMovimientos");
 					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 				}
 				console.log(entrada);
@@ -514,11 +608,11 @@ console.log(filter)
             	Aging=Math.floor((hoy-partidas.entrada_id.fechaEntrada.getTime())/ 86400000);
         		let fEntrada = partidas.entrada_id.fechaEntrada.getTime();
                 if(partidas.producto_id.garantiaFrescura)
-                fechaFrescura = dateFormat(new Date(fCaducidad - partidas.producto_id.garantiaFrescura * 86400000), "dd/mm/yyyy");
+                fechaFrescura = dateFormat(new Date(fCaducidad - (partidas.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
                 if(partidas.producto_id.alertaAmarilla)
-                fechaAlerta1 = dateFormat(new Date(fCaducidad - partidas.producto_id.alertaAmarilla * 86400000), "dd/mm/yyyy");
+                fechaAlerta1 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
             	if(partidas.producto_id.alertaRoja)
-            	fechaAlerta2 = dateFormat(new Date(fCaducidad - partidas.producto_id.alertaRoja * 86400000), "dd/mm/yyyy");
+            	fechaAlerta2 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
             	if(partidas.producto_id.vidaAnaquel)
             	leyenda = partidas.producto_id.vidaAnaquel- diasEnAlm - 1
         		}
@@ -535,8 +629,8 @@ console.log(filter)
            	worksheet.cell(i, 5).number(partidas.embalajesxSalir.piezas ? partidas.embalajesxSalir.piezas:0);
            	worksheet.cell(i, 6).number(partidas.embalajesxSalir.cajas ? partidas.embalajesxSalir.cajas:0);
            	worksheet.cell(i, 7).number(partidas.embalajesxSalir.tarimas ? partidas.embalajesxSalir.tarimas:0);
-           	worksheet.cell(i, 8).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()+ (60 * 60 * 24 * 1000)), "dd/mm/yyyy"):"");
-           	worksheet.cell(i, 9).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()+ (60 * 60 * 24 * 1000)), "dd/mm/yyyy"):"");
+           	worksheet.cell(i, 8).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), "dd/mm/yyyy"):"");
+           	worksheet.cell(i, 9).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), "dd/mm/yyyy"):"");
            	worksheet.cell(i, 10).number(partidas.producto_id.vidaAnaquel ? partidas.producto_id.vidaAnaquel:0);
            	worksheet.cell(i, 11).number(partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0);
            	worksheet.cell(i, 12).string(fechaEspRecibo);
@@ -824,6 +918,7 @@ module.exports = {
 	getSalidasByEntradaID,
 	getEntradasReporte,
 	getExcelEntradas,
-	getExcelCaducidades
+	getExcelCaducidades,
+	saveEntradaBabel
 	// getPartidaById,
 }
