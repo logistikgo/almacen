@@ -10,7 +10,8 @@ const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const TiempoCargaDescarga = require('../controllers/TiempoCargaDescarga');
-
+const PlantaProductora = require('../models/PlantaProductora'); 
+const dateFormat = require('dateformat');
 function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
 }
@@ -227,34 +228,36 @@ async function saveEntradaBabel(req, res) {
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
 	        }
-	        console.log(data.InfoPedidos)
+	        //console.log(data.InfoPedidos)
 	        arrPartidas.push(data);
     	}
 	}
-	console.log("test");
-	console.log(arrPartidas);
+	//console.log("test");
+	//console.log(arrPartidas);
 
     var arrPartidas_id = [];
     var partidas = [];
     await Helper.asyncForEach(arrPartidas, async function (partida) {
         partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
         let nPartida = new PartidaModel(partida);
-        console.log(nPartida.InfoPedidos[0].IDAlmacen);
-        console.log(nPartida);
+        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
+        //console.log(nPartida);
         await nPartida.save().then((partida) => {
         	partidas.push(partida)
             arrPartidas_id.push(partida._id);
         });
     });
-	console.log(arrPartidas_id)
-
+	//console.log(arrPartidas_id)
+	let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[1].InfoPedido.split(" ")[1] }).exec();
+	let fechaesperada=Date.parse(req.body.Infoplanta[3].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado);
+	//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
 	if (partidas && partidas.length > 0) {
 		let idCliente = req.body.IDClienteFiscal;
 		let idSucursales = req.body.IDSucursal;
 
 		let nEntrada = new Entrada();
 
-		//nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
+		nEntrada.fechaEntrada = fechaesperada;
 		nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
 			return total + valor;
 		});
@@ -265,22 +268,24 @@ async function saveEntradaBabel(req, res) {
 		nEntrada.tipo = "NORMAL";
 		nEntrada.partidas = partidas.map(x => x._id);
 		nEntrada.nombreUsuario = "BarcelBabel";
-		nEntrada.tracto = req.body.InfoPlanta[14].InfoPedido;
-		nEntrada.remolque = req.body.InfoPlanta[12].InfoPedido;
-		nEntrada.embarque = req.body.InfoPlanta[24].InfoPedido;
-		nEntrada.transportista = req.body.InfoPlanta[18].InfoPedido;
-		nEntrada.ordenCompra=req.body.InfoPlanta[30].InfoPedido;
+		nEntrada.tracto = req.body.Infoplanta[13].InfoPedido;
+		nEntrada.remolque = req.body.Infoplanta[11].InfoPedido;
+		nEntrada.embarque = req.body.Infoplanta[23].InfoPedido;
+		nEntrada.transportista = req.body.Infoplanta[17].InfoPedido;
+		nEntrada.ordenCompra=req.body.Infoplanta[29].InfoPedido;
 		nEntrada.fechaAlta = new Date();
 		nEntrada.idEntrada = await getNextID();
 		nEntrada.folio = await getNextID();
+		nEntrada.plantaOrigen=planta.Nombre;
+		nEntrada.DiasTraslado=planta.DiasTraslado;
 		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
-		console.log("testEntrada");
+		//console.log("testEntrada");
 		nEntrada.save()
 			.then(async (entrada) => {
-				console.log("testpartidas");
+				//console.log("testpartidas");
 				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
 				for (let itemPartida of partidas) {
-					console.log("testMovimientos");
+					//console.log("testMovimientos");
 					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 				}
 				console.log(entrada);
@@ -509,7 +514,7 @@ console.log(filter)
 		});
 
 		var excel = require('excel4node');
-        var dateFormat = require('dateformat');
+        
         var workbook = new excel.Workbook();
         var tituloStyle = workbook.createStyle({
           font: {
@@ -774,7 +779,6 @@ async function getExcelEntradas(req, res) {
 		}).then((entradas) => {
 
 			var excel = require('excel4node');
-	        var dateFormat = require('dateformat');
 	        var workbook = new excel.Workbook();
 	        var tituloStyle = workbook.createStyle({
 	          font: {
