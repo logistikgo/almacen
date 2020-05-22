@@ -24,6 +24,8 @@ const Entrada = Schema(
 		unidad: String,
 		tracto: String,
 		remolque: String,
+		sello: String,
+		plantaOrigen: String,
 		tiempoDescarga_id: { type: Schema.ObjectId, ref: "TiempoCargaDescarga" },
 		fechaEntrada: Date,
 		observaciones: String,

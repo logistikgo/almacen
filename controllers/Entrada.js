@@ -34,7 +34,8 @@ async function get(req, res) {
 	{
 		filter = {
 			sucursal_id: _idSucursal,
-			tipo: _tipo
+			tipo: _tipo,
+			//status: "FINALIZADO"
 		};
 	}
 	if (!_interfaz) { //Esta condicion determina si la funcion esta siendo usa de la interfaz o de la aplicacion
