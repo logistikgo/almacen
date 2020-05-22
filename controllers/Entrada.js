@@ -205,14 +205,15 @@ async function saveEntradaAutomatica(req, res) {
 
 async function saveEntradaBabel(req, res) {
 	var mongoose = require('mongoose');
+	res.status(200).send(req);
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
-	var arrPartidas=[];
+	/*var arrPartidas=[];
 	for (var i=4; i<34 ; i++) {
 		if(req.body.Pedido[i].Clave !== undefined)
 		{
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
-			//console.log(producto._id)
+			console.log(producto._id)
 			const data={
 				producto_id:producto._id,
 				clave:producto.clave,
@@ -298,7 +299,7 @@ async function saveEntradaBabel(req, res) {
 		console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
 		res.status(400).send({ message: "Se intenta generar una entrada sin partidas", error: "No se encontró pre-partidas para los IDs de pedidos indicados" });
 	}*//**/
-	res.status(200).send({ message: "Se intenta generar una entrada sin partidas", error: "No se encontró pre-partidas para los IDs de pedidos indicados" });
+	//res.status(200).send({ message: "Se intenta generar una entrada sin partidas", error: "No se encontró pre-partidas para los IDs de pedidos indicados" });
 
 }
 
