@@ -116,20 +116,23 @@ async function save(req, res) {
 }
 
 async function update(req, res) {
+	console.log(req);
 	let bodyParams = req.body;
 	let salida_id = bodyParams.salidaid;
-	
+	console.log(bodyParams);
 	bodyParams.fechaSalida = new Date(bodyParams.fechaSalida);
 	bodyParams.fechaAlta = new Date();
 
-	for (let partida of req.body.jsonPartidas) {
-		Partida._put(partida);
-	}
-
+	// for (let partida of req.body) {
+	// 	Partida._put(partida);
+	// }
+	console.log(req.body);
+	console.log("----------------------------------");
 	Salida.updateOne(
 		{ _id: salida_id },
 		{ $set: req.body })
 		.then((salida) => {
+			console.log(salida);
 			res.status(200).send(salida);
 		})
 		.catch((error) => {
