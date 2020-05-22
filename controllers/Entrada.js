@@ -227,26 +227,26 @@ async function saveEntradaBabel(req, res) {
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
 	        }
-	        console.log(data.InfoPedidos)
+	        //console.log(data.InfoPedidos)
 	        arrPartidas.push(data);
     	}
 	}
-	console.log("test");
-	console.log(arrPartidas);
+	//console.log("test");
+	//console.log(arrPartidas);
 
     var arrPartidas_id = [];
     var partidas = [];
     await Helper.asyncForEach(arrPartidas, async function (partida) {
         partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
         let nPartida = new PartidaModel(partida);
-        console.log(nPartida.InfoPedidos[0].IDAlmacen);
-        console.log(nPartida);
+        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
+        //console.log(nPartida);
         await nPartida.save().then((partida) => {
         	partidas.push(partida)
             arrPartidas_id.push(partida._id);
         });
     });
-	console.log(arrPartidas_id)
+	//console.log(arrPartidas_id)
 
 	if (partidas && partidas.length > 0) {
 		let idCliente = req.body.IDClienteFiscal;
@@ -265,22 +265,22 @@ async function saveEntradaBabel(req, res) {
 		nEntrada.tipo = "NORMAL";
 		nEntrada.partidas = partidas.map(x => x._id);
 		nEntrada.nombreUsuario = "BarcelBabel";
-		nEntrada.tracto = req.body.InfoPlanta[14].InfoPedido;
-		nEntrada.remolque = req.body.InfoPlanta[12].InfoPedido;
-		nEntrada.embarque = req.body.InfoPlanta[24].InfoPedido;
-		nEntrada.transportista = req.body.InfoPlanta[18].InfoPedido;
-		nEntrada.ordenCompra=req.body.InfoPlanta[30].InfoPedido;
+		nEntrada.tracto = req.body.Infoplanta[13].InfoPedido;
+		nEntrada.remolque = req.body.Infoplanta[11].InfoPedido;
+		nEntrada.embarque = req.body.Infoplanta[23].InfoPedido;
+		nEntrada.transportista = req.body.Infoplanta[17].InfoPedido;
+		nEntrada.ordenCompra=req.body.Infoplanta[29].InfoPedido;
 		nEntrada.fechaAlta = new Date();
 		nEntrada.idEntrada = await getNextID();
 		nEntrada.folio = await getNextID();
 		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
-		console.log("testEntrada");
+		//console.log("testEntrada");
 		nEntrada.save()
 			.then(async (entrada) => {
-				console.log("testpartidas");
+				//console.log("testpartidas");
 				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
 				for (let itemPartida of partidas) {
-					console.log("testMovimientos");
+					//console.log("testMovimientos");
 					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 				}
 				console.log(entrada);
