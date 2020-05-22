@@ -205,7 +205,7 @@ async function saveEntradaAutomatica(req, res) {
 
 async function saveEntradaBabel(req, res) {
 	var mongoose = require('mongoose');
-	res.status(200).send(req);
+	res.status(200).send(req.body.Pedido[0].Clave);
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
 	/*var arrPartidas=[];
