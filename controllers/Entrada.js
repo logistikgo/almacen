@@ -21,22 +21,69 @@ async function get(req, res) {
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
 	let _tipo = req.query.tipo;
-	let _status = req.query.status;
+	let _status = req.query.status != ""? req.query.status : null;
 	let _interfaz = req.query.interfaz;
-	let filter ="";
-	if(_status != "FINALIZADO"){
+	console.log(_status);
+	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
+	var json = [];
+	if(_status != "FINALIZADO" && _status != null){
 		filter = {
 			sucursal_id: _idSucursal,
 			tipo: _tipo,
 			status: _status
 		};
 	}
-	else
+	else if(_status != null)
 	{
+		if(req.query.isReporte) {
+			filter = {
+				sucursal_id: _idSucursal,
+				tipo: _tipo,
+				//status: "FINALIZADO"
+			};
+		}
+		else {
+			filter = {
+				sucursal_id: _idSucursal,
+				tipo: _tipo,
+				status: "FINALIZADO"
+			};
+		}
+	}
+	else if(_status === null){
 		filter = {
 			sucursal_id: _idSucursal,
+			clienteFiscal_id: _idClienteFiscal,
+			almacen_id: _idAlmacen,
 			tipo: _tipo
 		};
+		Entrada.find(filter)
+		.then((entradasByStatus) => {
+			entradasByStatus.forEach(resp => {
+				if(resp.status == "WaitingArrival")
+					WaitingArrival++;
+				if(resp.status == "ARRIVED")
+					ARRIVED++;
+				if(resp.status == "APLICADA")
+					APLICADA++;
+				if(resp.tipo == "RECHAZO")
+					RECHAZO++;
+				if(resp.status == "FINALIZADO")
+					FINALIZADO++;
+			});
+			var jsonResponse = {
+				WaitingArrival: WaitingArrival,
+				Arrived: ARRIVED,
+				Aplicada: APLICADA,
+				Rechazo: RECHAZO,
+				Finalizado: FINALIZADO
+			};
+			json = jsonResponse;
+		})
+		.catch((error) => {
+			console.log(error);
+		});
+		
 	}
 	if (!_interfaz) { //Esta condicion determina si la funcion esta siendo usa de la interfaz o de la aplicacion
 		if (_status == "APLICADA" || _status == "FINALIZADO") //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
@@ -57,7 +104,7 @@ async function get(req, res) {
 			path: 'partidas.producto_id',
 			model: 'Producto'
 		}).then((entradas) => {
-			res.status(200).send(entradas);
+			res.status(200).send(_status == null ? json : entradas);
 		}).catch((error) => {
 			res.status(500).send(error);
 		});
