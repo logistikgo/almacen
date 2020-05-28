@@ -10,6 +10,7 @@ const FolioIngreso = Schema(
         tarifa_id: Schema.ObjectId,
         tipoTarifa: String,
         total: Number, //Subtotal
+        Moneda: String,
         //Iva
         //Retencion?
         //Total
