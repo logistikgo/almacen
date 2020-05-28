@@ -1,6 +1,7 @@
 'use strict'
 
 const Entrada = require('../models/Entrada');
+const Producto = require('../models/Producto');
 const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
 const PartidaModel = require('../models/Partida');
@@ -9,7 +10,8 @@ const MovimientoInventario = require('../controllers/MovimientoInventario');
 const MovimientoInventarioModel = require('../models/MovimientoInventario');
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const TiempoCargaDescarga = require('../controllers/TiempoCargaDescarga');
-
+const PlantaProductora = require('../models/PlantaProductora'); 
+const dateFormat = require('dateformat');
 function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
 }
@@ -19,22 +21,69 @@ async function get(req, res) {
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
 	let _tipo = req.query.tipo;
-	let _status = req.query.status;
+	let _status = req.query.status != ""? req.query.status : null;
 	let _interfaz = req.query.interfaz;
-	let filter ="";
-	if(_status != "FINALIZADO"){
+	console.log(_status);
+	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
+	var json = [];
+	if(_status != "FINALIZADO" && _status != null){
 		filter = {
 			sucursal_id: _idSucursal,
 			tipo: _tipo,
 			status: _status
 		};
 	}
-	else
+	else if(_status != null)
 	{
+		if(req.query.isReporte) {
+			filter = {
+				sucursal_id: _idSucursal,
+				tipo: _tipo,
+				//status: "FINALIZADO"
+			};
+		}
+		else {
+			filter = {
+				sucursal_id: _idSucursal,
+				tipo: _tipo,
+				status: "FINALIZADO"
+			};
+		}
+	}
+	else if(_status === null){
 		filter = {
 			sucursal_id: _idSucursal,
+			clienteFiscal_id: _idClienteFiscal,
+			almacen_id: _idAlmacen,
 			tipo: _tipo
 		};
+		Entrada.find(filter)
+		.then((entradasByStatus) => {
+			entradasByStatus.forEach(resp => {
+				if(resp.status == "WaitingArrival")
+					WaitingArrival++;
+				if(resp.status == "ARRIVED")
+					ARRIVED++;
+				if(resp.status == "APLICADA")
+					APLICADA++;
+				if(resp.tipo == "RECHAZO")
+					RECHAZO++;
+				if(resp.status == "FINALIZADO")
+					FINALIZADO++;
+			});
+			var jsonResponse = {
+				WaitingArrival: WaitingArrival,
+				Arrived: ARRIVED,
+				Aplicada: APLICADA,
+				Rechazo: RECHAZO,
+				Finalizado: FINALIZADO
+			};
+			json = jsonResponse;
+		})
+		.catch((error) => {
+			console.log(error);
+		});
+		
 	}
 	if (!_interfaz) { //Esta condicion determina si la funcion esta siendo usa de la interfaz o de la aplicacion
 		if (_status == "APLICADA" || _status == "FINALIZADO") //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
@@ -55,7 +104,7 @@ async function get(req, res) {
 			path: 'partidas.producto_id',
 			model: 'Producto'
 		}).then((entradas) => {
-			res.status(200).send(entradas);
+			res.status(200).send(_status == null ? json : entradas);
 		}).catch((error) => {
 			res.status(500).send(error);
 		});
@@ -187,6 +236,105 @@ async function saveEntradaAutomatica(req, res) {
 
 				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
 				for (let itemPartida of partidas) {
+					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+				}
+				console.log(entrada);
+				res.status(200).send(entrada);
+			})
+			.catch((error) => {
+				res.status(500).send(error);
+			});
+	} else {
+		console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+		res.status(400).send({ message: "Se intenta generar una entrada sin partidas", error: "No se encontró pre-partidas para los IDs de pedidos indicados" });
+	}
+}
+
+async function saveEntradaBabel(req, res) {
+	var mongoose = require('mongoose');
+	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
+	//console.log(req.body);
+	var arrPartidas=[];
+	for (var i=4; i<34 ; i++) {
+		if(req.body.Pedido[i].Clave !== undefined)
+		{
+			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
+			console.log(producto._id)
+			const data={
+				producto_id:producto._id,
+				clave:producto.clave,
+				descripcion:producto.descripcion,
+				origen:"Babel",
+				tipo: "Arrival",
+    			status: "WaitingArrival",
+				embalajesEntrada: { cajas:req.body.Pedido[i].Cantidad},
+	        	embalajesxSalir: { cajas:req.body.Pedido[i].Cantidad},
+	        	fechaProduccion: Date.parse(req.body.Pedido[i].Caducidad),
+	        	fechaCaducidad: Date.parse(req.body.Pedido[i].Caducidad),
+	        	lote:req.body.Pedido[i].Lote,
+	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
+	        	valor:0
+	        }
+	        //console.log(data.InfoPedidos)
+	        arrPartidas.push(data);
+    	}
+	}
+	//console.log("test");
+	//console.log(arrPartidas);
+    var arrPartidas_id = [];
+    var partidas = [];
+    await Helper.asyncForEach(arrPartidas, async function (partida) {
+        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
+        let nPartida = new PartidaModel(partida);
+        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
+        //console.log(nPartida);
+        await nPartida.save().then((partida) => {
+        	partidas.push(partida)
+            arrPartidas_id.push(partida._id);
+        });
+    });
+	//console.log(arrPartidas_id)
+	let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[1].InfoPedido.split(" ")[1] }).exec();
+	let fechaesperada=Date.parse(req.body.Infoplanta[3].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado);
+	//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
+	if (partidas && partidas.length > 0) {
+		let idCliente = req.body.IDClienteFiscal;
+		let idSucursales = req.body.IDSucursal;
+
+		let nEntrada = new Entrada();
+
+		nEntrada.fechaEntrada = fechaesperada;
+		nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+			return total + valor;
+		});
+		nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+		nEntrada.clienteFiscal_id = idCliente;
+		nEntrada.sucursal_id = idSucursales;
+		nEntrada.status = "WaitingArrival";/*repalce arrival*/
+		nEntrada.tipo = "Arrival";
+		nEntrada.partidas = partidas.map(x => x._id);
+		nEntrada.nombreUsuario = "BarcelBabel";
+		nEntrada.tracto = req.body.Infoplanta[13].InfoPedido;
+		nEntrada.remolque = req.body.Infoplanta[11].InfoPedido;
+		//nEntrada.embarque = req.body.Infoplanta[23].InfoPedido;
+		nEntrada.referencia = req.body.Infoplanta[23].InfoPedido;
+		nEntrada.item = req.body.Infoplanta[23].InfoPedido;
+		nEntrada.transportista = req.body.Infoplanta[9].InfoPedido;
+		nEntrada.operador = req.body.Infoplanta[17].InfoPedido;
+		nEntrada.ordenCompra=req.body.Infoplanta[29].InfoPedido;
+		nEntrada.fechaAlta = new Date();
+		nEntrada.idEntrada = await getNextID();
+		nEntrada.folio = await getNextID();
+		nEntrada.plantaOrigen=planta.Nombre;
+		nEntrada.DiasTraslado=planta.DiasTraslado;
+		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
+		//console.log("testEntrada");
+		nEntrada.save()
+			.then(async (entrada) => {
+				//console.log("testpartidas");
+				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
+				for (let itemPartida of partidas) {
+					//console.log("testMovimientos");
 					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 				}
 				console.log(entrada);
@@ -415,7 +563,7 @@ console.log(filter)
 		});
 
 		var excel = require('excel4node');
-        var dateFormat = require('dateformat');
+        
         var workbook = new excel.Workbook();
         var tituloStyle = workbook.createStyle({
           font: {
@@ -680,7 +828,6 @@ async function getExcelEntradas(req, res) {
 		}).then((entradas) => {
 
 			var excel = require('excel4node');
-	        var dateFormat = require('dateformat');
 	        var workbook = new excel.Workbook();
 	        var tituloStyle = workbook.createStyle({
 	          font: {
@@ -756,6 +903,27 @@ async function getExcelEntradas(req, res) {
 			res.status(500).send(error);
 		});
 }
+/*change status to arrived*/
+async function updateById(req, res) {
+
+	let _id = req.query.id;
+	let entrada = await Entrada.findOne({ _id: _id });
+	entrada.status="Arrived";
+	entrada.save().then((entrada) => {
+		entrada.partidas.forEach(async id_partidas => 
+        {
+        	let partida = await PartidaModel.findOne({ _id: id_partidas });
+        	partida.status="Arrived";
+			partida.save();
+
+        });
+		res.status(200).send(entrada);
+	})
+	.catch((error) => {
+		res.status(500).send(error);
+	});
+}
+
 
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
@@ -823,6 +991,8 @@ module.exports = {
 	getSalidasByEntradaID,
 	getEntradasReporte,
 	getExcelEntradas,
-	getExcelCaducidades
+	getExcelCaducidades,
+	saveEntradaBabel,
+	updateById
 	// getPartidaById,
 }

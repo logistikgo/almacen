@@ -118,14 +118,12 @@ async function save(req, res) {
 async function update(req, res) {
 	let bodyParams = req.body;
 	let salida_id = bodyParams.salidaid;
-	
 	bodyParams.fechaSalida = new Date(bodyParams.fechaSalida);
 	bodyParams.fechaAlta = new Date();
 
-	for (let partida of req.body.jsonPartidas) {
-		Partida._put(partida);
-	}
-
+	// for (let partida of req.body) {
+	// 	Partida._put(partida);
+	// }
 	Salida.updateOne(
 		{ _id: salida_id },
 		{ $set: req.body })
@@ -495,7 +493,7 @@ function getExcelSalidas(req, res) {
 		worksheet.cell(2, 18).string('Operador').style(headersStyle);
 		worksheet.cell(2, 19).string('Ubicacion').style(headersStyle);
         let i=3;
-        console.log("test1")
+        //console.log("test1")
         arrPartidas.forEach(partidas => 
         {
         	worksheet.cell(i, 1).string(partidas.referencia ? partidas.referencia:"");
@@ -564,7 +562,10 @@ function getExcelSalidas(req, res) {
 				  },
 	        	});
        		}
-        	worksheet.cell(i, 13).number(value).style(ResultStyle);
+       		//console.log("Test");
+       		//console.log(value);
+       		if(value != Infinity)
+        		worksheet.cell(i, 13).number(value).style(ResultStyle);
         	worksheet.cell(i, 14).string(partidas.transportista ? partidas.transportista:"");
         	worksheet.cell(i, 15).string(partidas.placasTrailer ? partidas.placasTrailer:"");
         	worksheet.cell(i, 16).string(partidas.placasRemolque ? partidas.placasRemolque:"");
@@ -576,7 +577,7 @@ function getExcelSalidas(req, res) {
             worksheet.cell(i, 19).string(res);
             i++;
         });
-        workbook.write('ReporteSalidas'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
+        workbook.write('ReporteSali'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
 
 	})
 	.catch((error) => {
