@@ -37,7 +37,6 @@ function getByCliente(req, res) {
 
     TarifaFija.find({ cliente_id: cliente_id, statusReg: "ACTIVO" })
         .sort({ "fechaAlta": -1 })
-        .limit(1)
         .then(tarifa => {
             res.status(200).send(tarifa);
         })

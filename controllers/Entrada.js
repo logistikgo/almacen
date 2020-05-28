@@ -21,22 +21,69 @@ async function get(req, res) {
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
 	let _tipo = req.query.tipo;
-	let _status = req.query.status;
+	let _status = req.query.status != ""? req.query.status : null;
 	let _interfaz = req.query.interfaz;
-	let filter ="";
-	if(_status != "FINALIZADO"){
+	console.log(_status);
+	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
+	var json = [];
+	if(_status != "FINALIZADO" && _status != null){
 		filter = {
 			sucursal_id: _idSucursal,
 			tipo: _tipo,
 			status: _status
 		};
 	}
-	else
+	else if(_status != null)
 	{
+		if(req.query.isReporte) {
+			filter = {
+				sucursal_id: _idSucursal,
+				tipo: _tipo,
+				//status: "FINALIZADO"
+			};
+		}
+		else {
+			filter = {
+				sucursal_id: _idSucursal,
+				tipo: _tipo,
+				status: "FINALIZADO"
+			};
+		}
+	}
+	else if(_status === null){
 		filter = {
 			sucursal_id: _idSucursal,
+			clienteFiscal_id: _idClienteFiscal,
+			almacen_id: _idAlmacen,
 			tipo: _tipo
 		};
+		Entrada.find(filter)
+		.then((entradasByStatus) => {
+			entradasByStatus.forEach(resp => {
+				if(resp.status == "WaitingArrival")
+					WaitingArrival++;
+				if(resp.status == "ARRIVED")
+					ARRIVED++;
+				if(resp.status == "APLICADA")
+					APLICADA++;
+				if(resp.tipo == "RECHAZO")
+					RECHAZO++;
+				if(resp.status == "FINALIZADO")
+					FINALIZADO++;
+			});
+			var jsonResponse = {
+				WaitingArrival: WaitingArrival,
+				Arrived: ARRIVED,
+				Aplicada: APLICADA,
+				Rechazo: RECHAZO,
+				Finalizado: FINALIZADO
+			};
+			json = jsonResponse;
+		})
+		.catch((error) => {
+			console.log(error);
+		});
+		
 	}
 	if (!_interfaz) { //Esta condicion determina si la funcion esta siendo usa de la interfaz o de la aplicacion
 		if (_status == "APLICADA" || _status == "FINALIZADO") //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
@@ -57,7 +104,7 @@ async function get(req, res) {
 			path: 'partidas.producto_id',
 			model: 'Producto'
 		}).then((entradas) => {
-			res.status(200).send(entradas);
+			res.status(200).send(_status == null ? json : entradas);
 		}).catch((error) => {
 			res.status(500).send(error);
 		});
@@ -219,7 +266,7 @@ async function saveEntradaBabel(req, res) {
 				descripcion:producto.descripcion,
 				origen:"Babel",
 				tipo: "Arrival",
-    			status: "NO ASIGNADA",
+    			status: "WaitingArrival",
 				embalajesEntrada: { cajas:req.body.Pedido[i].Cantidad},
 	        	embalajesxSalir: { cajas:req.body.Pedido[i].Cantidad},
 	        	fechaProduccion: Date.parse(req.body.Pedido[i].Caducidad),
@@ -263,14 +310,17 @@ async function saveEntradaBabel(req, res) {
 		nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
 		nEntrada.clienteFiscal_id = idCliente;
 		nEntrada.sucursal_id = idSucursales;
-		nEntrada.status = "SIN_POSICIONAR";/*repalce arrival*/
-		nEntrada.tipo = "NORMAL";
+		nEntrada.status = "WaitingArrival";/*repalce arrival*/
+		nEntrada.tipo = "Arrival";
 		nEntrada.partidas = partidas.map(x => x._id);
 		nEntrada.nombreUsuario = "BarcelBabel";
 		nEntrada.tracto = req.body.Infoplanta[13].InfoPedido;
 		nEntrada.remolque = req.body.Infoplanta[11].InfoPedido;
-		nEntrada.embarque = req.body.Infoplanta[23].InfoPedido;
-		nEntrada.transportista = req.body.Infoplanta[17].InfoPedido;
+		//nEntrada.embarque = req.body.Infoplanta[23].InfoPedido;
+		nEntrada.referencia = req.body.Infoplanta[23].InfoPedido;
+		nEntrada.item = req.body.Infoplanta[23].InfoPedido;
+		nEntrada.transportista = req.body.Infoplanta[9].InfoPedido;
+		nEntrada.operador = req.body.Infoplanta[17].InfoPedido;
 		nEntrada.ordenCompra=req.body.Infoplanta[29].InfoPedido;
 		nEntrada.fechaAlta = new Date();
 		nEntrada.idEntrada = await getNextID();
@@ -853,6 +903,27 @@ async function getExcelEntradas(req, res) {
 			res.status(500).send(error);
 		});
 }
+/*change status to arrived*/
+async function updateById(req, res) {
+
+	let _id = req.query.id;
+	let entrada = await Entrada.findOne({ _id: _id });
+	entrada.status="Arrived";
+	entrada.save().then((entrada) => {
+		entrada.partidas.forEach(async id_partidas => 
+        {
+        	let partida = await PartidaModel.findOne({ _id: id_partidas });
+        	partida.status="Arrived";
+			partida.save();
+
+        });
+		res.status(200).send(entrada);
+	})
+	.catch((error) => {
+		res.status(500).send(error);
+	});
+}
+
 
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
@@ -921,6 +992,7 @@ module.exports = {
 	getEntradasReporte,
 	getExcelEntradas,
 	getExcelCaducidades,
-	saveEntradaBabel
+	saveEntradaBabel,
+	updateById
 	// getPartidaById,
 }
