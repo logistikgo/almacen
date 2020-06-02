@@ -3,6 +3,7 @@
 const Pasillo = require('../models/Pasillo');
 const Posicion = require('../controllers/Posicion');
 const PosicionModel = require('../models/Posicion');
+const Helper = require('../helpers');
 var ObjectId = (require('mongoose').Types.ObjectId);
 
 function get(req, res) {
@@ -153,6 +154,91 @@ function save(almacen_id, pasillo, usuarioAlta_id, usuarioAlta) {
 		});
 }
 
+
+async function getPocionesAuto(Family,almacen_id)
+{
+	let pasillos = await Pasillo.find({
+		almacen_id: new ObjectId(almacen_id),
+		statusReg: "ACTIVO"
+	})
+	let need=Family.needed;
+	let resarray=[]
+	for ( let i = 0; i <= 5 ; i++ )
+	{
+		await Helper.asyncForEach(pasillos, async function (pasillo) 
+		{
+		
+			if(pasillo.familia == Family.nombre){
+				console.log(pasillo.nombre);
+				console.log(pasillo.familia);
+				let posiciones = await PosicionModel.find({
+					pasillo_id: new ObjectId(pasillo._id),
+					estatus: "DISPONIBLE"
+				})
+				//console.log(posiciones);
+			
+	        	await Helper.asyncForEach(posiciones, async function (posicion) 
+				{
+	        		if(posicion.niveles.length>i)
+	        		if(Family.prioridad <= posicion.niveles[i].prioridad && need > 0 && posicion.niveles[i].isCandadoDisponibilidad == false && posicion.niveles[i].apartado == false)
+    				{
+    					console.log(posicion._id);
+    					console.log(posicion.niveles[i].prioridad);
+    					console.log(posicion.nombre+"::"+posicion.niveles[i].nombre);
+    					need-=1;
+    					posicion.niveles[i].isCandadoDisponibilidad = true; 
+    					posicion.niveles[i].apartado = true;
+    					posicion.save();
+    					resarray.push({pocision_id:posicion._id,nivelIndex:i});
+    				}
+	    				
+	    				
+				});
+			}
+
+		});
+	}
+	if(need>0)
+	{
+		for ( let i = 0; i <= 5 ; i++ )
+		{
+			await Helper.asyncForEach(pasillos, async function (pasillo) 
+			{
+			
+				if(pasillo.familia == "NONE"){
+					console.log(pasillo.nombre);
+					console.log(pasillo.familia);
+					let posiciones = await PosicionModel.find({
+						pasillo_id: new ObjectId(pasillo._id),
+						estatus: "DISPONIBLE"
+					})
+					//console.log(posiciones);
+				
+					await Helper.asyncForEach(posiciones, async function (posicion) 
+					{
+		        		if(posicion.niveles.length>i)
+		        		if(Family.prioridad <= posicion.niveles[i].prioridad && need > 0 && posicion.niveles[i].isCandadoDisponibilidad == false && posicion.niveles[i].apartado == false)
+	    				{
+	    					console.log(posicion._id);
+	    					console.log(posicion.niveles[i].prioridad);
+	    					console.log(posicion.nombre+"::"+posicion.niveles[i].nombre);
+	    					need-=1;
+	    					posicion.niveles[i].isCandadoDisponibilidad = true; 
+	    					posicion.niveles[i].apartado = true;
+	    					posicion.save();
+	    					resarray.push({pocision_id:posicion._id,nivelIndex:i});
+	    				}
+		    				
+		    				
+					});
+				}
+
+			});
+		}
+	}
+	return resarray;
+}
+
 function update() {
 
 }
@@ -168,5 +254,6 @@ module.exports = {
 	getDisponibles,
 	save,
 	update,
+	getPocionesAuto,
 	_delete
 }

@@ -5,6 +5,7 @@ const Salida = require('../models/Salida');
 const Entrada = require('../models/Entrada');
 const Pasillo = require('../models/Pasillo');
 const Posicion = require('./Posicion');
+const PosicionModelo = require('../models/Posicion');
 const MovimientoInventarioController = require('./MovimientoInventario');
 const Helper = require('../helpers');
 const NullParamsException = { error: "NullParamsException" };
@@ -1083,7 +1084,28 @@ async function updateCajasPedidas(req, res) {
 
 //     return 0;
 // }
-
+async function posicionarAuto(id_pocision,id_partidas,nivelIndex)
+{
+    let partida = await Partida.findOne({ _id: id_partidas });
+    let posicion = await PosicionModelo.findOne({ _id: id_pocision});
+    let pasillo = await Pasillo.findOne({ _id: posicion.pasillo_id});
+    partida.posiciones=[];
+        let jPosicionBahia = {
+            embalajesEntrada: partida.embalajesEntrada,
+            embalajesxSalir: partida.embalajesxSalir,
+            pasillo: pasillo.nombre,
+            pasillo_id: pasillo._id,
+            posicion: posicion.nombre,
+            posicion_id: posicion._id,
+            nivel_id: posicion.niveles[nivelIndex]._id,
+            nivel: posicion.niveles[nivelIndex].nombre,
+            ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
+        };
+        partida.posiciones.push(jPosicionBahia);
+        partida.save();
+        console.log(partida);
+    
+}
 module.exports = {
     get,
     post,
@@ -1104,5 +1126,6 @@ module.exports = {
     asignarEntrada,
     updatePosicionPartida,
     updateCajasPedidas,
+    posicionarAuto,
     getExcelByIDs
 }
