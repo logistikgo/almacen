@@ -35,6 +35,7 @@ const CostoFactor = require('./controllers/CostoFactor');
 const CostoFija = require('./controllers/CostoFija');
 const CostoPES = require('./controllers/CostoPES');
 const PlantaProductora = require('./controllers/PlantaProductora');
+const Ticket = require('./controllers/Ticket');
 
 app.use(bodyParser.urlencoded({
 	extended: false

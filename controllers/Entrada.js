@@ -61,7 +61,7 @@ async function get(req, res) {
 		Entrada.find(filter)
 		.then((entradasByStatus) => {
 			entradasByStatus.forEach(resp => {
-				if(resp.status == "WaitingArrival")
+				if(resp.status == "WAITINGARRIVAL")
 					WaitingArrival++;
 				if(resp.status == "ARRIVED")
 					ARRIVED++;
