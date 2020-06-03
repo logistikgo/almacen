@@ -21,7 +21,8 @@ const Pasillo = Schema(
 		fechaAlta: Date,
 		usuarioAlta_id: Number,
 		usuarioAlta: String,
-		statusReg: String
+		statusReg: String,
+		familia:{ type: String, default: "NONE" },
 	},
 	{
 		collection: 'Pasillos'

@@ -35,6 +35,7 @@ const CostoFactor = require('./controllers/CostoFactor');
 const CostoFija = require('./controllers/CostoFija');
 const CostoPES = require('./controllers/CostoPES');
 const PlantaProductora = require('./controllers/PlantaProductora');
+const Ticket = require('./controllers/Ticket');
 
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -261,4 +262,7 @@ app.get('/api/getExcelSalidas', Salida.getExcelSalidas);
 //entradas
 app.post('/api/saveEntradaBabel', Entrada.saveEntradaBabel);
 app.post('/api/updateById', Entrada.updateById);
+
+//PosicionamentoAuto
+app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
 module.exports = app;

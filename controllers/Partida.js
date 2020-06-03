@@ -4,11 +4,15 @@ const Partida = require('../models/Partida');
 const Salida = require('../models/Salida');
 const Entrada = require('../models/Entrada');
 const Pasillo = require('../models/Pasillo');
+const Producto = require('../models/Producto');
 const Posicion = require('./Posicion');
+const PosicionModelo = require('../models/Posicion');
 const MovimientoInventarioController = require('./MovimientoInventario');
 const Helper = require('../helpers');
 const NullParamsException = { error: "NullParamsException" };
 const BreakException = { info: "Break" };
+const dateFormat = require('dateformat');
+
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
@@ -423,23 +427,31 @@ async function getByProductoEmbalaje(req, res) {
 
         //Ordena las partidas dependiendo del algoritmo
         if (algoritmoSalida[0].algoritmo === "PEPS")
-            partidas = partidas.sort(function (a, b) {
+            partidas = partidas.sort(async function (a, b) {
                 if (new Date(a.entrada_id.fechaEntrada) < new Date(b.entrada_id.fechaEntrada)) return -1;
                 if (new Date(a.entrada_id.fechaEntrada) > new Date(b.entrada_id.fechaEntrada)) return 1;
                 else {
                     if (algoritmoSalida.length > 1) {
                         if (algoritmoSalida[1].algoritmo === "CADUCIDAD") {
-                            if (new Date(a.fechaCaducidad) < new Date(b.fechaCaducidad)) return -1;
-                            else if (new Date(a.fechaCaducidad) > new Date(b.fechaCaducidad)) return 1;
+                            let prodA=await Producto.findOne({ _id: a.producto_id });
+                            let fechaA = new Date(a.fechaCaducidad - (prodA.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+                            let prodB=await Producto.findOne({ _id: b.producto_id });
+                            let fechaB = new Date(b.fechaCaducidad - (prodB.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+                            
+                            if (new Date(fechaA) < new Date(fechaB)) return -1;
+                            else if (new Date(fechaA) > new Date(fechaB)) return 1;
                         }
                     }
                     return 0;
                 }
             });
         else if (algoritmoSalida[0].algoritmo === "CADUCIDAD")
-            partidas = partidas.sort(function (a, b) {
-                if (new Date(a.fechaCaducidad) < new Date(b.fechaCaducidad)) return -1;
-                if (new Date(a.fechaCaducidad) > new Date(b.fechaCaducidad)) return 1;
+            partidas = partidas.sort( function (a, b) {
+                let fechaA = a.fechaCaducidad;
+                let fechaB = b.fechaCaducidad;
+                
+                if (new Date(fechaA) < new Date(fechaB)) return -1;
+                if (new Date(fechaA) > new Date(fechaB)) return 1;
                 else {
                     if (algoritmoSalida.length > 1) {
                         if (algoritmoSalida[1].algoritmo === "PEPS") {
@@ -451,10 +463,11 @@ async function getByProductoEmbalaje(req, res) {
                 }
             });
     }
-
+    //console.log(partidas);
     let partidasActuales = [];
 
     try {
+        console.log("try");
         //Validacion para Clientes fiscales que no utilicen ningun algoritmo
         console.log(algoritmoSalida === undefined || algoritmoSalida.length < 1);
         if (algoritmoSalida === undefined || algoritmoSalida.length < 1) {
@@ -529,61 +542,126 @@ async function getByProductoEmbalaje(req, res) {
          */
 
         console.log("Cantidad restante", cantidadRestante);
-        partidas.forEach(partida => {
-            let subConsecutivo = 0;
+        await Helper.asyncForEach(partidas, async function (partida) {
+            let prodA=await Producto.findOne({ _id: partida.producto_id });
+             //console.log(prodA.garantiaFrescura)
+            let fechaA=Date.now();
+            if(prodA.garantiaFrescura)
+                fechaA = new Date(partida.fechaCaducidad - (prodA.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 
-            partida.posiciones.filter(x => !x.isEmpty).forEach(posicion => {
+            if((algoritmoSalida[0].algoritmo === "CADUCIDAD" && Date.now()<fechaA)){
+                let subConsecutivo = 0;
+                //console.log(dateFormat(fechaA, "dd/mm/yyyy"));
+                partida.posiciones.filter(x => !x.isEmpty).forEach(posicion => {
 
-                if (cantidadRestante > 0) {
-                    let auxPartida = {
-                        lote: partida.lote,
-                        clave: partida.clave,
-                        descripcion: partida.descripcion,
-                        isEmpty: partida.isEmpty,
-                        _id: partida._id,
-                        _idLocal: partida._id + '/' + subConsecutivo,
-                        embalajesEntradaFull: Helper.Clone(partida.embalajesEntrada),
-                        embalajesxSalirFull: Helper.Clone(partida.embalajesxSalir),
-                        embalajesEntrada: Helper.Clone(posicion.embalajesxSalir),
-                        embalajesxSalir: Helper.Clone(posicion.embalajesxSalir),
-                        embalajesEnSalida: Helper.emptyEmbalajes(posicion.embalajesxSalir),
-                        posicion_id: posicion.posicion_id,
-                        posicion: posicion.posicion,
-                        pasillo_id: posicion.pasillo_id,
-                        pasillo: posicion.pasillo,
-                        nivel_id: posicion.nivel_id,
-                        nivel: posicion.nivel,
-                        producto_id: producto_id,
-                        ubicacion_id: posicion._id,
-                        posicionesFull: Helper.Clone(partida.posiciones),
-                        posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
-                        subConsecutivo: subConsecutivo,
-                        fechaEntrada: partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
-                        fechaCaducidad: partida.fechaCaducidad ? partida.fechaCaducidad : "",
-                        entrada_id: partida.entrada_id != undefined ? partida.entrada_id._id : ""
-                    };
+                    if (cantidadRestante > 0) {
+                        let auxPartida = {
+                            lote: partida.lote,
+                            clave: partida.clave,
+                            descripcion: partida.descripcion,
+                            isEmpty: partida.isEmpty,
+                            _id: partida._id,
+                            _idLocal: partida._id + '/' + subConsecutivo,
+                            embalajesEntradaFull: Helper.Clone(partida.embalajesEntrada),
+                            embalajesxSalirFull: Helper.Clone(partida.embalajesxSalir),
+                            embalajesEntrada: Helper.Clone(posicion.embalajesxSalir),
+                            embalajesxSalir: Helper.Clone(posicion.embalajesxSalir),
+                            embalajesEnSalida: Helper.emptyEmbalajes(posicion.embalajesxSalir),
+                            posicion_id: posicion.posicion_id,
+                            posicion: posicion.posicion,
+                            pasillo_id: posicion.pasillo_id,
+                            pasillo: posicion.pasillo,
+                            nivel_id: posicion.nivel_id,
+                            nivel: posicion.nivel,
+                            producto_id: producto_id,
+                            ubicacion_id: posicion._id,
+                            posicionesFull: Helper.Clone(partida.posiciones),
+                            posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
+                            subConsecutivo: subConsecutivo,
+                            fechaEntrada: partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
+                            fechaCaducidad: partida.fechaCaducidad ? partida.fechaCaducidad : "",
+                            entrada_id: partida.entrada_id != undefined ? partida.entrada_id._id : ""
+                        };
 
-                    if (cantidadRestante >= auxPartida.embalajesxSalir[embalaje]) {
-                        auxPartida.embalajesEnSalida[embalaje] = auxPartida.embalajesxSalir[embalaje];
-                        auxPartida.embalajesxSalir[embalaje] = 0;
-                        auxPartida.posiciones[0].embalajesxSalir[embalaje] = 0;
-                        auxPartida.posiciones[0].isEmpty = Helper.isEmptyEmbalaje(auxPartida.posiciones[0].embalajesxSalir);
+                        if (cantidadRestante >= auxPartida.embalajesxSalir[embalaje]) {
+                            auxPartida.embalajesEnSalida[embalaje] = auxPartida.embalajesxSalir[embalaje];
+                            auxPartida.embalajesxSalir[embalaje] = 0;
+                            auxPartida.posiciones[0].embalajesxSalir[embalaje] = 0;
+                            auxPartida.posiciones[0].isEmpty = Helper.isEmptyEmbalaje(auxPartida.posiciones[0].embalajesxSalir);
 
+                        } else {
+
+                            auxPartida.embalajesEnSalida[embalaje] = cantidadRestante;
+                            auxPartida.embalajesxSalir[embalaje] -= cantidadRestante;
+                            auxPartida.posiciones[0].embalajesxSalir[embalaje] -= cantidadRestante;
+                        }
+
+                        subConsecutivo += 1;
+                        partidasActuales.push(auxPartida);
+                        cantidadRestante -= auxPartida.embalajesEnSalida[embalaje];
                     } else {
-
-                        auxPartida.embalajesEnSalida[embalaje] = cantidadRestante;
-                        auxPartida.embalajesxSalir[embalaje] -= cantidadRestante;
-                        auxPartida.posiciones[0].embalajesxSalir[embalaje] -= cantidadRestante;
+                        //Si no hay mas que sacar entonces simplemente termina
+                        throw BreakException;
                     }
+                });
+            }
+            else if(algoritmoSalida[0].algoritmo != "CADUCIDAD")
+            {
+                let subConsecutivo = 0;
+                //console.log(dateFormat(fechaA, "dd/mm/yyyy"));
+                partida.posiciones.filter(x => !x.isEmpty).forEach(posicion => {
 
-                    subConsecutivo += 1;
-                    partidasActuales.push(auxPartida);
-                    cantidadRestante -= auxPartida.embalajesEnSalida[embalaje];
-                } else {
-                    //Si no hay mas que sacar entonces simplemente termina
-                    throw BreakException;
-                }
-            });
+                    if (cantidadRestante > 0) {
+                        let auxPartida = {
+                            lote: partida.lote,
+                            clave: partida.clave,
+                            descripcion: partida.descripcion,
+                            isEmpty: partida.isEmpty,
+                            _id: partida._id,
+                            _idLocal: partida._id + '/' + subConsecutivo,
+                            embalajesEntradaFull: Helper.Clone(partida.embalajesEntrada),
+                            embalajesxSalirFull: Helper.Clone(partida.embalajesxSalir),
+                            embalajesEntrada: Helper.Clone(posicion.embalajesxSalir),
+                            embalajesxSalir: Helper.Clone(posicion.embalajesxSalir),
+                            embalajesEnSalida: Helper.emptyEmbalajes(posicion.embalajesxSalir),
+                            posicion_id: posicion.posicion_id,
+                            posicion: posicion.posicion,
+                            pasillo_id: posicion.pasillo_id,
+                            pasillo: posicion.pasillo,
+                            nivel_id: posicion.nivel_id,
+                            nivel: posicion.nivel,
+                            producto_id: producto_id,
+                            ubicacion_id: posicion._id,
+                            posicionesFull: Helper.Clone(partida.posiciones),
+                            posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
+                            subConsecutivo: subConsecutivo,
+                            fechaEntrada: partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
+                            fechaCaducidad: partida.fechaCaducidad ? partida.fechaCaducidad : "",
+                            entrada_id: partida.entrada_id != undefined ? partida.entrada_id._id : ""
+                        };
+
+                        if (cantidadRestante >= auxPartida.embalajesxSalir[embalaje]) {
+                            auxPartida.embalajesEnSalida[embalaje] = auxPartida.embalajesxSalir[embalaje];
+                            auxPartida.embalajesxSalir[embalaje] = 0;
+                            auxPartida.posiciones[0].embalajesxSalir[embalaje] = 0;
+                            auxPartida.posiciones[0].isEmpty = Helper.isEmptyEmbalaje(auxPartida.posiciones[0].embalajesxSalir);
+
+                        } else {
+
+                            auxPartida.embalajesEnSalida[embalaje] = cantidadRestante;
+                            auxPartida.embalajesxSalir[embalaje] -= cantidadRestante;
+                            auxPartida.posiciones[0].embalajesxSalir[embalaje] -= cantidadRestante;
+                        }
+
+                        subConsecutivo += 1;
+                        partidasActuales.push(auxPartida);
+                        cantidadRestante -= auxPartida.embalajesEnSalida[embalaje];
+                    } else {
+                        //Si no hay mas que sacar entonces simplemente termina
+                        throw BreakException;
+                    }
+                });
+            }
         });
         //Si los ciclos han terminado entonces se lanza  la excepcion de finalización.
         //Puesto que ya no hay partidas disponibles
@@ -1083,7 +1161,28 @@ async function updateCajasPedidas(req, res) {
 
 //     return 0;
 // }
-
+async function posicionarAuto(id_pocision,id_partidas,nivelIndex)
+{
+    let partida = await Partida.findOne({ _id: id_partidas });
+    let posicion = await PosicionModelo.findOne({ _id: id_pocision});
+    let pasillo = await Pasillo.findOne({ _id: posicion.pasillo_id});
+    partida.posiciones=[];
+        let jPosicionBahia = {
+            embalajesEntrada: partida.embalajesEntrada,
+            embalajesxSalir: partida.embalajesxSalir,
+            pasillo: pasillo.nombre,
+            pasillo_id: pasillo._id,
+            posicion: posicion.nombre,
+            posicion_id: posicion._id,
+            nivel_id: posicion.niveles[nivelIndex]._id,
+            nivel: posicion.niveles[nivelIndex].nombre,
+            ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
+        };
+        partida.posiciones.push(jPosicionBahia);
+        partida.save();
+        console.log(partida);
+    
+}
 module.exports = {
     get,
     post,
@@ -1104,5 +1203,6 @@ module.exports = {
     asignarEntrada,
     updatePosicionPartida,
     updateCajasPedidas,
+    posicionarAuto,
     getExcelByIDs
 }

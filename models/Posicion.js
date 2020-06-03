@@ -9,7 +9,9 @@ const Posicion = Schema(
 		nombre: String,
 		niveles: [{
 			nombre: String,
-			isCandadoDisponibilidad: Boolean,
+			isCandadoDisponibilidad: { type: Boolean, default: false},
+			apartado: { type: Boolean, default: false},
+			prioridad: { type: Number, default: 5},
 			productos: [{
 				producto_id: { type: Schema.ObjectId, ref: "Producto" },
 				embalajes: {},
