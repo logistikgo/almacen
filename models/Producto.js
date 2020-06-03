@@ -61,7 +61,9 @@ const Producto = Schema({
 	alertaAmarilla: Number,
 	alertaRoja: Number,
 	isSafetyStock: Boolean,
-	safetystock: Number
+	safetystock: Number,
+	familia:{ type: String, default: "NONE" },
+	prioridad:{ type: Number, default: 5 }
 },
 	{ collection: 'Productos' }
 );

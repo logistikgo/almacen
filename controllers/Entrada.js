@@ -4,6 +4,7 @@ const Entrada = require('../models/Entrada');
 const Producto = require('../models/Producto');
 const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
+const PasilloCtr = require('../controllers/Pasillo');
 const PartidaModel = require('../models/Partida');
 const Helper = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
@@ -60,7 +61,7 @@ async function get(req, res) {
 		Entrada.find(filter)
 		.then((entradasByStatus) => {
 			entradasByStatus.forEach(resp => {
-				if(resp.status == "WaitingArrival")
+				if(resp.status == "WAITINGARRIVAL")
 					WaitingArrival++;
 				if(resp.status == "ARRIVED")
 					ARRIVED++;
@@ -310,8 +311,8 @@ async function saveEntradaBabel(req, res) {
 		nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
 		nEntrada.clienteFiscal_id = idCliente;
 		nEntrada.sucursal_id = idSucursales;
-		nEntrada.status = "WaitingArrival";/*repalce arrival*/
-		nEntrada.tipo = "Arrival";
+		nEntrada.status = "WAITINGARRIVAL";/*repalce arrival*/
+		nEntrada.tipo = "ARRIVAL";
 		nEntrada.partidas = partidas.map(x => x._id);
 		nEntrada.nombreUsuario = "BarcelBabel";
 		nEntrada.tracto = req.body.Infoplanta[13].InfoPedido;
@@ -908,12 +909,12 @@ async function updateById(req, res) {
 
 	let _id = req.query.id;
 	let entrada = await Entrada.findOne({ _id: _id });
-	entrada.status="Arrived";
+	entrada.status="ARRIVED";
 	entrada.save().then((entrada) => {
 		entrada.partidas.forEach(async id_partidas => 
         {
         	let partida = await PartidaModel.findOne({ _id: id_partidas });
-        	partida.status="Arrived";
+        	partida.status="ARRIVED";
 			partida.save();
 
         });
@@ -924,6 +925,95 @@ async function updateById(req, res) {
 	});
 }
 
+async function posicionarPrioridades(req, res) {
+	let _id = req.query.id;
+	let entrada = await Entrada.findOne({ _id: _id });
+	entrada.status="APLICADA";
+	entrada.save();
+	let arrayFamilias=[];
+	/*when to order by date???*/
+	await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
+
+    	let partida = await PartidaModel.findOne({ _id: id_partidas });
+    	console.log("-------------------------------");
+    	console.log(partida.descripcion);
+    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+    	
+    	let producto = await Producto.findOne({ _id: partida.producto_id });
+    	console.log("-------------------------------");
+ 		console.log(producto.prioridad)
+    	partida.status="ASIGNADA";
+		partida.save();
+    	if(producto.familia)
+    	{
+    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia  && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
+    		{
+    			console.log("yes");
+    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
+    			arrayFamilias[index].needed=1+arrayFamilias[index].needed;
+	    	}
+	        else{
+	        	console.log("NO");
+	        	const data={
+				nombre:producto.familia,
+				prioridad: producto.prioridad,
+	        	needed:1,
+	        	fechaCaducidad:dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"),
+	        	arrayPosiciones:[]
+	        	}
+    			arrayFamilias.push(data)  
+	        
+    		}  	
+    	}
+
+
+    });
+    console.log("second");
+    arrayFamilias.sort(function(a, b) {
+	    a = a.fechaCaducidad;
+	    b = b.fechaCaducidad;
+	    return a<b ? -1 : a>b ? 1 : 0;
+	});
+	await Helper.asyncForEach(arrayFamilias, async function (familia) 
+	{
+    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
+    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
+    	console.log("----result----");
+    	console.log(familia.arrayPosiciones);
+    	console.log("_________");
+    });
+    console.log("endGET");
+    console.log("Start");
+	await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
+
+    	let partida = await PartidaModel.findOne({ _id: id_partidas });
+    	console.log("-------------------------------");
+    	console.log(partida.descripcion);
+    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+    	
+    	let producto = await Producto.findOne({ _id: partida.producto_id });
+    	console.log("-------------------------------");
+ 		console.log(producto.prioridad)
+    	if(producto.familia)
+    	{
+    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
+    		{
+    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
+    			
+    			if(arrayFamilias[index].needed>0){
+    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,id_partidas,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
+    				arrayFamilias[index].arrayPosiciones.shift();
+    			}
+    			arrayFamilias[index].needed-=1;
+    			
+
+    		}
+
+    	}
+    });
+	
+
+}
 
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
@@ -993,6 +1083,7 @@ module.exports = {
 	getExcelEntradas,
 	getExcelCaducidades,
 	saveEntradaBabel,
-	updateById
+	updateById,
+	posicionarPrioridades
 	// getPartidaById,
 }
