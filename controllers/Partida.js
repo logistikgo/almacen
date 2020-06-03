@@ -547,7 +547,7 @@ async function getByProductoEmbalaje(req, res) {
              //console.log(prodA.garantiaFrescura)
             let fechaA=Date.now();
             if(prodA.garantiaFrescura)
-                let fechaA = new Date(partida.fechaCaducidad - (prodA.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+                fechaA = new Date(partida.fechaCaducidad - (prodA.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 
             if((algoritmoSalida[0].algoritmo === "CADUCIDAD" && Date.now()<fechaA)){
                 let subConsecutivo = 0;
