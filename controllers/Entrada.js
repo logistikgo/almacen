@@ -1179,6 +1179,7 @@ async function posicionarPrioridades(req, res) {
     	let producto = await Producto.findOne({ _id: partida.producto_id });
     	console.log("-------------------------------");
  		//console.log(producto.prioridad)
+ 		let respuesta=0;
     	if(producto.familia)
     	{
     		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
@@ -1190,6 +1191,10 @@ async function posicionarPrioridades(req, res) {
     				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
     				arrayFamilias[index].arrayPosiciones.shift();
     			}
+    			else
+    			{
+    				respuesta+=arrayFamilias[index].needed;
+    			}
     			arrayFamilias[index].needed-=1;
     			
 
@@ -1197,8 +1202,10 @@ async function posicionarPrioridades(req, res) {
 
     	}
     });
-	
-
+    if(respuesta<1)
+		res.status(200).send(respuesta);
+	else
+		res.status(500).send("not");
 }
 
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
