@@ -1208,6 +1208,44 @@ async function posicionarPrioridades(req, res) {
 		res.status(500).send("not");
 }
 
+/* Actualiza entrada y agrega partida dashboard */
+function updateRemision(req, res) {
+	let entrada_id = req.body.entrada_id;
+	var infoPartida = req.body.partida;
+
+	let newPartida = new PartidaModel(infoPartida);
+	newPartida.save().then((partida) => {
+		var arrPartidas = [];
+		Entrada.findOne({_id: entrada_id}).then((entrada) => {
+			arrPartidas = entrada.partidas;
+			arrPartidas.push(newPartida._id);
+
+			Entrada.updateOne({_id: entrada_id}, { $set: { partidas: arrPartidas }}).then((entrada) => {
+				res.status(200).send(infoPartida);
+			})
+			.catch((error) => {
+				res.status(500).send(error);
+			});
+		});
+	});
+}
+
+/* Cambiar el status de una entrada */
+function updateStatus(req, res) {
+	let _id = req.body.entrada_id;
+	let newStatus = req.body.status;
+	console.log(newStatus);
+
+	Entrada.updateOne({_id: _id}, { $set: { status: newStatus }}).then((data) => {
+		res.status(200).send(data);
+	})
+	.catch((error) => {
+		console.log(error);
+		res.status(500).send(error);
+	});
+}
+
+
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -1277,6 +1315,8 @@ module.exports = {
 	getExcelCaducidades,
 	saveEntradaBabel,
 	updateById,
-	posicionarPrioridades
+	posicionarPrioridades,
+	updateRemision,
+	updateStatus
 	// getPartidaById,
 }

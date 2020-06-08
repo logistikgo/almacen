@@ -85,6 +85,8 @@ app.put('/api/entrada', Entrada.update);
 app.post('/api/entrada', Entrada.save);
 app.post('/api/entradaAutomatica', Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada', Entrada.validaEntrada);
+app.put('/api/updateRemision', Entrada.updateRemision);
+app.put('/api/updateStatus', Entrada.updateStatus);
 
 app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
