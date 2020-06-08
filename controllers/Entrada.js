@@ -267,7 +267,7 @@ async function saveEntradaBabel(req, res) {
 				descripcion:producto.descripcion,
 				origen:"Babel",
 				tipo: "Arrival",
-    			status: "WaitingArrival",
+    			status: "WAITINGARRIVAL",
 				embalajesEntrada: { cajas:req.body.Pedido[i].Cantidad},
 	        	embalajesxSalir: { cajas:req.body.Pedido[i].Cantidad},
 	        	fechaProduccion: Date.parse(req.body.Pedido[i].Caducidad),
@@ -1097,7 +1097,7 @@ async function updateById(req, res) {
 }
 
 async function posicionarPrioridades(req, res) {
-	let _id = req.query.id;
+	let _id = req.body.id;
 	let entrada = await Entrada.findOne({ _id: _id });
 	entrada.status="APLICADA";
 	entrada.save();
@@ -1168,7 +1168,8 @@ async function posicionarPrioridades(req, res) {
     	console.log("_________");
     });
     console.log("endGET");
-    console.log("Start");
+	console.log("Start");
+	let respuesta=0;
 	await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
 
     	let partida = await PartidaModel.findOne({ _id: repartidas._id });
@@ -1179,7 +1180,7 @@ async function posicionarPrioridades(req, res) {
     	let producto = await Producto.findOne({ _id: partida.producto_id });
     	console.log("-------------------------------");
  		//console.log(producto.prioridad)
- 		let respuesta=0;
+ 		
     	if(producto.familia)
     	{
     		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
@@ -1203,9 +1204,9 @@ async function posicionarPrioridades(req, res) {
     	}
     });
     if(respuesta<1)
-		res.status(200).send(respuesta);
+		res.sendStatus(200);
 	else
-		res.status(500).send("not");
+		res.sendStatus(500);
 }
 
 /* Actualiza entrada y agrega partida dashboard */
