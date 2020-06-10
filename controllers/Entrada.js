@@ -1212,6 +1212,56 @@ async function posicionarPrioridades(req, res) {
 	}catch (error) {
         res.status(500).send(error);
     }
+
+	console.log(arrayFamilias);
+	await Helper.asyncForEach(arrayFamilias, async function (familia) 
+	{
+    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
+    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
+    	console.log("----result----");
+    	console.log(familia.arrayPosiciones);
+    	console.log("_________");
+    });
+    console.log("endGET");
+	console.log("Start");
+	let respuesta=0;
+	await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
+
+    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
+    	console.log("-------------------------------");
+    	console.log(partida.descripcion);
+    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+    	
+    	let producto = await Producto.findOne({ _id: partida.producto_id });
+    	console.log("-------------------------------");
+ 		//console.log(producto.prioridad)
+ 		
+    	if(producto.familia)
+    	{
+    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
+    		{
+    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
+    			
+    			if(arrayFamilias[index].needed>0){
+    				console.log(arrayFamilias[index].arrayPosiciones[0]);
+    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
+    				arrayFamilias[index].arrayPosiciones.shift();
+    			}
+    			else
+    			{
+    				respuesta+=arrayFamilias[index].needed;
+    			}
+    			arrayFamilias[index].needed-=1;
+    			
+
+    		}
+
+    	}
+    });
+    if(respuesta<1)
+		res.sendStatus(200);
+	else
+		res.sendStatus(500);
 }
 
 /* Actualiza entrada y agrega partida dashboard */
