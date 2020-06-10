@@ -469,12 +469,13 @@ async function validaEntrada(req, res) {
 }
 
 function getEntradasReporte(req, res) {
+	//console.log(req.body.fechaInicio)
 	var arrPartidas = [];
 	var arrPartidasFilter = [];
 	let clasificacion = req.body.clasificacion != undefined ? req.body.clasificacion : "";
 	let subclasificacion = req.body.subclasificacion != undefined ? req.body.subclasificacion :"";
-	let fechaInicio= req.body.fechaInicio !="" ? new Date(req.body.fechaInicio).toISOString() :"";
-	let fechaFinal= req.body.fechaFinal !="" ? new Date(req.body.fechaFinal).toISOString() :"";
+	let fechaInicio= req.body.fechaInicio != undefined ? req.body.fechaInicio !="" ? new Date(req.body.fechaInicio).toISOString() :"" :"";
+	let fechaFinal= req.body.fechaFinal != undefined ? req.body.fechaFinal !="" ? new Date(req.body.fechaFinal).toISOString() :"" :"";
 	let fecha=req.body.fecha != undefined ? req.body.fecha : "";
 	let alerta1=req.body.alerta1 != undefined ? req.body.alerta1 : "";
 	let alerta2=req.body.alerta2 != undefined ? req.body.alerta2 : "";
@@ -516,7 +517,7 @@ function getEntradasReporte(req, res) {
 		}
 	}
 	let reporte = 0;
-	console.log(filter);
+	//console.log(filter);
 	
 	Entrada.find(filter, {partidas: 1, _id: 0})
 	.populate({
@@ -596,11 +597,11 @@ function getEntradasReporte(req, res) {
 					resFecha = new Date(fechaAlerta2)>fechaInicio && new Date(fechaAlerta2)<fechaFinal;
 				}
 				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == ""){
-					console.log("No Filter");
+					//console.log("No Filter");
 					arrPartidas.push(elem);
 				}
 				else{
-					console.log("test");
+					//console.log("test");
 					let resClasificacion=true;
 					let resSubclasificacion=true;
 					let resAlerta1=true;
@@ -637,7 +638,7 @@ function getEntradasReporte(req, res) {
 					if(elem.isEmpty == false && resSubclasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true )
 					{	
 						arrPartidas.push(elem);
-						console.log("Filter");
+						//console.log("Filter");
 					}
 				}
 			})		
@@ -1104,108 +1105,113 @@ async function posicionarPrioridades(req, res) {
 	let arrayFamilias=[];
 	var reOrderPartidas=[];
 	/*when to order by date???*/
-	await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
-
-    	let partida = await PartidaModel.findOne({ _id: id_partidas });
-    	console.log("-------------------------------");
-    	console.log(partida.descripcion);
-    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
-    	
-    	let producto = await Producto.findOne({ _id: partida.producto_id });
-    	console.log("-------------------------------");
- 		console.log(producto.prioridad)
-    	partida.status="ASIGNADA";
-		partida.save();
-    	if(producto.familia)
-    	{
-    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia  && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
-    		{
-    			console.log("yes");
-    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
-    			arrayFamilias[index].needed=1+arrayFamilias[index].needed;
-	    	}
-	        else{
-	        	console.log("NO");
-	        	const data={
-				nombre:producto.familia,
-				prioridad: producto.prioridad,
-				descripcion:producto.descripcion,
-	        	needed:1,
-	        	fechaCaducidad:dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"),
-	        	arrayPosiciones:[]
-	        	}
-    			arrayFamilias.push(data)  
-	        
-    		}  	
-    	}
-    	reOrderPartidas.push(partida)
-
-    });
-    console.log("second");
-    arrayFamilias=arrayFamilias.sort(function(a, b) {
-    	return b.prioridad - a.prioridad;
-	});
-    arrayFamilias=arrayFamilias.sort(function(a, b) {
-	    a = a.fechaCaducidad;
-	    b = b.fechaCaducidad;
-	    return a<b ? -1 : a>b ? 1 : 0;
-	});
-    
-
-	/*reOrderPartidas.sort(function(a, b) {
-	    a = new Date(dateFormat(a.fechaCaducidad, "dd/mm/yyyy"));
-	    b = new Date(dateFormat(b.fechaCaducidad, "dd/mm/yyyy"));
-	    return a<b ? -1 : a>b ? 1 : 0;
-	});*/
-
-	console.log(arrayFamilias);
-	await Helper.asyncForEach(arrayFamilias, async function (familia) 
+	try
 	{
-    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
-    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
-    	console.log("----result----");
-    	console.log(familia.arrayPosiciones);
-    	console.log("_________");
-    });
-    console.log("endGET");
-    console.log("Start");
-	await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
+		await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
 
-    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
-    	console.log("-------------------------------");
-    	console.log(partida.descripcion);
-    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
-    	
-    	let producto = await Producto.findOne({ _id: partida.producto_id });
-    	console.log("-------------------------------");
- 		//console.log(producto.prioridad)
- 		let respuesta=0;
-    	if(producto.familia)
-    	{
-    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
-    		{
-    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
-    			
-    			if(arrayFamilias[index].needed>0){
-    				console.log(arrayFamilias[index].arrayPosiciones[0]);
-    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
-    				arrayFamilias[index].arrayPosiciones.shift();
-    			}
-    			else
-    			{
-    				respuesta+=arrayFamilias[index].needed;
-    			}
-    			arrayFamilias[index].needed-=1;
-    			
+	    	let partida = await PartidaModel.findOne({ _id: id_partidas });
+	    	console.log("-------------------------------");
+	    	console.log(partida.descripcion);
+	    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+	    	
+	    	let producto = await Producto.findOne({ _id: partida.producto_id });
+	    	console.log("-------------------------------");
+	 		console.log(producto.prioridad)
+	    	partida.status="ASIGNADA";
+			partida.save();
+	    	if(producto.familia)
+	    	{
+	    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia  && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
+	    		{
+	    			console.log("yes");
+	    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
+	    			arrayFamilias[index].needed=1+arrayFamilias[index].needed;
+		    	}
+		        else{
+		        	console.log("NO");
+		        	const data={
+					nombre:producto.familia,
+					prioridad: producto.prioridad,
+					descripcion:producto.descripcion,
+		        	needed:1,
+		        	fechaCaducidad:dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"),
+		        	arrayPosiciones:[]
+		        	}
+	    			arrayFamilias.push(data)  
+		        
+	    		}  	
+	    	}
+	    	reOrderPartidas.push(partida)
 
-    		}
+	    });
+	    console.log("second");
+	    arrayFamilias=arrayFamilias.sort(function(a, b) {
+	    	return b.prioridad - a.prioridad;
+		});
+	    arrayFamilias=arrayFamilias.sort(function(a, b) {
+		    a = a.fechaCaducidad;
+		    b = b.fechaCaducidad;
+		    return a<b ? -1 : a>b ? 1 : 0;
+		});
+	    
 
-    	}
-    });
-    if(respuesta<1)
-		res.status(200).send(respuesta);
-	else
-		res.status(500).send("not");
+		/*reOrderPartidas.sort(function(a, b) {
+		    a = new Date(dateFormat(a.fechaCaducidad, "dd/mm/yyyy"));
+		    b = new Date(dateFormat(b.fechaCaducidad, "dd/mm/yyyy"));
+		    return a<b ? -1 : a>b ? 1 : 0;
+		});*/
+
+		console.log(arrayFamilias);
+		await Helper.asyncForEach(arrayFamilias, async function (familia) 
+		{
+	    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
+	    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
+	    	console.log("----result----");
+	    	console.log(familia.arrayPosiciones);
+	    	console.log("_________");
+	    });
+	    console.log("endGET");
+	    console.log("Start");
+		await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
+
+	    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
+	    	console.log("-------------------------------");
+	    	console.log(partida.descripcion);
+	    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+	    	
+	    	let producto = await Producto.findOne({ _id: partida.producto_id });
+	    	console.log("-------------------------------");
+	 		//console.log(producto.prioridad)
+	 		let respuesta=0;
+	    	if(producto.familia)
+	    	{
+	    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
+	    		{
+	    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
+	    			
+	    			if(arrayFamilias[index].needed>0){
+	    				console.log(arrayFamilias[index].arrayPosiciones[0]);
+	    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
+	    				arrayFamilias[index].arrayPosiciones.shift();
+	    			}
+	    			else
+	    			{
+	    				respuesta+=arrayFamilias[index].needed;
+	    			}
+	    			arrayFamilias[index].needed-=1;
+	    			
+
+	    		}
+
+	    	}
+	    });
+	    if(respuesta<1)
+			res.status(200).send(respuesta);
+		else
+			res.status(500).send("not");
+	}catch (error) {
+        res.status(500).send(error);
+    }
 }
 
 /* Actualiza entrada y agrega partida dashboard */
