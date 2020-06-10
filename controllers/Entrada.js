@@ -267,7 +267,7 @@ async function saveEntradaBabel(req, res) {
 				descripcion:producto.descripcion,
 				origen:"Babel",
 				tipo: "Arrival",
-    			status: "WaitingArrival",
+    			status: "WAITINGARRIVAL",
 				embalajesEntrada: { cajas:req.body.Pedido[i].Cantidad},
 	        	embalajesxSalir: { cajas:req.body.Pedido[i].Cantidad},
 	        	fechaProduccion: Date.parse(req.body.Pedido[i].Caducidad),
