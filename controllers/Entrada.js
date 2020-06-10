@@ -1098,7 +1098,7 @@ async function updateById(req, res) {
 }
 
 async function posicionarPrioridades(req, res) {
-	let _id = req.query.id;
+	let _id = req.body.id;
 	let entrada = await Entrada.findOne({ _id: _id });
 	entrada.status="APLICADA";
 	entrada.save();
