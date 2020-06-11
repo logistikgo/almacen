@@ -132,39 +132,41 @@ async function gethideColumns(req, res) {
 	let resultciclo=true;
 	ClienteFiscal.find({ _id: idCliente })
 		.then(async (cliente) => {
+			if(cliente[0].arrEmbalajes != undefined){
+				let arrembalajes=cliente[0].arrEmbalajes.split(",");
+				await Embalaje.find({ status: "ACTIVO" }).then(async (embalajes) => 
+				{
+					await Helper.asyncForEach(embalajes, async function (embalaje) {
+						resultciclo=true;
+						//console.log(embalaje.clave);
+						arrembalajes.forEach( emb=>{
+							//console.log(emb);
+							if(embalaje.clave == emb)
+								resultciclo=false;
+						});
+
+						if(resultciclo == true)
+							embalajesarr.push(embalaje.clave)
+					})
+				});
+				//console.log(embalajesarr);
+				columns.forEach(column => {
+
+					resultciclo=false;
+					//console.log(column);
+					embalajesarr.forEach( embalaje=>{
+						console.log(column.name.toLowerCase()+" "+embalaje);
+						if(column.name.toLowerCase() == embalaje)
+							resultciclo=true;
+					});
+					if(resultciclo == true)
+						resultcolumns.push(column.idx)
+				});
+				//console.log(resultcolumns);
+				res.status(200).send(resultcolumns);
+			}
 			if(cliente[0].arrEmbalajes == undefined)
 				res.status(200).send(resultcolumns);
-			let arrembalajes=cliente[0].arrEmbalajes.split(",");
-			await Embalaje.find({ status: "ACTIVO" }).then(async (embalajes) => 
-			{
-				await Helper.asyncForEach(embalajes, async function (embalaje) {
-					resultciclo=true;
-					//console.log(embalaje.clave);
-					arrembalajes.forEach( emb=>{
-						//console.log(emb);
-						if(embalaje.clave == emb)
-							resultciclo=false;
-					});
-
-					if(resultciclo == true)
-						embalajesarr.push(embalaje.clave)
-				})
-			});
-			//console.log(embalajesarr);
-			columns.forEach(column => {
-
-				resultciclo=false;
-				//console.log(column);
-				embalajesarr.forEach( embalaje=>{
-					console.log(column.name.toLowerCase()+" "+embalaje);
-					if(column.name.toLowerCase() == embalaje)
-						resultciclo=true;
-				});
-				if(resultciclo == true)
-					resultcolumns.push(column.idx)
-			});
-			//console.log(resultcolumns);
-			res.status(200).send(resultcolumns);
 		})
 		.catch((error) => {
 			res.status(500).send(error);
