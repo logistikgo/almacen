@@ -322,7 +322,15 @@ function getReportePartidas(req, res) {
 	Salida.find({clienteFiscal_id: req.query.clienteFiscal_id})
 	.populate({
 		path: 'partidas',
-		model: 'Partida',
+		model: 'Partida'
+	})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'producto_id',
+			model: 'Producto',
+			select: 'subclasificacion'
+		}
 	})
 	.then((salidas) => {
 		salidas.forEach(salida => {
@@ -340,7 +348,7 @@ function getReportePartidas(req, res) {
 						embalajes = elem.embalajes;
 					}
 				})
-
+				console.log(partida);
 				var paramsSalida = {
 					_id: salida._id,
 					stringFolio: salida.stringFolio,
@@ -357,6 +365,7 @@ function getReportePartidas(req, res) {
 					clave: partida.clave,
 					lote: partida.lote,
 					descripcion: partida.descripcion,
+					subclasificacion: partida.producto_id.subclasificacion,
 					posiciones: partida.posiciones,
 					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes
