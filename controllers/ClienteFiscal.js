@@ -130,9 +130,10 @@ async function gethideColumns(req, res) {
 	let resultcolumns=[];
 	let embalajesarr=[];
 	let resultciclo=true;
-	//console.log(columns[0])
 	ClienteFiscal.find({ _id: idCliente })
 		.then(async (cliente) => {
+			if(cliente[0].arrEmbalajes == undefined)
+				res.status(200).send(resultcolumns);
 			let arrembalajes=cliente[0].arrEmbalajes.split(",");
 			await Embalaje.find({ status: "ACTIVO" }).then(async (embalajes) => 
 			{
@@ -149,7 +150,7 @@ async function gethideColumns(req, res) {
 						embalajesarr.push(embalaje.clave)
 				})
 			});
-			console.log(embalajesarr);
+			//console.log(embalajesarr);
 			columns.forEach(column => {
 
 				resultciclo=false;
@@ -162,7 +163,7 @@ async function gethideColumns(req, res) {
 				if(resultciclo == true)
 					resultcolumns.push(column.idx)
 			});
-			console.log(resultcolumns);
+			//console.log(resultcolumns);
 			res.status(200).send(resultcolumns);
 		})
 		.catch((error) => {
