@@ -155,7 +155,7 @@ async function gethideColumns(req, res) {
 					resultciclo=false;
 					//console.log(column);
 					embalajesarr.forEach( embalaje=>{
-						console.log(column.name.toLowerCase()+" "+embalaje);
+						//console.log(column.name.toLowerCase()+" "+embalaje);
 						if(column.name.toLowerCase() == embalaje)
 							resultciclo=true;
 					});
