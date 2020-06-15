@@ -1067,7 +1067,7 @@ function getExcelCaducidades(req, res) {
            	console.log("cclo3");
            	worksheet.cell(i, indexbody+8).number(1+diasEnAlm);
            	worksheet.cell(i, indexbody+9).number(leyenda);
-           	worksheet.cell(i, indexbody+1).string(partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"");
+           	worksheet.cell(i, indexbody+10).string(partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"");
            	worksheet.cell(i, indexbody+11).number(Math.abs(Aging));
            	console.log("cclo4");
            	//worksheet.cell(i, indexbody+11).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
