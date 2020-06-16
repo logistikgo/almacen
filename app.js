@@ -36,11 +36,13 @@ const CostoFija = require('./controllers/CostoFija');
 const CostoPES = require('./controllers/CostoPES');
 const PlantaProductora = require('./controllers/PlantaProductora');
 const Ticket = require('./controllers/Ticket');
-
+/* cors error
 app.use(bodyParser.urlencoded({
 	extended: false
 }));
-app.use(bodyParser.json());
+app.use(bodyParser.json());*/
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use(function (req, res, next) {
 	res.header("Access-Control-Allow-Origin", "*");
@@ -85,6 +87,8 @@ app.put('/api/entrada', Entrada.update);
 app.post('/api/entrada', Entrada.save);
 app.post('/api/entradaAutomatica', Entrada.saveEntradaAutomatica);
 app.post('/api/validaEntrada', Entrada.validaEntrada);
+app.put('/api/updateRemision', Entrada.updateRemision);
+app.put('/api/updateStatus', Entrada.updateStatus);
 
 app.get('/api/salidas', Salida.get);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
@@ -103,6 +107,7 @@ app.delete('/api/deleteCteFiscal', CteFiscal._delete);
 app.put('/api/clienteFiscal', CteFiscal.update);
 app.get('/api/getCteFiscalByTarifa/:tipoTarifaPrecio', CteFiscal.getByTarifa);
 app.post('/api/getValidacionCliente', CteFiscal.getValidacionCliente);
+app.post('/api/gethideColumns', CteFiscal.gethideColumns);
 
 app.get('/api/sucursales', Sucursal.get);
 app.get('/api/sucursalesXD', Helper.getSucursalesXD);

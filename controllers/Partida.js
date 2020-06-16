@@ -467,7 +467,6 @@ async function getByProductoEmbalaje(req, res) {
     let partidasActuales = [];
 
     try {
-        console.log("try");
         //Validacion para Clientes fiscales que no utilicen ningun algoritmo
         console.log(algoritmoSalida === undefined || algoritmoSalida.length < 1);
         if (algoritmoSalida === undefined || algoritmoSalida.length < 1) {
@@ -548,8 +547,8 @@ async function getByProductoEmbalaje(req, res) {
             let fechaA=Date.now();
             if(prodA.garantiaFrescura)
                 fechaA = new Date(partida.fechaCaducidad - (prodA.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
-
-            if((algoritmoSalida[0].algoritmo === "CADUCIDAD" && Date.now()<fechaA)){
+            console.log(partida.embalajesxSalir[embalaje]+"=="+partida.embalajesEntrada[embalaje]);
+            if(algoritmoSalida[0].algoritmo === "CADUCIDAD" && Date.now()<fechaA && partida.embalajesxSalir[embalaje]==partida.embalajesEntrada[embalaje]){
                 let subConsecutivo = 0;
                 //console.log(dateFormat(fechaA, "dd/mm/yyyy"));
                 partida.posiciones.filter(x => !x.isEmpty).forEach(posicion => {
@@ -1180,7 +1179,7 @@ async function posicionarAuto(id_pocision,id_partidas,nivelIndex)
         };
         partida.posiciones.push(jPosicionBahia);
         partida.save();
-        console.log(partida);
+        //console.log(partida);
     
 }
 module.exports = {
