@@ -395,6 +395,14 @@ function getExcelSalidas(req, res) {
 		path: 'partidas',
 		model: 'Partida',
 	})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'producto_id',
+			model: 'Producto',
+			select: 'subclasificacion'
+		}
+	})
 	.then(async (salidas) => {
 		salidas.forEach( salida => {
 			
@@ -467,6 +475,22 @@ function getExcelSalidas(req, res) {
 		    fgColor: '#FF0000',
 		  },
         });
+        var OntimeStyle= workbook.createStyle({
+          numberFormat: '#.0%; -#.0%; -',
+          font: {
+            bold: true,
+          },
+          alignment: {
+            wrapText: true,
+            horizontal: 'center',
+          },
+          fill: {
+		    type: 'pattern',
+		    patternType: 'solid',
+		    bgColor: '#FF0000',
+		    fgColor: '#FF0000',
+		  },
+        });
         var headersStyle = workbook.createStyle({
           font: {
             bold: true,
@@ -503,23 +527,34 @@ function getExcelSalidas(req, res) {
 		worksheet.cell(2, 6).string('Descripción').style(headersStyle);
 		worksheet.cell(2, 7).string('Subclasificacion').style(headersStyle);
 		worksheet.cell(2, 8).string('Fecha Entrada en Sistema').style(headersStyle);
-		worksheet.cell(2, 9).string('Fecha Salida').style(headersStyle);
+		
 
-		let indexheaders=10;
+		let indexheaders=9;
 		ArrayEmbalaje.forEach(arrEmbalaje=>{ 
 			if(clienteEmbalaje.includes(arrEmbalaje.clave)){
 				if (arrEmbalaje.clave=="cajas")
 				{
 					worksheet.cell(2, indexheaders).string(headercajas).style(headersStyle);
+					indexheaders++;
 				}
-				indexheaders++;
+				
 			}
 		});
 
 		worksheet.cell(2, indexheaders).string(headerCajaspedido).style(headersStyle);
 		worksheet.cell(2, indexheaders+1).string('In Full').style(headersStyle);
+		worksheet.cell(2, indexheaders+2).string('Fecha Carga Programada').style(headersStyle);
+		worksheet.cell(2, indexheaders+3).string('Fecha Salida').style(headersStyle);
+		worksheet.cell(2, indexheaders+4).string('Retraso').style(headersStyle);
+		worksheet.cell(2, indexheaders+5).string('On Time').style(headersStyle);
+		worksheet.cell(2, indexheaders+6).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
+        arrPartidas.sort(function(a, b) {
+		    a = new Date(a.fechaSalida);
+		    b = new Date(b.fechaSalida);
+		    return a>b ? -1 : a<b ? 1 : 0;
+		});
         arrPartidas.forEach(partidas => 
         {
         	worksheet.cell(i, 1).string(partidas.referencia ? partidas.referencia:"");
@@ -530,14 +565,14 @@ function getExcelSalidas(req, res) {
         	worksheet.cell(i, 6).string(partidas.descripcion ? partidas.descripcion:"");
         	worksheet.cell(i, 7).string(partidas.subclasificacion ? partidas.subclasificacion:"");
         	worksheet.cell(i, 8).string(partidas.fechaAlta ? dateFormat(partidas.fechaAlta, formatofecha):"");
-			worksheet.cell(i, 9).string(partidas.fechaSalida ? dateFormat(partidas.fechaSalida, formatofecha):"");
-			let indexbody=10;
+			let indexbody=9;
 
            	clienteEmbalaje.forEach(emb=>
            	{	
-           		if(partidas.embalajes && emb == "cajas" )
+           		if(partidas.embalajes && emb == "cajas" ){
            			worksheet.cell(i, indexbody).number(partidas.embalajes[emb] ? parseInt(partidas.embalajes[emb]):0);				
-				indexbody++;
+					indexbody++;
+				}
            	});
         	if(partidas.CajasPedidas)
         		worksheet.cell(i, indexbody).string(partidas.CajasPedidas ? partidas.CajasPedidas.cajas.toString():"0");
@@ -585,14 +620,66 @@ function getExcelSalidas(req, res) {
 				  },
 	        	});
        		}
+
        		//console.log("Test");
        		//console.log(value);
        		if(value != Infinity)
         		worksheet.cell(i, indexbody+1).number(value).style(ResultStyle);
+        	//console.log(partidas.fechaReciboRemision);
+        	worksheet.cell(i, indexbody+2).string(partidas.fechaReciboRemision ? partidas.fechaReciboRemision!="SIN ASIGNAR" ? dateFormat(new Date(partidas.fechaReciboRemision), formatofecha):"SIN ASIGNAR":"");
+        	worksheet.cell(i, indexbody+3).string(partidas.fechaSalida ? dateFormat(partidas.fechaSalida, formatofecha):"");
+        	let ontime =0;
+			if (partidas.fechaReciboRemision !== "SIN ASIGNAR" && partidas.fechaSalida) {
+			    let fRecibo = partidas.fechaReciboRemision.getTime();
+			    let fSalida = partidas.fechaSalida.getTime();
+			    ontime = Math.abs(Math.floor((fRecibo- fSalida)/86400000));
+			}
+			let resontime="";
+			if (ontime < 0){
+                resontime = "RETRASO";
+                OntimeStyle = workbook.createStyle({
+       			  numberFormat: '#.0%; -#.0%; -',
+		          font: {
+		            bold: true,
+		          },
+		          alignment: {
+		            wrapText: true,
+		            horizontal: 'center',
+		          },
+		          fill: {
+				    type: 'pattern',
+				    patternType: 'solid',
+				    bgColor: '#FF0000',
+				    fgColor: '#FF0000',
+				  },
+	        	});
+			}
+            else{
+                resontime = "A TIEMPO";
+                OntimeStyle = workbook.createStyle({
+           		  numberFormat: '#.0%; -#.0%; -',
+		          font: {
+		            bold: true,
+		          },
+		          alignment: {
+		            wrapText: true,
+		            horizontal: 'center',
+		          },
+		          fill: {
+				    type: 'pattern',
+				    patternType: 'solid',
+				    bgColor: '#008000',
+				    fgColor: '#008000',
+				  },
+		        });
+            }
+			worksheet.cell(i, indexbody+4).number(ontime);
+           	worksheet.cell(i, indexbody+5).string(resontime).style(OntimeStyle);
+           
             let res=""
             if(partidas.posiciones.length === 1) 
             	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
-            worksheet.cell(i, indexbody+2).string(res);
+            worksheet.cell(i, indexbody+6).string(res);
             i++;
         });
         workbook.write('ReporteSali'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
