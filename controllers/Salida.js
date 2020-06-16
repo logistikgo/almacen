@@ -514,7 +514,7 @@ function getExcelSalidas(req, res) {
         let headercajas=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Despachados " : "cajas";
         let headerCajaspedido=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Solicitados" : "cajas";
       	
-        let clienteEmbalaje = clientefiscal.arrEmbalajes.split(',');
+        let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();
 
         var worksheet = workbook.addWorksheet('Partidas');

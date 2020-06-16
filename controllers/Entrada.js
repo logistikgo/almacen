@@ -898,7 +898,7 @@ function getExcelCaducidades(req, res) {
         let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
         let formatofecha=clientefiscal._id == "5e33420d22b5651aecafe934" ? "mm/dd/yyyy" : "dd/mm/yyyy";
       
-        let clienteEmbalaje = clientefiscal.arrEmbalajes.split(',');
+        let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();
         
          
@@ -1066,8 +1066,24 @@ function getExcelCaducidades(req, res) {
 
            	clienteEmbalaje.forEach(emb=>
            	{	
-           		worksheet.cell(i, indexbody).number(partidas.embalajesxSalir[emb] ? parseInt(partidas.embalajesxSalir[emb]):0);
-				indexbody++;
+           		let tarimas =0
+           		if (emb == 'tarimas' && partidas.producto_id.arrEquivalencias.length > 0) {
+	                let band = false;
+	                partidas.producto_id.arrEquivalencias.forEach(function (equivalencia) {
+	                    if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
+
+	                        tarimas = partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia ? (partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
+	                        band = true;
+	                    }
+	                });
+	                if (band !== true)
+	                    tarimas = full.embalajesxSalir.tarimas ? partidas.embalajesxSalir.tarimas : 0;
+	                worksheet.cell(i, indexbody).number(tarimas);
+	            }
+	            else {
+	                worksheet.cell(i, indexbody).number(partidas.embalajesxSalir[emb] ? parseInt(partidas.embalajesxSalir[emb]):0);
+	            }
+           		indexbody++;
            	});
            	worksheet.cell(i, indexbody).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
            	worksheet.cell(i, indexbody+1).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
