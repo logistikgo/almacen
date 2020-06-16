@@ -256,13 +256,14 @@ async function saveEntradaAutomatica(req, res) {
 async function saveEntradaBabel(req, res) {
 	var mongoose = require('mongoose');
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
-	//console.log(req.body);
+	console.log(req.body);
 	var arrPartidas=[];
+	var arrPO=[];
 	for (var i=4; i<34 ; i++) {
 		if(req.body.Pedido[i].Clave !== undefined)
 		{
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
-			console.log(producto._id)
+			console.log(req.body.Pedido[i].Clave)
 			const data={
 				producto_id:producto._id,
 				clave:producto.clave,
@@ -279,77 +280,100 @@ async function saveEntradaBabel(req, res) {
 	        	valor:0
 	        }
 	        //console.log(data.InfoPedidos)
-	        arrPartidas.push(data);
+	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden)))
+	    		{
+	    			//console.log("yes");
+	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden));
+	    			arrPO[index].arrPartidas.push(data)
+		    	}
+		        else{
+		        	//console.log("NO");arrPartidas.push(data);
+		        	const PO={
+					po:req.body.Pedido[i].NoOrden,
+					factura:req.body.Pedido[i].Factura,
+		        	arrPartidas:[]
+		        	}
+		        	PO.arrPartidas.push(data)
+	    			arrPO.push(PO)  
+	    		} 
+	        //
     	}
 	}
+	console.log(arrPO);
+	
 	//console.log("test");
 	//console.log(arrPartidas);
+	let reserror="";
     var arrPartidas_id = [];
     var partidas = [];
-    await Helper.asyncForEach(arrPartidas, async function (partida) {
-        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
-        let nPartida = new PartidaModel(partida);
-        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
-        //console.log(nPartida);
-        await nPartida.save().then((partida) => {
-        	partidas.push(partida)
-            arrPartidas_id.push(partida._id);
-        });
-    });
-	//console.log(arrPartidas_id)
-	let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[1].InfoPedido.split(" ")[1] }).exec();
-	let fechaesperada=Date.parse(req.body.Infoplanta[3].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado);
-	//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
-	if (partidas && partidas.length > 0) {
-		let idCliente = req.body.IDClienteFiscal;
-		let idSucursales = req.body.IDSucursal;
+	await Helper.asyncForEach(arrPO,async function (noOrden) {
+	    await Helper.asyncForEach(arrPartidas, async function (partida) {
+	        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
+	        let nPartida = new PartidaModel(partida);
+	        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
+	        //console.log(nPartida);
+	        await nPartida.save().then((partida) => {
+	        	partidas.push(partida)
+	            arrPartidas_id.push(partida._id);
+	        });
+	    });
+		//console.log(arrPartidas_id)
+		let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[1].InfoPedido.split(" ")[1] }).exec();
+		let fechaesperada=Date.parse(req.body.Infoplanta[3].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado);
+		//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
+		if (partidas && partidas.length > 0) {
+			let idCliente = req.body.IDClienteFiscal;
+			let idSucursales = req.body.IDSucursal;
 
-		let nEntrada = new Entrada();
+			let nEntrada = new Entrada();
 
-		nEntrada.fechaEntrada = fechaesperada;
-		nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
-			return total + valor;
-		});
-		nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
-		nEntrada.clienteFiscal_id = idCliente;
-		nEntrada.sucursal_id = idSucursales;
-		nEntrada.status = "WAITINGARRIVAL";/*repalce arrival*/
-		nEntrada.tipo = "ARRIVAL";
-		nEntrada.partidas = partidas.map(x => x._id);
-		nEntrada.nombreUsuario = "BarcelBabel";
-		nEntrada.tracto = req.body.Infoplanta[13].InfoPedido;
-		nEntrada.remolque = req.body.Infoplanta[11].InfoPedido;
-		//nEntrada.embarque = req.body.Infoplanta[23].InfoPedido;
-		nEntrada.referencia = req.body.Infoplanta[23].InfoPedido;
-		nEntrada.item = req.body.Infoplanta[23].InfoPedido;
-		nEntrada.transportista = req.body.Infoplanta[9].InfoPedido;
-		nEntrada.operador = req.body.Infoplanta[17].InfoPedido;
-		nEntrada.ordenCompra=req.body.Infoplanta[29].InfoPedido;
-		nEntrada.fechaAlta = new Date();
-		nEntrada.idEntrada = await getNextID();
-		nEntrada.folio = await getNextID();
-		nEntrada.plantaOrigen=planta.Nombre;
-		nEntrada.DiasTraslado=planta.DiasTraslado;
-		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
-		//console.log("testEntrada");
-		nEntrada.save()
-			.then(async (entrada) => {
-				//console.log("testpartidas");
-				await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
-				for (let itemPartida of partidas) {
-					//console.log("testMovimientos");
-					await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
-				}
-				console.log(entrada);
-				res.status(200).send(entrada);
-			})
-			.catch((error) => {
-				res.status(500).send(error);
+			nEntrada.fechaEntrada = fechaesperada;
+			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+				return total + valor;
 			});
-	} else {
-		console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
-		res.status(400).send({ message: "Se intenta generar una entrada sin partidas", error: "No se encontró pre-partidas para los IDs de pedidos indicados" });
-	}
+			nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+			nEntrada.clienteFiscal_id = idCliente;
+			nEntrada.sucursal_id = idSucursales;
+			nEntrada.status = "WAITINGARRIVAL";/*repalce arrival*/
+			nEntrada.tipo = "ARRIVAL";
+			nEntrada.partidas = partidas.map(x => x._id);
+			nEntrada.nombreUsuario = "BarcelBabel";
+			nEntrada.tracto = req.body.Infoplanta[13].InfoPedido;
+			nEntrada.remolque = req.body.Infoplanta[11].InfoPedido;
+			//nEntrada.embarque = req.body.Infoplanta[23].InfoPedido;
+			nEntrada.referencia = req.body.Infoplanta[23].InfoPedido;
+			nEntrada.item = req.body.Infoplanta[23].InfoPedido;
+			nEntrada.transportista = req.body.Infoplanta[9].InfoPedido;
+			nEntrada.operador = req.body.Infoplanta[17].InfoPedido;
+			nEntrada.ordenCompra=req.body.Infoplanta[29].InfoPedido;
+			nEntrada.fechaAlta = new Date();
+			nEntrada.idEntrada = await getNextID();
+			nEntrada.folio = await getNextID();
+			nEntrada.plantaOrigen=planta.Nombre;
+			nEntrada.DiasTraslado=planta.DiasTraslado;
+			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
+			//console.log("testEntrada");
+			nEntrada.save()
+				.then(async (entrada) => {
+					//console.log("testpartidas");
+					await Partida.asignarEntrada(partidas.map(x => x._id.toString()), entrada._id.toString());
+					for (let itemPartida of partidas) {
+						//console.log("testMovimientos");
+						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+					}
+					console.log(entrada);
+					console.log("/***********/")
+				}).catch((error) => {
+					reserror=error
+				});
+		} else {
+			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+		}
+	});
+	if(reserror!= "")
+		res.status(500).send(reserror);
+	else
+		res.status(200).send(entrada);
 }
 
 //Valida que la entrada ya existe o no, devolviendo true o false

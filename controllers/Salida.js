@@ -369,7 +369,8 @@ function getReportePartidas(req, res) {
 					subclasificacion: partida.producto_id.subclasificacion,
 					posiciones: partida.posiciones,
 					CajasPedidas: partida.CajasPedidas,
-					embalajes: embalajes
+					embalajes: embalajes,
+					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR"
 				}
 
 				arrPartidas.push(paramsSalida);
@@ -429,7 +430,9 @@ function getExcelSalidas(req, res) {
 					descripcion: partida.descripcion,
 					posiciones: partida.posiciones,
 					CajasPedidas: partida.CajasPedidas,
-					embalajes: embalajes
+					embalajes: embalajes,
+					subclasificacion: partida.producto_id.subclasificacion,
+					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR"
 				}
 
 				arrPartidas.push(paramsSalida);
@@ -509,10 +512,6 @@ function getExcelSalidas(req, res) {
 				{
 					worksheet.cell(2, indexheaders).string(headercajas).style(headersStyle);
 				}
-				else
-				{
-					worksheet.cell(2, indexheaders).string(arrEmbalaje.nombre).style(headersStyle);
-				}
 				indexheaders++;
 			}
 		});
@@ -536,10 +535,8 @@ function getExcelSalidas(req, res) {
 
            	clienteEmbalaje.forEach(emb=>
            	{	
-           		if(partidas.embalajes)
-           			worksheet.cell(i, indexbody).number(partidas.embalajes[emb] ? parseInt(partidas.embalajes[emb]):0);
-				else
-        			worksheet.cell(i, indexbody).string("0")
+           		if(partidas.embalajes && emb == "cajas" )
+           			worksheet.cell(i, indexbody).number(partidas.embalajes[emb] ? parseInt(partidas.embalajes[emb]):0);				
 				indexbody++;
            	});
         	if(partidas.CajasPedidas)
