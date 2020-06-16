@@ -173,8 +173,8 @@ async function getPocionesAuto(Family,almacen_id)
 			{
 			
 				if(pasillo.familia == Family.nombre){
-					console.log(pasillo.nombre);
-					console.log(pasillo.familia);
+					/*console.log(pasillo.nombre);
+					console.log(pasillo.familia);*/
 					let posiciones = await PosicionModel.find({
 						pasillo_id: new ObjectId(pasillo._id),
 						estatus: "DISPONIBLE"
@@ -187,9 +187,9 @@ async function getPocionesAuto(Family,almacen_id)
 		        		if(posicion.niveles.length>i)
 		        		if(famPri == posicion.niveles[i].prioridad && need > 0 && posicion.niveles[i].isCandadoDisponibilidad == false && posicion.niveles[i].apartado == false)
 	    				{
-	    					console.log(posicion._id);
+	    					/*console.log(posicion._id);
 	    					console.log(posicion.niveles[i].prioridad);
-	    					console.log(posicion.nombre+"::"+posicion.niveles[i].nombre);
+	    					console.log(posicion.nombre+"::"+posicion.niveles[i].nombre);*/
 	    					need-=1;
 	    					posicion.niveles[i].isCandadoDisponibilidad = true; 
 	    					posicion.niveles[i].apartado = true;
@@ -206,7 +206,7 @@ async function getPocionesAuto(Family,almacen_id)
 	}
 	if(need>0)
 	{
-		console.log("none");
+		//console.log("none");
 		for (let famPri=Family.prioridad; famPri <=5 && need>0; famPri++)
 		{
 			let pasillos = await Pasillo.find({
@@ -219,8 +219,8 @@ async function getPocionesAuto(Family,almacen_id)
 				{
 				
 					if(pasillo.familia == "NONE"){
-						console.log(pasillo.nombre);
-						console.log(pasillo.familia);
+						/*console.log(pasillo.nombre);
+						console.log(pasillo.familia);*/
 						let posiciones = await PosicionModel.find({
 							pasillo_id: new ObjectId(pasillo._id),
 							estatus: "DISPONIBLE"
@@ -232,9 +232,9 @@ async function getPocionesAuto(Family,almacen_id)
 			        		if(posicion.niveles.length>i)
 			        		if(famPri == posicion.niveles[i].prioridad && need > 0 && posicion.niveles[i].isCandadoDisponibilidad == false && posicion.niveles[i].apartado == false)
 		    				{
-		    					console.log(posicion._id);
+		    					/*console.log(posicion._id);
 		    					console.log(posicion.niveles[i].prioridad);
-		    					console.log(posicion.nombre+"::"+posicion.niveles[i].nombre);
+		    					console.log(posicion.nombre+"::"+posicion.niveles[i].nombre);*/
 		    					need-=1;
 		    					posicion.niveles[i].isCandadoDisponibilidad = true; 
 		    					posicion.niveles[i].apartado = true;

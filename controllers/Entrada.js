@@ -873,11 +873,9 @@ function getExcelCaducidades(req, res) {
         //console.log(req.query.clienteFiscal_id);
         let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
         let formatofecha=clientefiscal._id == "5e33420d22b5651aecafe934" ? "mm/dd/yyyy" : "dd/mm/yyyy";
-        console.log(formatofecha);
+      
         let clienteEmbalaje = clientefiscal.arrEmbalajes.split(',');
-        console.log(clienteEmbalaje);
         let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();
-        console.log('ArrayEmbalaje');
         
          
         var worksheet = workbook.addWorksheet('Partidas');
@@ -889,7 +887,6 @@ function getExcelCaducidades(req, res) {
 		let indexheaders=5;
 		ArrayEmbalaje.forEach(arrEmbalaje=>{ 
 			if(clienteEmbalaje.includes(arrEmbalaje.clave)){
-				//console.log("asad");
 				if(arrEmbalaje.clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
 					worksheet.cell(2, indexheaders).string("Corrugados").style(headersStyle);
 				else
@@ -916,7 +913,7 @@ function getExcelCaducidades(req, res) {
 		worksheet.cell(2, indexheaders+16).string('Alerta 2').style(headersStyle);
 		worksheet.cell(2, indexheaders+17).string('Fecha Alerta 2').style(headersStyle);
 		worksheet.cell(2, indexheaders+18).string('Ubicacion').style(headersStyle);
-		console.log("endtest");
+		
         let i=3;
         arrPartidas.forEach(partidas => 
         {
@@ -951,7 +948,6 @@ function getExcelCaducidades(req, res) {
         	diff=0;
         	hoy=Date.now();
            	Aging=0;
-           	console.log("inicio variables");
         	if(partidas.fechaCaducidad !== undefined && partidas.fechaCaducidad != null && partidas.entrada_id.fechaEntrada != undefined)
         	{
         		//console.log(partidas.fechaCaducidad);
@@ -976,14 +972,12 @@ function getExcelCaducidades(req, res) {
                 let fechaRecibo = new Date(fCaducidad - tiempoTraslado * 86400000);
                 fechaEspRecibo =dateFormat(fechaRecibo, formatofecha);
             }
-            console.log("newcode");
             if (partidas.entrada_id.fechaReciboRemision !== undefined) 
             {
                 tempx= new Date(partidas.entrada_id.fechaReciboRemision).getTime() + 2 * 86400000;
                 fechacalculada2Dias = dateFormat(tempx, formatofecha);
                     
             }
-            console.log("newcode2");
 			if (partidas.entrada_id.fechaReciboRemision !== undefined && partidas.fechaCaducidad !== undefined) {
 			    tempx = new Date(partidas.entrada_id.fechaReciboRemision.getTime() + 2 * 86400000);
 			    fCaducidad = partidas.fechaCaducidad.getTime();
@@ -1040,36 +1034,29 @@ function getExcelCaducidades(req, res) {
 			        });
 			    }
 			}
-            console.log("bodyexcell");
             worksheet.cell(i, 1).string(partidas.lote ? partidas.lote:"");
             worksheet.cell(i, 2).string(partidas.entrada_id.stringFolio  ? partidas.entrada_id.stringFolio :"");
            	worksheet.cell(i, 3).string(partidas.clave ? partidas.clave:"");
            	worksheet.cell(i, 4).string(partidas.descripcion ? partidas.descripcion:"");
            	let indexbody=5;
 
-           	console.log(partidas.embalajesxSalir['tarimas']);
            	clienteEmbalaje.forEach(emb=>
            	{	
            		worksheet.cell(i, indexbody).number(partidas.embalajesxSalir[emb] ? parseInt(partidas.embalajesxSalir[emb]):0);
 				indexbody++;
            	});
-           	console.log("cclo");
            	worksheet.cell(i, indexbody).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
            	worksheet.cell(i, indexbody+1).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
            	worksheet.cell(i, indexbody+2).string(fechacalculada2Dias);
-           	console.log("cclo0");
            	worksheet.cell(i, indexbody+3).number(GarFresFecha).style(GarFresFechaStyle);
-           	console.log("cclo1");
            	worksheet.cell(i, indexbody+4).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
            	worksheet.cell(i, indexbody+5).number(partidas.producto_id.vidaAnaquel ? partidas.producto_id.vidaAnaquel:0);
            	worksheet.cell(i, indexbody+6).number(partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0);
            	worksheet.cell(i, indexbody+7).string(fechaEspRecibo);
-           	console.log("cclo3");
            	worksheet.cell(i, indexbody+8).number(1+diasEnAlm);
            	worksheet.cell(i, indexbody+9).number(leyenda);
            	worksheet.cell(i, indexbody+10).string(partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"");
            	worksheet.cell(i, indexbody+11).number(Math.abs(Aging));
-           	console.log("cclo4");
            	//worksheet.cell(i, indexbody+11).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
            	//worksheet.cell(i, indexbody+12).string(fechaFrescura ? fechaFrescura:"");
            	worksheet.cell(i, indexbody+12).number(partidas.producto_id.alertaAmarilla ? partidas.producto_id.alertaAmarilla:0);
@@ -1198,11 +1185,9 @@ function getExcelCaducidades(req, res) {
             	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
            	worksheet.cell(i, indexbody+18).string(res);
             i++;
-            console.log("endtest");
         });
-        console.log("endtest");
         workbook.write('ReporteCaducidad'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
-        console.log("endtest2");
+
 
 	})
 	.catch((error) => {
@@ -1319,7 +1304,6 @@ async function getExcelEntradas(req, res) {
 	            worksheet.cell(i, 15).string(entrada.referencia ? entrada.referencia : "");
 	            worksheet.cell(i, 16).string(entrada.valor ? entrada.valor : "");
 	            worksheet.cell(i, 17).string(entrada.status ? entrada.status : "");
-	            console.log(i);
 	            i++;
 	        });
 	        workbook.write('ReporteEntradas'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
@@ -1362,25 +1346,25 @@ async function posicionarPrioridades(req, res) {
 		await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
 
 	    	let partida = await PartidaModel.findOne({ _id: id_partidas });
-	    	console.log("-------------------------------");
+	    	/*console.log("-------------------------------");
 	    	console.log(partida.descripcion);
-	    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+	    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));*/
 	    	
 	    	let producto = await Producto.findOne({ _id: partida.producto_id });
-	    	console.log("-------------------------------");
-	 		console.log(producto.prioridad)
+	    	/*console.log("-------------------------------");
+	 		console.log(producto.prioridad)*/
 	    	partida.status="ASIGNADA";
 			partida.save();
 	    	if(producto.familia)
 	    	{
 	    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia  && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
 	    		{
-	    			console.log("yes");
+	    			//console.log("yes");
 	    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
 	    			arrayFamilias[index].needed=1+arrayFamilias[index].needed;
 		    	}
 		        else{
-		        	console.log("NO");
+		        	//console.log("NO");
 		        	const data={
 					nombre:producto.familia,
 					prioridad: producto.prioridad,
@@ -1396,7 +1380,7 @@ async function posicionarPrioridades(req, res) {
 	    	reOrderPartidas.push(partida)
 
 	    });
-	    console.log("second");
+	    
 	    arrayFamilias=arrayFamilias.sort(function(a, b) {
 	    	return b.prioridad - a.prioridad;
 		});
@@ -1413,26 +1397,26 @@ async function posicionarPrioridades(req, res) {
 		    return a<b ? -1 : a>b ? 1 : 0;
 		});*/
 
-		console.log(arrayFamilias);
+		//console.log(arrayFamilias);
 		await Helper.asyncForEach(arrayFamilias, async function (familia) 
 		{
-	    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
+	    	//console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
 	    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
-	    	console.log("----result----");
+	    	/*console.log("----result----");
 	    	console.log(familia.arrayPosiciones);
-	    	console.log("_________");
+	    	console.log("_________");*/
 	    });
-	    console.log("endGET");
-	    console.log("Start");
+	    //console.log("endGET");
+	    //console.log("Start");
 		await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
 
 	    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
-	    	console.log("-------------------------------");
+	    	/*console.log("-------------------------------");
 	    	console.log(partida.descripcion);
-	    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+	    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));*/
 	    	
 	    	let producto = await Producto.findOne({ _id: partida.producto_id });
-	    	console.log("-------------------------------");
+	    	//console.log("-------------------------------");
 	 		//console.log(producto.prioridad)
 	 		let respuesta=0;
 	    	if(producto.familia)
@@ -1442,7 +1426,7 @@ async function posicionarPrioridades(req, res) {
 	    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
 	    			
 	    			if(arrayFamilias[index].needed>0){
-	    				console.log(arrayFamilias[index].arrayPosiciones[0]);
+	    				//console.log(arrayFamilias[index].arrayPosiciones[0]);
 	    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
 	    				arrayFamilias[index].arrayPosiciones.shift();
 	    			}
@@ -1465,27 +1449,27 @@ async function posicionarPrioridades(req, res) {
         res.status(500).send(error);
     }
 
-	console.log(arrayFamilias);
+	//console.log(arrayFamilias);
 	await Helper.asyncForEach(arrayFamilias, async function (familia) 
 	{
-    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
+    	//console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
     	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
-    	console.log("----result----");
+    	/*console.log("----result----");
     	console.log(familia.arrayPosiciones);
-    	console.log("_________");
+    	console.log("_________");*/
     });
-    console.log("endGET");
-	console.log("Start");
+   /* console.log("endGET");
+	console.log("Start");*/
 	let respuesta=0;
 	await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
 
     	let partida = await PartidaModel.findOne({ _id: repartidas._id });
-    	console.log("-------------------------------");
+    	/*console.log("-------------------------------");
     	console.log(partida.descripcion);
-    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));*/
     	
     	let producto = await Producto.findOne({ _id: partida.producto_id });
-    	console.log("-------------------------------");
+    	//console.log("-------------------------------");
  		//console.log(producto.prioridad)
  		
     	if(producto.familia)
@@ -1495,7 +1479,7 @@ async function posicionarPrioridades(req, res) {
     			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
     			
     			if(arrayFamilias[index].needed>0){
-    				console.log(arrayFamilias[index].arrayPosiciones[0]);
+    				//console.log(arrayFamilias[index].arrayPosiciones[0]);
     				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
     				arrayFamilias[index].arrayPosiciones.shift();
     			}
@@ -1542,13 +1526,13 @@ function updateRemision(req, res) {
 function updateStatus(req, res) {
 	let _id = req.body.entrada_id;
 	let newStatus = req.body.status;
-	console.log(newStatus);
+	//console.log(newStatus);
 
 	Entrada.updateOne({_id: _id}, { $set: { status: newStatus }}).then((data) => {
 		res.status(200).send(data);
 	})
 	.catch((error) => {
-		console.log(error);
+		//console.log(error);
 		res.status(500).send(error);
 	});
 }
