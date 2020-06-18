@@ -334,8 +334,10 @@ async function addSalida(salida, _id) {
 }
 
 async function asignarEntrada(arrPartidas_id, entrada_id) {
+    //console.log(arrPartidas_id);
     await Helper.asyncForEach(arrPartidas_id, async function (partida_id) {
         await Partida.updateOne({ _id: partida_id }, { $set: { entrada_id: entrada_id, status: "ASIGNADA" } }).exec();
+        //console.log(partida_id);
     });
 }
 
