@@ -349,7 +349,7 @@ function getReportePartidas(req, res) {
 						embalajes = elem.embalajes;
 					}
 				})
-				console.log(partida);
+				//console.log(partida);
 				var paramsSalida = {
 					_id: salida._id,
 					stringFolio: salida.stringFolio,
