@@ -184,7 +184,7 @@ async function save(req, res) {
 	nEntrada.folio = await getNextID();
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
 
-	nEntrada.save()
+	await nEntrada.save()
 		.then(async (entrada) => {
 			for (let itemPartida of req.body.partidasJson) {
 				await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
