@@ -26,7 +26,7 @@ async function get(req, res) {
 	let _tipo = req.query.tipo;
 	let _status = req.query.status != ""? req.query.status : null;
 	let _interfaz = req.query.interfaz;
-	console.log(_status);
+	//console.log(_status);
 	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
 	var json = [];
 	if(_status != "FINALIZADO" && _status != null){
@@ -320,7 +320,7 @@ async function saveEntradaBabel(req, res) {
 	        });
 	    });
 	    //console.log(partidas);
-	    console.log(arrPartidas_id);
+	    //console.log(arrPartidas_id);
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="PLANTA EXPORTADORA / MANUFACTURING PLANT");
 		let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="FECHA / DATE");
@@ -413,7 +413,7 @@ async function update(req, res) {
 	req.body.fechaAlta = new Date();
 
 	if (req.body.status == "SIN_POSICIONAR") {
-		console.log("1");
+		//console.log("1");
 		Partida.posicionar(req.body.partidasJson, bodyParams.almacen_id);
 
 		//Updatea los movimientos de esta entrada, les asigna el campo almacen_id y clienteFiscal_id
