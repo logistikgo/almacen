@@ -257,8 +257,8 @@ async function save(req, res) {
 	req.body.valor = 0;
 	req.body.embalajesRechazo = req.body.embalajes;
 
-	console.log(req.body.presentacion);
-	console.log(req.body.safetystock)
+	//console.log(req.body.presentacion);
+	//console.log(req.body.safetystock)
 	let nProducto = new Producto(req.body);
 
 	nProducto.save()
