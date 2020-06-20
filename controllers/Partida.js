@@ -679,30 +679,54 @@ async function getByProductoEmbalaje(req, res) {
 
 /* Obtiene las partidas con respecto a los filtros de cliente fiscal, sucursal y almacen. */
 async function getPartidasByIDs(req, res) {
-    let arrClientesFiscales_id = req.query.arrClientesFiscales_id;
-    let arrSucursales_id = req.query.arrSucursales_id;
-    let arrAlmacenes_id = req.query.arrAlmacenes_id;
-    let fechaInicio = req.query.fechaInicio;
-    let fechaFinal = req.query.fechaFinal;
+    let arrClientesFiscales_id = req.query.clienteFiscal_id;
+    let arrSucursales_id = req.query.sucursal_id;
+    let arrAlmacenes_id = req.query.almacen_id;
     let tipo = req.query.tipo;
-
+    let clasificacion = req.query.clasificacion != undefined ? req.query.clasificacion : "";
+    let subclasificacion = req.query.subclasificacion != undefined ? req.query.subclasificacion :"";
+    let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+    let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+    let fecha=req.query.fecha != undefined ? req.query.fecha : "";
+    let folioEntrada=req.query.stringFolioEntrada != undefined ? req.query.stringFolioEntrada : "";
+    let folioSalida=req.query.stringFolioSalida != undefined ? req.query.stringFolioSalida : "";
+    
+    console.log(req.query);
     try {
-        if (arrClientesFiscales_id == undefined || arrClientesFiscales_id.length == 0) throw NullParamsException;
-        if (arrSucursales_id == undefined || arrSucursales_id.length == 0) throw NullParamsException;
-        if (arrAlmacenes_id == undefined || arrAlmacenes_id.length == 0) throw NullParamsException;
+
+        if (arrClientesFiscales_id == undefined ) throw NullParamsException;
+        if (arrSucursales_id == undefined ) throw NullParamsException;
+        if (arrAlmacenes_id == undefined ) throw NullParamsException;
         if (tipo == undefined || tipo == "") throw NullParamsException;
 
-        let filtro = {
-            clienteFiscal_id: { $in: arrClientesFiscales_id },
-            sucursal_id: { $in: arrSucursales_id },
-            almacen_id: { $in: arrAlmacenes_id }
+        let filter = {
+            clienteFiscal_id: arrClientesFiscales_id ,
+            sucursal_id:  arrSucursales_id ,
+            almacen_id: arrAlmacenes_id 
         };
-
-        if (fechaInicio != undefined && fechaFinal != undefined) {
-            filtro['fechaEntrada'] = { $gte: fechaInicio, $lt: fechaFinal };
+        if(fechaInicio != "" &&  fechaFinal != ""){
+            if(fecha == "fechaAlta")
+            {
+                filter.fechaAlta={
+                    $gte:fechaInicio,
+                    $lt: fechaFinal
+                };
+            }
+            if(fecha == "fechaEntrada")
+            {
+                filter.fechaEntrada={
+                    $gte:fechaInicio,
+                    $lt: fechaFinal
+                };
+            }
+        }
+        if(folioEntrada != "")
+        {
+            filter.stringFolio=folioEntrada;
         }
 
-        let entradas = await Entrada.find(filtro).exec();
+        let entradas = await Entrada.find(filter).exec();
+
         let entradas_id = entradas.map(x => x._id);
 
         let partidas = await Partida
@@ -713,9 +737,9 @@ async function getPartidasByIDs(req, res) {
                 populate: {
                     path: "clienteFiscal_id",
                     model: "ClienteFiscal",
-                    select: 'nombreCorto nombreComercial razonSocial'
+                    select: 'nombreCorto nombreComercial razonSocial fechAlta'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechAlta'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
             })
             .populate({
                 path: "entrada_id",
@@ -723,9 +747,9 @@ async function getPartidasByIDs(req, res) {
                 populate: {
                     path: "sucursal_id",
                     model: "Sucursal",
-                    select: 'nombre'
+                    select: 'nombre fechAlta'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechAlta'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
             })
             .populate({
                 path: "entrada_id",
@@ -733,19 +757,28 @@ async function getPartidasByIDs(req, res) {
                 populate: {
                     path: "almacen_id",
                     model: "Almacen",
-                    select: 'nombre'
+                    select: 'nombre fechAlta',
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechAlta'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
             })
             .populate({
                 path: 'salidas_id.salida_id',
                 model: 'Salida',
-                select: 'folio stringFolio fechaSalida item embalajes fechAlta'
+                select: 'folio stringFolio fechaSalida item embalajes fechaAlta'
             })
             .exec();
+            console.log(partidas)
+            partidas = partidas.sort(sortByfechaEntadaAsc);
+            let arrPartidas=[]
+        
+            partidas.forEach(partida => 
+            {
+                //console.log(partida);
 
-        partidas = partidas.sort(sortByfechaEntadaAsc);
-        res.status(200).send(partidas);
+                arrPartidas.push(partida);
+            });
+        
+        res.status(200).send(arrPartidas);
     }
     catch (error) {
         res.status(500).send(error);
