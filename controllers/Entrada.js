@@ -523,6 +523,10 @@ function getEntradasReporte(req, res) {
 	let fecha=req.body.fecha != undefined ? req.body.fecha : "";
 	let alerta1=req.body.alerta1 != undefined ? req.body.alerta1 : "";
 	let alerta2=req.body.alerta2 != undefined ? req.body.alerta2 : "";
+	let ageingInit=req.body.aging ? req.body.aging.inicio != undefined ? req.body.aging.inicio : "":"";
+	let ageingFin=req.body.aging ? req.body.aging.fin != undefined ? req.body.aging.fin : "":"";
+	let clave=req.body.producto_id != undefined ? req.body.producto_id : "";
+	let folio=req.body.stringFolio != undefined ? req.body.stringFolio : "";
 	let fechaEntrada="";
 	let fechaFrescura="";
 	let fechaAlerta1="";
@@ -557,6 +561,10 @@ function getEntradasReporte(req, res) {
 		        $lt: fechaFinal
 		    };
 		}
+	}
+	if(folio != "")
+	{
+		filter.stringFolio=folio;
 	}
 	let reporte = 0;
 	
@@ -639,7 +647,7 @@ function getEntradasReporte(req, res) {
 				{
 					resFecha = new Date(fechaAlerta2)>fechaInicio && new Date(fechaAlerta2)<fechaFinal;
 				}
-				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == ""){
+				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
 					arrPartidas.push(elem);
 				}
 				else{
@@ -647,6 +655,21 @@ function getEntradasReporte(req, res) {
 					let resSubclasificacion=true;
 					let resAlerta1=true;
 					let resAlerta2=true;
+					let resAgeing=true;
+					let resClave=true;
+					if(ageingInit != "" && ageingFin!= "")
+					{
+						if(Aging >= parseInt(ageingInit) && Aging <= parseInt(ageingFin))
+						{
+							resAgeing=true;
+						}
+						else
+							resAgeing=false;
+					}
+					if(clave != "" && elem.producto_id.id.toString() != clave.toString())
+					{
+						resClave=false;
+					}
 					if(alerta1 !="" && fechaAlerta1 != "")
 					{
 						if(diasAlm < 0)
@@ -676,7 +699,7 @@ function getEntradasReporte(req, res) {
 					{
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
 					}
-					if(elem.isEmpty == false && resSubclasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true )
+					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
 					{	
 						arrPartidas.push(elem);
 					}
@@ -700,6 +723,10 @@ function getExcelCaducidades(req, res) {
 	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
 	let alerta1=req.query.alerta1 != undefined ? req.query.alerta1 : "";
 	let alerta2=req.query.alerta2 != undefined ? req.query.alerta2 : "";
+	let ageingInit=req.query.aging ? req.query.aging.inicio != undefined ? req.query.aging.inicio : "":"";
+	let ageingFin=req.query.aging ? req.query.aging.fin != undefined ? req.query.aging.fin : "":"";
+	let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
+	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let fechaEntrada="";
 	let fechaFrescura="";
 	let fechaAlerta1="";
@@ -734,6 +761,10 @@ function getExcelCaducidades(req, res) {
 		        $lt: fechaFinal
 		    };
 		}
+	}
+	if(folio != "")
+	{
+		filter.stringFolio=folio;
 	}
 	let reporte = 0;
 
@@ -815,7 +846,7 @@ function getExcelCaducidades(req, res) {
 				{
 					resFecha = new Date(fechaAlerta2)>fechaInicio && new Date(fechaAlerta2)<fechaFinal;
 				}
-				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == ""){
+				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
 					//console.log("No Filter");
 					arrPartidas.push(elem);
 				}
@@ -824,6 +855,21 @@ function getExcelCaducidades(req, res) {
 					let resSubclasificacion=true;
 					let resAlerta1=true;
 					let resAlerta2=true;
+					let resAgeing=true;
+					let resClave=true;
+					if(ageingInit != "" && ageingFin!= "")
+					{
+						if(Aging >= parseInt(ageingInit) && Aging <= parseInt(ageingFin))
+						{
+							resAgeing=true;
+						}
+						else
+							resAgeing=false;
+					}
+					if(clave != "" && elem.producto_id.id.toString() != clave.toString())
+					{
+						resClave=false;
+					}
 					if(alerta1 !="" && fechaAlerta1 != "")
 					{
 						if(diasAlm < 0)
@@ -853,7 +899,7 @@ function getExcelCaducidades(req, res) {
 					{
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
 					}
-					if(elem.isEmpty == false && resSubclasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true )
+					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
 					{	
 						arrPartidas.push(elem);
 					}

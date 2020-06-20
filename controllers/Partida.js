@@ -715,7 +715,7 @@ async function getPartidasByIDs(req, res) {
                     model: "ClienteFiscal",
                     select: 'nombreCorto nombreComercial razonSocial'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechAlta'
             })
             .populate({
                 path: "entrada_id",
@@ -725,7 +725,7 @@ async function getPartidasByIDs(req, res) {
                     model: "Sucursal",
                     select: 'nombre'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechAlta'
             })
             .populate({
                 path: "entrada_id",
@@ -735,12 +735,12 @@ async function getPartidasByIDs(req, res) {
                     model: "Almacen",
                     select: 'nombre'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechAlta'
             })
             .populate({
                 path: 'salidas_id.salida_id',
                 model: 'Salida',
-                select: 'folio stringFolio fechaSalida item embalajes'
+                select: 'folio stringFolio fechaSalida item embalajes fechAlta'
             })
             .exec();
 
@@ -760,7 +760,7 @@ async function getExcelByIDs(req, res) {
     let fechaInicio = req.query.fechaInicio;
     let fechaFinal = req.query.fechaFinal;
     let tipo = req.query.tipo;
-
+    console.log(req.query.arrAlmacenes_id);
     try {
         if (arrClientesFiscales_id == undefined || arrClientesFiscales_id.length == 0) throw NullParamsException;
         if (arrSucursales_id == undefined || arrSucursales_id.length == 0) throw NullParamsException;
@@ -861,7 +861,7 @@ async function getExcelByIDs(req, res) {
         worksheet.cell(2, 4).string('Referencia').style(headersStyle);
         worksheet.cell(2, 5).string('Producto').style(headersStyle);    
         worksheet.cell(2, 6).string('T.').style(headersStyle);
-        worksheet.cell(2, 7).string('Cjs.').style(headersStyle);
+        worksheet.cell(2, 7).string('Sacos.').style(headersStyle);
         worksheet.cell(2, 8).string('Fecha Ingreso').style(headersStyle);
         worksheet.cell(2, 9).string('Fecha salida').style(headersStyle);    
         worksheet.cell(2, 10).string('% Salida').style(headersStyle);
@@ -910,7 +910,7 @@ async function getExcelByIDs(req, res) {
             worksheet.cell(i, 4).string(partida.entrada_id.referencia ? partida.entrada_id.referencia :"");
             worksheet.cell(i, 5).string(partida.descripcion ? partida.descripcion:"");    
             worksheet.cell(i, 6).number(partida.embalajesEntrada.tarimas ? partida.embalajesEntrada.tarimas:0);
-            worksheet.cell(i, 7).number(partida.embalajesEntrada.cajas ? partida.embalajesEntrada.cajas:0);
+            worksheet.cell(i, 7).number(partida.embalajesEntrada.sacos ? partida.embalajesEntrada.sacos:0);
             worksheet.cell(i, 8).string(partida.entrada_id.fechaEntrada ? dateFormat(partida.entrada_id.fechaEntrada, "dd/mm/yyyy") : "");
             worksheet.cell(i, 9).string(max);   
             worksheet.cell(i, 10).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
