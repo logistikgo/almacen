@@ -496,26 +496,66 @@ function getReportePartidas(req, res) {
 	});
 }
 
-function getExcelSalidas(req, res) {
+async function getExcelSalidas(req, res) {
+	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
+	console.log(req.query);
 	var arrPartidas = [];
 	var partidas = [];
+	let Infull=req.query.inFull ? req.query.inFull :"";
+	let InfullInit=req.query.inFull ? req.query.inFull.inicio != undefined ? req.query.inFull.inicio : "":"";
+	let InfullFin=req.query.inFull ? req.query.inFull.fin != undefined ? req.query.inFull.fin : "":"";
+	let clasificacion = req.query.clasificacion != undefined ? req.query.clasificacion : "";
+	let subclasificacion = req.query.subclasificacion != undefined ? req.query.subclasificacion :"";
+	let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
+	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
+	let valorontime=req.query.onTime ? req.query.onTime : "";
+	let value = 0
+	let fRecibo = "";
+    let fSalida = "";
+    let ontime = "";
+    let resontime="";
 	var salidas_id = [];
+	let filter = {
+		clienteFiscal_id: req.query.clienteFiscal_id
+	}
 
-	Salida.find({clienteFiscal_id: req.query.idClienteFiscal})
+	if(fechaInicio != "" &&  fechaFinal != ""){
+		if(fecha == "fechaAlta")
+		{
+			filter.fechaAlta={
+		        $gte:fechaInicio,
+		        $lt: fechaFinal
+		    };
+		}
+		if(fecha == "fechaSalida")
+		{
+			filter.fechaSalida={
+		        $gte:fechaInicio,
+		        $lt: fechaFinal
+		    };
+		}
+	}
+	console.log(filter);
+	if(folio != "")
+	{
+		filter.stringFolio=folio;
+	}
+	Salida.find(filter)
 	.populate({
 		path: 'partidas',
-		model: 'Partida',
+		model: 'Partida'
 	})
 	.populate({
 		path: 'partidas',
 		populate: {
 			path: 'producto_id',
-			model: 'Producto',
-			select: 'subclasificacion'
+			model: 'Producto'
 		}
 	})
 	.then(async (salidas) => {
-		salidas.forEach( salida => {
+		salidas.forEach(salida => {
 			
 			partidas = salida.partidas;
 
@@ -530,7 +570,7 @@ function getExcelSalidas(req, res) {
 						embalajes = elem.embalajes;
 					}
 				})
-
+				//console.log(partida);
 				var paramsSalida = {
 					_id: salida._id,
 					stringFolio: salida.stringFolio,
@@ -547,14 +587,85 @@ function getExcelSalidas(req, res) {
 					clave: partida.clave,
 					lote: partida.lote,
 					descripcion: partida.descripcion,
+					subclasificacion: partida.producto_id.subclasificacion,
 					posiciones: partida.posiciones,
 					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes,
-					subclasificacion: partida.producto_id.subclasificacion,
 					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR"
 				}
+				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == ""){
+					arrPartidas.push(paramsSalida);
+					//console.log("in")
+				}
+				else
+				{	
+					let resClasificacion=true;
+					let resSubclasificacion=true;
+					let value = 0
+		        	if(paramsSalida.CajasPedidas && paramsSalida.embalajes)
+		        		value=(  paramsSalida.CajasPedidas.cajas/paramsSalida.embalajes.cajas) ? ((paramsSalida.CajasPedidas.cajas)/paramsSalida.embalajes.cajas) : 0;
+					let resFull=true;
+					let resClave=true;
+					let resResontime=true;
+					ontime=0;
+					resontime="SIN ASIGNAR";
+					if (paramsSalida.fechaReciboRemision !== "SIN ASIGNAR" && paramsSalida.fechaSalida) {
+						fRecibo = paramsSalida.fechaReciboRemision.getTime();
+					    fSalida = paramsSalida.fechaSalida.getTime();
+					    ontime = Math.abs(Math.floor((fRecibo- fSalida)/86400000));
+						if (ontime < 0)
+			                resontime = "RETRASO"
 
-				arrPartidas.push(paramsSalida);
+			            else
+			                resontime = "ATIEMPO";
+		        	}
+					if(clasificacion != "")
+					{
+						resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+					}
+					if(subclasificacion != "")
+					{
+						resSubclasificacion=partida.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
+					}
+					//console.log(valorontime + "==" + resontime )
+					if(resontime != valorontime && valorontime !="")
+					{
+						resResontime =false;
+					}
+					if(clave != "" && partida.producto_id._id.toString() != clave.toString())
+					{
+						resClave=false;
+					}
+					if(Infull!="")
+					{
+						//console.log(InfullInit +"-"+(value*100)+"-"+InfullFin)
+						if(InfullInit != "" && InfullFin!= "" && InfullFin!= "x")
+						{
+							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
+							{
+								resFull=true;
+							}
+							else
+								resFull=false;
+						}
+						if(InfullInit != "" && InfullFin == "x")
+						{
+							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
+							{
+								resFull=true;
+							}
+							else
+								resFull=false;
+						}
+					}
+					//console.log(resFull);
+					//console.log(resFull+" == true && "+resClasificacion+" == true && "+resSubclasificacion+" == true && "+resClave+"==true && "+resResontime+"==true")
+					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true)
+					{
+						arrPartidas.push(paramsSalida);
+					}
+				}
+				
 
 			})
 		})
@@ -620,7 +731,7 @@ function getExcelSalidas(req, res) {
             },
         });
 
-		let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.idClienteFiscal })
+		let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
         let formatofecha=clientefiscal._id == "5e33420d22b5651aecafe934" ? "mm/dd/yyyy" : "dd/mm/yyyy";
         let headercajas=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Despachados " : "cajas";
         let headerCajaspedido=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Solicitados" : "cajas";
@@ -739,10 +850,10 @@ function getExcelSalidas(req, res) {
         	//console.log(partidas.fechaReciboRemision);
         	worksheet.cell(i, indexbody+2).string(partidas.fechaReciboRemision ? partidas.fechaReciboRemision!="SIN ASIGNAR" ? dateFormat(new Date(partidas.fechaReciboRemision), formatofecha):"SIN ASIGNAR":"");
         	worksheet.cell(i, indexbody+3).string(partidas.fechaSalida ? dateFormat(partidas.fechaSalida, formatofecha):"");
-        	let ontime =0;
+        	ontime =0;
 			if (partidas.fechaReciboRemision !== "SIN ASIGNAR" && partidas.fechaSalida) {
-			    let fRecibo = partidas.fechaReciboRemision.getTime();
-			    let fSalida = partidas.fechaSalida.getTime();
+			    fRecibo = partidas.fechaReciboRemision.getTime();
+			    fSalida = partidas.fechaSalida.getTime();
 			    ontime = Math.abs(Math.floor((fRecibo- fSalida)/86400000));
 			}
 			let resontime="";
