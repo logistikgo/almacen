@@ -33,6 +33,7 @@ async function get(req, res) {
 	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
 	var json = [];
+	console.log(req.query);
 	if(_status != "FINALIZADO" && _status != null){
 		filter = {
 			sucursal_id: _idSucursal,
@@ -58,6 +59,12 @@ async function get(req, res) {
 		}
 	}
 	else if(_status === null){
+		filter = {
+			sucursal_id: _idSucursal,
+			clienteFiscal_id: _idClienteFiscal,
+			almacen_id: _idAlmacen,
+			tipo: _tipo
+		};
 		Entrada.find(filter)
 		.then((entradasByStatus) => {
 			entradasByStatus.forEach(resp => {
