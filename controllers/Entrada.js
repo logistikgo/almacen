@@ -26,7 +26,11 @@ async function get(req, res) {
 	let _tipo = req.query.tipo;
 	let _status = req.query.status != ""? req.query.status : null;
 	let _interfaz = req.query.interfaz;
+	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
 	//console.log(_status);
+	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
 	var json = [];
 	if(_status != "FINALIZADO" && _status != null){
@@ -38,7 +42,7 @@ async function get(req, res) {
 	}
 	else if(_status != null)
 	{
-		if(req.query.isReporte) {
+		if(req.query.isReporte && _status === "NINGUNO") {
 			filter = {
 				sucursal_id: _idSucursal,
 				tipo: _tipo,
@@ -49,17 +53,11 @@ async function get(req, res) {
 			filter = {
 				sucursal_id: _idSucursal,
 				tipo: _tipo,
-				status: "FINALIZADO"
+				status: _status
 			};
 		}
 	}
 	else if(_status === null){
-		filter = {
-			sucursal_id: _idSucursal,
-			clienteFiscal_id: _idClienteFiscal,
-			almacen_id: _idAlmacen,
-			tipo: _tipo
-		};
 		Entrada.find(filter)
 		.then((entradasByStatus) => {
 			entradasByStatus.forEach(resp => {
@@ -101,7 +99,26 @@ async function get(req, res) {
 		filter.clienteFiscal_id = arrClientes[0];
 		filter.sucursal_id = arrSucursales[0];
 	}
-
+	if(fechaInicio != "" &&  fechaFinal != ""){
+		if(fecha == "fechaAlta")
+		{
+			filter.fechaAlta={
+		        $gte:fechaInicio,
+		        $lt: fechaFinal
+		    };
+		}
+		if(fecha == "fechaEntrada")
+		{
+			filter.fechaEntrada={
+		        $gte:fechaInicio,
+		        $lt: fechaFinal
+		    };
+		}
+	}
+	if(folio != "")
+	{
+		filter.stringFolio=folio;
+	}
 	Entrada.find(filter).sort({ fechaEntrada: -1 })
 		.populate({
 			path: 'partidas.producto_id',
@@ -1304,8 +1321,12 @@ async function getExcelEntradas(req, res) {
 	let _tipo = req.query.tipo;
 	let _status = req.query.status;
 	let _interfaz = req.query.interfaz;
+	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
+	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let filter ="";
-	if(_status != "FINALIZADO"){
+	if(_status != "NINGUNO"){
 		filter = {
 			sucursal_id: _idSucursal,
 			tipo: _tipo,
@@ -1318,6 +1339,7 @@ async function getExcelEntradas(req, res) {
 			sucursal_id: _idSucursal,
 			tipo: _tipo
 		};
+		
 	}
 	if (!_interfaz) { //Esta condicion determina si la funcion esta siendo usa de la interfaz o de la aplicacion
 		if (_status == "APLICADA" || _status == "FINALIZADO") //si tiene status entonces su estatus es SIN_POSICIONAR, por lo tanto no se requiere almacen_id
@@ -1333,6 +1355,34 @@ async function getExcelEntradas(req, res) {
 		filter.sucursal_id = arrSucursales[0];
 	}
 
+
+
+	filter = {
+			sucursal_id: _idSucursal,
+			clienteFiscal_id: _idClienteFiscal,
+			almacen_id: _idAlmacen,
+			tipo: _tipo
+		};
+		if(fechaInicio != "" &&  fechaFinal != ""){
+			if(fecha == "fechaAlta")
+			{
+				filter.fechaAlta={
+			        $gte:fechaInicio,
+			        $lt: fechaFinal
+			    };
+			}
+			if(fecha == "fechaEntrada")
+			{
+				filter.fechaEntrada={
+			        $gte:fechaInicio,
+			        $lt: fechaFinal
+			    };
+			}
+		}
+		if(folio != "")
+		{
+			filter.stringFolio=folio;
+	}
 	Entrada.find(filter).sort({ fechaEntrada: -1 })
 		.populate({
 			path: 'partidas.producto_id',
