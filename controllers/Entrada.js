@@ -29,11 +29,13 @@ async function get(req, res) {
 	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
 	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
 	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
+	let isReporte=req.query.isReporte != undefined ? req.query.isReporte: "";
 	//console.log(_status);
 	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
 	var json = [];
-	if(_status != "FINALIZADO" && _status != null){
+	//console.log(req.query);
+	if(_status != "FINALIZADO" && _status != null && _status !== "NINGUNO"){
 		filter = {
 			sucursal_id: _idSucursal,
 			tipo: _tipo,
@@ -42,11 +44,12 @@ async function get(req, res) {
 	}
 	else if(_status != null)
 	{
-		if(req.query.isReporte && _status === "NINGUNO") {
+		//console.log(isReporte);
+		if( isReporte === "true" && _status === "NINGUNO") {
 			filter = {
 				sucursal_id: _idSucursal,
 				tipo: _tipo,
-				//status: "FINALIZADO"
+				status: { $in:['FINALIZADO','APLICADA']}
 			};
 		}
 		else {
@@ -58,6 +61,12 @@ async function get(req, res) {
 		}
 	}
 	else if(_status === null){
+		filter = {
+			sucursal_id: _idSucursal,
+			clienteFiscal_id: _idClienteFiscal,
+			almacen_id: _idAlmacen,
+			tipo: _tipo
+		};
 		Entrada.find(filter)
 		.then((entradasByStatus) => {
 			entradasByStatus.forEach(resp => {
@@ -606,7 +615,7 @@ function getEntradasReporte(req, res) {
 		entradas.forEach(entrada => {
 			var partida = entrada.partidas;
 			partida.forEach(elem => {
-				
+				//console.log("1");
 				let resFecha=true;
 				let resAlerta1=true;
 				let resAlerta2=true;
@@ -652,6 +661,7 @@ function getEntradasReporte(req, res) {
 	        				resFecha=false;
 	        		}
         		}
+        		//console.log("2");
 				if(fecha == "fechaFrescura" && fechaFrescura != "")
 				{
 					resFecha = new Date(fechaFrescura)>new Date(fechaInicio) && new Date(fechaFrescura)<new Date(fechaFinal);
@@ -668,6 +678,7 @@ function getEntradasReporte(req, res) {
 					arrPartidas.push(elem);
 				}
 				else{
+					//console.log("3");
 					let resClasificacion=true;
 					let resSubclasificacion=true;
 					let resAlerta1=true;
@@ -683,7 +694,7 @@ function getEntradasReporte(req, res) {
 						else
 							resAgeing=false;
 					}
-					if(clave != "" && elem.producto_id.id.toString() != clave.toString())
+					if(clave != "" && elem.producto_id.id.toString() !== clave.toString())
 					{
 						resClave=false;
 					}
@@ -708,18 +719,20 @@ function getEntradasReporte(req, res) {
 						else
 							resAlerta2= alerta1 == "RECHAZO" ;
 					}
-					if(clasificacion != "")
+
+					if(clasificacion != "" && elem.producto_id.statusReg == "ACTIVO")
 					{
-						resClasificacion=elem.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+						resClasificacion=elem.producto_id.clasificacion_id.toString() === clasificacion.toString() ;
 					}
-					if(subclasificacion != "")
+					if(subclasificacion != "" && elem.producto_id.statusReg == "ACTIVO")
 					{
-						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
+						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
 					}
 					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
 					{	
 						arrPartidas.push(elem);
 					}
+					//console.log("4");
 				}
 			})		
 		});
@@ -909,11 +922,11 @@ function getExcelCaducidades(req, res) {
 						else
 							resAlerta2= alerta1 == "RECHAZO" ;
 					}
-					if(clasificacion != "")
+					if(clasificacion != "" && elem.producto_id.statusReg == "ACTIVO")
 					{
 						resClasificacion=elem.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
 					}
-					if(subclasificacion != "")
+					if(subclasificacion != "" && elem.producto_id.statusReg == "ACTIVO")
 					{
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
 					}
