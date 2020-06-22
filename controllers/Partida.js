@@ -693,7 +693,7 @@ async function getPartidasByIDs(req, res) {
     let folioSalida=req.query.stringFolioSalida != undefined ? req.query.stringFolioSalida : "";
     let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
     let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
-    console.log(req.query);
+    //console.log(req.query);
     try {
 
         if (arrClientesFiscales_id == undefined ) throw NullParamsException;
@@ -780,6 +780,7 @@ async function getPartidasByIDs(req, res) {
             partidas.forEach(partida => 
             {
                 //console.log(partida);
+
                 let resFecha=true
                 let resClasificacion=true;
                 let resSubclasificacion=true;
@@ -955,6 +956,7 @@ async function getExcelByIDs(req, res) {
                 if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true)
                     arrPartidas.push(partida);
             });
+            console.log("startexcel");
         var excel = require('excel4node');
         var dateFormat = require('dateformat');
         var workbook = new excel.Workbook();
@@ -986,7 +988,7 @@ async function getExcelByIDs(req, res) {
         });
         let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
         let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
-        console.log(tipoUsuario);
+        //console.log(tipoUsuario);
         let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();
         var worksheet = workbook.addWorksheet('Partidas');
@@ -1037,22 +1039,22 @@ async function getExcelByIDs(req, res) {
             }
             totalSalida = totalEntrada - totalResto;
             porcentaje = (totalSalida / totalEntrada);
-
-            if(partida.salidas_id )
+            if(partida.salidas_id != undefined)
             if (partida.salidas_id.length > 0 || partida.isEmpty === true){
-
                 let salidas_idInstances = partida.salidas_id.map(x => x.salida_id);
-                let fechasSalida = salidas_idInstances.map(x => x.fechaSalida);
-                if(fechasSalida.length > 0){
-                    max = fechasSalida.reduce(function (a, b) { return a > b ? a : b; });
-                    var diff = Math.abs(max.getTime() - partida.entrada_id.fechaEntrada.getTime());
-                    let ms= Math.floor(diff % 1000);
-                    let s= Math.floor(diff / 1000 % 60);
-                    let m= Math.floor(diff / 60000 % 60);
-                    let h= Math.floor(diff / 3600000 % 24);
-                    let d= Math.floor(diff / 86400000);
-                    max =dateFormat(max, formatofecha)
-                    lapso= d.toString() + ' día(s), ' + h.toString() + ' hora(s), ' + m.toString() + ' minuto(s)';
+                if(salidas_idInstances){
+                    let fechasSalida = salidas_idInstances.map(x => x.fechaSalida) ? salidas_idInstances.map(x => x.fechaSalida) : "";
+                    if(fechasSalida !== "" &&fechasSalida.length > 0){
+                        max = fechasSalida.reduce(function (a, b) { return a > b ? a : b; });
+                        var diff = Math.abs(max.getTime() - partida.entrada_id.fechaEntrada.getTime());
+                        let ms= Math.floor(diff % 1000);
+                        let s= Math.floor(diff / 1000 % 60);
+                        let m= Math.floor(diff / 60000 % 60);
+                        let h= Math.floor(diff / 3600000 % 24);
+                        let d= Math.floor(diff / 86400000);
+                        max =dateFormat(max, formatofecha)
+                        lapso= d.toString() + ' día(s), ' + h.toString() + ' hora(s), ' + m.toString() + ' minuto(s)';
+                    }
                 }
             }
             worksheet.cell(i, 1).string(partida.entrada_id.stringFolio ? partida.entrada_id.stringFolio:"");
@@ -1062,8 +1064,8 @@ async function getExcelByIDs(req, res) {
             worksheet.cell(i, 5).string(partida.clave ? partida.clave:"");
             worksheet.cell(i, 6).string(partida.entrada_id.ordenCompra ? partida.entrada_id.ordenCompra:"");
             worksheet.cell(i, 7).string(partida.lote ? partida.lote:"");
-            worksheet.cell(i, 8).string(partida.descripcion ? partida.descripcion:"");  
-            worksheet.cell(i, 9).string(partida.producto_id.clasificacion ? partida.producto_id.clasificacion:"");
+            worksheet.cell(i, 8).string(partida.descripcion ? partida.descripcion:""); 
+            worksheet.cell(i, 9).string(partida.producto_id.subclasificacion ? partida.producto_id.subclasificacion:"");
 
             let indexbody=10;
             clienteEmbalaje.forEach(emb=>
@@ -1073,19 +1075,19 @@ async function getExcelByIDs(req, res) {
                     let band = false;
                     partida.producto_id.arrEquivalencias.forEach(function (equivalencia) {
                        
-                        if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
+                        if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja" && partida.embalajesEntrada.cajas) {
 
-                            tarimas = partida.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia ? (partida.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
+                            tarimas = partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia ? (partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
                             band = true;
                         }
                     });
                     if (band !== true){
-                        tarimas = partida.embalajesxSalir.tarimas ? partida.embalajesxSalir.tarimas : 0;
+                        tarimas = partida.embalajesEntrada.tarimas ? partida.embalajesEntrada.tarimas : 0;
                     }
                     worksheet.cell(i, indexbody).number(parseInt(tarimas));
                 }
                 else {
-                    worksheet.cell(i, indexbody).number(partida.embalajesxSalir[emb] ? parseInt(partida.embalajesxSalir[emb]):0);
+                    worksheet.cell(i, indexbody).number(partida.embalajesEntrada[emb] ? parseInt(partida.embalajesEntrada[emb]):0);
                 }
                 indexbody++;
             });
@@ -1093,15 +1095,15 @@ async function getExcelByIDs(req, res) {
             worksheet.cell(i, indexbody+1).string(partida.entrada_id.fechaAlta ? dateFormat(partida.entrada_id.fechaAlta, formatofecha) : "");
             worksheet.cell(i, indexbody+2).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaSalida, formatofecha) : "":"");
             worksheet.cell(i, indexbody+3).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaAlta, formatofecha) : "":"");
-
             worksheet.cell(i, indexbody+4).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
             worksheet.cell(i, indexbody+5).string(lapso).style(fitcellStyle);
             worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
             i++;
         });
-        workbook.write('ReportePartidas'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
+         workbook.write('ReportePartidas'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
     }
     catch (error) {
+        console.log(error);
         res.status(500).send(error);
     }
 }
