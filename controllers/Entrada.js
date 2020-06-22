@@ -727,6 +727,7 @@ function getExcelCaducidades(req, res) {
 	let ageingFin=req.query.aging ? req.query.aging.fin != undefined ? req.query.aging.fin : "":"";
 	let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
 	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
+	let tipoUsuario = req.query.tipoUsuario != undefined ? req.query.tipoUsuario : "";
 	let fechaEntrada="";
 	let fechaFrescura="";
 	let fechaAlerta1="";
@@ -952,7 +953,7 @@ function getExcelCaducidades(req, res) {
             },
         });
         let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
-        let formatofecha=clientefiscal._id == "5e33420d22b5651aecafe934" ? "mm/dd/yyyy" : "dd/mm/yyyy";
+        let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
       
         let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();

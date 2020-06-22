@@ -511,6 +511,7 @@ async function getExcelSalidas(req, res) {
 	let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
 	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let valorontime=req.query.onTime ? req.query.onTime : "";
+	let tipoUsuario = req.query.tipoUsuario != undefined ? req.query.tipoUsuario : "";
 	let value = 0
 	let fRecibo = "";
     let fSalida = "";
@@ -732,7 +733,7 @@ async function getExcelSalidas(req, res) {
         });
 
 		let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
-        let formatofecha=clientefiscal._id == "5e33420d22b5651aecafe934" ? "mm/dd/yyyy" : "dd/mm/yyyy";
+        let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
         let headercajas=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Despachados " : "cajas";
         let headerCajaspedido=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Solicitados" : "cajas";
       	
@@ -904,7 +905,7 @@ async function getExcelSalidas(req, res) {
             worksheet.cell(i, indexbody+6).string(res);
             i++;
         });
-        workbook.write('ReporteSali'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
+        workbook.write('ReporteSali'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
 
 	})
 	.catch((error) => {

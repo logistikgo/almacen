@@ -836,7 +836,8 @@ async function getExcelByIDs(req, res) {
     let folioSalida=req.query.stringFolioSalida != undefined ? req.query.stringFolioSalida : "";
     let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
     let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
-    
+    let tipoUsuario = req.query.tipoUsuario != undefined ? req.query.tipoUsuario : "";
+    console.log(tipoUsuario);
     try {
 
         if (arrClientesFiscales_id == undefined ) throw NullParamsException;
@@ -983,13 +984,11 @@ async function getExcelByIDs(req, res) {
                 wrapText: true,
             },
         });
-        //console.log("testBegin")
         let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
-        let formatofecha=clientefiscal._id == "5e33420d22b5651aecafe934" ? "mm/dd/yyyy" : "dd/mm/yyyy";
-      
+        let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
+        console.log(tipoUsuario);
         let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();
-        //console.log("bookbegin")
         var worksheet = workbook.addWorksheet('Partidas');
         worksheet.column(4).setWidth(20);
         worksheet.column(11).setWidth(35);
@@ -1023,7 +1022,6 @@ async function getExcelByIDs(req, res) {
         worksheet.cell(2, indexheaders+4).string('% Salida').style(headersStyle);
         worksheet.cell(2, indexheaders+5).string('Lapso').style(headersStyle);
         worksheet.cell(2, indexheaders+6).string('Recibio').style(headersStyle);
-        //console.log("headersEnd");
         let i=3;
         arrPartidas.forEach(partida => 
         {
@@ -1037,7 +1035,6 @@ async function getExcelByIDs(req, res) {
                 totalEntrada += partida.embalajesEntrada[x];
                 totalResto += partida.embalajesxSalir[x];
             }
-            console.log("1");
             totalSalida = totalEntrada - totalResto;
             porcentaje = (totalSalida / totalEntrada);
 
@@ -1046,7 +1043,6 @@ async function getExcelByIDs(req, res) {
 
                 let salidas_idInstances = partida.salidas_id.map(x => x.salida_id);
                 let fechasSalida = salidas_idInstances.map(x => x.fechaSalida);
-                console.log(fechasSalida.length);
                 if(fechasSalida.length > 0){
                     max = fechasSalida.reduce(function (a, b) { return a > b ? a : b; });
                     var diff = Math.abs(max.getTime() - partida.entrada_id.fechaEntrada.getTime());
@@ -1055,11 +1051,10 @@ async function getExcelByIDs(req, res) {
                     let m= Math.floor(diff / 60000 % 60);
                     let h= Math.floor(diff / 3600000 % 24);
                     let d= Math.floor(diff / 86400000);
-                    max =dateFormat(max, "dd/mm/yyyy")
+                    max =dateFormat(max, formatofecha)
                     lapso= d.toString() + ' día(s), ' + h.toString() + ' hora(s), ' + m.toString() + ' minuto(s)';
                 }
             }
-            // console.log("2");
             worksheet.cell(i, 1).string(partida.entrada_id.stringFolio ? partida.entrada_id.stringFolio:"");
             worksheet.cell(i, 2).string(partida.salidas_id.length > 0  ? partida.salidas_id[0].salida_id.stringFolio: "");
             worksheet.cell(i, 3).string(partida.entrada_id.item ? partida.entrada_id.item:"");
@@ -1074,54 +1069,42 @@ async function getExcelByIDs(req, res) {
             clienteEmbalaje.forEach(emb=>
             {   
                 let tarimas =0
-                //console.log(2.1);
-                //console.log(partida);
                 if (emb == 'tarimas' && partida.producto_id.arrEquivalencias.length > 0) {
                     let band = false;
-                    //console.log(2.2);
                     partida.producto_id.arrEquivalencias.forEach(function (equivalencia) {
-                        console.log(2.3);
+                       
                         if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
 
                             tarimas = partida.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia ? (partida.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
                             band = true;
                         }
-                        console.log(2.4);
                     });
-                    //console.log(2.5);
                     if (band !== true){
                         tarimas = partida.embalajesxSalir.tarimas ? partida.embalajesxSalir.tarimas : 0;
-                        console.log(2.6);
                     }
                     worksheet.cell(i, indexbody).number(parseInt(tarimas));
-                    //console.log(2.7);
                 }
                 else {
-                    //console.log(2.8);
                     worksheet.cell(i, indexbody).number(partida.embalajesxSalir[emb] ? parseInt(partida.embalajesxSalir[emb]):0);
                 }
                 indexbody++;
             });
-             //console.log("3");
-            worksheet.cell(i, indexbody).string(partida.entrada_id.fechaEntrada ? dateFormat(partida.entrada_id.fechaEntrada, "dd/mm/yyyy") : "");
-            worksheet.cell(i, indexbody+1).string(partida.entrada_id.fechaAlta ? dateFormat(partida.entrada_id.fechaAlta, "dd/mm/yyyy") : "");
-            worksheet.cell(i, indexbody+2).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaSalida, "dd/mm/yyyy") : "":"");
-            worksheet.cell(i, indexbody+3).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaAlta, "dd/mm/yyyy") : "":"");
-            //worksheet.cell(i, 9).string(max);   
+            worksheet.cell(i, indexbody).string(partida.entrada_id.fechaEntrada ? dateFormat(partida.entrada_id.fechaEntrada, formatofecha) : "");
+            worksheet.cell(i, indexbody+1).string(partida.entrada_id.fechaAlta ? dateFormat(partida.entrada_id.fechaAlta, formatofecha) : "");
+            worksheet.cell(i, indexbody+2).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaSalida, formatofecha) : "":"");
+            worksheet.cell(i, indexbody+3).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaAlta, formatofecha) : "":"");
+
             worksheet.cell(i, indexbody+4).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
             worksheet.cell(i, indexbody+5).string(lapso).style(fitcellStyle);
             worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
             i++;
-             //console.log("4");
         });
-        workbook.write('ReportePartidas'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
+        workbook.write('ReportePartidas'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
     }
     catch (error) {
         res.status(500).send(error);
     }
 }
-
-
 
 function sortByfechaEntadaAsc(a, b) {
     if (a.fechaEntrada == undefined || a.fechaEntrada == null || b.fechaEntrada == undefined || b.fechaEntrada == null) {
