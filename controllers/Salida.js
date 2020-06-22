@@ -438,11 +438,11 @@ function getReportePartidas(req, res) {
 			            else
 			                resontime = "ATIEMPO";
 		        	}
-					if(clasificacion != "")
+					if(clasificacion != "" && partida.producto_id.statusReg == "ACTIVO")
 					{
 						resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
 					}
-					if(subclasificacion != "")
+					if(subclasificacion != "" && partida.producto_id.statusReg == "ACTIVO")
 					{
 						resSubclasificacion=partida.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
 					}
@@ -620,11 +620,11 @@ async function getExcelSalidas(req, res) {
 			            else
 			                resontime = "ATIEMPO";
 		        	}
-					if(clasificacion != "")
+					if(clasificacion != "" && partida.producto_id.statusReg == "ACTIVO")
 					{
 						resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
 					}
-					if(subclasificacion != "")
+					if(subclasificacion != "" && partida.producto_id.statusReg == "ACTIVO")
 					{
 						resSubclasificacion=partida.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
 					}

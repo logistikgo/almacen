@@ -693,7 +693,7 @@ async function getPartidasByIDs(req, res) {
     let folioSalida=req.query.stringFolioSalida != undefined ? req.query.stringFolioSalida : "";
     let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
     let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
-    console.log(req.query);
+    //console.log(req.query);
     try {
 
         if (arrClientesFiscales_id == undefined ) throw NullParamsException;
@@ -986,7 +986,7 @@ async function getExcelByIDs(req, res) {
         });
         let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
         let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
-        console.log(tipoUsuario);
+        //console.log(tipoUsuario);
         let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();
         var worksheet = workbook.addWorksheet('Partidas');
@@ -1055,6 +1055,7 @@ async function getExcelByIDs(req, res) {
                     lapso= d.toString() + ' día(s), ' + h.toString() + ' hora(s), ' + m.toString() + ' minuto(s)';
                 }
             }
+            console.log("0")
             worksheet.cell(i, 1).string(partida.entrada_id.stringFolio ? partida.entrada_id.stringFolio:"");
             worksheet.cell(i, 2).string(partida.salidas_id.length > 0  ? partida.salidas_id[0].salida_id.stringFolio: "");
             worksheet.cell(i, 3).string(partida.entrada_id.item ? partida.entrada_id.item:"");
@@ -1062,10 +1063,12 @@ async function getExcelByIDs(req, res) {
             worksheet.cell(i, 5).string(partida.clave ? partida.clave:"");
             worksheet.cell(i, 6).string(partida.entrada_id.ordenCompra ? partida.entrada_id.ordenCompra:"");
             worksheet.cell(i, 7).string(partida.lote ? partida.lote:"");
-            worksheet.cell(i, 8).string(partida.descripcion ? partida.descripcion:"");  
-            worksheet.cell(i, 9).string(partida.producto_id.clasificacion ? partida.producto_id.clasificacion:"");
+            worksheet.cell(i, 8).string(partida.descripcion ? partida.descripcion:""); 
+            console.log("1"); 
+            worksheet.cell(i, 9).string(partida.producto_id.subclasificacion ? partida.producto_id.subclasificacion:"");
 
             let indexbody=10;
+            console.log("3");
             clienteEmbalaje.forEach(emb=>
             {   
                 let tarimas =0
@@ -1073,30 +1076,32 @@ async function getExcelByIDs(req, res) {
                     let band = false;
                     partida.producto_id.arrEquivalencias.forEach(function (equivalencia) {
                        
-                        if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
+                        if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja" && partida.embalajesEntrada.cajas) {
 
-                            tarimas = partida.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia ? (partida.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
+                            tarimas = partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia ? (partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
                             band = true;
                         }
                     });
                     if (band !== true){
-                        tarimas = partida.embalajesxSalir.tarimas ? partida.embalajesxSalir.tarimas : 0;
+                        tarimas = partida.embalajesEntrada.tarimas ? partida.embalajesEntrada.tarimas : 0;
                     }
                     worksheet.cell(i, indexbody).number(parseInt(tarimas));
                 }
                 else {
-                    worksheet.cell(i, indexbody).number(partida.embalajesxSalir[emb] ? parseInt(partida.embalajesxSalir[emb]):0);
+                    worksheet.cell(i, indexbody).number(partida.embalajesEntrada[emb] ? parseInt(partida.embalajesEntrada[emb]):0);
                 }
                 indexbody++;
             });
+            console.log("4");
             worksheet.cell(i, indexbody).string(partida.entrada_id.fechaEntrada ? dateFormat(partida.entrada_id.fechaEntrada, formatofecha) : "");
             worksheet.cell(i, indexbody+1).string(partida.entrada_id.fechaAlta ? dateFormat(partida.entrada_id.fechaAlta, formatofecha) : "");
             worksheet.cell(i, indexbody+2).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaSalida, formatofecha) : "":"");
             worksheet.cell(i, indexbody+3).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaAlta, formatofecha) : "":"");
-
+            console.log("5");
             worksheet.cell(i, indexbody+4).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
             worksheet.cell(i, indexbody+5).string(lapso).style(fitcellStyle);
             worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
+            console.log("6");
             i++;
         });
         workbook.write('ReportePartidas'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
