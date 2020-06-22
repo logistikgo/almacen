@@ -70,10 +70,16 @@ function _delete(req, res) {
 		});
 }
 
+async function getArrayEmbalajes() {
+	let embalajes = await Embalaje.find({ status: "ACTIVO" });
+	return embalajes
+}
+
 module.exports = {
 	get,
 	save,
 	getById,
 	update,
-	_delete
+	_delete,
+	getArrayEmbalajes
 }

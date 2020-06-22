@@ -35,6 +35,7 @@ const Salida = Schema(
 		placasRemolque: String,
 		sello: String,
 		horaSello: Date,
+		fechaReciboRemision: Date,
 		tiempoCarga_id: {
 			type: Schema.ObjectId,
 			ref: "TiempoCargaDescarga"

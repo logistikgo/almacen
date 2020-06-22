@@ -28,7 +28,8 @@ const ClienteFiscal = Schema({
 	pais: String,
 	tipoTarifaPrecio: String,
 	statusReg: String,
-	hasTarifa:{ type: Boolean, default: false } 
+	hasTarifa:{ type: Boolean, default: false } ,
+	arrEmbalajes:String
 },
 	{ collection: 'ClientesFiscales' }
 );

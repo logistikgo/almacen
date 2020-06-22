@@ -9,7 +9,8 @@ const Helper = require('../helpers');
 const PrePartidaM = require("../models/PrePartida");
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const TiempoCargaDescarga = require("../controllers/TiempoCargaDescarga");
-
+const EmbalajesController = require('../controllers/Embalaje');
+const ClienteFiscal = require('../models/ClienteFiscal');
 function getNextID() {
 	return Helper.getNextID(Salida, "salida_id");
 }
@@ -315,14 +316,62 @@ function getPartidasDeEntrada(partidasDeEntrada, partidasDeSalida) {
 }
 
 function getReportePartidas(req, res) {
+	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
+	console.log(req.query);
 	var arrPartidas = [];
 	var partidas = [];
+	let Infull=req.query.inFull ? req.query.inFull :"";
+	let InfullInit=req.query.inFull ? req.query.inFull.inicio != undefined ? req.query.inFull.inicio : "":"";
+	let InfullFin=req.query.inFull ? req.query.inFull.fin != undefined ? req.query.inFull.fin : "":"";
+	let clasificacion = req.query.clasificacion != undefined ? req.query.clasificacion : "";
+	let subclasificacion = req.query.subclasificacion != undefined ? req.query.subclasificacion :"";
+	let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
+	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
+	let valorontime=req.query.onTime ? req.query.onTime : "";
+	let value = 0
+	let fRecibo = "";
+    let fSalida = "";
+    let ontime = "";
+    let resontime="";
 	var salidas_id = [];
+	let filter = {
+		clienteFiscal_id: req.query.clienteFiscal_id
+	}
 
-	Salida.find({clienteFiscal_id: req.query.clienteFiscal_id})
+	if(fechaInicio != "" &&  fechaFinal != ""){
+		if(fecha == "fechaAlta")
+		{
+			filter.fechaAlta={
+		        $gte:fechaInicio,
+		        $lt: fechaFinal
+		    };
+		}
+		if(fecha == "fechaSalida")
+		{
+			filter.fechaSalida={
+		        $gte:fechaInicio,
+		        $lt: fechaFinal
+		    };
+		}
+	}
+	console.log(filter);
+	if(folio != "")
+	{
+		filter.stringFolio=folio;
+	}
+	Salida.find(filter)
 	.populate({
 		path: 'partidas',
-		model: 'Partida',
+		model: 'Partida'
+	})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'producto_id',
+			model: 'Producto'
+		}
 	})
 	.then((salidas) => {
 		salidas.forEach(salida => {
@@ -340,7 +389,7 @@ function getReportePartidas(req, res) {
 						embalajes = elem.embalajes;
 					}
 				})
-
+				//console.log(partida);
 				var paramsSalida = {
 					_id: salida._id,
 					stringFolio: salida.stringFolio,
@@ -357,12 +406,85 @@ function getReportePartidas(req, res) {
 					clave: partida.clave,
 					lote: partida.lote,
 					descripcion: partida.descripcion,
+					subclasificacion: partida.producto_id.subclasificacion,
 					posiciones: partida.posiciones,
 					CajasPedidas: partida.CajasPedidas,
-					embalajes: embalajes
+					embalajes: embalajes,
+					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR"
 				}
+				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == ""){
+					arrPartidas.push(paramsSalida);
+					//console.log("in")
+				}
+				else
+				{	
+					let resClasificacion=true;
+					let resSubclasificacion=true;
+					let value = 0
+		        	if(paramsSalida.CajasPedidas && paramsSalida.embalajes)
+		        		value=(  paramsSalida.CajasPedidas.cajas/paramsSalida.embalajes.cajas) ? ((paramsSalida.CajasPedidas.cajas)/paramsSalida.embalajes.cajas) : 0;
+					let resFull=true;
+					let resClave=true;
+					let resResontime=true;
+					ontime=0;
+					resontime="SIN ASIGNAR";
+					if (paramsSalida.fechaReciboRemision !== "SIN ASIGNAR" && paramsSalida.fechaSalida) {
+						fRecibo = paramsSalida.fechaReciboRemision.getTime();
+					    fSalida = paramsSalida.fechaSalida.getTime();
+					    ontime = Math.abs(Math.floor((fRecibo- fSalida)/86400000));
+						if (ontime < 0)
+			                resontime = "RETRASO"
 
-				arrPartidas.push(paramsSalida);
+			            else
+			                resontime = "ATIEMPO";
+		        	}
+					if(clasificacion != "")
+					{
+						resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+					}
+					if(subclasificacion != "")
+					{
+						resSubclasificacion=partida.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
+					}
+					//console.log(valorontime + "==" + resontime )
+					if(resontime != valorontime && valorontime !="")
+					{
+						resResontime =false;
+					}
+					if(clave != "" && partida.producto_id._id.toString() != clave.toString())
+					{
+						resClave=false;
+					}
+					if(Infull!="")
+					{
+						//console.log(InfullInit +"-"+(value*100)+"-"+InfullFin)
+						if(InfullInit != "" && InfullFin!= "" && InfullFin!= "x")
+						{
+							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
+							{
+								resFull=true;
+							}
+							else
+								resFull=false;
+						}
+						if(InfullInit != "" && InfullFin == "x")
+						{
+							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
+							{
+								resFull=true;
+							}
+							else
+								resFull=false;
+						}
+					}
+					//console.log(resFull);
+					//console.log(resFull+" == true && "+resClasificacion+" == true && "+resSubclasificacion+" == true && "+resClave+"==true && "+resResontime+"==true")
+					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true)
+					{
+						arrPartidas.push(paramsSalida);
+					}
+				}
+				
 
 			})
 		})
@@ -374,17 +496,66 @@ function getReportePartidas(req, res) {
 	});
 }
 
-function getExcelSalidas(req, res) {
+async function getExcelSalidas(req, res) {
+	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
+	console.log(req.query);
 	var arrPartidas = [];
 	var partidas = [];
+	let Infull=req.query.inFull ? req.query.inFull :"";
+	let InfullInit=req.query.inFull ? req.query.inFull.inicio != undefined ? req.query.inFull.inicio : "":"";
+	let InfullFin=req.query.inFull ? req.query.inFull.fin != undefined ? req.query.inFull.fin : "":"";
+	let clasificacion = req.query.clasificacion != undefined ? req.query.clasificacion : "";
+	let subclasificacion = req.query.subclasificacion != undefined ? req.query.subclasificacion :"";
+	let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
+	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
+	let valorontime=req.query.onTime ? req.query.onTime : "";
+	let tipoUsuario = req.query.tipoUsuario != undefined ? req.query.tipoUsuario : "";
+	let value = 0
+	let fRecibo = "";
+    let fSalida = "";
+    let ontime = "";
+    let resontime="";
 	var salidas_id = [];
+	let filter = {
+		clienteFiscal_id: req.query.clienteFiscal_id
+	}
 
-	Salida.find({clienteFiscal_id: req.query.idClienteFiscal})
+	if(fechaInicio != "" &&  fechaFinal != ""){
+		if(fecha == "fechaAlta")
+		{
+			filter.fechaAlta={
+		        $gte:fechaInicio,
+		        $lt: fechaFinal
+		    };
+		}
+		if(fecha == "fechaSalida")
+		{
+			filter.fechaSalida={
+		        $gte:fechaInicio,
+		        $lt: fechaFinal
+		    };
+		}
+	}
+	console.log(filter);
+	if(folio != "")
+	{
+		filter.stringFolio=folio;
+	}
+	Salida.find(filter)
 	.populate({
 		path: 'partidas',
-		model: 'Partida',
+		model: 'Partida'
 	})
-	.then((salidas) => {
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'producto_id',
+			model: 'Producto'
+		}
+	})
+	.then(async (salidas) => {
 		salidas.forEach(salida => {
 			
 			partidas = salida.partidas;
@@ -400,7 +571,7 @@ function getExcelSalidas(req, res) {
 						embalajes = elem.embalajes;
 					}
 				})
-
+				//console.log(partida);
 				var paramsSalida = {
 					_id: salida._id,
 					stringFolio: salida.stringFolio,
@@ -417,12 +588,85 @@ function getExcelSalidas(req, res) {
 					clave: partida.clave,
 					lote: partida.lote,
 					descripcion: partida.descripcion,
+					subclasificacion: partida.producto_id.subclasificacion,
 					posiciones: partida.posiciones,
 					CajasPedidas: partida.CajasPedidas,
-					embalajes: embalajes
+					embalajes: embalajes,
+					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR"
 				}
+				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == ""){
+					arrPartidas.push(paramsSalida);
+					//console.log("in")
+				}
+				else
+				{	
+					let resClasificacion=true;
+					let resSubclasificacion=true;
+					let value = 0
+		        	if(paramsSalida.CajasPedidas && paramsSalida.embalajes)
+		        		value=(  paramsSalida.CajasPedidas.cajas/paramsSalida.embalajes.cajas) ? ((paramsSalida.CajasPedidas.cajas)/paramsSalida.embalajes.cajas) : 0;
+					let resFull=true;
+					let resClave=true;
+					let resResontime=true;
+					ontime=0;
+					resontime="SIN ASIGNAR";
+					if (paramsSalida.fechaReciboRemision !== "SIN ASIGNAR" && paramsSalida.fechaSalida) {
+						fRecibo = paramsSalida.fechaReciboRemision.getTime();
+					    fSalida = paramsSalida.fechaSalida.getTime();
+					    ontime = Math.abs(Math.floor((fRecibo- fSalida)/86400000));
+						if (ontime < 0)
+			                resontime = "RETRASO"
 
-				arrPartidas.push(paramsSalida);
+			            else
+			                resontime = "ATIEMPO";
+		        	}
+					if(clasificacion != "")
+					{
+						resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+					}
+					if(subclasificacion != "")
+					{
+						resSubclasificacion=partida.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
+					}
+					//console.log(valorontime + "==" + resontime )
+					if(resontime != valorontime && valorontime !="")
+					{
+						resResontime =false;
+					}
+					if(clave != "" && partida.producto_id._id.toString() != clave.toString())
+					{
+						resClave=false;
+					}
+					if(Infull!="")
+					{
+						//console.log(InfullInit +"-"+(value*100)+"-"+InfullFin)
+						if(InfullInit != "" && InfullFin!= "" && InfullFin!= "x")
+						{
+							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
+							{
+								resFull=true;
+							}
+							else
+								resFull=false;
+						}
+						if(InfullInit != "" && InfullFin == "x")
+						{
+							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
+							{
+								resFull=true;
+							}
+							else
+								resFull=false;
+						}
+					}
+					//console.log(resFull);
+					//console.log(resFull+" == true && "+resClasificacion+" == true && "+resSubclasificacion+" == true && "+resClave+"==true && "+resResontime+"==true")
+					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true)
+					{
+						arrPartidas.push(paramsSalida);
+					}
+				}
+				
 
 			})
 		})
@@ -439,6 +683,22 @@ function getExcelSalidas(req, res) {
           },
         });
         var ResultStyle = workbook.createStyle({
+          numberFormat: '#.0%; -#.0%; -',
+          font: {
+            bold: true,
+          },
+          alignment: {
+            wrapText: true,
+            horizontal: 'center',
+          },
+          fill: {
+		    type: 'pattern',
+		    patternType: 'solid',
+		    bgColor: '#FF0000',
+		    fgColor: '#FF0000',
+		  },
+        });
+        var OntimeStyle= workbook.createStyle({
           numberFormat: '#.0%; -#.0%; -',
           font: {
             bold: true,
@@ -471,6 +731,15 @@ function getExcelSalidas(req, res) {
                 wrapText: true,
             },
         });
+
+		let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+        let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
+        let headercajas=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Despachados " : "cajas";
+        let headerCajaspedido=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Solicitados" : "cajas";
+      	
+        let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
+        let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();
+
         var worksheet = workbook.addWorksheet('Partidas');
         worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
         worksheet.cell(2, 1).string('Pedido').style(headersStyle);
@@ -479,21 +748,36 @@ function getExcelSalidas(req, res) {
         worksheet.cell(2, 4).string('Item').style(headersStyle);
         worksheet.cell(2, 5).string('Clave').style(headersStyle);
 		worksheet.cell(2, 6).string('Descripción').style(headersStyle);
-		worksheet.cell(2, 7).string('Fecha Alta').style(headersStyle);
-		worksheet.cell(2, 8).string('Fecha salida').style(headersStyle);
-		worksheet.cell(2, 9).string('Pzs.').style(headersStyle);
-		worksheet.cell(2, 10).string('T.').style(headersStyle);
-		worksheet.cell(2, 11).string('Cjs.').style(headersStyle);
-		worksheet.cell(2, 12).string('Cjs-Pedido.').style(headersStyle);
-		worksheet.cell(2, 13).string('FillRate').style(headersStyle);
-		worksheet.cell(2, 14).string('Transportista').style(headersStyle);
-		worksheet.cell(2, 15).string('Placas trailer').style(headersStyle);
-		worksheet.cell(2, 16).string('Datos Remolque').style(headersStyle);
-		worksheet.cell(2, 17).string('Embarque').style(headersStyle);
-		worksheet.cell(2, 18).string('Operador').style(headersStyle);
-		worksheet.cell(2, 19).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, 7).string('Subclasificacion').style(headersStyle);
+		worksheet.cell(2, 8).string('Fecha Entrada en Sistema').style(headersStyle);
+		
+
+		let indexheaders=9;
+		ArrayEmbalaje.forEach(arrEmbalaje=>{ 
+			if(clienteEmbalaje.includes(arrEmbalaje.clave)){
+				if (arrEmbalaje.clave=="cajas")
+				{
+					worksheet.cell(2, indexheaders).string(headercajas).style(headersStyle);
+					indexheaders++;
+				}
+				
+			}
+		});
+
+		worksheet.cell(2, indexheaders).string(headerCajaspedido).style(headersStyle);
+		worksheet.cell(2, indexheaders+1).string('In Full').style(headersStyle);
+		worksheet.cell(2, indexheaders+2).string('Fecha Carga Programada').style(headersStyle);
+		worksheet.cell(2, indexheaders+3).string('Fecha Salida').style(headersStyle);
+		worksheet.cell(2, indexheaders+4).string('Retraso').style(headersStyle);
+		worksheet.cell(2, indexheaders+5).string('On Time').style(headersStyle);
+		worksheet.cell(2, indexheaders+6).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
+        arrPartidas.sort(function(a, b) {
+		    a = new Date(a.fechaSalida);
+		    b = new Date(b.fechaSalida);
+		    return a>b ? -1 : a<b ? 1 : 0;
+		});
         arrPartidas.forEach(partidas => 
         {
         	worksheet.cell(i, 1).string(partidas.referencia ? partidas.referencia:"");
@@ -502,27 +786,24 @@ function getExcelSalidas(req, res) {
         	worksheet.cell(i, 4).string(partidas.item ? partidas.item:"");
         	worksheet.cell(i, 5).string(partidas.clave ? partidas.clave:"");
         	worksheet.cell(i, 6).string(partidas.descripcion ? partidas.descripcion:"");
-        	worksheet.cell(i, 7).string(partidas.fechaAlta ? dateFormat(partidas.fechaAlta, "dd/mm/yyyy"):"");
-			worksheet.cell(i, 8).string(partidas.fechaSalida ? dateFormat(partidas.fechaSalida, "dd/mm/yyyy"):"");
-        	if(partidas.embalajes)
-        		worksheet.cell(i, 9).string(partidas.embalajes.piezas ? partidas.embalajes.piezas.toString():"0");
-        	else
-        		worksheet.cell(i, 9).string("0")
-        	if(partidas.embalajes)
-        		worksheet.cell(i, 10).string(partidas.embalajes.tarimas ? partidas.embalajes.tarimas.toString():"0");
-        	else
-        		worksheet.cell(i, 10).string("0")
-        	if(partidas.embalajes)
-        		worksheet.cell(i, 11).string(partidas.embalajes.cajas ? partidas.embalajes.cajas.toString():"0");
-        	else
-        		worksheet.cell(i, 11).string("0")
+        	worksheet.cell(i, 7).string(partidas.subclasificacion ? partidas.subclasificacion:"");
+        	worksheet.cell(i, 8).string(partidas.fechaAlta ? dateFormat(partidas.fechaAlta, formatofecha):"");
+			let indexbody=9;
+
+           	clienteEmbalaje.forEach(emb=>
+           	{	
+           		if(partidas.embalajes && emb == "cajas" ){
+           			worksheet.cell(i, indexbody).number(partidas.embalajes[emb] ? parseInt(partidas.embalajes[emb]):0);				
+					indexbody++;
+				}
+           	});
         	if(partidas.CajasPedidas)
-        		worksheet.cell(i, 12).string(partidas.CajasPedidas ? partidas.CajasPedidas.cajas.toString():"0");
+        		worksheet.cell(i, indexbody).string(partidas.CajasPedidas ? partidas.CajasPedidas.cajas.toString():"0");
         	else
-        		worksheet.cell(i, 12).string("0")
+        		worksheet.cell(i, indexbody).string("0")
         	let value = 0
         	if(partidas.CajasPedidas && partidas.embalajes)
-        		value=(partidas.embalajes.cajas / partidas.CajasPedidas.cajas) ? (partidas.embalajes.cajas / (partidas.CajasPedidas.cajas)) : 0;
+        		value=(  partidas.CajasPedidas.cajas/partidas.embalajes.cajas) ? ((partidas.CajasPedidas.cajas)/partidas.embalajes.cajas) : 0;
         	
         	if (value*100 >= 100)
         	{
@@ -562,22 +843,69 @@ function getExcelSalidas(req, res) {
 				  },
 	        	});
        		}
+
        		//console.log("Test");
        		//console.log(value);
        		if(value != Infinity)
-        		worksheet.cell(i, 13).number(value).style(ResultStyle);
-        	worksheet.cell(i, 14).string(partidas.transportista ? partidas.transportista:"");
-        	worksheet.cell(i, 15).string(partidas.placasTrailer ? partidas.placasTrailer:"");
-        	worksheet.cell(i, 16).string(partidas.placasRemolque ? partidas.placasRemolque:"");
-            worksheet.cell(i, 17).string(partidas.embarque ? partidas.embarque:"");
-            worksheet.cell(i, 18).string(partidas.operador ? partidas.operador:"");
+        		worksheet.cell(i, indexbody+1).number(value).style(ResultStyle);
+        	//console.log(partidas.fechaReciboRemision);
+        	worksheet.cell(i, indexbody+2).string(partidas.fechaReciboRemision ? partidas.fechaReciboRemision!="SIN ASIGNAR" ? dateFormat(new Date(partidas.fechaReciboRemision), formatofecha):"SIN ASIGNAR":"");
+        	worksheet.cell(i, indexbody+3).string(partidas.fechaSalida ? dateFormat(partidas.fechaSalida, formatofecha):"");
+        	ontime =0;
+			if (partidas.fechaReciboRemision !== "SIN ASIGNAR" && partidas.fechaSalida) {
+			    fRecibo = partidas.fechaReciboRemision.getTime();
+			    fSalida = partidas.fechaSalida.getTime();
+			    ontime = Math.abs(Math.floor((fRecibo- fSalida)/86400000));
+			}
+			let resontime="";
+			if (ontime < 0){
+                resontime = "RETRASO";
+                OntimeStyle = workbook.createStyle({
+       			  numberFormat: '#.0%; -#.0%; -',
+		          font: {
+		            bold: true,
+		          },
+		          alignment: {
+		            wrapText: true,
+		            horizontal: 'center',
+		          },
+		          fill: {
+				    type: 'pattern',
+				    patternType: 'solid',
+				    bgColor: '#FF0000',
+				    fgColor: '#FF0000',
+				  },
+	        	});
+			}
+            else{
+                resontime = "A TIEMPO";
+                OntimeStyle = workbook.createStyle({
+           		  numberFormat: '#.0%; -#.0%; -',
+		          font: {
+		            bold: true,
+		          },
+		          alignment: {
+		            wrapText: true,
+		            horizontal: 'center',
+		          },
+		          fill: {
+				    type: 'pattern',
+				    patternType: 'solid',
+				    bgColor: '#008000',
+				    fgColor: '#008000',
+				  },
+		        });
+            }
+			worksheet.cell(i, indexbody+4).number(ontime);
+           	worksheet.cell(i, indexbody+5).string(resontime).style(OntimeStyle);
+           
             let res=""
             if(partidas.posiciones.length === 1) 
             	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
-            worksheet.cell(i, 19).string(res);
+            worksheet.cell(i, indexbody+6).string(res);
             i++;
         });
-        workbook.write('ReporteSali'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
+        workbook.write('ReporteSali'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
 
 	})
 	.catch((error) => {
