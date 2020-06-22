@@ -1041,11 +1041,11 @@ function getExcelCaducidades(req, res) {
 	            	Aging=Math.floor((hoy-partidas.entrada_id.fechaEntrada.getTime())/ 86400000);
 	        		let fEntrada = partidas.entrada_id.fechaEntrada.getTime();
 	                if(partidas.producto_id.garantiaFrescura)
-	                	fechaFrescura = dateFormat(new Date(fCaducidad - (partidas.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+	                	fechaFrescura = dateFormat(new Date(fCaducidad - (partidas.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
 	                if(partidas.producto_id.alertaAmarilla)
-	                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+	                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
 	            	if(partidas.producto_id.alertaRoja)
-	            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+	            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
 	            	if(partidas.producto_id.vidaAnaquel)
 	            		leyenda = partidas.producto_id.vidaAnaquel- diasEnAlm - 1
 	        	}
