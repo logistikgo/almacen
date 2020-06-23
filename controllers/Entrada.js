@@ -410,8 +410,6 @@ async function saveEntradaBabel(req, res) {
 			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
 		}
 	});
-	//console.log("testFINAL")
-	
 		if(reserror!= "")
 		{
 			console.log(reserror)
