@@ -299,8 +299,8 @@ async function saveEntradaBabel(req, res) {
     			status: "WAITINGARRIVAL",
 				embalajesEntrada: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
-	        	fechaProduccion: Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)),
-	        	fechaCaducidad: Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)),
+	        	fechaProduccion: req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(5, 7)+"/"+req.body.Pedido[i].Caducidad.slice(8, 10)),
+	        	fechaCaducidad: req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(5, 7)+"/"+req.body.Pedido[i].Caducidad.slice(8, 10)),
 	        	lote:req.body.Pedido[i].Lote,
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
