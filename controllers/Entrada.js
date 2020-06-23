@@ -285,6 +285,7 @@ async function saveEntradaBabel(req, res) {
 	//console.log(req.body);
 	var arrPartidas=[];
 	var arrPO=[];
+	try{
 	for (var i=4; i<34 ; i++) {
 		if(req.body.Pedido[i].Clave !== undefined)
 		{
@@ -305,15 +306,15 @@ async function saveEntradaBabel(req, res) {
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
 	        }
-	        //console.log(data.InfoPedidos)
+	       // console.log(data.InfoPedidos)
 	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden)))
 	    		{
-	    			//console.log("yes");
+	    			console.log("yes");
 	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden));
 	    			arrPO[index].arrPartidas.push(data)
 		    	}
 		        else{
-		        	//console.log("NO");arrPartidas.push(data);
+		        	console.log("NO");arrPartidas.push(data);
 		        	const PO={
 					po:req.body.Pedido[i].NoOrden,
 					factura:req.body.Pedido[i].Factura,
@@ -325,10 +326,10 @@ async function saveEntradaBabel(req, res) {
 	        //
     	}
 	}
-	//console.log(arrPO);
+	/*console.log(arrPO);
 	
-	//console.log("test");
-	//console.log(arrPartidas);
+	console.log("test");
+	console.log(arrPartidas);*/
 	let reserror="";
     var arrPartidas_id = [];
     var partidas = [];
@@ -338,15 +339,15 @@ async function saveEntradaBabel(req, res) {
 	    await Helper.asyncForEach(noOrden.arrPartidas, async function (partida) {
 	        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
 	        let nPartida = new PartidaModel(partida);
-	        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
-	        //console.log(nPartida);
+	        console.log(nPartida.InfoPedidos[0].IDAlmacen);
+	        console.log(nPartida);
 	        await nPartida.save().then((partida) => {
 	        	partidas.push(partida)
 	            arrPartidas_id.push(partida._id);
 	        });
 	    });
-	    //console.log(partidas);
-	    //console.log(arrPartidas_id);
+	    /*console.log(partidas);
+	    console.log(arrPartidas_id);*/
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="PLANTA EXPORTADORA / MANUFACTURING PLANT");
 		let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="FECHA / DATE");
@@ -397,11 +398,11 @@ async function saveEntradaBabel(req, res) {
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 					//console.log(partidas);
 					for (let itemPartida of partidas) {
-						//console.log("testMovimientos");
+						console.log("testMovimientos");
 						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 					}
-					//console.log(entrada);
-					//console.log("/------------------/")
+					/*console.log(entrada);
+					console.log("/------------------/")*/
 				}).catch((error) => {
 					reserror=error
 				});
@@ -409,13 +410,20 @@ async function saveEntradaBabel(req, res) {
 			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
 		}
 	});
-	try{
+	//console.log("testFINAL")
+	
 		if(reserror!= "")
+		{
+			console.log(reserror)
 			res.status(500).send(reserror);
-		else
-			res.status(200).send(entrada);
+		}
+		else{
+			//console.log("testFINAL")
+			res.status(200).send("OK");
+		}
 	}
 	catch(error){
+			console.log(error)
 			res.status(500).send(error);
 	};
 }
