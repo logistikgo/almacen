@@ -285,6 +285,7 @@ async function saveEntradaBabel(req, res) {
 	//console.log(req.body);
 	var arrPartidas=[];
 	var arrPO=[];
+	try{
 	for (var i=4; i<34 ; i++) {
 		if(req.body.Pedido[i].Clave !== undefined)
 		{
@@ -409,11 +410,14 @@ async function saveEntradaBabel(req, res) {
 			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
 		}
 	});
-	try{
+	
 		if(reserror!= "")
+		{
 			res.status(500).send(reserror);
+			console.log(reserrore)
+		}
 		else
-			res.status(200).send(entrada);
+			res.status(200).send("OK");
 	}
 	catch(error){
 			res.status(500).send(error);
