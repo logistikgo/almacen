@@ -255,7 +255,7 @@ async function saveEntradaAutomatica(req, res) {
 		nEntrada.remolque = req.body.placasRemolque;
 		nEntrada.embarque = req.body.embarque;
 		nEntrada.transportista = req.body.transportista;
-		nEntrada.fechaAlta = new Date();
+		nEntrada.fechaAlta = new Date().now();
 		nEntrada.idEntrada = await getNextID();
 		nEntrada.folio = await getNextID();
 		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
@@ -389,7 +389,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.ordenCompra=noOrden.po;
-			nEntrada.fechaAlta = new Date();
+			nEntrada.fechaAlta = new Date().now();
 			nEntrada.idEntrada = await getNextID();
 			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=Date.now();
@@ -446,7 +446,7 @@ async function update(req, res) {
 	let entrada_id = bodyParams.entrada_id;
 
 	req.body.fechaEntrada = new Date(bodyParams.fechaEntrada);
-	req.body.fechaAlta = new Date();
+	req.body.fechaAlta = new Date().now();
 
 	if (req.body.status == "SIN_POSICIONAR") {
 		//console.log("1");
