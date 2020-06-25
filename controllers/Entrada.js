@@ -377,7 +377,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.tracto = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="CONTENEDOR / TRAILER");
 			nEntrada.remolque = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
-
+			nEntrada.plantaOrigen=Date.now();
 			nEntrada.referencia = noOrden.factura;
 			nEntrada.item = noOrden.factura;
 
@@ -386,8 +386,8 @@ async function saveEntradaBabel(req, res) {
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="CONDUCTOR / DRIVE");
 			nEntrada.operador = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="SELLOS / SEALS");
-			//nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
-			nEntrada.sello=Date.now();
+			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
+			
 			nEntrada.ordenCompra=noOrden.po;
 			nEntrada.fechaAlta = new Date();
 			nEntrada.idEntrada = await getNextID();
