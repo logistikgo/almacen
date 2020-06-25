@@ -262,6 +262,40 @@ function _delete() {
 
 }
 
+async function countDisponibles(almacen_id) {
+	console.log("asdas")
+	console.log(almacen_id)
+	let pasillos = await Pasillo.find({
+		almacen_id: new ObjectId(almacen_id),
+		statusReg: "ACTIVO"
+	})
+	let respuesta=0;
+	//console.log(pasillos)
+	await Helper.asyncForEach(pasillos, async function (pasillo) 
+	{
+		let posiciones = await PosicionModel.find({
+				pasillo_id: new ObjectId(pasillo._id),
+				estatus: "DISPONIBLE"
+		})
+				//console.log(posiciones);
+				//console.log(posiciones)
+		await Helper.asyncForEach(posiciones, async function (posicion) 
+		{
+			//console.log(posicion);
+        	await Helper.asyncForEach(posicion.niveles, async function (nivel) 
+			{
+				//console.log(nivel);
+				if( nivel.isCandadoDisponibilidad == false && nivel[i].apartado == false)
+					respuesta++;
+			});
+			
+		});
+	});
+	console.log(respuesta);
+	return respuesta;
+		
+}
+
 module.exports = {
 	get,
 	getById,
@@ -270,5 +304,6 @@ module.exports = {
 	save,
 	update,
 	getPocionesAuto,
+	countDisponibles,
 	_delete
 }
