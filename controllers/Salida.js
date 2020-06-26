@@ -926,5 +926,4 @@ module.exports = {
 	updatePartidasSalidaAPI,
 	getReportePartidas,
 	getExcelSalidas
-}celSalidas
 }
