@@ -392,8 +392,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.fechaAlta = new Date().now();
 			nEntrada.idEntrada = await getNextID();
 			nEntrada.folio = await getNextID();
-			nEntrada.plantaOrigen=Date.now();
-			//nEntrada.plantaOrigen=planta.Nombre;
+			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
 			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
 			//console.log("testEntrada");
@@ -1517,6 +1516,7 @@ async function posicionarPrioridades(req, res) {
 	let arrayFamilias=[];
 	var reOrderPartidas=[];
 	/*when to order by date???*/
+	let array=entrada.partidas;
 	try 
 	{
 		console.log("test");
@@ -1524,11 +1524,12 @@ async function posicionarPrioridades(req, res) {
 		console.log(freePosicions+"+<"+ entrada.partidas.length )
 		console.log("test");
 		if(freePosicions < entrada.partidas.length){
-	    	res.status(200).send("No hay suficientes posiciones");
+	    	return res.status(200).send("No hay suficientes posiciones");
 		}
 		else{
 			await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
-				if(id_partidas in array){
+				console.log(id_partidas in array.find(element => element =id_partidas))
+				if(array.find(element => element =id_partidas)){
 			    	let partida = await PartidaModel.findOne({ _id: id_partidas });
 			    	console.log("-------------------------------");
 			    	console.log(partida.descripcion);
@@ -1591,10 +1592,14 @@ async function posicionarPrioridades(req, res) {
 		    	console.log("_________");
 		    	respuesta+=familia.arrayPosiciones.length;
 		    });
-		    if(respuesta < entradas.partidas.length)
-		    	res.status(200).send("No hay suficientes posiciones en familias");
+		    console.log(respuesta+" < "+entrada.partidas.length)
+		    if(respuesta < 0){
+		    	return res.status(200).send("No hay suficientes posiciones en familias");
+		    }
 		    console.log("endGET");
+
 		    entrada.status="APLICADA";
+		    await updateFecha(_id);
 			entrada.save();
 		    console.log("Start");
 			await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
@@ -1631,12 +1636,12 @@ async function posicionarPrioridades(req, res) {
 		    	}
 		    });
 		    if(respuesta<1)
-				res.status(200).send(respuesta);
+				return res.sendStatus(respuesta);
 			else
-				res.status(500).send("not");
+				return res.status(500).send("not");
 		}
 	}catch (error) {
-        res.status(500).send(error);
+        return res.status(500).send(error);
         console.log(error);
     }
 }
@@ -1668,7 +1673,7 @@ function updateStatus(req, res) {
 	let _id = req.body.entrada_id;
 	let newStatus = req.body.status;
 	//console.log(newStatus);
-
+	
 	Entrada.updateOne({_id: _id}, { $set: { status: newStatus }}).then((data) => {
 		res.status(200).send(data);
 	})
@@ -1678,7 +1683,12 @@ function updateStatus(req, res) {
 	});
 }
 
-
+async function updateFecha(idEntrada)
+{
+	Entrada.updateOne({_id: idEntrada}, { $set: { fechaEntrada: new Date().now() }}).then(async (data) => {
+		await MovimientoInventario.updateMovimientos(idEntrada,new Date().now());
+	})
+}
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -1750,6 +1760,7 @@ module.exports = {
 	updateById,
 	posicionarPrioridades,
 	updateRemision,
-	updateStatus
+	updateStatus,
+	updateFecha
 	// getPartidaById,
 }

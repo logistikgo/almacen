@@ -285,7 +285,7 @@ async function countDisponibles(almacen_id) {
         	await Helper.asyncForEach(posicion.niveles, async function (nivel) 
 			{
 				//console.log(nivel);
-				if( nivel.isCandadoDisponibilidad == false && nivel[i].apartado == false)
+				if( nivel.isCandadoDisponibilidad == false && nivel.apartado == false)
 					respuesta++;
 			});
 			
