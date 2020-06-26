@@ -255,7 +255,7 @@ async function saveEntradaAutomatica(req, res) {
 		nEntrada.remolque = req.body.placasRemolque;
 		nEntrada.embarque = req.body.embarque;
 		nEntrada.transportista = req.body.transportista;
-		nEntrada.fechaAlta = new Date().now();
+		nEntrada.fechaAlta = Date.now();
 		nEntrada.idEntrada = await getNextID();
 		nEntrada.folio = await getNextID();
 		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
@@ -389,7 +389,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.ordenCompra=noOrden.po;
-			nEntrada.fechaAlta = new Date().now();
+			nEntrada.fechaAlta = Date.now();
 			nEntrada.idEntrada = await getNextID();
 			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=planta.Nombre;
@@ -447,7 +447,7 @@ async function update(req, res) {
 	let entrada_id = bodyParams.entrada_id;
 
 	req.body.fechaEntrada = new Date(bodyParams.fechaEntrada);
-	req.body.fechaAlta = new Date().now();
+	req.body.fechaAlta = Date.now();
 
 	if (req.body.status == "SIN_POSICIONAR") {
 		//console.log("1");
@@ -1521,7 +1521,7 @@ async function posicionarPrioridades(req, res) {
 	let array=entrada.partidas;
 	try 
 	{
-		console.log("test");
+		console.log("testbegin");
 		let freePosicions=await PasilloCtr.countDisponibles(entrada.almacen_id);
 		console.log(freePosicions+"+<"+ entrada.partidas.length )
 		console.log("test");
@@ -1601,7 +1601,7 @@ async function posicionarPrioridades(req, res) {
 		    console.log("endGET");
 
 		    entrada.status="APLICADA";
-		    await updateFecha(_id);
+		    await updateFecha(entrada._id);
 			entrada.save();
 		    console.log("Start");
 			await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
@@ -1643,8 +1643,9 @@ async function posicionarPrioridades(req, res) {
 				return res.status(500).send("not");
 		}
 	}catch (error) {
+		console.log(error);
         return res.status(500).send(error);
-        console.log(error);
+        
     }
 }
 
@@ -1687,8 +1688,9 @@ function updateStatus(req, res) {
 
 async function updateFecha(idEntrada)
 {
-	Entrada.updateOne({_id: idEntrada}, { $set: { fechaEntrada: new Date().now() }}).then(async (data) => {
-		await MovimientoInventario.updateMovimientos(idEntrada,new Date().now());
+	var today=Date.now();
+	Entrada.updateOne({_id: idEntrada}, { $set: { fechaEntrada: today }}).then(async (data) => {
+		await MovimientoInventario.updateMovimientos(idEntrada,today);
 	})
 }
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
@@ -1766,3 +1768,12 @@ module.exports = {
 	updateFecha
 	// getPartidaById,
 }
+
+
+
+
+
+
+
+
+

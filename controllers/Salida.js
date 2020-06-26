@@ -120,7 +120,7 @@ async function update(req, res) {
 	let bodyParams = req.body;
 	let salida_id = bodyParams.salidaid;
 	bodyParams.fechaSalida = new Date(bodyParams.fechaSalida);
-	bodyParams.fechaAlta = new Date().now();
+	bodyParams.fechaAlta = Date.now();
 
 	// for (let partida of req.body) {
 	// 	Partida._put(partida);
@@ -250,7 +250,7 @@ async function saveSalidaAutomatica(req, res) {
 
 			let nSalida = new Salida();
 			nSalida.salida_id = await getNextID();
-			nSalida.fechaAlta = new Date().now();;
+			nSalida.fechaAlta = Date.now();;
 			nSalida.fechaSalida = new Date(req.body.fechaSalida);
 			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
 			nSalida.nombreUsuario = req.body.nombreUsuario;
@@ -926,4 +926,5 @@ module.exports = {
 	updatePartidasSalidaAPI,
 	getReportePartidas,
 	getExcelSalidas
+}celSalidas
 }
