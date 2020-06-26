@@ -255,7 +255,7 @@ async function saveEntradaAutomatica(req, res) {
 		nEntrada.remolque = req.body.placasRemolque;
 		nEntrada.embarque = req.body.embarque;
 		nEntrada.transportista = req.body.transportista;
-		nEntrada.fechaAlta = new Date().now();
+		nEntrada.fechaAlta = Date.now();
 		nEntrada.idEntrada = await getNextID();
 		nEntrada.folio = await getNextID();
 		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
@@ -309,15 +309,15 @@ async function saveEntradaBabel(req, res) {
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
 	        }
-	        //console.log(data.InfoPedidos)
+	       // console.log(data.InfoPedidos)
 	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden)))
 	    		{
-	    			//console.log("yes");
+	    			console.log("yes");
 	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden));
 	    			arrPO[index].arrPartidas.push(data)
 		    	}
 		        else{
-		        	//console.log("NO");arrPartidas.push(data);
+		        	console.log("NO");arrPartidas.push(data);
 		        	const PO={
 					po:req.body.Pedido[i].NoOrden,
 					factura:req.body.Pedido[i].Factura,
@@ -329,10 +329,10 @@ async function saveEntradaBabel(req, res) {
 	        //
     	}
 	}
-	//console.log(arrPO);
+	/*console.log(arrPO);
 	
-	//console.log("test");
-	//console.log(arrPartidas);
+	console.log("test");
+	console.log(arrPartidas);*/
 	let reserror="";
     var arrPartidas_id = [];
     var partidas = [];
@@ -342,15 +342,15 @@ async function saveEntradaBabel(req, res) {
 	    await Helper.asyncForEach(noOrden.arrPartidas, async function (partida) {
 	        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
 	        let nPartida = new PartidaModel(partida);
-	        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
-	        //console.log(nPartida);
+	        console.log(nPartida.InfoPedidos[0].IDAlmacen);
+	        console.log(nPartida);
 	        await nPartida.save().then((partida) => {
 	        	partidas.push(partida)
 	            arrPartidas_id.push(partida._id);
 	        });
 	    });
-	    //console.log(partidas);
-	    //console.log(arrPartidas_id);
+	    /*console.log(partidas);
+	    console.log(arrPartidas_id);*/
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="PLANTA EXPORTADORA / MANUFACTURING PLANT");
 		let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="FECHA / DATE");
@@ -389,7 +389,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.ordenCompra=noOrden.po;
-			nEntrada.fechaAlta = new Date().now();
+			nEntrada.fechaAlta = Date.now();
 			nEntrada.idEntrada = await getNextID();
 			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=planta.Nombre;
@@ -402,11 +402,11 @@ async function saveEntradaBabel(req, res) {
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 					//console.log(partidas);
 					for (let itemPartida of partidas) {
-						//console.log("testMovimientos");
+						console.log("testMovimientos");
 						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 					}
-					//console.log(entrada);
-					//console.log("/------------------/")
+					/*console.log(entrada);
+					console.log("/------------------/")*/
 				}).catch((error) => {
 					reserror=error
 				});
@@ -414,16 +414,18 @@ async function saveEntradaBabel(req, res) {
 			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
 		}
 	});
-	
 		if(reserror!= "")
 		{
+			console.log(reserror)
 			res.status(500).send(reserror);
-			console.log(reserrore)
 		}
-		else
+		else{
+			//console.log("testFINAL")
 			res.status(200).send("OK");
+		}
 	}
 	catch(error){
+			console.log(error)
 			res.status(500).send(error);
 			console.log(error);
 	};
@@ -445,7 +447,7 @@ async function update(req, res) {
 	let entrada_id = bodyParams.entrada_id;
 
 	req.body.fechaEntrada = new Date(bodyParams.fechaEntrada);
-	req.body.fechaAlta = new Date().now();
+	req.body.fechaAlta = Date.now();
 
 	if (req.body.status == "SIN_POSICIONAR") {
 		//console.log("1");
@@ -1519,7 +1521,7 @@ async function posicionarPrioridades(req, res) {
 	let array=entrada.partidas;
 	try 
 	{
-		console.log("test");
+		console.log("testbegin");
 		let freePosicions=await PasilloCtr.countDisponibles(entrada.almacen_id);
 		console.log(freePosicions+"+<"+ entrada.partidas.length )
 		console.log("test");
@@ -1599,7 +1601,7 @@ async function posicionarPrioridades(req, res) {
 		    console.log("endGET");
 
 		    entrada.status="APLICADA";
-		    await updateFecha(_id);
+		    await updateFecha(entrada._id);
 			entrada.save();
 		    console.log("Start");
 			await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
@@ -1641,8 +1643,9 @@ async function posicionarPrioridades(req, res) {
 				return res.status(500).send("not");
 		}
 	}catch (error) {
+		console.log(error);
         return res.status(500).send(error);
-        console.log(error);
+        
     }
 }
 
@@ -1685,8 +1688,9 @@ function updateStatus(req, res) {
 
 async function updateFecha(idEntrada)
 {
-	Entrada.updateOne({_id: idEntrada}, { $set: { fechaEntrada: new Date().now() }}).then(async (data) => {
-		await MovimientoInventario.updateMovimientos(idEntrada,new Date().now());
+	var today=Date.now();
+	Entrada.updateOne({_id: idEntrada}, { $set: { fechaEntrada: today }}).then(async (data) => {
+		await MovimientoInventario.updateMovimientos(idEntrada,today);
 	})
 }
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
@@ -1764,3 +1768,12 @@ module.exports = {
 	updateFecha
 	// getPartidaById,
 }
+
+
+
+
+
+
+
+
+

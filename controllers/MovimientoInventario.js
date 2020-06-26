@@ -497,7 +497,7 @@ async function getByIDs_cte_suc_alm(req, res) {
 
 async function updateMovimientos(idEntrada,fechaEntrada)
 {
-	movimientos = await MovimientoInventario.find({entrada_id:idEntrada});
+	let movimientos = await MovimientoInventario.find({entrada_id:idEntrada});
 	await Helper.asyncForEach(movimientos,async function (movimiento) {
 		await MovimientoInventario.updateOne({_id: movimiento._id}, { $set: { fechaEntrada: fechaEntrada }});
 
