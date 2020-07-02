@@ -255,7 +255,7 @@ async function saveEntradaAutomatica(req, res) {
 		nEntrada.remolque = req.body.placasRemolque;
 		nEntrada.embarque = req.body.embarque;
 		nEntrada.transportista = req.body.transportista;
-		nEntrada.fechaAlta = new Date();
+		nEntrada.fechaAlta = Date.now();
 		nEntrada.idEntrada = await getNextID();
 		nEntrada.folio = await getNextID();
 		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
@@ -285,10 +285,14 @@ async function saveEntradaBabel(req, res) {
 	//console.log(req.body);
 	var arrPartidas=[];
 	var arrPO=[];
+	try{
 	for (var i=4; i<34 ; i++) {
 		if(req.body.Pedido[i].Clave !== undefined)
 		{
+		
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
+			if(producto==undefined)
+				return res.status(200).send("no existe item: "+req.body.Pedido[i].Clave);
 			//console.log(req.body.Pedido[i].Clave)
 			const data={
 				producto_id:producto._id,
@@ -299,21 +303,21 @@ async function saveEntradaBabel(req, res) {
     			status: "WAITINGARRIVAL",
 				embalajesEntrada: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
-	        	fechaProduccion: Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)),
-	        	fechaCaducidad: Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)),
+	        	fechaProduccion: req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(5, 7)+"/"+req.body.Pedido[i].Caducidad.slice(8, 10)),
+	        	fechaCaducidad: req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(5, 7)+"/"+req.body.Pedido[i].Caducidad.slice(8, 10)),
 	        	lote:req.body.Pedido[i].Lote,
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
 	        }
-	        //console.log(data.InfoPedidos)
+	       // console.log(data.InfoPedidos)
 	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden)))
 	    		{
-	    			//console.log("yes");
+	    			console.log("yes");
 	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden));
 	    			arrPO[index].arrPartidas.push(data)
 		    	}
 		        else{
-		        	//console.log("NO");arrPartidas.push(data);
+		        	console.log("NO");arrPartidas.push(data);
 		        	const PO={
 					po:req.body.Pedido[i].NoOrden,
 					factura:req.body.Pedido[i].Factura,
@@ -325,10 +329,10 @@ async function saveEntradaBabel(req, res) {
 	        //
     	}
 	}
-	//console.log(arrPO);
+	/*console.log(arrPO);
 	
-	//console.log("test");
-	//console.log(arrPartidas);
+	console.log("test");
+	console.log(arrPartidas);*/
 	let reserror="";
     var arrPartidas_id = [];
     var partidas = [];
@@ -338,15 +342,15 @@ async function saveEntradaBabel(req, res) {
 	    await Helper.asyncForEach(noOrden.arrPartidas, async function (partida) {
 	        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
 	        let nPartida = new PartidaModel(partida);
-	        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
-	        //console.log(nPartida);
+	        console.log(nPartida.InfoPedidos[0].IDAlmacen);
+	        console.log(nPartida);
 	        await nPartida.save().then((partida) => {
 	        	partidas.push(partida)
 	            arrPartidas_id.push(partida._id);
 	        });
 	    });
-	    //console.log(partidas);
-	    //console.log(arrPartidas_id);
+	    /*console.log(partidas);
+	    console.log(arrPartidas_id);*/
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="PLANTA EXPORTADORA / MANUFACTURING PLANT");
 		let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="FECHA / DATE");
@@ -373,7 +377,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.tracto = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="CONTENEDOR / TRAILER");
 			nEntrada.remolque = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
-
+			
 			nEntrada.referencia = noOrden.factura;
 			nEntrada.item = noOrden.factura;
 
@@ -383,8 +387,9 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.operador = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="SELLOS / SEALS");
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
+			
 			nEntrada.ordenCompra=noOrden.po;
-			nEntrada.fechaAlta = new Date();
+			nEntrada.fechaAlta = Date.now();
 			nEntrada.idEntrada = await getNextID();
 			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=planta.Nombre;
@@ -397,11 +402,11 @@ async function saveEntradaBabel(req, res) {
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 					//console.log(partidas);
 					for (let itemPartida of partidas) {
-						//console.log("testMovimientos");
+						console.log("testMovimientos");
 						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
 					}
-					//console.log(entrada);
-					//console.log("/------------------/")
+					/*console.log(entrada);
+					console.log("/------------------/")*/
 				}).catch((error) => {
 					reserror=error
 				});
@@ -409,14 +414,20 @@ async function saveEntradaBabel(req, res) {
 			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
 		}
 	});
-	try{
 		if(reserror!= "")
+		{
+			console.log(reserror)
 			res.status(500).send(reserror);
-		else
-			res.status(200).send(entrada);
+		}
+		else{
+			//console.log("testFINAL")
+			res.status(200).send("OK");
+		}
 	}
 	catch(error){
+			console.log(error)
 			res.status(500).send(error);
+			console.log(error);
 	};
 }
 
@@ -436,7 +447,7 @@ async function update(req, res) {
 	let entrada_id = bodyParams.entrada_id;
 
 	req.body.fechaEntrada = new Date(bodyParams.fechaEntrada);
-	req.body.fechaAlta = new Date();
+	req.body.fechaAlta = Date.now();
 
 	if (req.body.status == "SIN_POSICIONAR") {
 		//console.log("1");
@@ -1500,169 +1511,153 @@ async function updateById(req, res) {
 
 async function posicionarPrioridades(req, res) {
 	let _id = req.body.id;
+	//console.log(_id);
 	let entrada = await Entrada.findOne({ _id: _id });
-	entrada.status="APLICADA";
-	entrada.save();
+	//console.log(entrada);
+	console.log(req.body);
 	let arrayFamilias=[];
 	var reOrderPartidas=[];
 	/*when to order by date???*/
-	try
+	let array=req.body.nPartidas;
+	let resultpartidas=[];
+	try 
 	{
-		await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
+		//console.log("testbegin");
+		let freePosicions=await PasilloCtr.countDisponibles(entrada.almacen_id);
+		console.log(freePosicions+"+<"+ entrada.partidas.length )
+		console.log("test");
+		if(freePosicions < array.length){
+	    	return res.status(200).send("No hay suficientes posiciones");
+		}
+		else{
+			await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
+				//console.log(id_partidas in array.find(element => element =id_partidas))
+				
+			    	let partida = await PartidaModel.findOne({ _id: id_partidas });
+			    	console.log("-------------------------------");
+			    	console.log(partida.descripcion);
+			    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+			    if(array.find(element => element == id_partidas)){	
+			    	let producto = await Producto.findOne({ _id: partida.producto_id });
+			    	console.log("-------------------------------");
+			 		console.log(producto.prioridad)
+			    	partida.status="ASIGNADA";
+					partida.save();
+			    	if(producto.familia)
+			    	{
+			    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia  && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
+			    		{
+			    			console.log("yes");
+			    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
+			    			arrayFamilias[index].needed=1+arrayFamilias[index].needed;
+				    	}
+				        else{
+				        	console.log("NO");
+				        	const data={
+							nombre:producto.familia,
+							prioridad: producto.prioridad,
+							descripcion:producto.descripcion,
+				        	needed:1,
+				        	fechaCaducidad:dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"),
+				        	arrayPosiciones:[]
+				        	}
+			    			arrayFamilias.push(data)  
+				        
+			    		}  	
+			    	}
+			    	reOrderPartidas.push(partida)
+			    	resultpartidas.push(partida._id)
+			    }
+			    else
+			    {
+			    	partida.status="REMOVED";
+			    	partida.entrada_id=undefined;
+					partida.save();
+			    }
+		    });
+		    
+		    arrayFamilias=arrayFamilias.sort(function(a, b) {
+		    	return b.prioridad - a.prioridad;
+			});
+		    arrayFamilias=arrayFamilias.sort(function(a, b) {
+			    a = a.fechaCaducidad;
+			    b = b.fechaCaducidad;
+			    return a<b ? -1 : a>b ? 1 : 0;
+			});
+		    
 
-	    	let partida = await PartidaModel.findOne({ _id: id_partidas });
-	    	/*console.log("-------------------------------");
-	    	console.log(partida.descripcion);
-	    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));*/
-	    	
-	    	let producto = await Producto.findOne({ _id: partida.producto_id });
-	    	/*console.log("-------------------------------");
-	 		console.log(producto.prioridad)*/
-	    	partida.status="ASIGNADA";
-			partida.save();
-	    	if(producto.familia)
-	    	{
-	    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia  && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
-	    		{
-	    			//console.log("yes");
-	    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
-	    			arrayFamilias[index].needed=1+arrayFamilias[index].needed;
-		    	}
-		        else{
-		        	//console.log("NO");
-		        	const data={
-					nombre:producto.familia,
-					prioridad: producto.prioridad,
-					descripcion:producto.descripcion,
-		        	needed:1,
-		        	fechaCaducidad:dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"),
-		        	arrayPosiciones:[]
-		        	}
-	    			arrayFamilias.push(data)  
-		        
-	    		}  	
-	    	}
-	    	reOrderPartidas.push(partida)
+			/*reOrderPartidas.sort(function(a, b) {
+			    a = new Date(dateFormat(a.fechaCaducidad, "dd/mm/yyyy"));
+			    b = new Date(dateFormat(b.fechaCaducidad, "dd/mm/yyyy"));
+			    return a<b ? -1 : a>b ? 1 : 0;
+			});*/
+			let respuesta=0;
+			//console.log(arrayFamilias);
+			await Helper.asyncForEach(arrayFamilias, async function (familia) 
+			{
+		    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
+		    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
+		    	console.log("----result----");
+		    	console.log(familia.arrayPosiciones);
+		    	console.log("_________");
+		    	respuesta+=familia.arrayPosiciones.length;
+		    });
+		    console.log(respuesta+" < "+entrada.partidas.length)
+		    if(respuesta < 0){
+		    	return res.status(200).send("No hay suficientes posiciones en familias");
+		    }
+		    console.log("endGET");
 
-	    });
-	    
-	    arrayFamilias=arrayFamilias.sort(function(a, b) {
-	    	return b.prioridad - a.prioridad;
-		});
-	    arrayFamilias=arrayFamilias.sort(function(a, b) {
-		    a = a.fechaCaducidad;
-		    b = b.fechaCaducidad;
-		    return a<b ? -1 : a>b ? 1 : 0;
-		});
-	    
+		    entrada.status="APLICADA";
+		    entrada.partidas=resultpartidas; 
+		    await updateFecha(entrada._id);
+			entrada.save();
+		    console.log("Start");
+			await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
+				if(array.find(element => element == repartidas._id)){
+			    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
+			    	console.log("-------------------------------");
+			    	console.log(partida.descripcion);
+			    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+			    	
+			    	let producto = await Producto.findOne({ _id: partida.producto_id });
+			    	console.log("-------------------------------");
+			 		console.log(producto.prioridad)
+			 	 	respuesta=0;
+		 	 	
+			    	if(producto.familia)
+			    	{
+			    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
+			    		{
+			    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
+			    			
+			    			if(arrayFamilias[index].needed>0){
+			    				console.log(arrayFamilias[index].arrayPosiciones[0]);
+			    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
+			    				arrayFamilias[index].arrayPosiciones.shift();
+			    			}
+			    			else
+			    			{
+			    				respuesta+=arrayFamilias[index].needed;
+			    			}
+			    			arrayFamilias[index].needed-=1;
+			    			
 
-		/*reOrderPartidas.sort(function(a, b) {
-		    a = new Date(dateFormat(a.fechaCaducidad, "dd/mm/yyyy"));
-		    b = new Date(dateFormat(b.fechaCaducidad, "dd/mm/yyyy"));
-		    return a<b ? -1 : a>b ? 1 : 0;
-		});*/
+			    		}
 
-		//console.log(arrayFamilias);
-		await Helper.asyncForEach(arrayFamilias, async function (familia) 
-		{
-	    	//console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
-	    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
-	    	/*console.log("----result----");
-	    	console.log(familia.arrayPosiciones);
-	    	console.log("_________");*/
-	    });
-	    //console.log("endGET");
-	    //console.log("Start");
-		await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
-
-	    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
-	    	/*console.log("-------------------------------");
-	    	console.log(partida.descripcion);
-	    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));*/
-	    	
-	    	let producto = await Producto.findOne({ _id: partida.producto_id });
-	    	//console.log("-------------------------------");
-	 		//console.log(producto.prioridad)
-	 		let respuesta=0;
-	    	if(producto.familia)
-	    	{
-	    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
-	    		{
-	    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
-	    			
-	    			if(arrayFamilias[index].needed>0){
-	    				//console.log(arrayFamilias[index].arrayPosiciones[0]);
-	    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
-	    				arrayFamilias[index].arrayPosiciones.shift();
-	    			}
-	    			else
-	    			{
-	    				respuesta+=arrayFamilias[index].needed;
-	    			}
-	    			arrayFamilias[index].needed-=1;
-	    			
-
-	    		}
-
-	    	}
-	    });
-	    if(respuesta<1)
-			res.status(200).send(respuesta);
-		else
-			res.status(500).send("not");
+			    	}
+			    }
+		    });
+		    if(respuesta<1)
+				return res.status(200).send("OK");
+			else
+				return res.status(500).send("not");
+		}
 	}catch (error) {
-        res.status(500).send(error);
+		console.log(error);
+        return res.status(500).send(error);
+        
     }
-
-	//console.log(arrayFamilias);
-	await Helper.asyncForEach(arrayFamilias, async function (familia) 
-	{
-    	//console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
-    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
-    	/*console.log("----result----");
-    	console.log(familia.arrayPosiciones);
-    	console.log("_________");*/
-    });
-   /* console.log("endGET");
-	console.log("Start");*/
-	let respuesta=0;
-	await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
-
-    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
-    	/*console.log("-------------------------------");
-    	console.log(partida.descripcion);
-    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));*/
-    	
-    	let producto = await Producto.findOne({ _id: partida.producto_id });
-    	//console.log("-------------------------------");
- 		//console.log(producto.prioridad)
- 		
-    	if(producto.familia)
-    	{
-    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
-    		{
-    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
-    			
-    			if(arrayFamilias[index].needed>0){
-    				//console.log(arrayFamilias[index].arrayPosiciones[0]);
-    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
-    				arrayFamilias[index].arrayPosiciones.shift();
-    			}
-    			else
-    			{
-    				respuesta+=arrayFamilias[index].needed;
-    			}
-    			arrayFamilias[index].needed-=1;
-    			
-
-    		}
-
-    	}
-    });
-    if(respuesta<1)
-		res.sendStatus(200);
-	else
-		res.sendStatus(500);
 }
 
 /* Actualiza entrada y agrega partida dashboard */
@@ -1692,7 +1687,7 @@ function updateStatus(req, res) {
 	let _id = req.body.entrada_id;
 	let newStatus = req.body.status;
 	//console.log(newStatus);
-
+	
 	Entrada.updateOne({_id: _id}, { $set: { status: newStatus }}).then((data) => {
 		res.status(200).send(data);
 	})
@@ -1702,7 +1697,13 @@ function updateStatus(req, res) {
 	});
 }
 
-
+async function updateFecha(idEntrada)
+{
+	var today=Date.now();
+	Entrada.updateOne({_id: idEntrada}, { $set: { fechaEntrada: today }}).then(async (data) => {
+		await MovimientoInventario.updateMovimientos(idEntrada,today);
+	})
+}
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -1774,6 +1775,16 @@ module.exports = {
 	updateById,
 	posicionarPrioridades,
 	updateRemision,
-	updateStatus
+	updateStatus,
+	updateFecha
 	// getPartidaById,
 }
+
+
+
+
+
+
+
+
+

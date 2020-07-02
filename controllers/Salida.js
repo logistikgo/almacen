@@ -120,7 +120,7 @@ async function update(req, res) {
 	let bodyParams = req.body;
 	let salida_id = bodyParams.salidaid;
 	bodyParams.fechaSalida = new Date(bodyParams.fechaSalida);
-	bodyParams.fechaAlta = new Date();
+	bodyParams.fechaAlta = Date.now();
 
 	// for (let partida of req.body) {
 	// 	Partida._put(partida);
@@ -250,7 +250,7 @@ async function saveSalidaAutomatica(req, res) {
 
 			let nSalida = new Salida();
 			nSalida.salida_id = await getNextID();
-			nSalida.fechaAlta = new Date();
+			nSalida.fechaAlta = Date.now();;
 			nSalida.fechaSalida = new Date(req.body.fechaSalida);
 			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
 			nSalida.nombreUsuario = req.body.nombreUsuario;
@@ -422,7 +422,7 @@ function getReportePartidas(req, res) {
 					let resSubclasificacion=true;
 					let value = 0
 		        	if(paramsSalida.CajasPedidas && paramsSalida.embalajes)
-		        		value=(  paramsSalida.CajasPedidas.cajas/paramsSalida.embalajes.cajas) ? ((paramsSalida.CajasPedidas.cajas)/paramsSalida.embalajes.cajas) : 0;
+		        		value=(  paramsSalida.embalajes.cajas/paramsSalida.CajasPedidas.cajas) ? (paramsSalida.embalajes.cajas/(paramsSalida.CajasPedidas.cajas)) : 0;
 					let resFull=true;
 					let resClave=true;
 					let resResontime=true;
@@ -604,7 +604,7 @@ async function getExcelSalidas(req, res) {
 					let resSubclasificacion=true;
 					let value = 0
 		        	if(paramsSalida.CajasPedidas && paramsSalida.embalajes)
-		        		value=(  paramsSalida.CajasPedidas.cajas/paramsSalida.embalajes.cajas) ? ((paramsSalida.CajasPedidas.cajas)/paramsSalida.embalajes.cajas) : 0;
+		        		value=(  paramsSalida.embalajes.cajas/paramsSalida.CajasPedidas.cajas) ? (paramsSalida.embalajes.cajas/(paramsSalida.CajasPedidas.cajas)) : 0;
 					let resFull=true;
 					let resClave=true;
 					let resResontime=true;
@@ -803,7 +803,7 @@ async function getExcelSalidas(req, res) {
         		worksheet.cell(i, indexbody).string("0")
         	let value = 0
         	if(partidas.CajasPedidas && partidas.embalajes)
-        		value=(  partidas.CajasPedidas.cajas/partidas.embalajes.cajas) ? ((partidas.CajasPedidas.cajas)/partidas.embalajes.cajas) : 0;
+        		value=( partidas.embalajes.cajas/partidas.CajasPedidas.cajas) ? (partidas.embalajes.cajas/(partidas.CajasPedidas.cajas)) : 0;
         	
         	if (value*100 >= 100)
         	{

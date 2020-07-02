@@ -46,7 +46,7 @@ async function getByEntrada(req, res) {
 
     Partida.find({ entrada_id: entrada_id })
         .then((partidas) => {
-            console.log(partidas);
+            //console.log(partidas);
             res.status(200).send(partidas);
         })
         .catch((error) => {
@@ -158,6 +158,7 @@ async function put(arrPartidas, salida_id) {
 
             if (partidaFound.embalajesAlmacen != undefined) {
                 for (let x in partidaFound.embalajesAlmacen) {
+                    console.log(partidaFound.embalajesAlmacen +" - "+partida.embalajesEnSalida[x] );
                     partidaFound.embalajesAlmacen[x] -= partida.embalajesEnSalida[x];
                 }
                 changes['embalajesAlmacen'] = partidaFound.embalajesAlmacen;
