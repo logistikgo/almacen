@@ -164,7 +164,7 @@ function getByClave(req, res) {
 
 function getByIDsClientesFiscales(req, res) {
 	let _arrClienteFiscales = req.query.arrClientesFiscales;
-
+	console.log("Yael was here");
 	Producto.find({ arrClientesFiscales_id: { $in: _arrClienteFiscales }, "statusReg": "ACTIVO" })
 		.populate({
 			path: 'presentacion_id',
@@ -184,8 +184,10 @@ function getByIDsClientesFiscales(req, res) {
 }
 
 function getByIDClienteFiscal(req, res) {
+	console.log("Dennise was here");
 	let _idClienteFiscal = req.params.idClienteFiscal;
-	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
+	let almacen_id=req.params.almacen_id;
+	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] },almacen_id:_almacen_id, statusReg: "ACTIVO" })
 		.populate({
 			path: 'presentacion_id',
 			model: 'Presentacion'
@@ -225,9 +227,11 @@ async function getALM_XD(req, res) {
 }
 
 function getByIDClienteFiscal(req, res) {
+	console.log("Test");
 	let _idClienteFiscal = req.params.idClienteFiscal;
-	let almacen_id = req.query.almacen_id;
-
+	let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
+	console.log(req.query.almacen_id);
+	let arrProd=[];
 	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
 		.populate({
 			path: 'presentacion_id',
@@ -238,16 +242,34 @@ function getByIDClienteFiscal(req, res) {
 			model: 'ClasificacionesProductos'
 		})
 		.then(async (productos) => {
-
-			if (almacen_id != undefined) {
+			console.log(productos);
+			if (almacen_id != undefined && almacen_id != "") {
 				await Helpers.asyncForEach(productos, async function (producto) {
 
 					producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
 				});
 			}
-			res.status(200).send(productos);
+				await Helpers.asyncForEach(productos, async function (producto) {
+					
+					if(almacen_id !== "")
+					{
+						console.log(producto.almacen_id +"    "+almacen_id);
+						if(producto.almacen_id.toString() === almacen_id){
+							console.log(producto.almacen_id +"==="+almacen_id);
+							arrProd.push(producto);
+						}
+					}
+					else
+					{
+						arrProd.push(producto);
+					}
+				});
+			
+			console.log("test2");
+			res.status(200).send(arrProd);
 		})
 		.catch((error) => {
+			console.log(error)
 			return res.status(500).send(error);
 		});
 }
