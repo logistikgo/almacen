@@ -422,7 +422,7 @@ function getReportePartidas(req, res) {
 					let resSubclasificacion=true;
 					let value = 0
 		        	if(paramsSalida.CajasPedidas && paramsSalida.embalajes)
-		        		value=(  paramsSalida.CajasPedidas.cajas/paramsSalida.embalajes.cajas) ? ((paramsSalida.CajasPedidas.cajas)/paramsSalida.embalajes.cajas) : 0;
+		        		value=(  paramsSalida.embalajes.cajas/paramsSalida.CajasPedidas.cajas) ? (paramsSalida.embalajes.cajas/(paramsSalida.CajasPedidas.cajas)) : 0;
 					let resFull=true;
 					let resClave=true;
 					let resResontime=true;
@@ -604,7 +604,7 @@ async function getExcelSalidas(req, res) {
 					let resSubclasificacion=true;
 					let value = 0
 		        	if(paramsSalida.CajasPedidas && paramsSalida.embalajes)
-		        		value=(  paramsSalida.CajasPedidas.cajas/paramsSalida.embalajes.cajas) ? ((paramsSalida.CajasPedidas.cajas)/paramsSalida.embalajes.cajas) : 0;
+		        		value=(  paramsSalida.embalajes.cajas/paramsSalida.CajasPedidas.cajas) ? (paramsSalida.embalajes.cajas/(paramsSalida.CajasPedidas.cajas)) : 0;
 					let resFull=true;
 					let resClave=true;
 					let resResontime=true;
@@ -803,7 +803,7 @@ async function getExcelSalidas(req, res) {
         		worksheet.cell(i, indexbody).string("0")
         	let value = 0
         	if(partidas.CajasPedidas && partidas.embalajes)
-        		value=(  partidas.CajasPedidas.cajas/partidas.embalajes.cajas) ? ((partidas.CajasPedidas.cajas)/partidas.embalajes.cajas) : 0;
+        		value=( partidas.embalajes.cajas/partidas.CajasPedidas.cajas) ? (partidas.embalajes.cajas/(partidas.CajasPedidas.cajas)) : 0;
         	
         	if (value*100 >= 100)
         	{

@@ -1514,29 +1514,30 @@ async function posicionarPrioridades(req, res) {
 	//console.log(_id);
 	let entrada = await Entrada.findOne({ _id: _id });
 	//console.log(entrada);
-	
+	console.log(req.body);
 	let arrayFamilias=[];
 	var reOrderPartidas=[];
 	/*when to order by date???*/
-	let array=entrada.partidas;
+	let array=req.body.nPartidas;
+	let resultpartidas=[];
 	try 
 	{
-		console.log("testbegin");
+		//console.log("testbegin");
 		let freePosicions=await PasilloCtr.countDisponibles(entrada.almacen_id);
 		console.log(freePosicions+"+<"+ entrada.partidas.length )
 		console.log("test");
-		if(freePosicions < entrada.partidas.length){
+		if(freePosicions < array.length){
 	    	return res.status(200).send("No hay suficientes posiciones");
 		}
 		else{
 			await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
-				console.log(id_partidas in array.find(element => element =id_partidas))
-				if(array.find(element => element =id_partidas)){
+				//console.log(id_partidas in array.find(element => element =id_partidas))
+				
 			    	let partida = await PartidaModel.findOne({ _id: id_partidas });
 			    	console.log("-------------------------------");
 			    	console.log(partida.descripcion);
 			    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
-			    	
+			    if(array.find(element => element == id_partidas)){	
 			    	let producto = await Producto.findOne({ _id: partida.producto_id });
 			    	console.log("-------------------------------");
 			 		console.log(producto.prioridad)
@@ -1565,6 +1566,13 @@ async function posicionarPrioridades(req, res) {
 			    		}  	
 			    	}
 			    	reOrderPartidas.push(partida)
+			    	resultpartidas.push(partida._id)
+			    }
+			    else
+			    {
+			    	partida.status="REMOVED";
+			    	partida.entrada_id=undefined;
+					partida.save();
 			    }
 		    });
 		    
@@ -1584,7 +1592,7 @@ async function posicionarPrioridades(req, res) {
 			    return a<b ? -1 : a>b ? 1 : 0;
 			});*/
 			let respuesta=0;
-			console.log(arrayFamilias);
+			//console.log(arrayFamilias);
 			await Helper.asyncForEach(arrayFamilias, async function (familia) 
 			{
 		    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
@@ -1601,44 +1609,47 @@ async function posicionarPrioridades(req, res) {
 		    console.log("endGET");
 
 		    entrada.status="APLICADA";
+		    entrada.partidas=resultpartidas; 
 		    await updateFecha(entrada._id);
 			entrada.save();
 		    console.log("Start");
 			await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
+				if(array.find(element => element == repartidas._id)){
+			    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
+			    	console.log("-------------------------------");
+			    	console.log(partida.descripcion);
+			    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+			    	
+			    	let producto = await Producto.findOne({ _id: partida.producto_id });
+			    	console.log("-------------------------------");
+			 		console.log(producto.prioridad)
+			 	 	respuesta=0;
+		 	 	
+			    	if(producto.familia)
+			    	{
+			    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
+			    		{
+			    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
+			    			
+			    			if(arrayFamilias[index].needed>0){
+			    				console.log(arrayFamilias[index].arrayPosiciones[0]);
+			    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
+			    				arrayFamilias[index].arrayPosiciones.shift();
+			    			}
+			    			else
+			    			{
+			    				respuesta+=arrayFamilias[index].needed;
+			    			}
+			    			arrayFamilias[index].needed-=1;
+			    			
 
-		    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
-		    	console.log("-------------------------------");
-		    	console.log(partida.descripcion);
-		    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
-		    	
-		    	let producto = await Producto.findOne({ _id: partida.producto_id });
-		    	console.log("-------------------------------");
-		 		console.log(producto.prioridad)
-		 	 	respuesta=0;
-		    	if(producto.familia)
-		    	{
-		    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia &&  obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
-		    		{
-		    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
-		    			
-		    			if(arrayFamilias[index].needed>0){
-		    				console.log(arrayFamilias[index].arrayPosiciones[0]);
-		    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
-		    				arrayFamilias[index].arrayPosiciones.shift();
-		    			}
-		    			else
-		    			{
-		    				respuesta+=arrayFamilias[index].needed;
-		    			}
-		    			arrayFamilias[index].needed-=1;
-		    			
+			    		}
 
-		    		}
-
-		    	}
+			    	}
+			    }
 		    });
 		    if(respuesta<1)
-				return res.sendStatus(respuesta);
+				return res.status(200).send("OK");
 			else
 				return res.status(500).send("not");
 		}
