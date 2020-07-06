@@ -263,8 +263,8 @@ function _delete() {
 }
 
 async function countDisponibles(almacen_id) {
-	console.log("asdas")
-	console.log(almacen_id)
+	//console.log("asdas")
+	//console.log(almacen_id)
 	let pasillos = await Pasillo.find({
 		almacen_id: new ObjectId(almacen_id),
 		statusReg: "ACTIVO"
@@ -291,7 +291,7 @@ async function countDisponibles(almacen_id) {
 			
 		});
 	});
-	console.log(respuesta);
+	//console.log(respuesta);
 	return respuesta;
 		
 }
