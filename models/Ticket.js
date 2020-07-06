@@ -11,6 +11,9 @@ const Ticket = Schema(
         fechaProduccion: Date,
         fechaCaducidad: Date,
         embalajesEntrada: {},
+        entrada_id: {type: Schema.ObjectId, ref: 'Entrada'},
+        salida_id: {type: Schema.ObjectId, ref: 'Salida'},
+        observaciones: String
     },
     {
         collection: 'Tickets'
