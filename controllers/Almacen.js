@@ -233,7 +233,7 @@ function validaPosicion(req, res) {
 
 	MovimientoInventario.find({ posicion: _posicion, nivel: _nivel, almacen_id: _almacen })
 		.then((data) => {
-			console.log(data);
+			//console.log(data);
 			if (data.length === 0) {
 				return res.status(200).send(true);
 			}

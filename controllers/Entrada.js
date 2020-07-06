@@ -402,10 +402,6 @@ async function saveEntradaBabel(req, res) {
 					//console.log("testpartidas");
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 					//console.log(partidas);
-					for (let itemPartida of partidas) {
-						console.log("testMovimientos");
-						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
-					}
 					/*console.log(entrada);
 					console.log("/------------------/")*/
 				}).catch((error) => {
@@ -1615,10 +1611,7 @@ async function posicionarPrioridades(req, res) {
 		    }
 		   // console.log("endGET");
 
-		    entrada.status="APLICADA";
-		    entrada.partidas=resultpartidas; 
-		    await updateFecha(entrada._id);
-			entrada.save();
+		   
 		    //console.log("Start");
 			await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
 				if(array.find(element => element == repartidas._id)){
@@ -1655,6 +1648,19 @@ async function posicionarPrioridades(req, res) {
 			    	}
 			    }
 		    });
+		    entrada.status="APLICADA";
+		    entrada.partidas=resultpartidas; 
+		    entrada.fechaEntrada=new Date(Date.now()-(5*3600000));
+			entrada.save().then(async (entrada) => {
+					//console.log("testpartidas");
+					//console.log(partidas);
+					for (let itemPartida of reOrderPartidas) {
+						//console.log("testMovimientos");
+						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+					}
+					/*console.log(entrada);
+					console.log("/------------------/")*/
+			});
 		    if(respuesta<1)
 				return res.status(200).send(entrada);
 			else
