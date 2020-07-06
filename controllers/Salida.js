@@ -120,7 +120,7 @@ async function update(req, res) {
 	let bodyParams = req.body;
 	let salida_id = bodyParams.salidaid;
 	bodyParams.fechaSalida = new Date(bodyParams.fechaSalida);
-	bodyParams.fechaAlta = Date.now();
+	bodyParams.fechaAlta = new Date(Date.now()-(5*3600000));
 
 	// for (let partida of req.body) {
 	// 	Partida._put(partida);
@@ -250,7 +250,7 @@ async function saveSalidaAutomatica(req, res) {
 
 			let nSalida = new Salida();
 			nSalida.salida_id = await getNextID();
-			nSalida.fechaAlta = Date.now();;
+			nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
 			nSalida.fechaSalida = new Date(req.body.fechaSalida);
 			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
 			nSalida.nombreUsuario = req.body.nombreUsuario;
@@ -929,7 +929,7 @@ async function getExcelSalidas(req, res) {
             worksheet.cell(i, indexbody+6).string(res);
             i++;
         });
-        workbook.write('ReporteSali'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
+        workbook.write('ReporteSali'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
 
 	})
 	.catch((error) => {

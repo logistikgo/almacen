@@ -255,7 +255,7 @@ async function saveEntradaAutomatica(req, res) {
 		nEntrada.remolque = req.body.placasRemolque;
 		nEntrada.embarque = req.body.embarque;
 		nEntrada.transportista = req.body.transportista;
-		nEntrada.fechaAlta = Date.now();
+		nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 		nEntrada.idEntrada = await getNextID();
 		nEntrada.folio = await getNextID();
 		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
@@ -389,7 +389,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.ordenCompra=noOrden.po;
-			nEntrada.fechaAlta = Date.now();
+			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 			nEntrada.idEntrada = await getNextID();
 			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=planta.Nombre;
@@ -447,7 +447,7 @@ async function update(req, res) {
 	let entrada_id = bodyParams.entrada_id;
 
 	req.body.fechaEntrada = new Date(bodyParams.fechaEntrada);
-	req.body.fechaAlta = Date.now();
+	req.body.fechaAlta = new Date(Date.now()-(5*3600000));
 
 	if (req.body.status == "SIN_POSICIONAR") {
 		//console.log("1");
@@ -577,7 +577,7 @@ function getEntradasReporte(req, res) {
 	let diasEnAlm=0;
 	let fCaducidad=0;
 	var diff=0;
-	let hoy=Date.now();
+	let hoy=new Date(Date.now()-(5*3600000));
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.body.clienteFiscal_id,
@@ -784,7 +784,7 @@ function getExcelCaducidades(req, res) {
 	let diasEnAlm=0;
 	let fCaducidad=0;
 	var diff=0;
-	let hoy=Date.now();
+	let hoy=new Date(Date.now()-(5*3600000));
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.query.clienteFiscal_id,
@@ -1074,7 +1074,7 @@ function getExcelCaducidades(req, res) {
         	fechaAlerta2="";
         	fCaducidad=0;
         	diff=0;
-        	hoy=Date.now();
+        	hoy=new Date(Date.now()-(5*3600000));
            	Aging=0;
 
            	if(partidas.entrada_id)
@@ -1335,7 +1335,7 @@ function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+18).string(res);
             i++;
         });
-        workbook.write('ReporteCaducidad'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
+        workbook.write('ReporteCaducidad'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
 
 
 	})
@@ -1488,7 +1488,7 @@ async function getExcelEntradas(req, res) {
 	            worksheet.cell(i, 17).string(entrada.status ? entrada.status : "");
 	            i++;
 	        });
-	        workbook.write('ReporteEntradas'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
+	        workbook.write('ReporteEntradas'+dateFormat(new Date(Date.now()-(5*3600000)), "ddmmyyhh")+'.xlsx',res);
 			
 		}).catch((error) => {
 			res.status(500).send(error);
