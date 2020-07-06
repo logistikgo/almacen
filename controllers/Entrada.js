@@ -658,10 +658,10 @@ function getEntradasReporte(req, res) {
 		                if(elem.producto_id.garantiaFrescura)
 		                	fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 		                if(elem.producto_id.alertaAmarilla)
-		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
 		            	
 		            	if(elem.producto_id.alertaRoja)
-		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
 		            	if(elem.producto_id.vidaAnaquel)
 		            		leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
 		            	
@@ -675,15 +675,17 @@ function getEntradasReporte(req, res) {
         		//console.log("2");
 				if(fecha == "fechaFrescura" && fechaFrescura != "")
 				{
-					resFecha = new Date(fechaFrescura)>new Date(fechaInicio) && new Date(fechaFrescura)<new Date(fechaFinal);
+					resFecha = new Date(fechaFrescura)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaFrescura)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
 				}
 				if(fecha == "fechaAlerta1" && fechaAlerta1 != "")
-				{
-					resFecha = new Date(fechaAlerta1)>new Date(fechaInicio) && new Date(fechaAlerta1)<new Date(fechaFinal);
+				{	
+						
+					resFecha = new Date(fechaAlerta1)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta1)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
+					
 				}
 				if(fecha == "fechaAlerta2" && fechaAlerta2 != "")
 				{
-					resFecha = new Date(fechaAlerta2)>fechaInicio && new Date(fechaAlerta2)<fechaFinal;
+					resFecha = new Date(fechaAlerta2)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta2)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
 				}
 				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
 					arrPartidas.push(elem);
@@ -863,9 +865,9 @@ function getExcelCaducidades(req, res) {
 		                if(elem.producto_id.garantiaFrescura)
 		                	fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 		                if(elem.producto_id.alertaAmarilla)
-		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
 		            	if(elem.producto_id.alertaRoja)
-		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
 		            	if(elem.producto_id.vidaAnaquel)
 		            		leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
 		            	
@@ -878,18 +880,19 @@ function getExcelCaducidades(req, res) {
         		}
 				if(fecha == "fechaFrescura" && fechaFrescura != "")
 				{
-					resFecha = new Date(fechaFrescura)>new Date(fechaInicio) && new Date(fechaFrescura)<new Date(fechaFinal);
+					resFecha = new Date(dateFormat(fechaFrescura, "mm/dd/yyyy"))>=new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy")) && new Date(dateFormat(fechaFrescura, "mm/dd/yyyy"))<new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy"));
 				}
 				if(fecha == "fechaAlerta1" && fechaAlerta1 != "")
-				{
-					resFecha = new Date(fechaAlerta1)>new Date(fechaInicio) && new Date(fechaAlerta1)<new Date(fechaFinal);
+				{	
+					console.log(new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))+">="+new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy"))+" && "+new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))+"<"+new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy")));
+					resFecha = new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))>=new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy")) && new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))<new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy"));
+					
 				}
 				if(fecha == "fechaAlerta2" && fechaAlerta2 != "")
 				{
-					resFecha = new Date(fechaAlerta2)>fechaInicio && new Date(fechaAlerta2)<fechaFinal;
+					resFecha = new Date(dateFormat(fechaAlerta2, "mm/dd/yyyy"))>=new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy")) && new Date(dateFormat(fechaAlerta2, "mm/dd/yyyy"))<new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy"));
 				}
 				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
-					//console.log("No Filter");
 					arrPartidas.push(elem);
 				}
 				else{
@@ -941,6 +944,7 @@ function getExcelCaducidades(req, res) {
 					{
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
 					}
+					console.log(elem.isEmpty +"== false &&"+ resClasificacion+ "== true &&"+ resSubclasificacion +"== true &&"+ resFecha+"==true &&" +resAlerta2+"==true &&"+ resAlerta1+"==true &&"+ resAgeing+" == true && "+resClave+"==true")
 					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
 					{	
 						arrPartidas.push(elem);
@@ -1007,15 +1011,16 @@ function getExcelCaducidades(req, res) {
 		worksheet.cell(2, 3).string('Clave').style(headersStyle);
 		worksheet.cell(2, 4).string('Descripción').style(headersStyle);
 		let indexheaders=5;
-		ArrayEmbalaje.forEach(arrEmbalaje=>{ 
-			if(clienteEmbalaje.includes(arrEmbalaje.clave)){
-				if(arrEmbalaje.clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
+		clienteEmbalaje.forEach(Embalaje=>{ 
+			let index=ArrayEmbalaje.findIndex(obj=> (obj.clave == Embalaje));
+				if(ArrayEmbalaje[index].clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
 					worksheet.cell(2, indexheaders).string("Corrugados").style(headersStyle);
 				else
-					worksheet.cell(2, indexheaders).string(arrEmbalaje.nombre).style(headersStyle);
+					worksheet.cell(2, indexheaders).string(ArrayEmbalaje[index].nombre).style(headersStyle);
 				indexheaders++;
-			}
+			
 		});
+
 		worksheet.cell(2, indexheaders).string('Fecha Producción').style(headersStyle);
 		worksheet.cell(2, indexheaders+1).string('Fecha Caducidad').style(headersStyle);
 		worksheet.cell(2, indexheaders+2).string('Fecha Embarque Calculada a 2 dias despues').style(headersStyle);
@@ -1037,6 +1042,7 @@ function getExcelCaducidades(req, res) {
 		worksheet.cell(2, indexheaders+18).string('Ubicacion').style(headersStyle);
 		
         let i=3;
+        console.log(arrPartidas);
         arrPartidas.forEach(partidas => 
         {
         	
@@ -1514,7 +1520,7 @@ async function posicionarPrioridades(req, res) {
 	//console.log(_id);
 	let entrada = await Entrada.findOne({ _id: _id });
 	//console.log(entrada);
-	console.log(req.body);
+	//console.log(req.body);
 	let arrayFamilias=[];
 	var reOrderPartidas=[];
 	/*when to order by date???*/
@@ -1524,8 +1530,8 @@ async function posicionarPrioridades(req, res) {
 	{
 		//console.log("testbegin");
 		let freePosicions=await PasilloCtr.countDisponibles(entrada.almacen_id);
-		console.log(freePosicions+"+<"+ entrada.partidas.length )
-		console.log("test");
+		//console.log(freePosicions+"+<"+ entrada.partidas.length )
+		//console.log("test");
 		if(freePosicions < array.length){
 	    	return res.status(200).send("No hay suficientes posiciones");
 		}
@@ -1534,25 +1540,25 @@ async function posicionarPrioridades(req, res) {
 				//console.log(id_partidas in array.find(element => element =id_partidas))
 				
 			    	let partida = await PartidaModel.findOne({ _id: id_partidas });
-			    	console.log("-------------------------------");
-			    	console.log(partida.descripcion);
-			    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+			    	//console.log("-------------------------------");
+			    	//console.log(partida.descripcion);
+			    	//console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
 			    if(array.find(element => element == id_partidas)){	
 			    	let producto = await Producto.findOne({ _id: partida.producto_id });
-			    	console.log("-------------------------------");
-			 		console.log(producto.prioridad)
+			    	//console.log("-------------------------------");
+			 		//console.log(producto.prioridad)
 			    	partida.status="ASIGNADA";
 					partida.save();
 			    	if(producto.familia)
 			    	{
 			    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia  && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
 			    		{
-			    			console.log("yes");
+			    			//console.log("yes");
 			    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
 			    			arrayFamilias[index].needed=1+arrayFamilias[index].needed;
 				    	}
 				        else{
-				        	console.log("NO");
+				        	//console.log("NO");
 				        	const data={
 							nombre:producto.familia,
 							prioridad: producto.prioridad,
@@ -1595,29 +1601,29 @@ async function posicionarPrioridades(req, res) {
 			//console.log(arrayFamilias);
 			await Helper.asyncForEach(arrayFamilias, async function (familia) 
 			{
-		    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
+		    	//console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
 		    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
-		    	console.log("----result----");
-		    	console.log(familia.arrayPosiciones);
-		    	console.log("_________");
+		    	//console.log("----result----");
+		    	//console.log(familia.arrayPosiciones);
+		    	//console.log("_________");
 		    	respuesta+=familia.arrayPosiciones.length;
 		    });
-		    console.log(respuesta+" < "+entrada.partidas.length)
+		  //  console.log(respuesta+" < "+entrada.partidas.length)
 		    if(respuesta < 0){
 		    	return res.status(200).send("No hay suficientes posiciones en familias");
 		    }
-		    console.log("endGET");
+		   // console.log("endGET");
 
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
 		    await updateFecha(entrada._id);
 			entrada.save();
-		    console.log("Start");
+		    //console.log("Start");
 			await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
 				if(array.find(element => element == repartidas._id)){
 			    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
-			    	console.log("-------------------------------");
-			    	console.log(partida.descripcion);
+			    	///console.log("-------------------------------");
+			    	//console.log(partida.descripcion);
 			    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
 			    	
 			    	let producto = await Producto.findOne({ _id: partida.producto_id });
@@ -1649,12 +1655,12 @@ async function posicionarPrioridades(req, res) {
 			    }
 		    });
 		    if(respuesta<1)
-				return res.status(200).send("OK");
+				return res.status(200).send(entrada);
 			else
 				return res.status(500).send("not");
 		}
 	}catch (error) {
-		console.log(error);
+		//console.log(error);
         return res.status(500).send(error);
         
     }
