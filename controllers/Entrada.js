@@ -1651,7 +1651,16 @@ async function posicionarPrioridades(req, res) {
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaEntrada=new Date(Date.now()-(5*3600000));
-			
+			entrada.save().then(async (entrada) => {
+					//console.log("testpartidas");
+					//console.log(partidas);
+					for (let itemPartida of reOrderPartidas) {
+						//console.log("testMovimientos");
+						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+					}
+					/*console.log(entrada);
+					console.log("/------------------/")*/
+			});
 		    if(respuesta<1)
 				return res.status(200).send(entrada);
 			else
