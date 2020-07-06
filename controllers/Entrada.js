@@ -343,8 +343,8 @@ async function saveEntradaBabel(req, res) {
 	    await Helper.asyncForEach(noOrden.arrPartidas, async function (partida) {
 	        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
 	        let nPartida = new PartidaModel(partida);
-	        console.log(nPartida.InfoPedidos[0].IDAlmacen);
-	        console.log(nPartida);
+	        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
+	        //console.log(nPartida);
 	        await nPartida.save().then((partida) => {
 	        	partidas.push(partida)
 	            arrPartidas_id.push(partida._id);
@@ -885,7 +885,7 @@ function getExcelCaducidades(req, res) {
 				}
 				if(fecha == "fechaAlerta1" && fechaAlerta1 != "")
 				{	
-					console.log(new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))+">="+new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy"))+" && "+new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))+"<"+new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy")));
+					//console.log(new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))+">="+new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy"))+" && "+new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))+"<"+new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy")));
 					resFecha = new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))>=new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy")) && new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))<new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy"));
 					
 				}
@@ -945,7 +945,7 @@ function getExcelCaducidades(req, res) {
 					{
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
 					}
-					console.log(elem.isEmpty +"== false &&"+ resClasificacion+ "== true &&"+ resSubclasificacion +"== true &&"+ resFecha+"==true &&" +resAlerta2+"==true &&"+ resAlerta1+"==true &&"+ resAgeing+" == true && "+resClave+"==true")
+					//console.log(elem.isEmpty +"== false &&"+ resClasificacion+ "== true &&"+ resSubclasificacion +"== true &&"+ resFecha+"==true &&" +resAlerta2+"==true &&"+ resAlerta1+"==true &&"+ resAgeing+" == true && "+resClave+"==true")
 					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
 					{	
 						arrPartidas.push(elem);
@@ -1043,7 +1043,7 @@ function getExcelCaducidades(req, res) {
 		worksheet.cell(2, indexheaders+18).string('Ubicacion').style(headersStyle);
 		
         let i=3;
-        console.log(arrPartidas);
+        //console.log(arrPartidas);
         arrPartidas.forEach(partidas => 
         {
         	
@@ -1625,11 +1625,11 @@ async function posicionarPrioridades(req, res) {
 			    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
 			    	///console.log("-------------------------------");
 			    	//console.log(partida.descripcion);
-			    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+			    	//console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
 			    	
 			    	let producto = await Producto.findOne({ _id: partida.producto_id });
-			    	console.log("-------------------------------");
-			 		console.log(producto.prioridad)
+			    	//console.log("-------------------------------");
+			 		//console.log(producto.prioridad)
 			 	 	respuesta=0;
 		 	 	
 			    	if(producto.familia)
@@ -1639,7 +1639,7 @@ async function posicionarPrioridades(req, res) {
 			    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
 			    			
 			    			if(arrayFamilias[index].needed>0){
-			    				console.log(arrayFamilias[index].arrayPosiciones[0]);
+			    				//console.log(arrayFamilias[index].arrayPosiciones[0]);
 			    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
 			    				arrayFamilias[index].arrayPosiciones.shift();
 			    			}
@@ -1661,7 +1661,7 @@ async function posicionarPrioridades(req, res) {
 				return res.status(500).send("not");
 		}
 	}catch (error) {
-		//console.log(error);
+		console.log(error);
         return res.status(500).send(error);
         
     }
