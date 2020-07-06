@@ -208,6 +208,7 @@ async function save(req, res) {
 	nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
+	nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
 
 	await nEntrada.save()
