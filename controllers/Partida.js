@@ -1009,14 +1009,14 @@ async function getExcelByIDs(req, res) {
         /*worksheet.cell(2, 6).string('T.').style(headersStyle);
         worksheet.cell(2, 7).string('Sacos.').style(headersStyle);*/
         let indexheaders=10;
-        ArrayEmbalaje.forEach(arrEmbalaje=>{ 
-            if(clienteEmbalaje.includes(arrEmbalaje.clave)){
-                if(arrEmbalaje.clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
+        clienteEmbalaje.forEach(Embalaje=>{ 
+            let index=ArrayEmbalaje.findIndex(obj=> (obj.clave == Embalaje));
+                if(ArrayEmbalaje[index].clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
                     worksheet.cell(2, indexheaders).string("Corrugados").style(headersStyle);
                 else
-                    worksheet.cell(2, indexheaders).string(arrEmbalaje.nombre).style(headersStyle);
+                    worksheet.cell(2, indexheaders).string(ArrayEmbalaje[index].nombre).style(headersStyle);
                 indexheaders++;
-            }
+            
         });
         worksheet.cell(2, indexheaders).string('Fecha Ingreso').style(headersStyle);
         worksheet.cell(2, indexheaders+1).string('Fecha Alta Ingreso').style(headersStyle);
