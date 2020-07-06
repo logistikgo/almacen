@@ -285,6 +285,7 @@ async function saveEntradaBabel(req, res) {
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
 	var arrPartidas=[];
+	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
 	try{
 	for (var i=4; i<34 ; i++) {
@@ -312,23 +313,37 @@ async function saveEntradaBabel(req, res) {
 	        }
 	       // console.log(data.InfoPedidos)
 	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden)))
-	    		{
-	    			console.log("yes");
-	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden));
-	    			arrPO[index].arrPartidas.push(data)
-		    	}
-		        else{
-		        	console.log("NO");arrPartidas.push(data);
+    		{
+    			//console.log("yes");
+    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden));
+    			arrPO[index].arrPartidas.push(data)
+	    	}
+	        else{
+	        	//console.log("NO");
+		        	arrPartidas.push(data);
 		        	const PO={
 					po:req.body.Pedido[i].NoOrden,
 					factura:req.body.Pedido[i].Factura,
 		        	arrPartidas:[]
 		        	}
 		        	PO.arrPartidas.push(data)
-	    			arrPO.push(PO)  
-	    		} 
-	        //
+	    			arrPO.push(PO);
+
+	    		let countEntradas=await Entrada.find({"ordenCompra":req.body.Pedido[i].NoOrden}).exec();
+	    		if(countEntradas.length >0)
+	    		{
+	    			resORDENES=resORDENES+req.body.Pedido[i].NoOrden+"\n";
+	    		}
+    		} 
+	        
     	}
+	}
+	if(resORDENES != "")
+	{
+
+		arrPo=[];
+		return res.status(200).send("Ya existe las Ordenes:\n" + resORDENES);
+		
 	}
 	/*console.log(arrPO);
 	
