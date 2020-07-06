@@ -1705,7 +1705,7 @@ function updateStatus(req, res) {
 
 async function updateFecha(idEntrada)
 {
-	var today=Date.now();
+	var today=new Date(Date.now().toLocaleString());
 	Entrada.updateOne({_id: idEntrada}, { $set: { fechaEntrada: today }}).then(async (data) => {
 		await MovimientoInventario.updateMovimientos(idEntrada,today);
 	})
