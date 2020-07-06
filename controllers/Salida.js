@@ -91,6 +91,7 @@ async function save(req, res) {
 	nSalida.fechaSalida = new Date(req.body.fechaSalida);
 	nSalida.salida_id = await getNextID();
 	nSalida.folio = await getNextID();
+	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
 	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O');
 
 	nSalida.save()
@@ -120,7 +121,7 @@ async function update(req, res) {
 	let bodyParams = req.body;
 	let salida_id = bodyParams.salidaid;
 	bodyParams.fechaSalida = new Date(bodyParams.fechaSalida);
-	bodyParams.fechaAlta = Date.now();
+	bodyParams.fechaAlta = new Date(Date.now()-(5*3600000));
 
 	// for (let partida of req.body) {
 	// 	Partida._put(partida);
@@ -250,7 +251,7 @@ async function saveSalidaAutomatica(req, res) {
 
 			let nSalida = new Salida();
 			nSalida.salida_id = await getNextID();
-			nSalida.fechaAlta = Date.now();;
+			nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
 			nSalida.fechaSalida = new Date(req.body.fechaSalida);
 			nSalida.usuarioAlta_id = req.body.usuarioAlta_id;
 			nSalida.nombreUsuario = req.body.nombreUsuario;
@@ -410,7 +411,8 @@ function getReportePartidas(req, res) {
 					posiciones: partida.posiciones,
 					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes,
-					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR"
+					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
+					producto_id:partida.producto_id
 				}
 				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == ""){
 					arrPartidas.push(paramsSalida);
@@ -592,7 +594,8 @@ async function getExcelSalidas(req, res) {
 					posiciones: partida.posiciones,
 					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes,
-					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR"
+					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
+					producto_id:partida.producto_id
 				}
 				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == ""){
 					arrPartidas.push(paramsSalida);
@@ -735,7 +738,7 @@ async function getExcelSalidas(req, res) {
 		let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
         let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
         let headercajas=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Despachados " : "cajas";
-        let headerCajaspedido=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Solicitados" : "cajas";
+        let headerCajaspedido=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Solicitados" : "cajas Pedidas";
       	
         let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();
@@ -753,17 +756,16 @@ async function getExcelSalidas(req, res) {
 		
 
 		let indexheaders=9;
-		ArrayEmbalaje.forEach(arrEmbalaje=>{ 
-			if(clienteEmbalaje.includes(arrEmbalaje.clave)){
-				if (arrEmbalaje.clave=="cajas")
-				{
-					worksheet.cell(2, indexheaders).string(headercajas).style(headersStyle);
-					indexheaders++;
-				}
-				
-			}
-		});
-
+		
+		clienteEmbalaje.forEach(Embalaje=>{ 
+            let index=ArrayEmbalaje.findIndex(obj=> (obj.clave == Embalaje));
+                if(ArrayEmbalaje[index].clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
+                    worksheet.cell(2, indexheaders).string(headercajas).style(headersStyle);
+                else
+                    worksheet.cell(2, indexheaders).string(ArrayEmbalaje[index].nombre).style(headersStyle);
+                indexheaders++;
+            
+        });
 		worksheet.cell(2, indexheaders).string(headerCajaspedido).style(headersStyle);
 		worksheet.cell(2, indexheaders+1).string('In Full').style(headersStyle);
 		worksheet.cell(2, indexheaders+2).string('Fecha Carga Programada').style(headersStyle);
@@ -789,13 +791,36 @@ async function getExcelSalidas(req, res) {
         	worksheet.cell(i, 7).string(partidas.subclasificacion ? partidas.subclasificacion:"");
         	worksheet.cell(i, 8).string(partidas.fechaAlta ? dateFormat(partidas.fechaAlta, formatofecha):"");
 			let indexbody=9;
-
            	clienteEmbalaje.forEach(emb=>
            	{	
-           		if(partidas.embalajes && emb == "cajas" ){
-           			worksheet.cell(i, indexbody).number(partidas.embalajes[emb] ? parseInt(partidas.embalajes[emb]):0);				
-					indexbody++;
-				}
+           		let tarimas =0
+           		  console.log(partidas)
+           		if (emb == 'tarimas' && partidas.producto_id != undefined && partidas.producto_id.arrEquivalencias.length > 0) {
+	                let band = false;
+
+	                partidas.producto_id.arrEquivalencias.forEach(function (equivalencia) {
+
+	                	console.log(equivalencia);
+	                    if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
+
+	                        tarimas = partidas.embalajes.cajas / equivalencia.cantidadEquivalencia ? (partidas.embalajes.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
+	                        band = true;
+	                    }
+	                });
+	                if (band !== true){
+	                    tarimas = partidas.embalajes.tarimas ? partidas.embalajes.tarimas : 0;
+	                	
+	                }
+	                worksheet.cell(i, indexbody).number(parseInt(tarimas));
+	            }
+	            else {
+	            	if(partidas.embalajes != undefined){
+	                worksheet.cell(i, indexbody).number(partidas.embalajes[emb] ? parseInt(partidas.embalajes[emb]):0);
+	            	}
+	            	else
+	            		worksheet.cell(i, indexbody).number(0);
+	            }
+           		indexbody++;
            	});
         	if(partidas.CajasPedidas)
         		worksheet.cell(i, indexbody).string(partidas.CajasPedidas ? partidas.CajasPedidas.cajas.toString():"0");
@@ -905,7 +930,7 @@ async function getExcelSalidas(req, res) {
             worksheet.cell(i, indexbody+6).string(res);
             i++;
         });
-        workbook.write('ReporteSali'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
+        workbook.write('ReporteSali'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
 
 	})
 	.catch((error) => {

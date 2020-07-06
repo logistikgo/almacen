@@ -126,7 +126,7 @@ async function saveEntrada(itemPartida, entrada_id) {
 
 async function saveAjuste(req, res) {
 	let bodyParams = req.body;
-	console.log(bodyParams);
+	//console.log(bodyParams);
 	let nMovimiento = new MovimientoInventario();
 
 	nMovimiento.producto_id = bodyParams.producto_id;

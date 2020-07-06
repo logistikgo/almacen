@@ -208,6 +208,7 @@ async function save(req, res) {
 	nEntrada.fechaEntrada = new Date(req.body.fechaEntrada);
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
+	nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
 
 	await nEntrada.save()
@@ -255,7 +256,7 @@ async function saveEntradaAutomatica(req, res) {
 		nEntrada.remolque = req.body.placasRemolque;
 		nEntrada.embarque = req.body.embarque;
 		nEntrada.transportista = req.body.transportista;
-		nEntrada.fechaAlta = Date.now();
+		nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 		nEntrada.idEntrada = await getNextID();
 		nEntrada.folio = await getNextID();
 		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
@@ -342,8 +343,8 @@ async function saveEntradaBabel(req, res) {
 	    await Helper.asyncForEach(noOrden.arrPartidas, async function (partida) {
 	        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
 	        let nPartida = new PartidaModel(partida);
-	        console.log(nPartida.InfoPedidos[0].IDAlmacen);
-	        console.log(nPartida);
+	        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
+	        //console.log(nPartida);
 	        await nPartida.save().then((partida) => {
 	        	partidas.push(partida)
 	            arrPartidas_id.push(partida._id);
@@ -389,7 +390,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.ordenCompra=noOrden.po;
-			nEntrada.fechaAlta = Date.now();
+			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 			nEntrada.idEntrada = await getNextID();
 			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=planta.Nombre;
@@ -401,10 +402,6 @@ async function saveEntradaBabel(req, res) {
 					//console.log("testpartidas");
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 					//console.log(partidas);
-					for (let itemPartida of partidas) {
-						console.log("testMovimientos");
-						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
-					}
 					/*console.log(entrada);
 					console.log("/------------------/")*/
 				}).catch((error) => {
@@ -447,7 +444,7 @@ async function update(req, res) {
 	let entrada_id = bodyParams.entrada_id;
 
 	req.body.fechaEntrada = new Date(bodyParams.fechaEntrada);
-	req.body.fechaAlta = Date.now();
+	req.body.fechaAlta = new Date(Date.now()-(5*3600000));
 
 	if (req.body.status == "SIN_POSICIONAR") {
 		//console.log("1");
@@ -577,7 +574,7 @@ function getEntradasReporte(req, res) {
 	let diasEnAlm=0;
 	let fCaducidad=0;
 	var diff=0;
-	let hoy=Date.now();
+	let hoy=new Date(Date.now()-(5*3600000));
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.body.clienteFiscal_id,
@@ -658,10 +655,10 @@ function getEntradasReporte(req, res) {
 		                if(elem.producto_id.garantiaFrescura)
 		                	fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 		                if(elem.producto_id.alertaAmarilla)
-		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
 		            	
 		            	if(elem.producto_id.alertaRoja)
-		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
 		            	if(elem.producto_id.vidaAnaquel)
 		            		leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
 		            	
@@ -675,15 +672,17 @@ function getEntradasReporte(req, res) {
         		//console.log("2");
 				if(fecha == "fechaFrescura" && fechaFrescura != "")
 				{
-					resFecha = new Date(fechaFrescura)>new Date(fechaInicio) && new Date(fechaFrescura)<new Date(fechaFinal);
+					resFecha = new Date(fechaFrescura)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaFrescura)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
 				}
 				if(fecha == "fechaAlerta1" && fechaAlerta1 != "")
-				{
-					resFecha = new Date(fechaAlerta1)>new Date(fechaInicio) && new Date(fechaAlerta1)<new Date(fechaFinal);
+				{	
+						
+					resFecha = new Date(fechaAlerta1)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta1)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
+					
 				}
 				if(fecha == "fechaAlerta2" && fechaAlerta2 != "")
 				{
-					resFecha = new Date(fechaAlerta2)>fechaInicio && new Date(fechaAlerta2)<fechaFinal;
+					resFecha = new Date(fechaAlerta2)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta2)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
 				}
 				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
 					arrPartidas.push(elem);
@@ -782,7 +781,7 @@ function getExcelCaducidades(req, res) {
 	let diasEnAlm=0;
 	let fCaducidad=0;
 	var diff=0;
-	let hoy=Date.now();
+	let hoy=new Date(Date.now()-(5*3600000));
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.query.clienteFiscal_id,
@@ -863,9 +862,9 @@ function getExcelCaducidades(req, res) {
 		                if(elem.producto_id.garantiaFrescura)
 		                	fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 		                if(elem.producto_id.alertaAmarilla)
-		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
 		            	if(elem.producto_id.alertaRoja)
-		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "dd/mm/yyyy");
+		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
 		            	if(elem.producto_id.vidaAnaquel)
 		            		leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
 		            	
@@ -878,18 +877,19 @@ function getExcelCaducidades(req, res) {
         		}
 				if(fecha == "fechaFrescura" && fechaFrescura != "")
 				{
-					resFecha = new Date(fechaFrescura)>new Date(fechaInicio) && new Date(fechaFrescura)<new Date(fechaFinal);
+					resFecha = new Date(dateFormat(fechaFrescura, "mm/dd/yyyy"))>=new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy")) && new Date(dateFormat(fechaFrescura, "mm/dd/yyyy"))<new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy"));
 				}
 				if(fecha == "fechaAlerta1" && fechaAlerta1 != "")
-				{
-					resFecha = new Date(fechaAlerta1)>new Date(fechaInicio) && new Date(fechaAlerta1)<new Date(fechaFinal);
+				{	
+					//console.log(new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))+">="+new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy"))+" && "+new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))+"<"+new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy")));
+					resFecha = new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))>=new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy")) && new Date(dateFormat(fechaAlerta1, "mm/dd/yyyy"))<new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy"));
+					
 				}
 				if(fecha == "fechaAlerta2" && fechaAlerta2 != "")
 				{
-					resFecha = new Date(fechaAlerta2)>fechaInicio && new Date(fechaAlerta2)<fechaFinal;
+					resFecha = new Date(dateFormat(fechaAlerta2, "mm/dd/yyyy"))>=new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy")) && new Date(dateFormat(fechaAlerta2, "mm/dd/yyyy"))<new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy"));
 				}
 				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
-					//console.log("No Filter");
 					arrPartidas.push(elem);
 				}
 				else{
@@ -941,6 +941,7 @@ function getExcelCaducidades(req, res) {
 					{
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
 					}
+					//console.log(elem.isEmpty +"== false &&"+ resClasificacion+ "== true &&"+ resSubclasificacion +"== true &&"+ resFecha+"==true &&" +resAlerta2+"==true &&"+ resAlerta1+"==true &&"+ resAgeing+" == true && "+resClave+"==true")
 					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
 					{	
 						arrPartidas.push(elem);
@@ -1007,15 +1008,16 @@ function getExcelCaducidades(req, res) {
 		worksheet.cell(2, 3).string('Clave').style(headersStyle);
 		worksheet.cell(2, 4).string('Descripción').style(headersStyle);
 		let indexheaders=5;
-		ArrayEmbalaje.forEach(arrEmbalaje=>{ 
-			if(clienteEmbalaje.includes(arrEmbalaje.clave)){
-				if(arrEmbalaje.clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
+		clienteEmbalaje.forEach(Embalaje=>{ 
+			let index=ArrayEmbalaje.findIndex(obj=> (obj.clave == Embalaje));
+				if(ArrayEmbalaje[index].clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
 					worksheet.cell(2, indexheaders).string("Corrugados").style(headersStyle);
 				else
-					worksheet.cell(2, indexheaders).string(arrEmbalaje.nombre).style(headersStyle);
+					worksheet.cell(2, indexheaders).string(ArrayEmbalaje[index].nombre).style(headersStyle);
 				indexheaders++;
-			}
+			
 		});
+
 		worksheet.cell(2, indexheaders).string('Fecha Producción').style(headersStyle);
 		worksheet.cell(2, indexheaders+1).string('Fecha Caducidad').style(headersStyle);
 		worksheet.cell(2, indexheaders+2).string('Fecha Embarque Calculada a 2 dias despues').style(headersStyle);
@@ -1037,6 +1039,7 @@ function getExcelCaducidades(req, res) {
 		worksheet.cell(2, indexheaders+18).string('Ubicacion').style(headersStyle);
 		
         let i=3;
+        //console.log(arrPartidas);
         arrPartidas.forEach(partidas => 
         {
         	
@@ -1068,7 +1071,7 @@ function getExcelCaducidades(req, res) {
         	fechaAlerta2="";
         	fCaducidad=0;
         	diff=0;
-        	hoy=Date.now();
+        	hoy=new Date(Date.now()-(5*3600000));
            	Aging=0;
 
            	if(partidas.entrada_id)
@@ -1329,7 +1332,7 @@ function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+18).string(res);
             i++;
         });
-        workbook.write('ReporteCaducidad'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
+        workbook.write('ReporteCaducidad'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
 
 
 	})
@@ -1482,7 +1485,7 @@ async function getExcelEntradas(req, res) {
 	            worksheet.cell(i, 17).string(entrada.status ? entrada.status : "");
 	            i++;
 	        });
-	        workbook.write('ReporteEntradas'+dateFormat(Date.now(), "ddmmyyhh")+'.xlsx',res);
+	        workbook.write('ReporteEntradas'+dateFormat(new Date(Date.now()-(5*3600000)), "ddmmyyhh")+'.xlsx',res);
 			
 		}).catch((error) => {
 			res.status(500).send(error);
@@ -1514,7 +1517,7 @@ async function posicionarPrioridades(req, res) {
 	//console.log(_id);
 	let entrada = await Entrada.findOne({ _id: _id });
 	//console.log(entrada);
-	console.log(req.body);
+	//console.log(req.body);
 	let arrayFamilias=[];
 	var reOrderPartidas=[];
 	/*when to order by date???*/
@@ -1524,8 +1527,8 @@ async function posicionarPrioridades(req, res) {
 	{
 		//console.log("testbegin");
 		let freePosicions=await PasilloCtr.countDisponibles(entrada.almacen_id);
-		console.log(freePosicions+"+<"+ entrada.partidas.length )
-		console.log("test");
+		//console.log(freePosicions+"+<"+ entrada.partidas.length )
+		//console.log("test");
 		if(freePosicions < array.length){
 	    	return res.status(200).send("No hay suficientes posiciones");
 		}
@@ -1534,25 +1537,25 @@ async function posicionarPrioridades(req, res) {
 				//console.log(id_partidas in array.find(element => element =id_partidas))
 				
 			    	let partida = await PartidaModel.findOne({ _id: id_partidas });
-			    	console.log("-------------------------------");
-			    	console.log(partida.descripcion);
-			    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+			    	//console.log("-------------------------------");
+			    	//console.log(partida.descripcion);
+			    	//console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
 			    if(array.find(element => element == id_partidas)){	
 			    	let producto = await Producto.findOne({ _id: partida.producto_id });
-			    	console.log("-------------------------------");
-			 		console.log(producto.prioridad)
+			    	//console.log("-------------------------------");
+			 		//console.log(producto.prioridad)
 			    	partida.status="ASIGNADA";
 					partida.save();
 			    	if(producto.familia)
 			    	{
 			    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia  && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
 			    		{
-			    			console.log("yes");
+			    			//console.log("yes");
 			    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
 			    			arrayFamilias[index].needed=1+arrayFamilias[index].needed;
 				    	}
 				        else{
-				        	console.log("NO");
+				        	//console.log("NO");
 				        	const data={
 							nombre:producto.familia,
 							prioridad: producto.prioridad,
@@ -1595,34 +1598,31 @@ async function posicionarPrioridades(req, res) {
 			//console.log(arrayFamilias);
 			await Helper.asyncForEach(arrayFamilias, async function (familia) 
 			{
-		    	console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
+		    	//console.log("_________"+familia.nombre+"-"+familia.prioridad+"-"+familia.needed+"-"+familia.fechaCaducidad+"_________");
 		    	familia.arrayPosiciones=await PasilloCtr.getPocionesAuto(familia,entrada.almacen_id);
-		    	console.log("----result----");
-		    	console.log(familia.arrayPosiciones);
-		    	console.log("_________");
+		    	//console.log("----result----");
+		    	//console.log(familia.arrayPosiciones);
+		    	//console.log("_________");
 		    	respuesta+=familia.arrayPosiciones.length;
 		    });
-		    console.log(respuesta+" < "+entrada.partidas.length)
+		  //  console.log(respuesta+" < "+entrada.partidas.length)
 		    if(respuesta < 0){
 		    	return res.status(200).send("No hay suficientes posiciones en familias");
 		    }
-		    console.log("endGET");
+		   // console.log("endGET");
 
-		    entrada.status="APLICADA";
-		    entrada.partidas=resultpartidas; 
-		    await updateFecha(entrada._id);
-			entrada.save();
-		    console.log("Start");
+		   
+		    //console.log("Start");
 			await Helper.asyncForEach(reOrderPartidas, async function (repartidas) {
 				if(array.find(element => element == repartidas._id)){
 			    	let partida = await PartidaModel.findOne({ _id: repartidas._id });
-			    	console.log("-------------------------------");
-			    	console.log(partida.descripcion);
-			    	console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+			    	///console.log("-------------------------------");
+			    	//console.log(partida.descripcion);
+			    	//console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
 			    	
 			    	let producto = await Producto.findOne({ _id: partida.producto_id });
-			    	console.log("-------------------------------");
-			 		console.log(producto.prioridad)
+			    	//console.log("-------------------------------");
+			 		//console.log(producto.prioridad)
 			 	 	respuesta=0;
 		 	 	
 			    	if(producto.familia)
@@ -1632,7 +1632,7 @@ async function posicionarPrioridades(req, res) {
 			    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
 			    			
 			    			if(arrayFamilias[index].needed>0){
-			    				console.log(arrayFamilias[index].arrayPosiciones[0]);
+			    				//console.log(arrayFamilias[index].arrayPosiciones[0]);
 			    				await Partida.posicionarAuto(arrayFamilias[index].arrayPosiciones[0].pocision_id,repartidas._id,arrayFamilias[index].arrayPosiciones[0].nivelIndex);
 			    				arrayFamilias[index].arrayPosiciones.shift();
 			    			}
@@ -1648,8 +1648,26 @@ async function posicionarPrioridades(req, res) {
 			    	}
 			    }
 		    });
+		    entrada.status="APLICADA";
+		    entrada.partidas=resultpartidas; 
+		    entrada.fechaEntrada=new Date(Date.now()-(5*3600000));
+			entrada.save().then(async (entrada) => {
+					//console.log("testpartidas");
+					//console.log(partidas);
+<<<<<<< HEAD
+					for (let itemPartida of partidas) {
+						console.log("testMovimientos");
+=======
+					for (let itemPartida of reOrderPartidas) {
+						//console.log("testMovimientos");
+>>>>>>> dev
+						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+					}
+					/*console.log(entrada);
+					console.log("/------------------/")*/
+			});
 		    if(respuesta<1)
-				return res.status(200).send("OK");
+				return res.status(200).send(entrada);
 			else
 				return res.status(500).send("not");
 		}
@@ -1699,7 +1717,7 @@ function updateStatus(req, res) {
 
 async function updateFecha(idEntrada)
 {
-	var today=Date.now();
+	var today=new Date(Date.now()-(5*3600000));
 	Entrada.updateOne({_id: idEntrada}, { $set: { fechaEntrada: today }}).then(async (data) => {
 		await MovimientoInventario.updateMovimientos(idEntrada,today);
 	})
