@@ -119,7 +119,7 @@ function getBySalidaConIDCarga(req, res) {
 
 async function saveIDCarga(req, res){
     let partidas = req.body.partidas;
-    console.log(partidas);
+    //console.log(partidas);
     let resPartidas = [];
 
     await Helper.asyncForEach(partidas, async function (partida) {
@@ -158,7 +158,7 @@ async function put(arrPartidas, salida_id) {
 
             if (partidaFound.embalajesAlmacen != undefined) {
                 for (let x in partidaFound.embalajesAlmacen) {
-                    console.log(partidaFound.embalajesAlmacen +" - "+partida.embalajesEnSalida[x] );
+                    //console.log(partidaFound.embalajesAlmacen +" - "+partida.embalajesEnSalida[x] );
                     partidaFound.embalajesAlmacen[x] -= partida.embalajesEnSalida[x];
                 }
                 changes['embalajesAlmacen'] = partidaFound.embalajesAlmacen;
@@ -397,7 +397,7 @@ async function getByProductoEmbalaje(req, res) {
     let cantidadRestante = parseFloat(cantidad);
     let algoritmoSalida = req.query.algoritmoSalida;
 
-    console.log(cantidadRestante);
+    //console.log(cantidadRestante);
 
     /**
      * Se obtienen las partidas necesarias para la cantidad deseada
@@ -472,13 +472,13 @@ async function getByProductoEmbalaje(req, res) {
 
     try {
         //Validacion para Clientes fiscales que no utilicen ningun algoritmo
-        console.log(algoritmoSalida === undefined || algoritmoSalida.length < 1);
+        //console.log(algoritmoSalida === undefined || algoritmoSalida.length < 1);
         if (algoritmoSalida === undefined || algoritmoSalida.length < 1) {
             partidas.forEach(partida => {
                 let subConsecutivo = 0;
                 //console.log("Posiciones", partida.posiciones.filter(x => !x.isEmpty));
                 partida.posiciones.filter(x => !x.isEmpty).forEach(posicion => {
-                    console.log("Posicion n", posicion.nivel)
+                   // console.log("Posicion n", posicion.nivel)
                     let auxPartida = {
                         lote: partida.lote,
                         clave: partida.clave,
@@ -544,14 +544,14 @@ async function getByProductoEmbalaje(req, res) {
          * del embalaje para cada posicion, dependiendo de su disponibilidad
          */
 
-        console.log("Cantidad restante", cantidadRestante);
+        //console.log("Cantidad restante", cantidadRestante);
         await Helper.asyncForEach(partidas, async function (partida) {
             let prodA=await Producto.findOne({ _id: partida.producto_id });
              //console.log(prodA.garantiaFrescura)
             let fechaA=Date.now();
             if(prodA.garantiaFrescura)
                 fechaA = new Date(partida.fechaCaducidad - (prodA.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
-            console.log(partida.embalajesxSalir[embalaje]+"=="+partida.embalajesEntrada[embalaje]);
+          //  console.log(partida.embalajesxSalir[embalaje]+"=="+partida.embalajesEntrada[embalaje]);
             if(algoritmoSalida[0].algoritmo === "CADUCIDAD" && Date.now()<fechaA && partida.embalajesxSalir[embalaje]==partida.embalajesEntrada[embalaje]){
                 let subConsecutivo = 0;
                 //console.log(dateFormat(fechaA, "dd/mm/yyyy"));
@@ -839,7 +839,7 @@ async function getExcelByIDs(req, res) {
     let clave=req.query.producto_id != undefined ? req.query.producto_id : "";
     let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
     let tipoUsuario = req.query.tipoUsuario != undefined ? req.query.tipoUsuario : "";
-    console.log(tipoUsuario);
+    //console.log(tipoUsuario);
     try {
 
         if (arrClientesFiscales_id == undefined ) throw NullParamsException;
@@ -957,7 +957,7 @@ async function getExcelByIDs(req, res) {
                 if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true)
                     arrPartidas.push(partida);
             });
-            console.log("startexcel");
+            //console.log("startexcel");
         var excel = require('excel4node');
         var dateFormat = require('dateformat');
         var workbook = new excel.Workbook();
@@ -1104,7 +1104,7 @@ async function getExcelByIDs(req, res) {
          workbook.write('ReportePartidas'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
     }
     catch (error) {
-        console.log(error);
+       // console.log(error);
         res.status(500).send(error);
     }
 }
@@ -1143,8 +1143,8 @@ async function save(req, res) {
         await Helper.asyncForEach(arrPartidas, async function (partida) {
             partida.InfoPedidos[0].IDAlmacen=req.body.IDAlmacen;
             let nPartida = new Partida(partida);
-            console.log(nPartida.InfoPedidos[0].IDAlmacen);
-            console.log(nPartida);
+           // console.log(nPartida.InfoPedidos[0].IDAlmacen);
+            //console.log(nPartida);
             await nPartida.save().then((partida) => {
                 arrPartidas_id.push(partida._id);
             });
@@ -1262,8 +1262,8 @@ function _put(jNewPartida) {
     Partida.findOne({ _id: jNewPartida._id })
         .then(async (partida) => {
             try {
-                console.log(partida);
-                console.log(jNewPartida);
+                //console.log(partida);
+                //console.log(jNewPartida);
 
                 await Partida.updateOne({ _id: partida._id }, { $set: jNewPartida }).exec();
             }
@@ -1277,7 +1277,7 @@ async function updatePosicionPartida(req, res) {
     let bodyParams = req.body;
     let partida_id = bodyParams.partida_id;
 
-    console.log(partida_id);
+    //console.log(partida_id);
 
     let partida = await Partida.findOne({ _id: partida_id }).exec();
 
@@ -1321,7 +1321,7 @@ async function updatePosicionPartida(req, res) {
 
 async function updateCajasPedidas(req, res) {
     let id = req.body.id;
-    console.log(id);
+   // console.log(id);
     await Partida.updateOne({_id: id }, { $set: {"CajasPedidas": { "cajas" : req.body. pedidos} } })
         .then((partida) => {
             res.status(200).send(partida);
