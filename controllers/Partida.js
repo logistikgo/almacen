@@ -45,11 +45,21 @@ async function getByEntrada(req, res) {
     let entrada_id = req.params.entrada_id;
 
     Partida.find({ entrada_id: entrada_id })
-        .then((partidas) => {
-            //console.log(partidas);
-            res.status(200).send(partidas);
+        .then(async (partidas) => {
+            console.log(partidas.length);
+            let arrpartida=[];
+            await Helper.asyncForEach(partidas, async function (partida) 
+            {
+                if(partida.tipo == "NORMAL" && partida.status == "ASIGNADA")
+                {
+                    arrpartida.push(partida);
+                }
+            });
+            console.log(arrpartida.length);
+            res.status(200).send(arrpartida);
         })
         .catch((error) => {
+            console.log(error);
             res.status(500).send(error);
         });
 }
@@ -407,7 +417,7 @@ async function getByProductoEmbalaje(req, res) {
      *
      */
     let partidas = await Partida
-        .find({ producto_id: producto_id, isEmpty: false })
+        .find({ producto_id: producto_id, isEmpty: false , tipo:"NORMAL",status:"ASIGNADA"})
         .populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id',
             {
                 clienteFiscal_id: clienteFiscal_id,
@@ -1018,6 +1028,7 @@ async function getExcelByIDs(req, res) {
                 indexheaders++;
             
         });
+        console.log("1")
         worksheet.cell(2, indexheaders).string('Fecha Ingreso').style(headersStyle);
         worksheet.cell(2, indexheaders+1).string('Fecha Alta Ingreso').style(headersStyle);
         worksheet.cell(2, indexheaders+2).string('Fecha Despacho').style(headersStyle);

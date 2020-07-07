@@ -301,8 +301,8 @@ async function saveEntradaBabel(req, res) {
 				producto_id:producto._id,
 				clave:producto.clave,
 				descripcion:producto.descripcion,
-				origen:"Babel",
-				tipo: "Arrival",
+				origen:"BABEL",
+				tipo: "NORMAL",
     			status: "WAITINGARRIVAL",
 				embalajesEntrada: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
@@ -700,7 +700,7 @@ function getEntradasReporte(req, res) {
 				{
 					resFecha = new Date(fechaAlerta2)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta2)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
 				}
-				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
+				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio=="" && elem.tipo=="NORMAL" && elem.status=="ASIGNADA"){
 					arrPartidas.push(elem);
 				}
 				else{
@@ -754,7 +754,7 @@ function getEntradasReporte(req, res) {
 					{
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
 					}
-					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
+					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true  && elem.tipo=="NORMAL" && elem.status=="ASIGNADA")
 					{	
 						arrPartidas.push(elem);
 					}
@@ -905,7 +905,7 @@ function getExcelCaducidades(req, res) {
 				{
 					resFecha = new Date(dateFormat(fechaAlerta2, "mm/dd/yyyy"))>=new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy")) && new Date(dateFormat(fechaAlerta2, "mm/dd/yyyy"))<new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy"));
 				}
-				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
+				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""  && elem.tipo=="NORMAL" && elem.status=="ASIGNADA"){
 					arrPartidas.push(elem);
 				}
 				else{
@@ -958,7 +958,7 @@ function getExcelCaducidades(req, res) {
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
 					}
 					//console.log(elem.isEmpty +"== false &&"+ resClasificacion+ "== true &&"+ resSubclasificacion +"== true &&"+ resFecha+"==true &&" +resAlerta2+"==true &&"+ resAlerta1+"==true &&"+ resAgeing+" == true && "+resClave+"==true")
-					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
+					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true  && elem.tipo=="NORMAL" && elem.status=="ASIGNADA")
 					{	
 						arrPartidas.push(elem);
 					}
