@@ -15,6 +15,7 @@ const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const TiempoCargaDescarga = require('../controllers/TiempoCargaDescarga');
 const PlantaProductora = require('../models/PlantaProductora'); 
 const dateFormat = require('dateformat');
+const Ticket = require('../models/Ticket');
 function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
 }
@@ -1692,9 +1693,17 @@ async function posicionarPrioridades(req, res) {
 function updateRemision(req, res) {
 	let entrada_id = req.body.entrada_id;
 	var infoPartida = req.body.partida;
-
 	let newPartida = new PartidaModel(infoPartida);
+
 	newPartida.save().then((partida) => {
+		let ticket = new Ticket();
+		ticket.partida_id = partida._id;
+		ticket.entrada_id = entrada_id;
+		
+		ticket.save().then((resTicket) => {
+			console.log(resTicket._id);
+		});
+		
 		var arrPartidas = [];
 		Entrada.findOne({_id: entrada_id}).then((entrada) => {
 			arrPartidas = entrada.partidas;
