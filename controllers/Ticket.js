@@ -7,7 +7,7 @@ function post(req, res) {
     let nTicket = new Ticket(req.body ? req.body : req);
     let command = req.body.commandName;
     let resTicket = null;
-
+    //console.log(nTicket);
     switch(command) {
         case 'MODIFICAR':
             Partida.updateOne({_id: nTicket.partida_id}, { $set: { "isExtraordinaria": true} }).exec();
