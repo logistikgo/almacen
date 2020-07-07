@@ -270,4 +270,9 @@ app.post('/api/updateById', Entrada.updateById);
 
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
+
+//Tickets
+app.post('/api/saveTicket', Ticket.post);
+app.get('/api/getTicketsByEntrada', Ticket.getByEntrada);
+
 module.exports = app;
