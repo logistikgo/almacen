@@ -30,7 +30,7 @@ const Producto = Schema({
 	isPedimentos: Boolean,
 	isLotes: Boolean,
 	sucursal_id: { type: Schema.ObjectId, ref: "Sucursal" },
-	almacen_id: { type: Schema.ObjectId, ref: "Almacen" },
+	almacen_id: [{ type: Schema.ObjectId, ref: "Almacen" }],
 	clienteFiscal_id: { type: Schema.ObjectId, ref: "ClienteFiscal" },
 	embalajes: {},
 	usuarioAlta: String,
