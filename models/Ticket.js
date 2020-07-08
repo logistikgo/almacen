@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const Ticket = Schema(
     {
         partida_id: {type: Schema.ObjectId, ref: 'Partida'},
-        producto_id: { type: Schema.ObjectId, ref: 'Producto' },
+        producto_id: { type: Schema.ObjectId, ref: 'Producto'},
         lote: String,
         fechaProduccion: Date,
         fechaCaducidad: Date,

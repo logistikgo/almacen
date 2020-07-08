@@ -320,7 +320,7 @@ function getReportePartidas(req, res) {
 	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
 	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
 	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
-	console.log(req.query);
+	//console.log(req.query);
 	var arrPartidas = [];
 	var partidas = [];
 	let Infull=req.query.inFull ? req.query.inFull :"";
@@ -357,7 +357,7 @@ function getReportePartidas(req, res) {
 		    };
 		}
 	}
-	console.log(filter);
+	//console.log(filter);
 	if(folio != "")
 	{
 		filter.stringFolio=folio;
@@ -414,7 +414,7 @@ function getReportePartidas(req, res) {
 					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
 					producto_id:partida.producto_id
 				}
-				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == ""){
+				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == "" && paramsSalida.embalajes!= undefined){
 					arrPartidas.push(paramsSalida);
 					//console.log("in")
 				}
@@ -481,7 +481,7 @@ function getReportePartidas(req, res) {
 					}
 					//console.log(resFull);
 					//console.log(resFull+" == true && "+resClasificacion+" == true && "+resSubclasificacion+" == true && "+resClave+"==true && "+resResontime+"==true")
-					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true)
+					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true && paramsSalida.embalajes!= undefined)
 					{
 						arrPartidas.push(paramsSalida);
 					}
@@ -502,7 +502,7 @@ async function getExcelSalidas(req, res) {
 	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
 	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
 	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
-	console.log(req.query);
+	//console.log(req.query);
 	var arrPartidas = [];
 	var partidas = [];
 	let Infull=req.query.inFull ? req.query.inFull :"";
@@ -540,7 +540,7 @@ async function getExcelSalidas(req, res) {
 		    };
 		}
 	}
-	console.log(filter);
+	//console.log(filter);
 	if(folio != "")
 	{
 		filter.stringFolio=folio;
@@ -597,7 +597,7 @@ async function getExcelSalidas(req, res) {
 					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
 					producto_id:partida.producto_id
 				}
-				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == ""){
+				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == ""&& paramsSalida.embalajes!= undefined){
 					arrPartidas.push(paramsSalida);
 					//console.log("in")
 				}
@@ -664,7 +664,7 @@ async function getExcelSalidas(req, res) {
 					}
 					//console.log(resFull);
 					//console.log(resFull+" == true && "+resClasificacion+" == true && "+resSubclasificacion+" == true && "+resClave+"==true && "+resResontime+"==true")
-					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true)
+					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true&& paramsSalida.embalajes!= undefined)
 					{
 						arrPartidas.push(paramsSalida);
 					}
@@ -794,13 +794,13 @@ async function getExcelSalidas(req, res) {
            	clienteEmbalaje.forEach(emb=>
            	{	
            		let tarimas =0
-           		  console.log(partidas)
+           		  //console.log(partidas)
            		if (emb == 'tarimas' && partidas.producto_id != undefined && partidas.producto_id.arrEquivalencias.length > 0) {
 	                let band = false;
 
 	                partidas.producto_id.arrEquivalencias.forEach(function (equivalencia) {
 
-	                	console.log(equivalencia);
+	                	//console.log(equivalencia);
 	                    if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
 
 	                        tarimas = partidas.embalajes.cajas / equivalencia.cantidadEquivalencia ? (partidas.embalajes.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
@@ -934,8 +934,9 @@ async function getExcelSalidas(req, res) {
 
 	})
 	.catch((error) => {
-		res.status(500).send(error);
 		console.log(error);
+		res.status(500).send(error);
+		
 	});
 }
 
