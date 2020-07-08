@@ -202,8 +202,8 @@ function getByIDClienteFiscal(req, res) {
 		.catch((error) => {
 			return res.status(500).send(error);
 		});
-}*/
-
+}
+*/
 async function getALM_XD(req, res) {
 	let _arrClientesFiscalesXD = req.query.arrClientesFiscales;
 
@@ -227,10 +227,11 @@ async function getALM_XD(req, res) {
 }
 
 function getByIDClienteFiscal(req, res) {
-	console.log("Dennise was here");
-	let _idClienteFiscal = req.params.idClienteFiscal;
+	//console.log("Dennise was here");
+	let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
 	let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
-	//console.log(req.query.almacen_id);
+	//console.log(req.params.idClienteFiscal);
+
 	let arrProd=[];
 	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
 		.populate({
@@ -270,6 +271,7 @@ function getByIDClienteFiscal(req, res) {
 			console.log(error)
 			return res.status(500).send(error);
 		});
+
 }
 
 async function save(req, res) {
