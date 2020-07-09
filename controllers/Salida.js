@@ -396,6 +396,7 @@ function getReportePartidas(req, res) {
 					stringFolio: salida.stringFolio,
 					fechaAlta: salida.fechaAlta,
 					fechaSalida: salida.fechaSalida,
+					fechaCaducidad: partida.fechaCaducidad,
 					transportista: salida.transportista,
 					placas: salida.placas,
 					placasRemolque: salida.placasRemolque,
@@ -579,6 +580,7 @@ async function getExcelSalidas(req, res) {
 					stringFolio: salida.stringFolio,
 					fechaAlta: salida.fechaAlta,
 					fechaSalida: salida.fechaSalida,
+					fechaCaducidad: partida.fechaCaducidad,
 					transportista: salida.transportista,
 					placas: salida.placas,
 					placasRemolque: salida.placasRemolque,
@@ -597,7 +599,7 @@ async function getExcelSalidas(req, res) {
 					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
 					producto_id:partida.producto_id
 				}
-				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == ""&& paramsSalida.embalajes!= undefined){
+				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == "" && paramsSalida.embalajes!= undefined){
 					arrPartidas.push(paramsSalida);
 					//console.log("in")
 				}
@@ -664,7 +666,7 @@ async function getExcelSalidas(req, res) {
 					}
 					//console.log(resFull);
 					//console.log(resFull+" == true && "+resClasificacion+" == true && "+resSubclasificacion+" == true && "+resClave+"==true && "+resResontime+"==true")
-					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true&& paramsSalida.embalajes!= undefined)
+					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true && paramsSalida.embalajes!= undefined)
 					{
 						arrPartidas.push(paramsSalida);
 					}
@@ -770,9 +772,10 @@ async function getExcelSalidas(req, res) {
 		worksheet.cell(2, indexheaders+1).string('In Full').style(headersStyle);
 		worksheet.cell(2, indexheaders+2).string('Fecha Carga Programada').style(headersStyle);
 		worksheet.cell(2, indexheaders+3).string('Fecha Salida').style(headersStyle);
-		worksheet.cell(2, indexheaders+4).string('Retraso').style(headersStyle);
-		worksheet.cell(2, indexheaders+5).string('On Time').style(headersStyle);
-		worksheet.cell(2, indexheaders+6).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders+4).string('Fecha Caducidad').style(headersStyle);
+		worksheet.cell(2, indexheaders+5).string('Retraso').style(headersStyle);
+		worksheet.cell(2, indexheaders+6).string('On Time').style(headersStyle);
+		worksheet.cell(2, indexheaders+7).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
         arrPartidas.sort(function(a, b) {
@@ -875,7 +878,9 @@ async function getExcelSalidas(req, res) {
         		worksheet.cell(i, indexbody+1).number(value).style(ResultStyle);
         	//console.log(partidas.fechaReciboRemision);
         	worksheet.cell(i, indexbody+2).string(partidas.fechaReciboRemision ? partidas.fechaReciboRemision!="SIN ASIGNAR" ? dateFormat(new Date(partidas.fechaReciboRemision), formatofecha):"SIN ASIGNAR":"");
-        	worksheet.cell(i, indexbody+3).string(partidas.fechaSalida ? dateFormat(partidas.fechaSalida, formatofecha):"");
+			worksheet.cell(i, indexbody+3).string(partidas.fechaSalida ? dateFormat(partidas.fechaSalida, formatofecha):"");
+			//console.log(dateFormat(partidas.fechaCaducidad, formatofecha));
+			worksheet.cell(i, indexbody+4).string(partidas.fechaCaducidad ? dateFormat(partidas.fechaCaducidad, formatofecha): "");
         	ontime =0;
 			if (partidas.fechaReciboRemision !== "SIN ASIGNAR" && partidas.fechaSalida) {
 			    fRecibo = partidas.fechaReciboRemision.getTime();
@@ -921,13 +926,13 @@ async function getExcelSalidas(req, res) {
 				  },
 		        });
             }
-			worksheet.cell(i, indexbody+4).number(ontime);
-           	worksheet.cell(i, indexbody+5).string(resontime).style(OntimeStyle);
+			worksheet.cell(i, indexbody+5).number(ontime);
+           	worksheet.cell(i, indexbody+6).string(resontime).style(OntimeStyle);
            
             let res=""
             if(partidas.posiciones.length === 1) 
             	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
-            worksheet.cell(i, indexbody+6).string(res);
+            worksheet.cell(i, indexbody+7).string(res);
             i++;
         });
         workbook.write('ReporteSali'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
