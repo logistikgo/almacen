@@ -700,7 +700,7 @@ function getEntradasReporte(req, res) {
 				{
 					resFecha = new Date(fechaAlerta2)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta2)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
 				}
-				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio=="" && elem.tipo=="NORMAL" && elem.status=="ASIGNADA"){
+				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio=="" && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA") && elem.status=="ASIGNADA"){
 					arrPartidas.push(elem);
 				}
 				else{
