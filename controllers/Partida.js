@@ -50,7 +50,7 @@ async function getByEntrada(req, res) {
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
-                if(partida.tipo == "NORMAL" && partida.status == "ASIGNADA")
+                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL") && partida.status == "ASIGNADA")
                 {
                     arrpartida.push(partida);
                 }
@@ -743,7 +743,7 @@ async function getPartidasByIDs(req, res) {
         let entradas_id = entradas.map(x => x._id);
 
         let partidas = await Partida
-            .find({ entrada_id: { $in: entradas_id }, tipo: tipo })
+            .find({ entrada_id: { $in: entradas_id } })
             .populate({
                 path: "entrada_id",
                 model: "Entrada",
@@ -822,7 +822,7 @@ async function getPartidasByIDs(req, res) {
                 {
                     resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                 }
-                if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true)
+                if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     arrPartidas.push(partida);
             });
         
@@ -964,7 +964,7 @@ async function getExcelByIDs(req, res) {
                 {
                     resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                 }
-                if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true)
+                if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     arrPartidas.push(partida);
             });
             //console.log("startexcel");
