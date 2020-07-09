@@ -313,14 +313,18 @@ async function saveEntradaBabel(req, res) {
 	        	valor:0
 	        }
 	       // console.log(data.InfoPedidos)
-	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden)))
+	       let countEntradas=await Entrada.find({"ordenCompra":req.body.Pedido[i].NoOrden,"factura":req.body.Pedido[i].Factura}).exec();
+    		if(countEntradas.length <1)
+    		{
+	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura)))
     		{
     			//console.log("yes");
-    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden));
+    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura));
     			arrPO[index].arrPartidas.push(data)
 	    	}
 	        else{
 	        	//console.log("NO");
+	        	
 		        	arrPartidas.push(data);
 		        	const PO={
 					po:req.body.Pedido[i].NoOrden,
@@ -329,20 +333,20 @@ async function saveEntradaBabel(req, res) {
 		        	}
 		        	PO.arrPartidas.push(data)
 	    			arrPO.push(PO);
-
-	    		let countEntradas=await Entrada.find({"ordenCompra":req.body.Pedido[i].NoOrden}).exec();
-	    		if(countEntradas.length >0)
-	    		{
-	    			resORDENES=resORDENES+req.body.Pedido[i].NoOrden+"\n";
 	    		}
+	    		
     		} 
+    		if(countEntradas.length >0)
+    		{
+    			resORDENES=resORDENES+req.body.Pedido[i].NoOrden+"\n";
+    		}
 	        
     	}
 	}
-	if(resORDENES != "")
+	if(resORDENES != "" && arrPO.length<1)
 	{
 
-		arrPo=[];
+		//arrPO=[];
 		return res.status(200).send("Ya existe las Ordenes:\n" + resORDENES);
 		
 	}
@@ -397,8 +401,8 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.remolque = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.referencia = noOrden.factura;
+			nEntrada.factura = noOrden.factura;
 			nEntrada.item = noOrden.factura;
-
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="TRANSPORTISTA / CARRIER");
 			nEntrada.transportista = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="CONDUCTOR / DRIVE");
