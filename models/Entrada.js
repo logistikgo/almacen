@@ -29,6 +29,7 @@ const Entrada = Schema(
 		tiempoDescarga_id: { type: Schema.ObjectId, ref: "TiempoCargaDescarga" },
 		fechaEntrada: Date,
 		fechaReciboRemision: Date,
+		fechaSalidaPlanta: Date,
 		observaciones: String,
 		valor: Number,
 		partidas: [
