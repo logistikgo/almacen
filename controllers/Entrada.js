@@ -290,7 +290,7 @@ async function saveEntradaBabel(req, res) {
 	var arrPO=[];
 	try{
 	for (var i=4; i<34 ; i++) {
-		if(req.body.Pedido[i].Clave !== undefined)
+		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined)
 		{
 		
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
@@ -371,6 +371,7 @@ async function saveEntradaBabel(req, res) {
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="PLANTA EXPORTADORA / MANUFACTURING PLANT");
 		let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="FECHA / DATE");
+		let fechaSalidaPlanta=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
 		let fechaesperada=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado);
 		//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
 		if (partidas && partidas.length > 0) {
@@ -412,6 +413,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
 			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
+			nEntrada.fechaSalidaPlanta = fechaSalidaPlanta;
 			//console.log("testEntrada");
 			await nEntrada.save()
 				.then(async (entrada) => {
@@ -624,9 +626,9 @@ function getEntradasReporte(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
 	})
 	.populate({
 		path: 'partidas',
@@ -831,9 +833,9 @@ function getExcelCaducidades(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
 	})
 	.populate({
 		path: 'partidas',
@@ -1067,6 +1069,7 @@ function getExcelCaducidades(req, res) {
         	let fechacalculada2Dias="";
 			let tempx ="";
 			let GarFresFecha=0;
+			let orginalshippingdays=0;
 			let GarFresFechaStyle = workbook.createStyle({
 	          font: {
 	            bold: true,
@@ -1108,6 +1111,8 @@ function getExcelCaducidades(req, res) {
 	            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
 	            	if(partidas.producto_id.vidaAnaquel)
 	            		leyenda = partidas.producto_id.vidaAnaquel- diasEnAlm - 1
+	            	if(partidas.entrada_id.fechaSalidaPlanta != undefined)
+	            		orginalshippingdays=Math.abs(Math.floor((partidas.entrada_id.fechaSalidaPlanta.getTime()-partidas.entrada_id.fechaEntrada.getTime())/ 86400000)-1)
 	        	}
 	        	if (partidas.fechaCaducidad !== undefined && partidas.entrada_id.DiasTraslado !== undefined) {
 	                let tiempoTraslado = partidas.producto_id.vidaAnaquel - partidas.entrada_id.DiasTraslado-1;
@@ -1215,7 +1220,7 @@ function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+6).number(partidas.entrada_id ? partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0:0);
            	worksheet.cell(i, indexbody+7).string(fechaEspRecibo);
            	worksheet.cell(i, indexbody+8).number(1+diasEnAlm);
-           	worksheet.cell(i, indexbody+9).number(leyenda);
+           	worksheet.cell(i, indexbody+9).number(orginalshippingdays);
            	worksheet.cell(i, indexbody+10).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
            	worksheet.cell(i, indexbody+11).number(Math.abs(Aging));
            	//worksheet.cell(i, indexbody+11).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
