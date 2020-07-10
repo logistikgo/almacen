@@ -316,26 +316,26 @@ async function saveEntradaBabel(req, res) {
 	       let countEntradas=await Entrada.find({"ordenCompra":req.body.Pedido[i].NoOrden,"factura":req.body.Pedido[i].Factura}).exec();
     		if(countEntradas.length <1)
     		{
-	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura)))
-    		{
-    			//console.log("yes");
-    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura));
-    			arrPO[index].arrPartidas.push(data)
-	    	}
-	        else{
-	        	//console.log("NO");
-	        	
-		        	arrPartidas.push(data);
-		        	const PO={
-					po:req.body.Pedido[i].NoOrden,
-					factura:req.body.Pedido[i].Factura,
-		        	arrPartidas:[]
-		        	}
-		        	PO.arrPartidas.push(data)
-	    			arrPO.push(PO);
-	    		}
-	    		
-    		} 
+		        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura)))
+	    		{
+	    			//console.log("yes");
+	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura));
+	    			arrPO[index].arrPartidas.push(data)
+		    	}
+		        else{
+		        	//console.log("NO");
+		        	
+			        	arrPartidas.push(data);
+			        	const PO={
+						po:req.body.Pedido[i].NoOrden,
+						factura:req.body.Pedido[i].Factura,
+			        	arrPartidas:[]
+			        	}
+			        	PO.arrPartidas.push(data)
+		    			arrPO.push(PO);
+		    		}
+		    		
+	    		} 
     		if(countEntradas.length >0)
     		{
     			resORDENES=resORDENES+req.body.Pedido[i].NoOrden+"\n";
@@ -347,7 +347,7 @@ async function saveEntradaBabel(req, res) {
 	{
 
 		//arrPO=[];
-		return res.status(200).send("Ya existe las Ordenes:\n" + resORDENES);
+		return res.status(500).send("Ya existe las Ordenes:\n" + resORDENES);
 		
 	}
 	/*console.log(arrPO);
@@ -1676,15 +1676,17 @@ async function posicionarPrioridades(req, res) {
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaEntrada=new Date(Date.now()-(5*3600000));
-			entrada.save().then(async (entrada) => {
-					//console.log("testpartidas");
-					//console.log(partidas);
+			await entrada.save().then(async (entrada) => {
+					/*console.log("testpartidas");
+					console.log(resultpartidas);
+					console.log("/------------------/");*/
 					for (let itemPartida of reOrderPartidas) {
 						//console.log("testMovimientos");
-						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+						let partidait = await PartidaModel.findOne({ _id: itemPartida._id });
+						//console.log(partidait.posiciones);
+						await MovimientoInventario.saveEntrada(	partidait, entrada.id);
 					}
-					/*console.log(entrada);
-					console.log("/------------------/")*/
+					/*console.log(entrada);*/
 			});
 		    if(respuesta<1)
 				return res.status(200).send(entrada);
