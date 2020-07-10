@@ -410,16 +410,23 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.partidas = partidas.map(x => x._id);
 			nEntrada.nombreUsuario = "BarcelBabel";
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="TRACTOR-PLACAS/TRUCK-NUMBERPLATE");
+			if(indexInfopedido==-1)
+				indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="TRACTOR/TRAILER");
 			nEntrada.tracto = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
+
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="CONTENEDOR/TRAILER");
+			if(indexInfopedido==-1)
+				indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="CONTENEDOR/CONTAINER");
 			nEntrada.remolque = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.referencia = noOrden.factura;
 			nEntrada.factura = noOrden.factura;
 			nEntrada.item = noOrden.factura;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="TRANSPORTISTA/CARRIER");
+			if(indexInfopedido==-1)
+				indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="TRANSPORTISTA/CARGOLINE");
 			nEntrada.transportista = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
-			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="CONDUCTOR/DRIVE");
+			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="CONDUCTOR/DRIVER");
 			nEntrada.operador = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="SELLOS/SEALS");
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
