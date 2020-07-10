@@ -64,6 +64,29 @@ async function getByEntrada(req, res) {
         });
 }
 
+async function getByEntradaSalida(req, res) {
+    let entrada_id = req.params.entrada_id;
+    
+    Partida.find({ entrada_id: entrada_id })
+        .then(async (partidas) => {
+            console.log(partidas.length);
+            let arrpartida=[];
+            await Helper.asyncForEach(partidas, async function (partida) 
+            {
+                if(partida.tipo == "NORMAL" && partida.status == "ASIGNADA" )
+                {
+                    arrpartida.push(partida);
+                }
+            });
+            console.log(arrpartida.length);
+            res.status(200).send(arrpartida);
+        })
+        .catch((error) => {
+            console.log(error);
+            res.status(500).send(error);
+        });
+}
+
 async function getBySalida(req, res) {
     let salida_id = req.params.salida_id;
     let salida = await Salida.findOne({ _id: salida_id }).exec();
@@ -1380,6 +1403,7 @@ module.exports = {
     post,
     addSalida,
     getByEntrada,
+    getByEntradaSalida,
     getBySalida,
     getBySalidaConIDCarga,
     saveIDCarga,
