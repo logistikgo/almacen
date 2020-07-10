@@ -10,7 +10,7 @@ function post(req, res) {
     //console.log(nTicket);
     switch(command) {
         case 'MODIFICAR':
-            Partida.updateOne({_id: nTicket.partida_id}, { $set: { "isExtraordinaria": true, tipo: "MODIFICAR"} }).exec();
+            Partida.updateOne({_id: nTicket.partida_id}, { $set: { "isExtraordinaria": true, tipo: "MODIFICADA"} }).exec();
             break;
         case 'OMITIR':
             Partida.updateOne({_id: nTicket.partida_id}, { $set: { "isExtraordinaria": true, tipo: "OMITIR"} }).exec();
