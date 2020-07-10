@@ -297,6 +297,13 @@ async function saveEntradaBabel(req, res) {
 			if(producto==undefined)
 				return res.status(200).send("no existe item: "+req.body.Pedido[i].Clave);
 			//console.log(req.body.Pedido[i].Clave)
+			let fechaCaducidadTemp= req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(5, 7)+"/"+req.body.Pedido[i].Caducidad.slice(8, 10));
+	        if(isNaN(fechaCaducidadTemp))
+	        {
+	        	fechaCaducidadTemp= req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 2)+"/"+req.body.Pedido[i].Caducidad.slice(2, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 2)+"/"+req.body.Pedido[i].Caducidad.slice(3, 5)+"/"+req.body.Pedido[i].Caducidad.slice(6, 10));
+	        
+	        }
+	        console.log(fechaCaducidadTemp);
 			const data={
 				producto_id:producto._id,
 				clave:producto.clave,
@@ -306,8 +313,7 @@ async function saveEntradaBabel(req, res) {
     			status: "WAITINGARRIVAL",
 				embalajesEntrada: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
-	        	fechaProduccion: req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(5, 7)+"/"+req.body.Pedido[i].Caducidad.slice(8, 10)),
-	        	fechaCaducidad: req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(5, 7)+"/"+req.body.Pedido[i].Caducidad.slice(8, 10)),
+	        	fechaCaducidad: fechaCaducidadTemp,
 	        	lote:req.body.Pedido[i].Lote,
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
@@ -372,19 +378,27 @@ async function saveEntradaBabel(req, res) {
 	    });
 	    /*console.log(partidas);
 	    console.log(arrPartidas_id);*/
-	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="PLANTA EXPORTADORA / MANUFACTURING PLANT");
+	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA/MANUFACTURINGPLANT");
+	    //console.log(indexInfopedido);
 		let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
-		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="FECHA / DATE");
+		if(planta==null)
+		{
+			 indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
+			 planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
+		}
+		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		let fechaSalidaPlanta=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
-		let fechaesperada=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado);
-		//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
+		//console.log(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
+		let fechaesperada=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado+1);
+
+		console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
 		if (partidas && partidas.length > 0) {
 			let idCliente = req.body.IDClienteFiscal;
 			let idSucursales = req.body.IDSucursal;
 
 			let nEntrada = new Entrada();
 
-			nEntrada.fechaEntrada = fechaesperada;
+			nEntrada.fechaEntrada = new Date(dateFormat(fechaesperada, "dd/mm/yyyy"));
 			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
 				return total + valor;
 			});
@@ -395,19 +409,19 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.tipo = "NORMAL";
 			nEntrada.partidas = partidas.map(x => x._id);
 			nEntrada.nombreUsuario = "BarcelBabel";
-			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="TRACTOR - PLACAS /  TRUCK - NUMBER PLATE");
+			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="TRACTOR-PLACAS/TRUCK-NUMBERPLATE");
 			nEntrada.tracto = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
-			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="CONTENEDOR / TRAILER");
+			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="CONTENEDOR/TRAILER");
 			nEntrada.remolque = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.referencia = noOrden.factura;
 			nEntrada.factura = noOrden.factura;
 			nEntrada.item = noOrden.factura;
-			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="TRANSPORTISTA / CARRIER");
+			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="TRANSPORTISTA/CARRIER");
 			nEntrada.transportista = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
-			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="CONDUCTOR / DRIVE");
+			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="CONDUCTOR/DRIVE");
 			nEntrada.operador = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
-			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="SELLOS / SEALS");
+			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="SELLOS/SEALS");
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.ordenCompra=noOrden.po;
@@ -417,7 +431,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
 			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
-			nEntrada.fechaSalidaPlanta = fechaSalidaPlanta;
+			nEntrada.fechaSalidaPlanta = new Date(dateFormat(fechaSalidaPlanta, "dd/mm/yyyy"));;
 			//console.log("testEntrada");
 			await nEntrada.save()
 				.then(async (entrada) => {
