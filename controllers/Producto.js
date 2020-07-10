@@ -105,6 +105,7 @@ async function getExistenciasAlmacen(almacen_id, producto) {
 		partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.almacen_id == almacen_id);
 
 		partidas.forEach(function (partida) {
+			console.log(almacen_id +"=="+ partida.entrada_id.almacen_id);
 			for (let x in partida.embalajesxSalir) {
 				if (existencias[x] == undefined) existencias[x] = 0;
 
@@ -182,9 +183,9 @@ function getByIDsClientesFiscales(req, res) {
 			res.status(500).send({ message: "Error", error: err });
 		});
 }
-
+/*
 function getByIDClienteFiscal(req, res) {
-	//console.log("Dennise was here");
+	console.log("Yael was here");
 	let _idClienteFiscal = req.params.idClienteFiscal;
 	let almacen_id=req.params.almacen_id;
 	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] },almacen_id:_almacen_id, statusReg: "ACTIVO" })
@@ -203,7 +204,7 @@ function getByIDClienteFiscal(req, res) {
 			return res.status(500).send(error);
 		});
 }
-
+*/
 async function getALM_XD(req, res) {
 	let _arrClientesFiscalesXD = req.query.arrClientesFiscales;
 
@@ -227,10 +228,11 @@ async function getALM_XD(req, res) {
 }
 
 function getByIDClienteFiscal(req, res) {
-	//console.log("Test");
-	let _idClienteFiscal = req.params.idClienteFiscal;
+	//console.log("Dennise was here");
+	let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
 	let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
-	//console.log(req.query.almacen_id);
+	console.log(req.query.almacen_id);
+
 	let arrProd=[];
 	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
 		.populate({
@@ -245,7 +247,6 @@ function getByIDClienteFiscal(req, res) {
 			//console.log(productos);
 			if (almacen_id != undefined && almacen_id != "") {
 				await Helpers.asyncForEach(productos, async function (producto) {
-
 					producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
 				});
 			}
@@ -253,8 +254,7 @@ function getByIDClienteFiscal(req, res) {
 					
 					if(almacen_id !== "")
 					{
-						//console.log(producto.almacen_id +"    "+almacen_id);
-						if(producto.almacen_id.toString() === almacen_id){
+						if(producto.almacen_id.find(element => element.toString() == almacen_id)){
 							//console.log(producto.almacen_id +"==="+almacen_id);
 							arrProd.push(producto);
 						}
@@ -272,6 +272,7 @@ function getByIDClienteFiscal(req, res) {
 			console.log(error)
 			return res.status(500).send(error);
 		});
+
 }
 
 async function save(req, res) {

@@ -168,6 +168,7 @@ app.get('/api/getSucursalALM', Interfaz_ALM_XD.getIDSucursalALMAPI);
 app.get('/api/partidasByIDs', Partida.getPartidasByIDs);
 app.get('/api/partida/:filtro', Partida.get);
 app.get('/api/partida/entrada/:entrada_id', Partida.getByEntrada);
+app.get('/api/partida/entradaSalida/:entrada_id', Partida.getByEntradaSalida);
 app.get('/api/partida/salida/:salida_id', Partida.getBySalida);
 app.get('/api/partida/salida/idcarga/:salida_id', Partida.getBySalidaConIDCarga);
 app.put('/api/partida/saveIDCarga', Partida.saveIDCarga);
@@ -270,4 +271,9 @@ app.post('/api/updateById', Entrada.updateById);
 
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
+
+//Tickets
+app.post('/api/saveTicket', Ticket.post);
+app.get('/api/getTicketsByEntrada', Ticket.getByEntrada);
+
 module.exports = app;

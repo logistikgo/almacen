@@ -45,11 +45,44 @@ async function getByEntrada(req, res) {
     let entrada_id = req.params.entrada_id;
 
     Partida.find({ entrada_id: entrada_id })
-        .then((partidas) => {
-            //console.log(partidas);
-            res.status(200).send(partidas);
+        .then(async (partidas) => {
+            console.log(partidas.length);
+            let arrpartida=[];
+            await Helper.asyncForEach(partidas, async function (partida) 
+            {
+                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL") && (partida.status == "ASIGNADA" || partida.status == "WAITINGARRIVAL"))
+                {
+                    arrpartida.push(partida);
+                }
+            });
+            console.log(arrpartida.length);
+            res.status(200).send(arrpartida);
         })
         .catch((error) => {
+            console.log(error);
+            res.status(500).send(error);
+        });
+}
+
+async function getByEntradaSalida(req, res) {
+    let entrada_id = req.params.entrada_id;
+    
+    Partida.find({ entrada_id: entrada_id })
+        .then(async (partidas) => {
+            console.log(partidas.length);
+            let arrpartida=[];
+            await Helper.asyncForEach(partidas, async function (partida) 
+            {
+                if(partida.tipo == "NORMAL" && partida.status == "ASIGNADA" )
+                {
+                    arrpartida.push(partida);
+                }
+            });
+            console.log(arrpartida.length);
+            res.status(200).send(arrpartida);
+        })
+        .catch((error) => {
+            console.log(error);
             res.status(500).send(error);
         });
 }
@@ -338,7 +371,7 @@ async function addSalida(salida, _id) {
 async function asignarEntrada(arrPartidas_id, entrada_id) {
     //console.log(arrPartidas_id);
     await Helper.asyncForEach(arrPartidas_id, async function (partida_id) {
-        await Partida.updateOne({ _id: partida_id }, { $set: { entrada_id: entrada_id, status: "ASIGNADA" } }).exec();
+        await Partida.updateOne({ _id: partida_id }, { $set: { entrada_id: entrada_id} }).exec();
         //console.log(partida_id);
     });
 }
@@ -407,7 +440,7 @@ async function getByProductoEmbalaje(req, res) {
      *
      */
     let partidas = await Partida
-        .find({ producto_id: producto_id, isEmpty: false })
+        .find({ producto_id: producto_id, isEmpty: false , tipo:"NORMAL",status:"ASIGNADA"})
         .populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id',
             {
                 clienteFiscal_id: clienteFiscal_id,
@@ -733,7 +766,7 @@ async function getPartidasByIDs(req, res) {
         let entradas_id = entradas.map(x => x._id);
 
         let partidas = await Partida
-            .find({ entrada_id: { $in: entradas_id }, tipo: tipo })
+            .find({ entrada_id: { $in: entradas_id } })
             .populate({
                 path: "entrada_id",
                 model: "Entrada",
@@ -812,7 +845,7 @@ async function getPartidasByIDs(req, res) {
                 {
                     resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                 }
-                if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true)
+                if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     arrPartidas.push(partida);
             });
         
@@ -954,7 +987,7 @@ async function getExcelByIDs(req, res) {
                 {
                     resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                 }
-                if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true)
+                if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     arrPartidas.push(partida);
             });
             //console.log("startexcel");
@@ -1018,6 +1051,7 @@ async function getExcelByIDs(req, res) {
                 indexheaders++;
             
         });
+        console.log("1")
         worksheet.cell(2, indexheaders).string('Fecha Ingreso').style(headersStyle);
         worksheet.cell(2, indexheaders+1).string('Fecha Alta Ingreso').style(headersStyle);
         worksheet.cell(2, indexheaders+2).string('Fecha Despacho').style(headersStyle);
@@ -1360,7 +1394,7 @@ async function posicionarAuto(id_pocision,id_partidas,nivelIndex)
             ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
         };
         partida.posiciones.push(jPosicionBahia);
-        partida.save();
+        await partida.save();
         //console.log(partida);
     
 }
@@ -1369,6 +1403,7 @@ module.exports = {
     post,
     addSalida,
     getByEntrada,
+    getByEntradaSalida,
     getBySalida,
     getBySalidaConIDCarga,
     saveIDCarga,

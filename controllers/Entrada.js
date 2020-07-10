@@ -15,6 +15,7 @@ const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const TiempoCargaDescarga = require('../controllers/TiempoCargaDescarga');
 const PlantaProductora = require('../models/PlantaProductora'); 
 const dateFormat = require('dateformat');
+const Ticket = require('../models/Ticket');
 function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
 }
@@ -34,7 +35,7 @@ async function get(req, res) {
 	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
 	var json = [];
-	//console.log(req.query);
+	console.log(_tipo);
 	if(_status != "FINALIZADO" && _status != null && _status !== "NINGUNO"){
 		filter = {
 			sucursal_id: _idSucursal,
@@ -285,10 +286,11 @@ async function saveEntradaBabel(req, res) {
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
 	var arrPartidas=[];
+	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
 	try{
 	for (var i=4; i<34 ; i++) {
-		if(req.body.Pedido[i].Clave !== undefined)
+		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined)
 		{
 		
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
@@ -299,8 +301,8 @@ async function saveEntradaBabel(req, res) {
 				producto_id:producto._id,
 				clave:producto.clave,
 				descripcion:producto.descripcion,
-				origen:"Babel",
-				tipo: "Arrival",
+				origen:"BABEL",
+				tipo: "NORMAL",
     			status: "WAITINGARRIVAL",
 				embalajesEntrada: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
@@ -311,24 +313,42 @@ async function saveEntradaBabel(req, res) {
 	        	valor:0
 	        }
 	       // console.log(data.InfoPedidos)
-	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden)))
+	       let countEntradas=await Entrada.find({"ordenCompra":req.body.Pedido[i].NoOrden,"factura":req.body.Pedido[i].Factura}).exec();
+    		if(countEntradas.length <1)
+    		{
+		        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura)))
 	    		{
-	    			console.log("yes");
-	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden));
+	    			//console.log("yes");
+	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura));
 	    			arrPO[index].arrPartidas.push(data)
 		    	}
 		        else{
-		        	console.log("NO");arrPartidas.push(data);
-		        	const PO={
-					po:req.body.Pedido[i].NoOrden,
-					factura:req.body.Pedido[i].Factura,
-		        	arrPartidas:[]
-		        	}
-		        	PO.arrPartidas.push(data)
-	    			arrPO.push(PO)  
+		        	//console.log("NO");
+		        	
+			        	arrPartidas.push(data);
+			        	const PO={
+						po:req.body.Pedido[i].NoOrden,
+						factura:req.body.Pedido[i].Factura,
+			        	arrPartidas:[]
+			        	}
+			        	PO.arrPartidas.push(data)
+		    			arrPO.push(PO);
+		    		}
+		    		
 	    		} 
-	        //
+    		if(countEntradas.length >0)
+    		{
+    			resORDENES=resORDENES+req.body.Pedido[i].NoOrden+"\n";
+    		}
+	        
     	}
+	}
+	if(resORDENES != "" && arrPO.length<1)
+	{
+
+		//arrPO=[];
+		return res.status(500).send("Ya existe las Ordenes:\n" + resORDENES);
+		
 	}
 	/*console.log(arrPO);
 	
@@ -355,6 +375,7 @@ async function saveEntradaBabel(req, res) {
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="PLANTA EXPORTADORA / MANUFACTURING PLANT");
 		let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="FECHA / DATE");
+		let fechaSalidaPlanta=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
 		let fechaesperada=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado);
 		//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
 		if (partidas && partidas.length > 0) {
@@ -380,8 +401,8 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.remolque = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.referencia = noOrden.factura;
+			nEntrada.factura = noOrden.factura;
 			nEntrada.item = noOrden.factura;
-
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="TRANSPORTISTA / CARRIER");
 			nEntrada.transportista = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="CONDUCTOR / DRIVE");
@@ -396,6 +417,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
 			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
+			nEntrada.fechaSalidaPlanta = fechaSalidaPlanta;
 			//console.log("testEntrada");
 			await nEntrada.save()
 				.then(async (entrada) => {
@@ -608,9 +630,9 @@ function getEntradasReporte(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
 	})
 	.populate({
 		path: 'partidas',
@@ -684,7 +706,7 @@ function getEntradasReporte(req, res) {
 				{
 					resFecha = new Date(fechaAlerta2)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta2)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
 				}
-				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
+				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio=="" && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA")  && elem.status=="ASIGNADA"){
 					arrPartidas.push(elem);
 				}
 				else{
@@ -738,7 +760,7 @@ function getEntradasReporte(req, res) {
 					{
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
 					}
-					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
+					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true  && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA") && elem.status=="ASIGNADA")
 					{	
 						arrPartidas.push(elem);
 					}
@@ -815,9 +837,9 @@ function getExcelCaducidades(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
 	})
 	.populate({
 		path: 'partidas',
@@ -889,7 +911,7 @@ function getExcelCaducidades(req, res) {
 				{
 					resFecha = new Date(dateFormat(fechaAlerta2, "mm/dd/yyyy"))>=new Date(dateFormat(req.query.fechaInicio, "mm/dd/yyyy")) && new Date(dateFormat(fechaAlerta2, "mm/dd/yyyy"))<new Date(dateFormat(req.query.fechaFinal, "mm/dd/yyyy"));
 				}
-				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""){
+				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio==""  && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA") && elem.status=="ASIGNADA"){
 					arrPartidas.push(elem);
 				}
 				else{
@@ -942,7 +964,7 @@ function getExcelCaducidades(req, res) {
 						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
 					}
 					//console.log(elem.isEmpty +"== false &&"+ resClasificacion+ "== true &&"+ resSubclasificacion +"== true &&"+ resFecha+"==true &&" +resAlerta2+"==true &&"+ resAlerta1+"==true &&"+ resAgeing+" == true && "+resClave+"==true")
-					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true)
+					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true  && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA") && elem.status=="ASIGNADA")
 					{	
 						arrPartidas.push(elem);
 					}
@@ -1051,6 +1073,7 @@ function getExcelCaducidades(req, res) {
         	let fechacalculada2Dias="";
 			let tempx ="";
 			let GarFresFecha=0;
+			let orginalshippingdays=0;
 			let GarFresFechaStyle = workbook.createStyle({
 	          font: {
 	            bold: true,
@@ -1092,6 +1115,8 @@ function getExcelCaducidades(req, res) {
 	            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
 	            	if(partidas.producto_id.vidaAnaquel)
 	            		leyenda = partidas.producto_id.vidaAnaquel- diasEnAlm - 1
+	            	if(partidas.entrada_id.fechaSalidaPlanta != undefined)
+	            		orginalshippingdays=Math.abs(Math.floor((partidas.entrada_id.fechaSalidaPlanta.getTime()-partidas.entrada_id.fechaEntrada.getTime())/ 86400000)-1)
 	        	}
 	        	if (partidas.fechaCaducidad !== undefined && partidas.entrada_id.DiasTraslado !== undefined) {
 	                let tiempoTraslado = partidas.producto_id.vidaAnaquel - partidas.entrada_id.DiasTraslado-1;
@@ -1199,7 +1224,7 @@ function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+6).number(partidas.entrada_id ? partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0:0);
            	worksheet.cell(i, indexbody+7).string(fechaEspRecibo);
            	worksheet.cell(i, indexbody+8).number(1+diasEnAlm);
-           	worksheet.cell(i, indexbody+9).number(leyenda);
+           	worksheet.cell(i, indexbody+9).number(orginalshippingdays);
            	worksheet.cell(i, indexbody+10).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
            	worksheet.cell(i, indexbody+11).number(Math.abs(Aging));
            	//worksheet.cell(i, indexbody+11).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
@@ -1651,15 +1676,17 @@ async function posicionarPrioridades(req, res) {
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaEntrada=new Date(Date.now()-(5*3600000));
-			entrada.save().then(async (entrada) => {
-					//console.log("testpartidas");
-					//console.log(partidas);
+			await entrada.save().then(async (entrada) => {
+					/*console.log("testpartidas");
+					console.log(resultpartidas);
+					console.log("/------------------/");*/
 					for (let itemPartida of reOrderPartidas) {
 						//console.log("testMovimientos");
-						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+						let partidait = await PartidaModel.findOne({ _id: itemPartida._id });
+						//console.log(partidait.posiciones);
+						await MovimientoInventario.saveEntrada(	partidait, entrada.id);
 					}
-					/*console.log(entrada);
-					console.log("/------------------/")*/
+					/*console.log(entrada);*/
 			});
 		    if(respuesta<1)
 				return res.status(200).send(entrada);
@@ -1677,9 +1704,17 @@ async function posicionarPrioridades(req, res) {
 function updateRemision(req, res) {
 	let entrada_id = req.body.entrada_id;
 	var infoPartida = req.body.partida;
-
 	let newPartida = new PartidaModel(infoPartida);
+
 	newPartida.save().then((partida) => {
+		let ticket = new Ticket();
+		ticket.partida_id = partida._id;
+		ticket.entrada_id = entrada_id;
+		
+		ticket.save().then((resTicket) => {
+			console.log(resTicket._id);
+		});
+		
 		var arrPartidas = [];
 		Entrada.findOne({_id: entrada_id}).then((entrada) => {
 			arrPartidas = entrada.partidas;
