@@ -39,7 +39,7 @@ async function saveSalida(itemPartida, salida_id) {
 			nivel: posicionxSalida.nivel,
 			embalajes: posicionxSalida.embalajes
 		};
-		console.log(itemPartida.producto_id._id);
+		//console.log(itemPartida.producto_id._id);
 
 		await updateExistenciaPosicion(-1, jsonFormatPosicion, itemPartida.producto_id);
 	});
@@ -63,7 +63,7 @@ async function saveSalida(itemPartida, salida_id) {
 }
 
 async function saveEntrada(itemPartida, entrada_id) {
-
+	//console.log(itemPartida);
 	//Nueva instancia del modelo Movimiento
 	let nMovimiento = new MovimientoInventario();
 
@@ -90,8 +90,9 @@ async function saveEntrada(itemPartida, entrada_id) {
 	}
 
 	nMovimiento.referencia = entrada.referencia ? entrada.referencia : "";
-
+	//console.log(itemPartida);
 	if (entrada.status != "SIN_POSICIONAR") {
+		
 		await Helper.asyncForEach(itemPartida.posiciones, async function (posicionxPartida) {
 			let jsonFormatPosicion = {
 				posicion_id: posicionxPartida.posicion_id,
@@ -100,7 +101,7 @@ async function saveEntrada(itemPartida, entrada_id) {
 				pesoBruto: posicionxPartida.pesoBruto,
 				pesoNeto: posicionxPartida.pesoNeto
 			};
-
+			//console.log(posicionxPartida);
 			await updateExistenciaPosicion(1, jsonFormatPosicion, itemPartida.producto_id);
 		});
 	}
@@ -239,10 +240,10 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
 	 */
 	//console.log(signo);
-	//console.log(posicionxPartida);
+	console.log(posicionxPartida);
 	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
 	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
-	//console.log(nivel);
+	console.log(nivel);
 	//console.log(nivel.productos.find((x) => {
 	//	console.log(x.producto_id.toString());
 	//	console.log(producto_id.toString());
@@ -282,7 +283,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 		nivel.isCandadoDisponibilidad = true;
 	}
 
-	//console.log(posicion.niveles);
+	console.log(posicion.niveles);
 
 	let item = {
 		niveles: posicion.niveles

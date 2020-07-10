@@ -35,7 +35,7 @@ async function get(req, res) {
 	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
 	var json = [];
-	//console.log(req.query);
+	console.log(_tipo);
 	if(_status != "FINALIZADO" && _status != null && _status !== "NINGUNO"){
 		filter = {
 			sucursal_id: _idSucursal,
@@ -313,37 +313,41 @@ async function saveEntradaBabel(req, res) {
 	        	valor:0
 	        }
 	       // console.log(data.InfoPedidos)
-	        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden)))
+	       let countEntradas=await Entrada.find({"ordenCompra":req.body.Pedido[i].NoOrden,"factura":req.body.Pedido[i].Factura}).exec();
+    		if(countEntradas.length <1)
     		{
-    			//console.log("yes");
-    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden));
-    			arrPO[index].arrPartidas.push(data)
-	    	}
-	        else{
-	        	//console.log("NO");
-		        	arrPartidas.push(data);
-		        	const PO={
-					po:req.body.Pedido[i].NoOrden,
-					factura:req.body.Pedido[i].Factura,
-		        	arrPartidas:[]
-		        	}
-		        	PO.arrPartidas.push(data)
-	    			arrPO.push(PO);
-
-	    		let countEntradas=await Entrada.find({"ordenCompra":req.body.Pedido[i].NoOrden}).exec();
-	    		if(countEntradas.length >0)
+		        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura)))
 	    		{
-	    			resORDENES=resORDENES+req.body.Pedido[i].NoOrden+"\n";
-	    		}
-    		} 
+	    			//console.log("yes");
+	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura));
+	    			arrPO[index].arrPartidas.push(data)
+		    	}
+		        else{
+		        	//console.log("NO");
+		        	
+			        	arrPartidas.push(data);
+			        	const PO={
+						po:req.body.Pedido[i].NoOrden,
+						factura:req.body.Pedido[i].Factura,
+			        	arrPartidas:[]
+			        	}
+			        	PO.arrPartidas.push(data)
+		    			arrPO.push(PO);
+		    		}
+		    		
+	    		} 
+    		if(countEntradas.length >0)
+    		{
+    			resORDENES=resORDENES+req.body.Pedido[i].NoOrden+"\n";
+    		}
 	        
     	}
 	}
-	if(resORDENES != "")
+	if(resORDENES != "" && arrPO.length<1)
 	{
 
-		arrPo=[];
-		return res.status(200).send("Ya existe las Ordenes:\n" + resORDENES);
+		//arrPO=[];
+		return res.status(500).send("Ya existe las Ordenes:\n" + resORDENES);
 		
 	}
 	/*console.log(arrPO);
@@ -397,8 +401,8 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.remolque = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			
 			nEntrada.referencia = noOrden.factura;
+			nEntrada.factura = noOrden.factura;
 			nEntrada.item = noOrden.factura;
-
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="TRANSPORTISTA / CARRIER");
 			nEntrada.transportista = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido =="CONDUCTOR / DRIVE");
@@ -1672,15 +1676,17 @@ async function posicionarPrioridades(req, res) {
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaEntrada=new Date(Date.now()-(5*3600000));
-			entrada.save().then(async (entrada) => {
-					//console.log("testpartidas");
-					//console.log(partidas);
+			await entrada.save().then(async (entrada) => {
+					/*console.log("testpartidas");
+					console.log(resultpartidas);
+					console.log("/------------------/");*/
 					for (let itemPartida of reOrderPartidas) {
 						//console.log("testMovimientos");
-						await MovimientoInventario.saveEntrada(itemPartida, entrada.id);
+						let partidait = await PartidaModel.findOne({ _id: itemPartida._id });
+						//console.log(partidait.posiciones);
+						await MovimientoInventario.saveEntrada(	partidait, entrada.id);
 					}
-					/*console.log(entrada);
-					console.log("/------------------/")*/
+					/*console.log(entrada);*/
 			});
 		    if(respuesta<1)
 				return res.status(200).send(entrada);

@@ -50,7 +50,7 @@ async function getByEntrada(req, res) {
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
-                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL") && partida.status == "ASIGNADA")
+                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL") && (partida.status == "ASIGNADA" || partida.status == "WAITINGARRIVAL"))
                 {
                     arrpartida.push(partida);
                 }
@@ -348,7 +348,7 @@ async function addSalida(salida, _id) {
 async function asignarEntrada(arrPartidas_id, entrada_id) {
     //console.log(arrPartidas_id);
     await Helper.asyncForEach(arrPartidas_id, async function (partida_id) {
-        await Partida.updateOne({ _id: partida_id }, { $set: { entrada_id: entrada_id, status: "ASIGNADA" } }).exec();
+        await Partida.updateOne({ _id: partida_id }, { $set: { entrada_id: entrada_id} }).exec();
         //console.log(partida_id);
     });
 }
@@ -1371,7 +1371,7 @@ async function posicionarAuto(id_pocision,id_partidas,nivelIndex)
             ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
         };
         partida.posiciones.push(jPosicionBahia);
-        partida.save();
+        await partida.save();
         //console.log(partida);
     
 }

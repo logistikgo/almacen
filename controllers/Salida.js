@@ -413,7 +413,8 @@ function getReportePartidas(req, res) {
 					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes,
 					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
-					producto_id:partida.producto_id
+					producto_id:partida.producto_id,
+					horaSello: salida.horaSello
 				}
 				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == "" && paramsSalida.embalajes!= undefined){
 					arrPartidas.push(paramsSalida);
@@ -597,7 +598,8 @@ async function getExcelSalidas(req, res) {
 					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes,
 					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
-					producto_id:partida.producto_id
+					producto_id:partida.producto_id,
+					horaSello: salida.horaSello
 				}
 				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == "" && paramsSalida.embalajes!= undefined){
 					arrPartidas.push(paramsSalida);
@@ -738,7 +740,8 @@ async function getExcelSalidas(req, res) {
         });
 
 		let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
-        let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
+		let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
+		let formatofechaHora=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yy H:M" : "dd/mm/yy H:M";
         let headercajas=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Despachados " : "cajas";
         let headerCajaspedido=clientefiscal._id == "5e33420d22b5651aecafe934" ? "Corrugado Solicitados" : "cajas Pedidas";
       	
@@ -772,10 +775,11 @@ async function getExcelSalidas(req, res) {
 		worksheet.cell(2, indexheaders+1).string('In Full').style(headersStyle);
 		worksheet.cell(2, indexheaders+2).string('Fecha Carga Programada').style(headersStyle);
 		worksheet.cell(2, indexheaders+3).string('Fecha Salida').style(headersStyle);
-		worksheet.cell(2, indexheaders+4).string('Fecha Caducidad').style(headersStyle);
-		worksheet.cell(2, indexheaders+5).string('Retraso').style(headersStyle);
-		worksheet.cell(2, indexheaders+6).string('On Time').style(headersStyle);
-		worksheet.cell(2, indexheaders+7).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders+4).string('Fecha/Hora Sello').style(headersStyle);
+		worksheet.cell(2, indexheaders+5).string('Fecha Caducidad').style(headersStyle);
+		worksheet.cell(2, indexheaders+6).string('Retraso').style(headersStyle);
+		worksheet.cell(2, indexheaders+7).string('On Time').style(headersStyle);
+		worksheet.cell(2, indexheaders+8).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
         arrPartidas.sort(function(a, b) {
@@ -879,8 +883,8 @@ async function getExcelSalidas(req, res) {
         	//console.log(partidas.fechaReciboRemision);
         	worksheet.cell(i, indexbody+2).string(partidas.fechaReciboRemision ? partidas.fechaReciboRemision!="SIN ASIGNAR" ? dateFormat(new Date(partidas.fechaReciboRemision), formatofecha):"SIN ASIGNAR":"");
 			worksheet.cell(i, indexbody+3).string(partidas.fechaSalida ? dateFormat(partidas.fechaSalida, formatofecha):"");
-			//console.log(dateFormat(partidas.fechaCaducidad, formatofecha));
-			worksheet.cell(i, indexbody+4).string(partidas.fechaCaducidad ? dateFormat(partidas.fechaCaducidad, formatofecha): "");
+			worksheet.cell(i, indexbody+4).string(partidas.horaSello ? dateFormat(partidas.horaSello, formatofechaHora):"SIN ASIGNAR");
+			worksheet.cell(i, indexbody+5).string(partidas.fechaCaducidad ? dateFormat(partidas.fechaCaducidad, formatofecha): "");
         	ontime =0;
 			if (partidas.fechaReciboRemision !== "SIN ASIGNAR" && partidas.fechaSalida) {
 			    fRecibo = partidas.fechaReciboRemision.getTime();
@@ -926,13 +930,13 @@ async function getExcelSalidas(req, res) {
 				  },
 		        });
             }
-			worksheet.cell(i, indexbody+5).number(ontime);
-           	worksheet.cell(i, indexbody+6).string(resontime).style(OntimeStyle);
+			worksheet.cell(i, indexbody+6).number(ontime);
+           	worksheet.cell(i, indexbody+7).string(resontime).style(OntimeStyle);
            
             let res=""
             if(partidas.posiciones.length === 1) 
             	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
-            worksheet.cell(i, indexbody+7).string(res);
+            worksheet.cell(i, indexbody+8).string(res);
             i++;
         });
         workbook.write('ReporteSali'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
