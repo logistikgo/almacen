@@ -305,11 +305,11 @@ async function saveEntradaBabel(req, res) {
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
 			if(producto==undefined)
 				return res.status(200).send("no existe item: "+req.body.Pedido[i].Clave);
-			//console.log(req.body.Pedido[i].Caducidad)
-			let fechaCaducidadTemp= req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(5, 7)+"/"+req.body.Pedido[i].Caducidad.slice(8, 10));
-	        if(isNaN(fechaCaducidadTemp))
+			let fechaCaducidadTemp=req.body.Pedido[i].Caducidad.length > 8 ? req.body.Pedido[i].Caducidad.replace(/M/g, "") :req.body.Pedido[i].Caducidad;
+			let fechaCaducidadRes= fechaCaducidadTemp.length == 8 ? Date.parse(fechaCaducidadTemp.slice(0, 4)+"/"+fechaCaducidadTemp.slice(4, 6)+"/"+fechaCaducidadTemp.slice(6, 8)):Date.parse(fechaCaducidadTemp.slice(0, 4)+"/"+fechaCaducidadTemp.slice(5, 7)+"/"+fechaCaducidadTemp.slice(8, 10));
+			if(isNaN(fechaCaducidadRes))
 	        {
-	        	fechaCaducidadTemp= req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 2)+"/"+req.body.Pedido[i].Caducidad.slice(2, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 2)+"/"+req.body.Pedido[i].Caducidad.slice(3, 5)+"/"+req.body.Pedido[i].Caducidad.slice(6, 10));
+	        	fechaCaducidadRes= fechaCaducidadTemp.length == 8 ? Date.parse(fechaCaducidadTemp.slice(0, 2)+"/"+fechaCaducidadTemp.slice(2, 4)+"/"+fechaCaducidadTemp.slice(4, 8)):Date.parse(fechaCaducidadTemp.slice(0, 2)+"/"+fechaCaducidadTemp.slice(3, 5)+"/"+fechaCaducidadTemp.slice(6, 10));
 	        
 	        }
 	        //console.log(producto.clave);
@@ -327,7 +327,7 @@ async function saveEntradaBabel(req, res) {
 				embalajesEntrada: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	fechaProduccion:new Date(fechaProducionplanta),
-	        	fechaCaducidad: fechaCaducidadTemp,
+	        	fechaCaducidad: fechaCaducidadRes,
 	        	lote:req.body.Pedido[i].Lote,
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
