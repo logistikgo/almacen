@@ -211,7 +211,16 @@ async function save(req, res) {
 	nEntrada.folio = await getNextID();
 	nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
-
+	let countEntradas=await Entrada.find({"referencia":nEntrada.referencia}).exec();
+	if(countEntradas.length>0)
+	{
+		return res.status(409).send("Referencia ya existe");
+	}
+	countEntradas=await Entrada.find({"factura":nEntrada.referencia}).exec();
+	if(countEntradas.length>0)
+	{
+		return res.status(409).send("Referencia ya existe");
+	}
 	await nEntrada.save()
 		.then(async (entrada) => {
 			for (let itemPartida of req.body.partidasJson) {
@@ -296,14 +305,18 @@ async function saveEntradaBabel(req, res) {
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
 			if(producto==undefined)
 				return res.status(200).send("no existe item: "+req.body.Pedido[i].Clave);
-			//console.log(req.body.Pedido[i].Clave)
+			//console.log(req.body.Pedido[i].Caducidad)
 			let fechaCaducidadTemp= req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 6)+"/"+req.body.Pedido[i].Caducidad.slice(6, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 4)+"/"+req.body.Pedido[i].Caducidad.slice(5, 7)+"/"+req.body.Pedido[i].Caducidad.slice(8, 10));
 	        if(isNaN(fechaCaducidadTemp))
 	        {
 	        	fechaCaducidadTemp= req.body.Pedido[i].Caducidad.length == 8 ? Date.parse(req.body.Pedido[i].Caducidad.slice(0, 2)+"/"+req.body.Pedido[i].Caducidad.slice(2, 4)+"/"+req.body.Pedido[i].Caducidad.slice(4, 8)):Date.parse(req.body.Pedido[i].Caducidad.slice(0, 2)+"/"+req.body.Pedido[i].Caducidad.slice(3, 5)+"/"+req.body.Pedido[i].Caducidad.slice(6, 10));
 	        
 	        }
-	        console.log(fechaCaducidadTemp);
+	        //console.log(producto.clave);
+	        let indexFecha=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
+			let fechaProducionplanta=Date.parse(req.body.Infoplanta[indexFecha+1].InfoPedido);
+			fechaProducionplanta = new Date (fechaProducionplanta).getTime()-(7*3600000);
+	       // console.log(dateFormat(fechaCaducidadTemp, "dd/mm/yy") );
 			const data={
 				producto_id:producto._id,
 				clave:producto.clave,
@@ -313,6 +326,7 @@ async function saveEntradaBabel(req, res) {
     			status: "WAITINGARRIVAL",
 				embalajesEntrada: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
+	        	fechaProduccion:new Date(fechaProducionplanta),
 	        	fechaCaducidad: fechaCaducidadTemp,
 	        	lote:req.body.Pedido[i].Lote,
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
@@ -380,15 +394,20 @@ async function saveEntradaBabel(req, res) {
 	    console.log(arrPartidas_id);*/
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA/MANUFACTURINGPLANT");
 	    //console.log(indexInfopedido);
-		let planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
+	    let planta="";
+	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA")
+		 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
+		else
+			planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		if(planta==null)
 		{
 			 indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
 			 planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		}
+		console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		let fechaSalidaPlanta=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
-		//console.log(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
+		console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
 		let fechaesperada=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado+1);
 
 		console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
@@ -398,7 +417,8 @@ async function saveEntradaBabel(req, res) {
 
 			let nEntrada = new Entrada();
 
-			nEntrada.fechaEntrada = new Date(dateFormat(fechaesperada, "dd/mm/yyyy"));
+			nEntrada.fechaEntrada = new Date(fechaesperada);
+			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
 			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
 				return total + valor;
 			});
