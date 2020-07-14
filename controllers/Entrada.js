@@ -878,9 +878,9 @@ function getExcelCaducidades(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
 	})
 	.populate({
 		path: 'partidas',
@@ -1068,9 +1068,10 @@ function getExcelCaducidades(req, res) {
         worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
         worksheet.cell(2, 1).string('Lote').style(headersStyle);
 		worksheet.cell(2, 2).string('Folio entrada').style(headersStyle);
-		worksheet.cell(2, 3).string('Clave').style(headersStyle);
-		worksheet.cell(2, 4).string('Descripción').style(headersStyle);
-		let indexheaders=5;
+		worksheet.cell(2, 3).string('Tipo').style(headersStyle);
+		worksheet.cell(2, 4).string('Clave').style(headersStyle);
+		worksheet.cell(2, 5).string('Descripción').style(headersStyle);
+		let indexheaders=6;
 		clienteEmbalaje.forEach(Embalaje=>{ 
 			let index=ArrayEmbalaje.findIndex(obj=> (obj.clave == Embalaje));
 				if(ArrayEmbalaje[index].clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
@@ -1230,9 +1231,10 @@ function getExcelCaducidades(req, res) {
 			}
             worksheet.cell(i, 1).string(partidas.lote ? partidas.lote:"");
             worksheet.cell(i, 2).string(partidas.entrada_id ? partidas.entrada_id.stringFolio  ? partidas.entrada_id.stringFolio :"":"");
-           	worksheet.cell(i, 3).string(partidas.clave ? partidas.clave:"");
-           	worksheet.cell(i, 4).string(partidas.descripcion ? partidas.descripcion:"");
-           	let indexbody=5;
+            worksheet.cell(i, 3).string(partidas.entrada_id ? partidas.entrada_id.tipo  ? partidas.entrada_id.tipo :"":"");
+           	worksheet.cell(i, 4).string(partidas.clave ? partidas.clave:"");
+           	worksheet.cell(i, 5).string(partidas.descripcion ? partidas.descripcion:"");
+           	let indexbody=6;
            	clienteEmbalaje.forEach(emb=>
            	{	
            		let tarimas =0
