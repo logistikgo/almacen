@@ -922,7 +922,7 @@ async function getExcelByIDs(req, res) {
                     model: "ClienteFiscal",
                     select: 'nombreCorto nombreComercial razonSocial fechAlta'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
             })
             .populate({
                 path: "entrada_id",
@@ -932,7 +932,7 @@ async function getExcelByIDs(req, res) {
                     model: "Sucursal",
                     select: 'nombre fechAlta'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
             })
             .populate({
                 path: "entrada_id",
@@ -942,7 +942,7 @@ async function getExcelByIDs(req, res) {
                     model: "Almacen",
                     select: 'nombre fechAlta',
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
             })
             .populate({
                 path: 'salidas_id.salida_id',
@@ -1034,16 +1034,17 @@ async function getExcelByIDs(req, res) {
         worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
         worksheet.cell(2, 1).string('FolioEntrada').style(headersStyle);
         worksheet.cell(2, 2).string('FolioSalida').style(headersStyle);
-        worksheet.cell(2, 3).string('Item').style(headersStyle);
-        worksheet.cell(2, 4).string('Referencia').style(headersStyle);
-        worksheet.cell(2, 5).string('Clave').style(headersStyle);
-        worksheet.cell(2, 6).string('Orden compra').style(headersStyle);
-        worksheet.cell(2, 7).string('Lote').style(headersStyle);
-        worksheet.cell(2, 8).string('Producto').style(headersStyle);
-        worksheet.cell(2, 9).string('subclasificacion').style(headersStyle);
+        worksheet.cell(2, 3).string('Tipo').style(headersStyle);
+        worksheet.cell(2, 4).string('Item').style(headersStyle);
+        worksheet.cell(2, 5).string('Referencia').style(headersStyle);
+        worksheet.cell(2, 6).string('Clave').style(headersStyle);
+        worksheet.cell(2, 7).string('Orden compra').style(headersStyle);
+        worksheet.cell(2, 8).string('Lote').style(headersStyle);
+        worksheet.cell(2, 9).string('Producto').style(headersStyle);
+        worksheet.cell(2, 10).string('subclasificacion').style(headersStyle);
         /*worksheet.cell(2, 6).string('T.').style(headersStyle);
         worksheet.cell(2, 7).string('Sacos.').style(headersStyle);*/
-        let indexheaders=10;
+        let indexheaders=11;
         clienteEmbalaje.forEach(Embalaje=>{ 
             let index=ArrayEmbalaje.findIndex(obj=> (obj.clave == Embalaje));
                 if(ArrayEmbalaje[index].clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
@@ -1096,15 +1097,16 @@ async function getExcelByIDs(req, res) {
             }
             worksheet.cell(i, 1).string(partida.entrada_id.stringFolio ? partida.entrada_id.stringFolio:"");
             worksheet.cell(i, 2).string(partida.salidas_id.length > 0  ? partida.salidas_id[0].salida_id.stringFolio: "");
-            worksheet.cell(i, 3).string(partida.entrada_id.item ? partida.entrada_id.item:"");
-            worksheet.cell(i, 4).string(partida.entrada_id.referencia ? partida.entrada_id.referencia :"");
-            worksheet.cell(i, 5).string(partida.clave ? partida.clave:"");
-            worksheet.cell(i, 6).string(partida.entrada_id.ordenCompra ? partida.entrada_id.ordenCompra:"");
-            worksheet.cell(i, 7).string(partida.lote ? partida.lote:"");
-            worksheet.cell(i, 8).string(partida.descripcion ? partida.descripcion:""); 
-            worksheet.cell(i, 9).string(partida.producto_id.subclasificacion ? partida.producto_id.subclasificacion:"");
+            worksheet.cell(i, 3).string(partida.entrada_id.tipo ? partida.entrada_id.tipo:"");
+            worksheet.cell(i, 4).string(partida.entrada_id.item ? partida.entrada_id.item:"");
+            worksheet.cell(i, 5).string(partida.entrada_id.referencia ? partida.entrada_id.referencia :"");
+            worksheet.cell(i, 6).string(partida.clave ? partida.clave:"");
+            worksheet.cell(i, 7).string(partida.entrada_id.ordenCompra ? partida.entrada_id.ordenCompra:"");
+            worksheet.cell(i, 8).string(partida.lote ? partida.lote:"");
+            worksheet.cell(i, 9).string(partida.descripcion ? partida.descripcion:""); 
+            worksheet.cell(i, 10).string(partida.producto_id.subclasificacion ? partida.producto_id.subclasificacion:"");
 
-            let indexbody=10;
+            let indexbody=11;
             clienteEmbalaje.forEach(emb=>
             {   
                 let tarimas =0
