@@ -214,12 +214,12 @@ async function save(req, res) {
 	let countEntradas=await Entrada.find({"referencia":nEntrada.referencia}).exec();
 	if(countEntradas.length>0)
 	{
-		return res.status(409).send("Referencia ya existe");
+		return res.status(203).send({error:"Referencia ya existe"});
 	}
 	countEntradas=await Entrada.find({"factura":nEntrada.referencia}).exec();
 	if(countEntradas.length>0)
 	{
-		return res.status(409).send("Referencia ya existe");
+		return res.status(203).send({error:"Referencia ya existe"});
 	}
 	await nEntrada.save()
 		.then(async (entrada) => {
@@ -671,9 +671,9 @@ function getEntradasReporte(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
 	})
 	.populate({
 		path: 'partidas',
@@ -1716,7 +1716,7 @@ async function posicionarPrioridades(req, res) {
 		    });
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
-		    entrada.fechaEntrada=new Date(Date.now()-(5*3600000));
+		    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
 			await entrada.save().then(async (entrada) => {
 					/*console.log("testpartidas");
 					console.log(resultpartidas);
@@ -1775,9 +1775,15 @@ function updateRemision(req, res) {
 function updateStatus(req, res) {
 	let _id = req.body.entrada_id;
 	let newStatus = req.body.status;
-	//console.log(newStatus);
-	
-	Entrada.updateOne({_id: _id}, { $set: { status: newStatus }}).then((data) => {
+	console.log(newStatus);
+
+	let today = new Date(Date.now()-(5*3600000));
+	let datos ={ status: newStatus}
+	if(newStatus=="ARRIVED")
+	{
+		datos.fechaEntrada=today
+	}
+	Entrada.updateOne({_id: _id}, { $set: datos}).then((data) => {
 		res.status(200).send(data);
 	})
 	.catch((error) => {
