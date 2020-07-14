@@ -214,12 +214,12 @@ async function save(req, res) {
 	let countEntradas=await Entrada.find({"referencia":nEntrada.referencia}).exec();
 	if(countEntradas.length>0)
 	{
-		return res.status(409).send("Referencia ya existe");
+		return res.status(203).send({error:"Referencia ya existe"});
 	}
 	countEntradas=await Entrada.find({"factura":nEntrada.referencia}).exec();
 	if(countEntradas.length>0)
 	{
-		return res.status(409).send("Referencia ya existe");
+		return res.status(203).send({error:"Referencia ya existe"});
 	}
 	await nEntrada.save()
 		.then(async (entrada) => {
@@ -671,9 +671,9 @@ function getEntradasReporte(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
 	})
 	.populate({
 		path: 'partidas',
@@ -878,9 +878,9 @@ function getExcelCaducidades(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
 	})
 	.populate({
 		path: 'partidas',
@@ -1068,9 +1068,10 @@ function getExcelCaducidades(req, res) {
         worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
         worksheet.cell(2, 1).string('Lote').style(headersStyle);
 		worksheet.cell(2, 2).string('Folio entrada').style(headersStyle);
-		worksheet.cell(2, 3).string('Clave').style(headersStyle);
-		worksheet.cell(2, 4).string('Descripción').style(headersStyle);
-		let indexheaders=5;
+		worksheet.cell(2, 3).string('Tipo').style(headersStyle);
+		worksheet.cell(2, 4).string('Clave').style(headersStyle);
+		worksheet.cell(2, 5).string('Descripción').style(headersStyle);
+		let indexheaders=6;
 		clienteEmbalaje.forEach(Embalaje=>{ 
 			let index=ArrayEmbalaje.findIndex(obj=> (obj.clave == Embalaje));
 				if(ArrayEmbalaje[index].clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
@@ -1230,9 +1231,10 @@ function getExcelCaducidades(req, res) {
 			}
             worksheet.cell(i, 1).string(partidas.lote ? partidas.lote:"");
             worksheet.cell(i, 2).string(partidas.entrada_id ? partidas.entrada_id.stringFolio  ? partidas.entrada_id.stringFolio :"":"");
-           	worksheet.cell(i, 3).string(partidas.clave ? partidas.clave:"");
-           	worksheet.cell(i, 4).string(partidas.descripcion ? partidas.descripcion:"");
-           	let indexbody=5;
+            worksheet.cell(i, 3).string(partidas.entrada_id ? partidas.entrada_id.tipo  ? partidas.entrada_id.tipo :"":"");
+           	worksheet.cell(i, 4).string(partidas.clave ? partidas.clave:"");
+           	worksheet.cell(i, 5).string(partidas.descripcion ? partidas.descripcion:"");
+           	let indexbody=6;
            	clienteEmbalaje.forEach(emb=>
            	{	
            		let tarimas =0
@@ -1716,7 +1718,7 @@ async function posicionarPrioridades(req, res) {
 		    });
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
-		    entrada.fechaEntrada=new Date(Date.now()-(5*3600000));
+		    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
 			await entrada.save().then(async (entrada) => {
 					/*console.log("testpartidas");
 					console.log(resultpartidas);
@@ -1775,9 +1777,15 @@ function updateRemision(req, res) {
 function updateStatus(req, res) {
 	let _id = req.body.entrada_id;
 	let newStatus = req.body.status;
-	//console.log(newStatus);
-	
-	Entrada.updateOne({_id: _id}, { $set: { status: newStatus }}).then((data) => {
+	console.log(newStatus);
+
+	let today = new Date(Date.now()-(5*3600000));
+	let datos ={ status: newStatus}
+	if(newStatus=="ARRIVED")
+	{
+		datos.fechaEntrada=today
+	}
+	Entrada.updateOne({_id: _id}, { $set: datos}).then((data) => {
 		res.status(200).send(data);
 	})
 	.catch((error) => {
