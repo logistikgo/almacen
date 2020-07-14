@@ -430,7 +430,7 @@ async function getByProductoEmbalaje(req, res) {
     let cantidadRestante = parseFloat(cantidad);
     let algoritmoSalida = req.query.algoritmoSalida;
 
-    //console.log(cantidadRestante);
+    console.log("test");
 
     /**
      * Se obtienen las partidas necesarias para la cantidad deseada
@@ -441,7 +441,7 @@ async function getByProductoEmbalaje(req, res) {
      */
     let partidas = await Partida
         .find({ producto_id: producto_id, isEmpty: false , tipo:"NORMAL",status:"ASIGNADA"})
-        .populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id',
+        .populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id tipo',
             {
                 clienteFiscal_id: clienteFiscal_id,
                 sucursal_id: sucursal_id,
@@ -537,7 +537,8 @@ async function getByProductoEmbalaje(req, res) {
                         posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
                         subConsecutivo: subConsecutivo,
                         fechaEntrada: partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
-                        entrada_id: partida.entrada_id != undefined ? partida.entrada_id._id : ""
+                        entrada_id: partida.entrada_id != undefined ? partida.entrada_id._id : "",
+                        tipoentrada: partida.entrada_id != undefined ? partida.entrada_id.tipo : ""
                     };
                     //console.log(auxPartida);
                     subConsecutivo += 1;
@@ -565,6 +566,7 @@ async function getByProductoEmbalaje(req, res) {
                     }
                     console.log("end");*/
                     //if(band==true)
+                    if(auxPartida.tipoentrada == "NORMAL")
                     partidasActuales.push(auxPartida);
                 });
             });
