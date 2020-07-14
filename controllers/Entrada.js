@@ -406,6 +406,7 @@ async function saveEntradaBabel(req, res) {
 		}
 		console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
+		console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
 		let fechaSalidaPlanta=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
 		console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
 		let fechaesperada=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado+1);
@@ -458,7 +459,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
 			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
-			nEntrada.fechaSalidaPlanta = new Date(dateFormat(fechaSalidaPlanta, "dd/mm/yyyy"));;
+			nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 			//console.log("testEntrada");
 			await nEntrada.save()
 				.then(async (entrada) => {
