@@ -360,7 +360,7 @@ async function saveEntradaBabel(req, res) {
 	    	} 
     		if(countEntradas.length >0)
     		{
-    			resORDENES=resORDENES+req.body.Pedido[i].NoOrden+"\n";
+    			resORDENES=resORDENES+req.body.Pedido[i].Factura+"\n";
     		}
 	        
     	}
@@ -369,7 +369,7 @@ async function saveEntradaBabel(req, res) {
 	{
 
 		//arrPO=[];
-		return res.status(500).send("Ya existe las Ordenes:\n" + resORDENES);
+		return res.status(500).send("Ya existe las Remisiones:\n" + resORDENES+" ");
 		
 	}
 	/*console.log(arrPO);
