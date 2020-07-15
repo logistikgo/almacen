@@ -301,9 +301,9 @@ async function saveEntradaBabel(req, res) {
 	for (var i=4; i<34 ; i++) {
 		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined)
 		{
-		
+			
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
-			if(producto==undefined)
+			if(producto==undefined || req.body.Pedido[i].Clave == "")
 				return res.status(200).send("no existe item: "+req.body.Pedido[i].Clave);
 			let fechaCaducidadTemp=req.body.Pedido[i].Caducidad.length > 8 ? req.body.Pedido[i].Caducidad.replace(/M/g, "") :req.body.Pedido[i].Caducidad;
 			let fechaCaducidadRes= fechaCaducidadTemp.length == 8 ? Date.parse(fechaCaducidadTemp.slice(0, 4)+"/"+fechaCaducidadTemp.slice(4, 6)+"/"+fechaCaducidadTemp.slice(6, 8)):Date.parse(fechaCaducidadTemp.slice(0, 4)+"/"+fechaCaducidadTemp.slice(5, 7)+"/"+fechaCaducidadTemp.slice(8, 10));
