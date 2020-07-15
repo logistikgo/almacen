@@ -333,13 +333,15 @@ async function saveEntradaBabel(req, res) {
 	        	valor:0
 	        }
 	       // console.log(data.InfoPedidos)
-	       let countEntradas=await Entrada.find({"ordenCompra":req.body.Pedido[i].NoOrden,"factura":req.body.Pedido[i].Factura}).exec();
+	        let countEntradas=await Entrada.find({"factura":req.body.Pedido[i].Factura}).exec();
+	        countEntradas= countEntradas.length<1 ? await Entrada.find({"referencia":req.body.Pedido[i].Factura}).exec():countEntradas;
+	        countEntradas= countEntradas.length<1 ? await Entrada.find({"item":req.body.Pedido[i].Factura}).exec():countEntradas;
     		if(countEntradas.length <1)
     		{
-		        if(arrPO.find(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura)))
+		        if(arrPO.find(obj=> (obj.factura == req.body.Pedido[i].Factura)))
 	    		{
 	    			//console.log("yes");
-	    			let index=arrPO.findIndex(obj=> (obj.po == req.body.Pedido[i].NoOrden && obj.factura == req.body.Pedido[i].Factura));
+	    			let index=arrPO.findIndex(obj=> (obj.factura == req.body.Pedido[i].Factura));
 	    			arrPO[index].arrPartidas.push(data)
 		    	}
 		        else{
@@ -355,10 +357,10 @@ async function saveEntradaBabel(req, res) {
 		    			arrPO.push(PO);
 		    		}
 		    		
-	    		} 
+	    	} 
     		if(countEntradas.length >0)
     		{
-    			resORDENES=resORDENES+req.body.Pedido[i].NoOrden+"\n";
+    			resORDENES=resORDENES+req.body.Pedido[i].Factura+"\n";
     		}
 	        
     	}
@@ -367,7 +369,7 @@ async function saveEntradaBabel(req, res) {
 	{
 
 		//arrPO=[];
-		return res.status(500).send("Ya existe las Ordenes:\n" + resORDENES);
+		return res.status(500).send("Ya existe las Remisiones:\n" + resORDENES+" ");
 		
 	}
 	/*console.log(arrPO);
