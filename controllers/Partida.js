@@ -777,21 +777,11 @@ async function getPartidasByIDs(req, res) {
                     model: "ClienteFiscal",
                     select: 'nombreCorto nombreComercial razonSocial fechAlta'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
-            })
-            .populate({
-                path: "entrada_id",
-                model: "Entrada",
                 populate: {
                     path: "sucursal_id",
                     model: "Sucursal",
                     select: 'nombre fechAlta'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
-            })
-            .populate({
-                path: "entrada_id",
-                model: "Entrada",
                 populate: {
                     path: "almacen_id",
                     model: "Almacen",
@@ -998,21 +988,11 @@ async function getExcelByIDs(req, res) {
                     model: "ClienteFiscal",
                     select: 'nombreCorto nombreComercial razonSocial fechAlta'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
-            })
-            .populate({
-                path: "entrada_id",
-                model: "Entrada",
                 populate: {
                     path: "sucursal_id",
                     model: "Sucursal",
                     select: 'nombre fechAlta'
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
-            })
-            .populate({
-                path: "entrada_id",
-                model: "Entrada",
                 populate: {
                     path: "almacen_id",
                     model: "Almacen",
@@ -1066,7 +1046,8 @@ async function getExcelByIDs(req, res) {
                     resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                 }
                 if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
-                {    
+                {   
+                    //console.log(partida.entrada_id.tipo);
                     let porcentaje = 0;
                     let totalEntrada = 0;
                     let totalResto = 0;
