@@ -92,7 +92,7 @@ async function save(req, res) {
 	nSalida.salida_id = await getNextID();
 	nSalida.folio = await getNextID();
 	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
-	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O');
+	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
 
 	nSalida.save()
 		.then(async (salida) => {
@@ -277,7 +277,7 @@ async function saveSalidaAutomatica(req, res) {
 			nSalida.item = entradas[0].item;
 			nSalida.tipo = entradas[0].tipo;//NORMAL
 
-			nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O');
+			nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
 
 			nSalida.save()
 				.then(async (salida) => {
