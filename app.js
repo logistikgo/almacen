@@ -274,6 +274,6 @@ app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
 
 //Tickets
 app.post('/api/saveTicket', Ticket.post);
-app.get('/api/getTicketsByEntrada', Ticket.getByEntrada);
+app.post('/api/getTickets', Ticket.get);
 
 module.exports = app;

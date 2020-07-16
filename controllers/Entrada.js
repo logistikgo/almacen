@@ -20,6 +20,10 @@ function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
 }
 
+function getNextIDTicket() {
+	return Helper.getNextID(Ticket, "idTicket");
+}
+
 async function get(req, res) {
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
@@ -210,7 +214,7 @@ async function save(req, res) {
 	nEntrada.idEntrada = await getNextID();
 	nEntrada.folio = await getNextID();
 	nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
-	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
+	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 	let countEntradas=await Entrada.find({"referencia":nEntrada.referencia}).exec();
 	if(countEntradas.length>0)
 	{
@@ -269,7 +273,7 @@ async function saveEntradaAutomatica(req, res) {
 		nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 		nEntrada.idEntrada = await getNextID();
 		nEntrada.folio = await getNextID();
-		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
+		nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 
 		nEntrada.save()
 			.then(async (entrada) => {
@@ -301,9 +305,9 @@ async function saveEntradaBabel(req, res) {
 	for (var i=4; i<34 ; i++) {
 		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined)
 		{
-			
+		
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
-			if(producto==undefined || req.body.Pedido[i].Clave == "")
+			if(producto==undefined)
 				return res.status(200).send("no existe item: "+req.body.Pedido[i].Clave);
 			let fechaCaducidadTemp=req.body.Pedido[i].Caducidad.length > 8 ? req.body.Pedido[i].Caducidad.replace(/M/g, "") :req.body.Pedido[i].Caducidad;
 			let fechaCaducidadRes= fechaCaducidadTemp.length == 8 ? Date.parse(fechaCaducidadTemp.slice(0, 4)+"/"+fechaCaducidadTemp.slice(4, 6)+"/"+fechaCaducidadTemp.slice(6, 8)):Date.parse(fechaCaducidadTemp.slice(0, 4)+"/"+fechaCaducidadTemp.slice(5, 7)+"/"+fechaCaducidadTemp.slice(8, 10));
@@ -397,14 +401,19 @@ async function saveEntradaBabel(req, res) {
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA/MANUFACTURINGPLANT");
 	    //console.log(indexInfopedido);
 	    let planta="";
+
 	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA")
 		 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		else
 			planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		if(planta==null)
 		{
-			 indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
-			 planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
+			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
+			console.log(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0]);
+			if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA")
+			 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
+			else
+				planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		}
 		console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
@@ -460,7 +469,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
-			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I');
+			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 			nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 			//console.log("testEntrada");
 			await nEntrada.save()
@@ -1752,8 +1761,10 @@ function updateRemision(req, res) {
 	var infoPartida = req.body.partida;
 	let newPartida = new PartidaModel(infoPartida);
 
-	newPartida.save().then((partida) => {
+	newPartida.save().then(async function(partida) {
 		let ticket = new Ticket();
+		ticket.idTicket = await getNextIDTicket();
+		nTicket.stringFolio = await Helper.getStringFolio(nTicket.idTicket, nTicket.clienteFiscal_id, false, true);
 		ticket.partida_id = partida._id;
 		ticket.entrada_id = entrada_id;
 		
@@ -1879,12 +1890,3 @@ module.exports = {
 	updateFecha
 	// getPartidaById,
 }
-
-
-
-
-
-
-
-
- 
