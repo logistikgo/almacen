@@ -979,7 +979,7 @@ async function getExcelByIDs(req, res) {
         let entradas_id = entradas.map(x => x._id);
 
         let partidas = await Partida
-            .find({ entrada_id: { $in: entradas_id }, tipo: tipo })
+            .find({ entrada_id: { $in: entradas_id }})
             .populate({
                 path: "entrada_id",
                 model: "Entrada",
@@ -998,7 +998,7 @@ async function getExcelByIDs(req, res) {
                     model: "Almacen",
                     select: 'nombre fechAlta',
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item proveedor ordenCompra factura tracto remolque transportista fechaAlta'
             })
             .populate({
                 path: 'salidas_id.salida_id',
