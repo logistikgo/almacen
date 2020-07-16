@@ -929,7 +929,7 @@ async function getExcelByIDs(req, res) {
             indexheaders++;
         
     });
-    console.log("1")
+    //console.log("1")
     worksheet.cell(2, indexheaders).string('Fecha Ingreso').style(headersStyle);
     worksheet.cell(2, indexheaders+1).string('Fecha Alta Ingreso').style(headersStyle);
     worksheet.cell(2, indexheaders+2).string('Fecha Despacho').style(headersStyle);
@@ -983,22 +983,7 @@ async function getExcelByIDs(req, res) {
             .populate({
                 path: "entrada_id",
                 model: "Entrada",
-                populate: {
-                    path: "clienteFiscal_id",
-                    model: "ClienteFiscal",
-                    select: 'nombreCorto nombreComercial razonSocial fechaAlta'
-                },
-                populate: {
-                    path: "sucursal_id",
-                    model: "Sucursal",
-                    select: 'nombre fechaAlta'
-                },
-                populate: {
-                    path: "almacen_id",
-                    model: "Almacen",
-                    select: 'nombre fechaAlta',
-                },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
+                select: 'fechaEntrada stringFolio folio referencia embarque item proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
             })
             .populate({
                 path: 'salidas_id.salida_id',
@@ -1047,7 +1032,7 @@ async function getExcelByIDs(req, res) {
                 }
                 if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                 {   
-                    console.log(partida.entrada_id.tipo);
+                    //console.log(partida.entrada_id.tipo);
                     let porcentaje = 0;
                     let totalEntrada = 0;
                     let totalResto = 0;
@@ -1081,7 +1066,7 @@ async function getExcelByIDs(req, res) {
                     worksheet.cell(i, 1).string(partida.entrada_id.stringFolio ? partida.entrada_id.stringFolio:"");
                     worksheet.cell(i, 2).string(partida.salidas_id.length > 0  ? partida.salidas_id[0].salida_id.stringFolio: "");
                     worksheet.cell(i, 3).string(partida.entrada_id.tipo ? partida.entrada_id.tipo:"");
-                    console.log(partida.entrada_id.tipo);
+                    //console.log(partida.entrada_id.tipo);
                     worksheet.cell(i, 4).string(partida.entrada_id.item ? partida.entrada_id.item:"");
                     worksheet.cell(i, 5).string(partida.entrada_id.referencia ? partida.entrada_id.referencia :"");
                     worksheet.cell(i, 6).string(partida.clave ? partida.clave:"");
@@ -1124,9 +1109,9 @@ async function getExcelByIDs(req, res) {
                     i++;
                 }
             });
-        console.log("end");
+       // console.log("end");
         workbook.write('ReportePartidas'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
-        console.log("end");
+        //console.log("end");
     }
     catch (error) {
         console.log(error);
