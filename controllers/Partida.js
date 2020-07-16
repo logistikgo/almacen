@@ -998,7 +998,7 @@ async function getExcelByIDs(req, res) {
                     model: "Almacen",
                     select: 'nombre fechAlta',
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
             })
             .populate({
                 path: 'salidas_id.salida_id',
