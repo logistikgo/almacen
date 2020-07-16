@@ -936,7 +936,7 @@ async function getExcelByIDs(req, res) {
     worksheet.cell(2, indexheaders+3).string('Fecha Alta Despacho').style(headersStyle);    
     worksheet.cell(2, indexheaders+4).string('% Salida').style(headersStyle);
     worksheet.cell(2, indexheaders+5).string('Lapso').style(headersStyle);
-    worksheet.cell(2, indexheaders+6).string('Recibio').style(headersStyle);
+    //worksheet.cell(2, indexheaders+6).string('Recibio').style(headersStyle);
     let i=3;
 
     //ENDEXCELHEADERS---
@@ -998,7 +998,7 @@ async function getExcelByIDs(req, res) {
                     model: "Almacen",
                     select: 'nombre fechAlta',
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
             })
             .populate({
                 path: 'salidas_id.salida_id',
@@ -1119,7 +1119,7 @@ async function getExcelByIDs(req, res) {
                     worksheet.cell(i, indexbody+3).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaAlta, formatofecha) : "":"");
                     worksheet.cell(i, indexbody+4).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
                     worksheet.cell(i, indexbody+5).string(lapso).style(fitcellStyle);
-                    worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
+                    //worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
                     i++;
                 }
             });
