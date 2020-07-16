@@ -180,10 +180,15 @@ async function getNextID(dataContext, field) {
 	return max + 1;
 }
 
-async function getStringFolio(incr, clienteFiscal_id, Tipo) {
+async function getStringFolio(incr, clienteFiscal_id, Tipo, Ticket) {
 	let clienteFiscal = await ClienteFiscal.findOne({ _id: clienteFiscal_id }).exec();
-	//console.log(clienteFiscal);
-	let stringFolio = clienteFiscal.clave + "-" + Tipo + "-" + incr;
+	let stringFolio = "";
+	if(Ticket && !Tipo) {
+		stringFolio = clienteFiscal.clave + "-TK" + "-" + incr;
+	}
+	else {
+		stringFolio = clienteFiscal.clave + "-" + Tipo + "-" + incr;
+	}
 	return stringFolio;
 }
 
