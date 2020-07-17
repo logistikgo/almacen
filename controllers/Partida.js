@@ -972,8 +972,9 @@ async function getExcelByIDs(req, res) {
         {
             filter.stringFolio=folioEntrada;
         }
-        let entradas = await Entrada.find(filter).exec();
-        Entrada.find(filter)
+        //let entradas = await Entrada.find(filter).exec();
+        //console.log(filter);
+        await Entrada.find(filter)
         .populate({
             path: 'partidas',
             model: 'Partida'
@@ -992,10 +993,12 @@ async function getExcelByIDs(req, res) {
                 select: 'folio stringFolio fechaSalida item'
             }
         }).then(async (entradas) => {
+            //await Helper.asyncForEach(arrPartidas, async function (partida) {
             entradas.forEach(entrada => {
                 //console.log(entrada);
                 let partidas = entrada.partidas;
                // part
+               // await Helper.asyncForEach(arrPartidas, async function (partida) {
                 partidas.forEach((partida) => { 
                     //console.log(partida);
                     let resFecha=true
@@ -1028,6 +1031,7 @@ async function getExcelByIDs(req, res) {
                     {
                         resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                     }
+                    console.log(resFecha+" "+ resClasificacion+" "+resSubclasificacion+" "+ resClave+" "+partida.tipo)
                     if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     {   
                         //console.log(entrada.tipo);

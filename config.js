@@ -9,6 +9,5 @@ module.exports = {
 	//DEMO
 	//db: process.env.MONGODB || process.env.DB_DEMO_URL_ACCESS,//DEMO 
 	//PRODUCCION
-	//
 	db: process.env.MONGODB || process.env.DB_PRODUCTION_URL_ACCESS,//PRODUCCION
 }
