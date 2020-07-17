@@ -787,7 +787,7 @@ async function getPartidasByIDs(req, res) {
                     model: "Almacen",
                     select: 'nombre fechAlta',
                 },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
+                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta tipo'
             })
             .populate({
                 path: 'salidas_id.salida_id',
@@ -909,17 +909,16 @@ async function getExcelByIDs(req, res) {
     worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
     worksheet.cell(2, 1).string('FolioEntrada').style(headersStyle);
     worksheet.cell(2, 2).string('FolioSalida').style(headersStyle);
-    worksheet.cell(2, 3).string('Tipo').style(headersStyle);
-    worksheet.cell(2, 4).string('Item').style(headersStyle);
-    worksheet.cell(2, 5).string('Referencia').style(headersStyle);
-    worksheet.cell(2, 6).string('Clave').style(headersStyle);
-    worksheet.cell(2, 7).string('Orden compra').style(headersStyle);
-    worksheet.cell(2, 8).string('Lote').style(headersStyle);
-    worksheet.cell(2, 9).string('Producto').style(headersStyle);
-    worksheet.cell(2, 10).string('subclasificacion').style(headersStyle);
+    worksheet.cell(2, 3).string('Item').style(headersStyle);
+    worksheet.cell(2, 4).string('Referencia').style(headersStyle);
+    worksheet.cell(2, 5).string('Clave').style(headersStyle);
+    worksheet.cell(2, 6).string('Orden compra').style(headersStyle);
+    worksheet.cell(2, 7).string('Lote').style(headersStyle);
+    worksheet.cell(2, 8).string('Producto').style(headersStyle);
+    worksheet.cell(2, 9).string('subclasificacion').style(headersStyle);
     /*worksheet.cell(2, 6).string('T.').style(headersStyle);
     worksheet.cell(2, 7).string('Sacos.').style(headersStyle);*/
-    let indexheaders=11;
+    let indexheaders=10;
     clienteEmbalaje.forEach(Embalaje=>{ 
         let index=ArrayEmbalaje.findIndex(obj=> (obj.clave == Embalaje));
             if(ArrayEmbalaje[index].clave== "cajas" && clientefiscal._id == "5e33420d22b5651aecafe934")
@@ -929,14 +928,14 @@ async function getExcelByIDs(req, res) {
             indexheaders++;
         
     });
-    console.log("1")
+    //console.log("1")
     worksheet.cell(2, indexheaders).string('Fecha Ingreso').style(headersStyle);
     worksheet.cell(2, indexheaders+1).string('Fecha Alta Ingreso').style(headersStyle);
     worksheet.cell(2, indexheaders+2).string('Fecha Despacho').style(headersStyle);
     worksheet.cell(2, indexheaders+3).string('Fecha Alta Despacho').style(headersStyle);    
     worksheet.cell(2, indexheaders+4).string('% Salida').style(headersStyle);
     worksheet.cell(2, indexheaders+5).string('Lapso').style(headersStyle);
-    worksheet.cell(2, indexheaders+6).string('Recibio').style(headersStyle);
+    //worksheet.cell(2, indexheaders+6).string('Recibio').style(headersStyle);
     let i=3;
 
     //ENDEXCELHEADERS---
@@ -973,160 +972,150 @@ async function getExcelByIDs(req, res) {
         {
             filter.stringFolio=folioEntrada;
         }
-
         let entradas = await Entrada.find(filter).exec();
-
-        let entradas_id = entradas.map(x => x._id);
-
-        let partidas = await Partida
-            .find({ entrada_id: { $in: entradas_id }, tipo: tipo })
-            .populate({
-                path: "entrada_id",
-                model: "Entrada",
-                populate: {
-                    path: "clienteFiscal_id",
-                    model: "ClienteFiscal",
-                    select: 'nombreCorto nombreComercial razonSocial fechAlta'
-                },
-                populate: {
-                    path: "sucursal_id",
-                    model: "Sucursal",
-                    select: 'nombre fechAlta'
-                },
-                populate: {
-                    path: "almacen_id",
-                    model: "Almacen",
-                    select: 'nombre fechAlta',
-                },
-                select: 'fechaEntrada clienteFiscal_id sucursal_id almacen_id stringFolio folio referencia embarque item recibio proveedor ordenCompra factura tracto remolque transportista fechaAlta'
-            })
-            .populate({
-                path: 'salidas_id.salida_id',
-                model: 'Salida',
-                select: 'folio stringFolio fechaSalida item embalajes fechaAlta'
-            })
-            .populate({
+        Entrada.find(filter)
+        .populate({
+            path: 'partidas',
+            model: 'Partida'
+        })
+        .populate({
+            path: 'partidas',
+            populate: {
                 path: 'producto_id',
                 model: 'Producto',
-            
-            })
-            .exec();
-            partidas = partidas.sort(sortByfechaEntadaAsc);
-            let arrPartidas=[]
-            partidas.forEach(partida => 
-            {
-                let resFecha=true
-                let resClasificacion=true;
-                let resSubclasificacion=true;
-                let resClave=true;
-                if(fecha == "fechaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
-                {
-                    resFecha = new Date(partida.salidas_id[0].salida_id.fechaSalida)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaSalida)<=new Date(fechaFinal);
-                }
-                else
-                    if(fecha == "fechaSalida")
-                    resFecha = false;
-                if(fecha == "fechaAltaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
-                {
-                    resFecha = new Date(partida.salidas_id[0].salida_id.fechaAlta)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaAlta)<=new Date(fechaFinal);
-                }
-                else
-                    if(fecha == "fechaAltaSalida")
+            }
+        }).populate({
+            path: 'partidas',
+            populate:{
+                path: 'salidas_id.salida_id',
+                model: 'Salida',
+                select: 'folio stringFolio fechaSalida item'
+            }
+        }).then(async (entradas) => {
+            entradas.forEach(entrada => {
+                //console.log(entrada);
+                let partidas = entrada.partidas;
+               // part
+                partidas.forEach((partida) => { 
+                    //console.log(partida);
+                    let resFecha=true
+                    let resClasificacion=true;
+                    let resSubclasificacion=true;
+                    let resClave=true;
+                    if(fecha == "fechaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
+                    {
+                        resFecha = new Date(partida.salidas_id[0].salida_id.fechaSalida)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaSalida)<=new Date(fechaFinal);
+                    }
+                    else
+                        if(fecha == "fechaSalida")
                         resFecha = false;
-                if(clave != "" && partida.producto_id._id.toString() !== clave)
-                {
-                    resClave=false;
-                }
-                if(clasificacion != "")
-                {
-                    resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
-                }
-                if(subclasificacion != "")
-                {
-                    resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
-                }
-                if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
-                {   
-                    //console.log(partida.entrada_id.tipo);
-                    let porcentaje = 0;
-                    let totalEntrada = 0;
-                    let totalResto = 0;
-                    let totalSalida = 0;
-                    var max="";
-                    var lapso="";
-                    for (let x in partida.embalajesEntrada) {
-                        totalEntrada += partida.embalajesEntrada[x];
-                        totalResto += partida.embalajesxSalir[x];
+                    if(fecha == "fechaAltaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
+                    {
+                        resFecha = new Date(partida.salidas_id[0].salida_id.fechaAlta)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaAlta)<=new Date(fechaFinal);
                     }
-                    totalSalida = totalEntrada - totalResto;
-                    porcentaje = (totalSalida / totalEntrada);
-                    if(partida.salidas_id != undefined)
-                    if (partida.salidas_id.length > 0 || partida.isEmpty === true){
-                        let salidas_idInstances = partida.salidas_id.map(x => x.salida_id);
-                        if(salidas_idInstances){
-                            let fechasSalida = salidas_idInstances.map(x => x.fechaSalida) ? salidas_idInstances.map(x => x.fechaSalida) : "";
-                            if(fechasSalida !== "" &&fechasSalida.length > 0){
-                                max = fechasSalida.reduce(function (a, b) { return a > b ? a : b; });
-                                var diff = Math.abs(max.getTime() - partida.entrada_id.fechaEntrada.getTime());
-                                let ms= Math.floor(diff % 1000);
-                                let s= Math.floor(diff / 1000 % 60);
-                                let m= Math.floor(diff / 60000 % 60);
-                                let h= Math.floor(diff / 3600000 % 24);
-                                let d= Math.floor(diff / 86400000);
-                                max =dateFormat(max, formatofecha)
-                                lapso= d.toString() + ' día(s), ' + h.toString() + ' hora(s), ' + m.toString() + ' minuto(s)';
-                            }
-                        }
+                    else
+                        if(fecha == "fechaAltaSalida")
+                            resFecha = false;
+                    if(clave != "" && partida.producto_id._id.toString() !== clave)
+                    {
+                        resClave=false;
                     }
-                    worksheet.cell(i, 1).string(partida.entrada_id.stringFolio ? partida.entrada_id.stringFolio:"");
-                    worksheet.cell(i, 2).string(partida.salidas_id.length > 0  ? partida.salidas_id[0].salida_id.stringFolio: "");
-                    worksheet.cell(i, 3).string(partida.entrada_id.tipo ? partida.entrada_id.tipo:"");
-                    worksheet.cell(i, 4).string(partida.entrada_id.item ? partida.entrada_id.item:"");
-                    worksheet.cell(i, 5).string(partida.entrada_id.referencia ? partida.entrada_id.referencia :"");
-                    worksheet.cell(i, 6).string(partida.clave ? partida.clave:"");
-                    worksheet.cell(i, 7).string(partida.entrada_id.ordenCompra ? partida.entrada_id.ordenCompra:"");
-                    worksheet.cell(i, 8).string(partida.lote ? partida.lote:"");
-                    worksheet.cell(i, 9).string(partida.descripcion ? partida.descripcion:""); 
-                    worksheet.cell(i, 10).string(partida.producto_id.subclasificacion ? partida.producto_id.subclasificacion:"");
-
-                    let indexbody=11;
-                    clienteEmbalaje.forEach(emb=>
+                    if(clasificacion != "")
+                    {
+                        resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+                    }
+                    if(subclasificacion != "")
+                    {
+                        resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
+                    }
+                    if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     {   
-                        let tarimas =0
-                        if (emb == 'tarimas' && partida.producto_id.arrEquivalencias.length > 0) {
-                            let band = false;
-                            partida.producto_id.arrEquivalencias.forEach(function (equivalencia) {
-                               
-                                if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja" && partida.embalajesEntrada.cajas) {
-
-                                    tarimas = partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia ? (partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
-                                    band = true;
+                        //console.log(entrada.tipo);
+                        let porcentaje = 0;
+                        let totalEntrada = 0;
+                        let totalResto = 0;
+                        let totalSalida = 0;
+                        var max="";
+                        var lapso="";
+                        for (let x in partida.embalajesEntrada) {
+                            totalEntrada += partida.embalajesEntrada[x];
+                            totalResto += partida.embalajesxSalir[x];
+                        }
+                        totalSalida = totalEntrada - totalResto;
+                        porcentaje = (totalSalida / totalEntrada);
+                        if(partida.salidas_id != undefined)
+                        if (partida.salidas_id.length > 0 || partida.isEmpty === true){
+                            let salidas_idInstances = partida.salidas_id.map(x => x.salida_id);
+                            if(salidas_idInstances){
+                                let fechasSalida = salidas_idInstances.map(x => x.fechaSalida) ? salidas_idInstances.map(x => x.fechaSalida) : "";
+                                if(fechasSalida !== "" &&fechasSalida.length > 0){
+                                    max = fechasSalida.reduce(function (a, b) { return a > b ? a : b; });
+                                    var diff = Math.abs(max.getTime() - entrada.fechaEntrada.getTime());
+                                    let ms= Math.floor(diff % 1000);
+                                    let s= Math.floor(diff / 1000 % 60);
+                                    let m= Math.floor(diff / 60000 % 60);
+                                    let h= Math.floor(diff / 3600000 % 24);
+                                    let d= Math.floor(diff / 86400000);
+                                    max =dateFormat(max, formatofecha)
+                                    lapso= d.toString() + ' día(s), ' + h.toString() + ' hora(s), ' + m.toString() + ' minuto(s)';
                                 }
-                            });
-                            if (band !== true){
-                                tarimas = partida.embalajesEntrada.tarimas ? partida.embalajesEntrada.tarimas : 0;
                             }
-                            worksheet.cell(i, indexbody).number(parseInt(tarimas));
                         }
-                        else {
-                            worksheet.cell(i, indexbody).number(partida.embalajesEntrada[emb] ? parseInt(partida.embalajesEntrada[emb]):0);
-                        }
-                        indexbody++;
-                    });
-                    worksheet.cell(i, indexbody).string(partida.entrada_id.fechaEntrada ? dateFormat(partida.entrada_id.fechaEntrada, formatofecha) : "");
-                    worksheet.cell(i, indexbody+1).string(partida.entrada_id.fechaAlta ? dateFormat(partida.entrada_id.fechaAlta, formatofecha) : "");
-                    worksheet.cell(i, indexbody+2).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaSalida, formatofecha) : "":"");
-                    worksheet.cell(i, indexbody+3).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaAlta, formatofecha) : "":"");
-                    worksheet.cell(i, indexbody+4).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
-                    worksheet.cell(i, indexbody+5).string(lapso).style(fitcellStyle);
-                    worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
-                    i++;
-                }
+                        worksheet.cell(i, 1).string(entrada.stringFolio ? entrada.stringFolio:"");
+                        worksheet.cell(i, 2).string(partida.salidas_id.length > 0  ? partida.salidas_id[0].salida_id.stringFolio: "");
+                        //worksheet.cell(i, 3).string(entrada.tipo ? entrada.tipo:"");
+                        //console.log(entrada.tipo);
+                        worksheet.cell(i, 3).string(entrada.item ? entrada.item:"");
+                        worksheet.cell(i, 4).string(entrada.referencia ? entrada.referencia :"");
+                        worksheet.cell(i, 5).string(partida.clave ? partida.clave:"");
+                        worksheet.cell(i, 6).string(entrada.ordenCompra ? entrada.ordenCompra:"");
+                        worksheet.cell(i, 7).string(partida.lote ? partida.lote:"");
+                        worksheet.cell(i, 8).string(partida.descripcion ? partida.descripcion:""); 
+                        worksheet.cell(i, 9).string(partida.producto_id.subclasificacion ? partida.producto_id.subclasificacion:"");
+
+                        let indexbody=10;
+                        clienteEmbalaje.forEach(emb=>
+                        {   
+                            let tarimas =0
+                            if (emb == 'tarimas' && partida.producto_id.arrEquivalencias.length > 0) {
+                                let band = false;
+                                partida.producto_id.arrEquivalencias.forEach(function (equivalencia) {
+                                   
+                                    if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja" && partida.embalajesEntrada.cajas) {
+
+                                        tarimas = partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia ? (partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
+                                        band = true;
+                                    }
+                                });
+                                if (band !== true){
+                                    tarimas = partida.embalajesEntrada.tarimas ? partida.embalajesEntrada.tarimas : 0;
+                                }
+                                worksheet.cell(i, indexbody).number(parseInt(tarimas));
+                            }
+                            else {
+                                worksheet.cell(i, indexbody).number(partida.embalajesEntrada[emb] ? parseInt(partida.embalajesEntrada[emb]):0);
+                            }
+                            indexbody++;
+                        });
+                        worksheet.cell(i, indexbody).string(entrada.fechaEntrada ? dateFormat(entrada.fechaEntrada, formatofecha) : "");
+                        worksheet.cell(i, indexbody+1).string(entrada.fechaAlta ? dateFormat(entrada.fechaAlta, formatofecha) : "");
+                        worksheet.cell(i, indexbody+2).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaSalida, formatofecha) : "":"");
+                        worksheet.cell(i, indexbody+3).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaAlta, formatofecha) : "":"");
+                        worksheet.cell(i, indexbody+4).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
+                        worksheet.cell(i, indexbody+5).string(lapso).style(fitcellStyle);
+                        //worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
+                        i++;
+                    }
+                });
             });
+        })
+
+        console.log("end");
         workbook.write('ReportePartidas'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
+        console.log("end");
     }
     catch (error) {
-       // console.log(error);
+        console.log(error);
         res.status(500).send(error);
     }
 }
