@@ -7,7 +7,7 @@ const Almacen = require('../controllers/Almacen');
 const ClienteFiscal = require('../controllers/ClienteFiscal');
 const PlantaProductora = Schema(
 	{
-		nombre: String,
+		Nombre: String,
 		IdAlmacen: { type: Schema.ObjectId, ref: 'Almacen' },
 		IdCliente: { type: Schema.ObjectId, ref: 'ClienteFiscal' },
 		statusReg: { type: String, default: "ACTIVO" },
