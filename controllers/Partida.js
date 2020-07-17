@@ -977,7 +977,7 @@ async function getExcelByIDs(req, res) {
 
         let entradas_id = entradas.map(x => x._id);
         let partidas = await Partida
-            .find({entrada_id:{ $exists: true }, entrada_id: { $in: entradas_id }, tipo: tipo })
+            .find({entrada_id:{ $exists: true ,$in: entradas_id }, tipo: tipo })
             .populate({
                 path: "entrada_id",
                 model: "Entrada",
@@ -995,7 +995,7 @@ async function getExcelByIDs(req, res) {
             })
             .exec();
             partidas = partidas.sort(sortByfechaEntadaAsc);
-            let arrPartidas=[]
+            //let arrPartidas=[]
             partidas.forEach(partida => 
             {
                 let resFecha=true
