@@ -1107,9 +1107,9 @@ async function getExcelByIDs(req, res) {
                     i++;
                 }
             });
-       // console.log("end");
+        console.log("end");
         workbook.write('ReportePartidas'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
-        //console.log("end");
+        console.log("end");
     }
     catch (error) {
         console.log(error);
