@@ -10,11 +10,11 @@ const FolioCostos = Schema(
         proveedorRfc: String,
         tarifa_id: Schema.ObjectId,
         tipoTarifa: String,
-        total: Number, //Subtotal
+        total: Number,
         Moneda: String,
-        //Iva
-        //Retencion?
-        //Total
+        iva: Number,
+        subtotal: Number,
+        retencion: Number,
         fechaInicio: Date,
         fechaFin: Date,
         statusReg: { type: String, default: "ACTIVO" },
