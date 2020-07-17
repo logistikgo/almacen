@@ -973,13 +973,11 @@ async function getExcelByIDs(req, res) {
         {
             filter.stringFolio=folioEntrada;
         }
-
         let entradas = await Entrada.find(filter).exec();
 
         let entradas_id = entradas.map(x => x._id);
-
         let partidas = await Partida
-            .find({ entrada_id: { $in: entradas_id }, tipo: tipo })
+            .find({entrada_id:{ $exists: true }, entrada_id: { $in: entradas_id }, tipo: tipo })
             .populate({
                 path: "entrada_id",
                 model: "Entrada",
