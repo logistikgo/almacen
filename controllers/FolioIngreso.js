@@ -1,6 +1,6 @@
 'use strict'
 
-const FolioInreso = require('../models/FolioIngreso');
+const FolioInreso = require('../models/FolioCostos');
 const ClienteFiscal = require('../models/ClienteFiscal');
 
 function get(req, res) {
