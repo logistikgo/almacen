@@ -1031,7 +1031,7 @@ async function getExcelByIDs(req, res) {
                     {
                         resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                     }
-                    console.log(resFecha+" "+ resClasificacion+" "+resSubclasificacion+" "+ resClave+" "+partida.tipo)
+                    //console.log(resFecha+" "+ resClasificacion+" "+resSubclasificacion+" "+ resClave+" "+partida.tipo)
                     if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     {   
                         //console.log(entrada.tipo);
