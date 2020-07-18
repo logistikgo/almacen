@@ -566,7 +566,7 @@ async function getByProductoEmbalaje(req, res) {
                     }
                     console.log("end");*/
                     //if(band==true)
-                    if(auxPartida.tipoentrada == "NORMAL")
+                    if(auxPartida.tipoentrada == "NORMAL" || auxPartida.tipoentrada == "TRANSFERENCIA")
                     partidasActuales.push(auxPartida);
                 });
             });
