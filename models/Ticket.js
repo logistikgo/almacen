@@ -23,7 +23,10 @@ const Ticket = Schema(
         fechaAlta: Date,
         usuarioAlta_id: Number,
         nombreUsuario: String,
-        status: String
+        status: String,
+        usuarioAprueba_id: Number,
+        nombreUsuarioAprueba: String,
+        fechaLiberacion: Date,
     },
     {
         collection: 'Tickets'

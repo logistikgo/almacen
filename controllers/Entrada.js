@@ -1767,10 +1767,9 @@ function updateRemision(req, res) {
 		nTicket.stringFolio = await Helper.getStringFolio(nTicket.idTicket, nTicket.clienteFiscal_id, false, true);
 		ticket.partida_id = partida._id;
 		ticket.entrada_id = entrada_id;
-		
-		ticket.save().then((resTicket) => {
-			console.log(resTicket._id);
-		});
+		ticket.status = "PENDIENTE";
+		ticket.tipo = "AGREGAR"
+		ticket.save();
 		
 		var arrPartidas = [];
 		Entrada.findOne({_id: entrada_id}).then((entrada) => {
@@ -1791,7 +1790,7 @@ function updateRemision(req, res) {
 function updateStatus(req, res) {
 	let _id = req.body.entrada_id;
 	let newStatus = req.body.status;
-	console.log(newStatus);
+	//console.log(newStatus);
 
 	let today = new Date(Date.now()-(5*3600000));
 	let datos ={ status: newStatus}
