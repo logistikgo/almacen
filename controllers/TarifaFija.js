@@ -3,13 +3,18 @@
 const TarifaFija = require('../models/TarifaFija');
 const ClienteFiscal = require('../controllers/ClienteFiscal');
 
-function get(req, res) {
+function get(req, res) { 
     TarifaFija.find({ statusReg: "ACTIVO" })
         .populate({
             'path': 'cliente_id',
             'select': 'nombreCorto nombreComercial clave'
         })
+        .populate({
+            'path': 'almacen_id',
+            'select': 'nombre'
+        })
         .then(data => {
+            console.log(data);
             res.status(200).send(data);
         })
         .catch(error => {
@@ -33,9 +38,11 @@ function getByID(req, res) {
 }
 
 function getByCliente(req, res) {
-    let cliente_id = req.params.cliente_id;
+    console.log(req)
+    let cliente_id = req.query.cliente_id;
+    let tipo = req.query.tipo;
 
-    TarifaFija.find({ cliente_id: cliente_id, statusReg: "ACTIVO" })
+    TarifaFija.find({ cliente_id: cliente_id,tipo:tipo, statusReg: "ACTIVO" })
         .sort({ "fechaAlta": -1 })
         .then(tarifa => {
             res.status(200).send(tarifa);

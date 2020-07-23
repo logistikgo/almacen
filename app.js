@@ -205,7 +205,7 @@ app.delete('/api/tarifaFactor/:_id', TarifaFactor._delete);
 
 app.get('/api/tarifaFija', TarifaFija.get);
 app.get('/api/tarifaFija/:_id', TarifaFija.getByID);
-app.get('/api/tarifaFija/cliente/:cliente_id', TarifaFija.getByCliente);
+app.get('/api/tarifaFijacliente', TarifaFija.getByCliente);
 app.post('/api/tarifaFija', TarifaFija.save);
 app.delete('/api/tarifaFija/:_id', TarifaFija._delete);
 
@@ -275,5 +275,7 @@ app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
 //Tickets
 app.post('/api/saveTicket', Ticket.post);
 app.post('/api/getTickets', Ticket.get);
+app.get('/api/getTicketByID', Ticket.getByID);
+app.post('/api/aprobarTicket', Ticket.liberarTicket);
 
 module.exports = app;

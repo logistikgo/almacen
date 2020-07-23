@@ -7,17 +7,21 @@ const ClienteFiscal = require('../controllers/ClienteFiscal');
 
 const TarifaFija = Schema(
   {
+    nombre: String,
     cliente_id: { type: Schema.ObjectId, ref: 'ClienteFiscal' },
     tipoCambio: String,
     precio: Number,
     periodo: String,
+    cantidad:Number,
     usuarioAlta: String,
     usuarioAlta_id: Number,
     fechaAlta: { type: Date, default: Date.now },
     usuarioBaja_id: Number,
     fechaBaja: { type: Date },
     statusReg: { type: String, default: "ACTIVO" },
-    almacen_id: { type: Schema.ObjectId, ref: 'Almacen' }
+    almacen_id: { type: Schema.ObjectId, ref: 'Almacen' },
+    tipo: { type: String, default: "NORMAL" },
+    tipoExcedente: { type: String, default: "NONE" },
   },
   {
     collection: 'TarifasFija'
