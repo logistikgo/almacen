@@ -683,9 +683,9 @@ function getEntradasReporte(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
 	})
 	.populate({
 		path: 'partidas',
@@ -890,9 +890,9 @@ function getExcelCaducidades(req, res) {
 		populate: {
 			path: 'entrada_id',
 			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
 		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo'
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
 	})
 	.populate({
 		path: 'partidas',
@@ -1151,6 +1151,16 @@ function getExcelCaducidades(req, res) {
         	diff=0;
         	hoy=new Date(Date.now()-(5*3600000));
            	Aging=0;
+           	let resshippingdays="";
+           	let shipingdaysstyle=workbook.createStyle({
+	          font: {
+	            bold: true,
+	          },
+	          alignment: {
+	            wrapText: true,
+	            horizontal: 'left',
+	          },
+	        });
 
            	if(partidas.entrada_id)
            	{
@@ -1170,8 +1180,46 @@ function getExcelCaducidades(req, res) {
 	            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
 	            	if(partidas.producto_id.vidaAnaquel)
 	            		leyenda = partidas.producto_id.vidaAnaquel- diasEnAlm - 1
-	            	if(partidas.entrada_id.fechaSalidaPlanta != undefined)
+	            	if(partidas.entrada_id.fechaSalidaPlanta != undefined && partidas.entrada_id.DiasTraslado !== undefined){
 	            		orginalshippingdays=Math.abs(Math.floor((partidas.entrada_id.fechaEntrada.getTime()-partidas.entrada_id.fechaSalidaPlanta.getTime())/ 86400000))
+	            		resshippingdays=partidas.entrada_id.DiasTraslado - orginalshippingdays;
+						if(resshippingdays <0)
+			           	{
+			           		shipingdaysstyle = workbook.createStyle({
+						          font: {
+						            bold: true,
+						          },
+						          alignment: {
+						            wrapText: true,
+						            horizontal: 'center',
+						          },
+						          fill: {
+								    type: 'pattern',
+								    patternType: 'solid',
+								    bgColor: '#FF0000',
+								    fgColor: '#FF0000',
+								  },
+						        });
+			           	}
+			           	else
+			           	{
+			           		shipingdaysstyle = workbook.createStyle({
+						          font: {
+						            bold: true,
+						          },
+						          alignment: {
+						            wrapText: true,
+						            horizontal: 'center',
+						          },
+						          fill: {
+								    type: 'pattern',
+								    patternType: 'solid',
+								    bgColor: '#008000',
+								    fgColor: '#008000',
+								  },
+						        });
+			           	}
+	            	}
 	        	}
 	        	if (partidas.fechaCaducidad !== undefined && partidas.entrada_id.DiasTraslado !== undefined && partidas.entrada_id.fechaSalidaPlanta != undefined) {
 	                let tiempoTraslado = partidas.entrada_id.DiasTraslado;
@@ -1271,6 +1319,7 @@ function getExcelCaducidades(req, res) {
 	            }
            		indexbody++;
            	});
+
            	worksheet.cell(i, indexbody).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
            	worksheet.cell(i, indexbody+1).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
            	worksheet.cell(i, indexbody+2).string(fechacalculada2Dias);
@@ -1281,7 +1330,7 @@ function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+7).string(partidas.entrada_id ? partidas.entrada_id.fechaSalidaPlanta  ? dateFormat(new Date(partidas.entrada_id.fechaSalidaPlanta.getTime()), formatofecha) :"":"");
            	worksheet.cell(i, indexbody+8).string(fechaEspRecibo);
            	worksheet.cell(i, indexbody+9).number(1+diasEnAlm);
-           	worksheet.cell(i, indexbody+10).number(orginalshippingdays);
+           	worksheet.cell(i, indexbody+10).number(orginalshippingdays).style(shipingdaysstyle);;
            	worksheet.cell(i, indexbody+11).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
            	worksheet.cell(i, indexbody+12).number(Math.abs(Aging));
            	//worksheet.cell(i, indexbody+11).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
