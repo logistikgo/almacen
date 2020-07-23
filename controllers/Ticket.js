@@ -3,6 +3,7 @@
 const Ticket = require('../models/Ticket');
 const Partida = require('../models/Partida');
 const Helper = require('../helpers');
+const Entrada = require('../models/Entrada');
 
 function getNextID() {
 	return Helper.getNextID(Ticket, "idTicket");
@@ -16,6 +17,9 @@ async function post(req, res) {
     nTicket.fechaAlta = new Date(Date.now()-(5*3600000));
     nTicket.idTicket = await getNextID();
     nTicket.stringFolio = await Helper.getStringFolio(nTicket.idTicket, nTicket.clienteFiscal_id, false, true);
+    nTicket.nombreUsuarioAprueba = null;
+    nTicket.usuarioAprueba_id = null;
+    nTicket.fechaLiberacion = null;
 
     //console.log(nTicket);
     switch(command) {
@@ -90,7 +94,12 @@ function getByID(req, res) {
 async function liberarTicket(req, res) {
     let tipo = req.body.tipo;
     let _id = req.body.ticket_id;
+    let firma_id =  req.body.usuarioAprueba_id;
+    let firmaName = req.body.nombreUsuarioAprueba;
     let partida_id = "";
+
+    console.log(firma_id);
+    console.log(firmaName);
 
     await Ticket.findOne({_id: _id}).then(async function(ticket) {
         partida_id = ticket.partida_id;
@@ -114,9 +123,23 @@ async function liberarTicket(req, res) {
             
         }
         else if(tipo == "OMITIR") {
-            await Partida.updateOne({_id: partida_id}, {$set: { status: "ASIGNADA" }});
+            console.log(tipo);
+            Entrada.findOne({_id: ticket.entrada_id}).then(async function (entrada){
+                let arrPartidas = entrada.partidas;
+                let partidaIndex = arrPartidas.findIndex(x => x.toString() == partida_id);
+                if(partidaIndex != -1) {
+                    arrPartidas.splice(partidaIndex, 1);
+                }
+                entrada.partidas = arrPartidas;
+                entrada.save();
+
+                await Partida.deleteOne({_id: partida_id});
+            });
         }
-        await Ticket.updateOne({ _id: _id }, { $set: { estatus: "APROBADO" } });
+        await Ticket.updateOne({ _id: _id }, { $set: { status: "APROBADO", usuarioAprueba_id: firma_id, nombreUsuarioAprueba: firmaName, fechaLiberacion: new Date(Date.now()-(5*3600000)) } })
+        .then(ticket => {
+            res.status(200).send(ticket);
+        });
     });
 }
 
