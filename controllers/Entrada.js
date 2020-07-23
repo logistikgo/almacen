@@ -1107,14 +1107,15 @@ function getExcelCaducidades(req, res) {
 		worksheet.cell(2, indexheaders+10).string('Dias Traslado Real').style(headersStyle);
 		worksheet.cell(2, indexheaders+11).string('Fecha de Recibo Cedis').style(headersStyle);
 		worksheet.cell(2, indexheaders+12).string('Fecha de Alta LKGO').style(headersStyle);
-		worksheet.cell(2, indexheaders+13).string('Aging Report').style(headersStyle);
-		worksheet.cell(2, indexheaders+14).string('Dias Alerta 1').style(headersStyle);
-		worksheet.cell(2, indexheaders+15).string('Alerta 1').style(headersStyle);
-		worksheet.cell(2, indexheaders+16).string('Fecha Alerta 1').style(headersStyle);
-		worksheet.cell(2, indexheaders+17).string('Dias Alerta 2').style(headersStyle);
-		worksheet.cell(2, indexheaders+18).string('Alerta 2').style(headersStyle);
-		worksheet.cell(2, indexheaders+19).string('Fecha Alerta 2').style(headersStyle);
-		worksheet.cell(2, indexheaders+20).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders+13).string('Fecha Garantia Frescura').style(headersStyle);
+		worksheet.cell(2, indexheaders+14).string('Aging Report').style(headersStyle);
+		worksheet.cell(2, indexheaders+15).string('Dias Alerta 1').style(headersStyle);
+		worksheet.cell(2, indexheaders+16).string('Alerta 1').style(headersStyle);
+		worksheet.cell(2, indexheaders+17).string('Fecha Alerta 1').style(headersStyle);
+		worksheet.cell(2, indexheaders+18).string('Dias Alerta 2').style(headersStyle);
+		worksheet.cell(2, indexheaders+19).string('Alerta 2').style(headersStyle);
+		worksheet.cell(2, indexheaders+20).string('Fecha Alerta 2').style(headersStyle);
+		worksheet.cell(2, indexheaders+21).string('Ubicacion').style(headersStyle);
 		
         let i=3;
         //console.log(arrPartidas);
@@ -1335,9 +1336,9 @@ function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+11).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
            	worksheet.cell(i, indexbody+12).string(partidas.entrada_id ? partidas.entrada_id.fechaAlta  ? dateFormat(new Date(partidas.entrada_id.fechaAlta.getTime()), formatofecha) :"":"");
            	worksheet.cell(i, indexbody+13).number(Math.abs(Aging));
-           	//worksheet.cell(i, indexbody+11).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
+           	worksheet.cell(i, indexbody+14).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
            	//worksheet.cell(i, indexbody+12).string(fechaFrescura ? fechaFrescura:"");
-           	worksheet.cell(i, indexbody+14).number(partidas.producto_id.alertaAmarilla ? partidas.producto_id.alertaAmarilla:0);
+           	worksheet.cell(i, indexbody+15).number(partidas.producto_id.alertaAmarilla ? partidas.producto_id.alertaAmarilla:0);
            	
            	if(diasAlm<0)
            	{
@@ -1396,9 +1397,9 @@ function getExcelCaducidades(req, res) {
 					  },
 			        });
        		}
-       		worksheet.cell(i, indexbody+15).string(strleyenda).style(ResultStyle);
-           	worksheet.cell(i, indexbody+16).string(fechaAlerta1);
-           	worksheet.cell(i, indexbody+17).number(partidas.producto_id.alertaRoja ? partidas.producto_id.alertaRoja:0);
+       		worksheet.cell(i, indexbody+16).string(strleyenda).style(ResultStyle);
+           	worksheet.cell(i, indexbody+17).string(fechaAlerta1);
+           	worksheet.cell(i, indexbody+18).number(partidas.producto_id.alertaRoja ? partidas.producto_id.alertaRoja:0);
            	if(diasAlm<0)
            	{
 	           	if (Math.abs(diasAlm) <= partidas.producto_id.alertaRoja) {
@@ -1457,12 +1458,12 @@ function getExcelCaducidades(req, res) {
 					  },
 			        });
        		}
-           	worksheet.cell(i, indexbody+18).string(strleyenda).style(ResultStyle);
-           	worksheet.cell(i, indexbody+19).string(fechaAlerta2);
+           	worksheet.cell(i, indexbody+19).string(strleyenda).style(ResultStyle);
+           	worksheet.cell(i, indexbody+20).string(fechaAlerta2);
            	let res="";
            	if(partidas.posiciones.length === 1) 
             	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
-           	worksheet.cell(i, indexbody+20).string(res);
+           	worksheet.cell(i, indexbody+21).string(res);
             i++;
         });
         workbook.write('ReporteCaducidad'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
