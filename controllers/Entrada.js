@@ -515,8 +515,8 @@ async function updateEntradasBabel(req, res) {
         //console.log(countEntradas);
         countEntradas= countEntradas == null ? await Entrada.findOne({"factura":req.body.Remision}).exec():countEntradas;
         //console.log(countEntradas);
-        countEntradas= countEntradas == null ? await Entrada.find({"item":req.body.Remision}).exec():countEntradas;
-        //console.log(req.body.FechaPlanta);
+        countEntradas= countEntradas == null ? await Entrada.findOne({"item":req.body.Remision}).exec():countEntradas;
+        console.log(countEntradas);
         let dataSplit=req.body.FechaPlanta.split('/');
         let fechaSalidaPlanta=new Date (dataSplit[2], dataSplit[1]-1 , dataSplit[0]); 
        //console.log(fechaSalidaPlanta.toString());
