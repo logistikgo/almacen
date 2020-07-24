@@ -41,7 +41,7 @@ async function getExistenciasByAlmacen(req, res) {
 		}
 		let entradas = await Entrada.find({ almacen_id: almacen_id });
 		let entradas_id = entradas.map(x => x._id);
-		let partidas = await Partida.find({ entrada_id: { $in: entradas_id }, producto_id: producto_id, isEmpty: false });
+		let partidas = await Partida.find({ entrada_id: { $in: entradas_id }, producto_id: producto_id, isEmpty: false, status: "ASIGNADA" });
 
 		partidas.forEach(function (partida) {
 			for (let x in partida.embalajesxSalir) {
