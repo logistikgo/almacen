@@ -503,6 +503,40 @@ async function saveEntradaBabel(req, res) {
 	};
 }
 
+
+async function updateEntradasBabel(req, res) {
+	var mongoose = require('mongoose');
+	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
+	console.log(req.body);
+
+	try{	
+		
+        let countEntradas=await Entrada.findOne({"factura":req.body.Remision}).exec();
+        //console.log(countEntradas);
+        countEntradas= countEntradas == null ? await Entrada.findOne({"referencia":req.body.Remision}).exec():countEntradas;
+        //console.log(countEntradas);
+        countEntradas= countEntradas == null ? await Entrada.find({"item":req.body.Remision}).exec():countEntradas;
+        //console.log(req.body.FechaPlanta);
+        let dataSplit=req.body.FechaPlanta.split('/');
+        let fechaSalidaPlanta=new Date (dataSplit[2], dataSplit[1]-1 , dataSplit[0]); 
+       //console.log(fechaSalidaPlanta.toString());
+		if(countEntradas)
+		{	
+
+	    	if(countEntradas.fechaSalidaPlanta == undefined){
+	    		countEntradas.fechaSalidaPlanta =fechaSalidaPlanta;
+	    		countEntradas.save();
+	    	}
+	    	
+	    		
+    	} 
+    	return res.status(200).send("OK");
+	}catch(error){
+			console.log(error)
+			res.status(500).send(error);
+			console.log(error);
+	};
+}
 //Valida que la entrada ya existe o no, devolviendo true o false
 async function validaEntradaDuplicado(embarque) {
 	let entradas = await Entrada.find({ embarque: embarque }).exec();
@@ -1936,6 +1970,7 @@ module.exports = {
 	getExcelEntradas,
 	getExcelCaducidades,
 	saveEntradaBabel,
+	updateEntradasBabel,
 	updateById,
 	posicionarPrioridades,
 	updateRemision,
