@@ -530,6 +530,8 @@ async function updateEntradasBabel(req, res) {
 	    	
 	    		
     	} 
+    	else
+    		return res.status(200).send("No existe: "+req.body.Remision);
     	return res.status(200).send("OK");
 	}catch(error){
 			console.log(error)
