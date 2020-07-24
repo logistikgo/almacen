@@ -511,9 +511,9 @@ async function updateEntradasBabel(req, res) {
 
 	try{	
 		
-        let countEntradas=await Entrada.findOne({"factura":req.body.Remision}).exec();
+        let countEntradas=await Entrada.findOne({"referencia":req.body.Remision}).exec();
         //console.log(countEntradas);
-        countEntradas= countEntradas == null ? await Entrada.findOne({"referencia":req.body.Remision}).exec():countEntradas;
+        countEntradas= countEntradas == null ? await Entrada.findOne({"factura":req.body.Remision}).exec():countEntradas;
         //console.log(countEntradas);
         countEntradas= countEntradas == null ? await Entrada.find({"item":req.body.Remision}).exec():countEntradas;
         //console.log(req.body.FechaPlanta);
