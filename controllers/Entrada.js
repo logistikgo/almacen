@@ -1906,6 +1906,99 @@ async function updateFecha(idEntrada)
 		await MovimientoInventario.updateMovimientos(idEntrada,today);
 	})
 }
+
+async function saveEntradaEDI(req, res) {
+	try{
+		await Helper.asyncForEach(req.body.respuestaJson,async function (Entradas) {
+			var arrPartidas_id = [];
+			var partidas = [];
+			await Helper.asyncForEach(Entradas.partidas,async function (EDIpartida){
+
+				if(EDIpartida !== undefined && EDIpartida.clave !== undefined)
+				{
+				
+					var producto=await Producto.findOne({ 'clave':EDIpartida.clave }).exec();
+					if(producto==undefined)
+						return res.status(200).send("no existe item: "+EDIpartida.clave);
+					
+			        //console.log(dateFormat(fechaCaducidadTemp, "dd/mm/yy") );
+					const data={
+						producto_id:producto._id,
+						clave:producto.clave,
+						descripcion:producto.descripcion,
+						origen:"BABEL",
+						tipo: "NORMAL",
+		    			status: "WAITINGARRIVAL",
+						embalajesEntrada: { cajas:parseInt(EDIpartida.CantidadxEmbalaje)},
+			        	embalajesxSalir: { cajas:parseInt(EDIpartida.CantidadxEmbalaje)},
+			        	fechaProduccion:new Date(fechaProduccion),
+			        	fechaCaducidad: new Date(fechaCaducidad),
+			        	lote:EDIpartida.lote,
+			        	InfoPedidos:[{ "IDAlmacen": EDIpartida.IdAlmacen}],
+			        	valor:0
+			        }
+			        partida.InfoPedidos[0].IDAlmacen=EDIpartida.IdAlmacen;
+			        let nPartida = new PartidaModel(partida);
+			        await nPartida.save().then((partida) => {
+			        	partidas.push(partida)
+			            arrPartidas_id.push(partida._id);
+			        });
+		    	}
+		    });
+
+			if (partidas && partidas.length > 0) {
+				let idCliente = Entradas.Entrada.IDClienteFiscal;
+				let idSucursales = Entradas.Entrada.IDSucursal;
+
+				let nEntrada = new Entrada();
+
+				nEntrada.fechaEntrada = new Date(Entradas.Entrada.fechaEsperada);
+				nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
+				nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+					return total + valor;
+				});
+				nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+				nEntrada.clienteFiscal_id = idCliente;
+				nEntrada.sucursal_id = idSucursales;
+				nEntrada.status = "WAITINGARRIVAL";/*repalce arrival*/
+				nEntrada.tipo = "NORMAL";
+				nEntrada.partidas = partidas.map(x => x._id);
+				nEntrada.nombreUsuario = "BarcelBabel";
+				
+				nEntrada.referencia = Entradas.Entrada.referencia;
+				nEntrada.factura = Entradas.Entrada.item;
+				nEntrada.item = Entradas.Entrada.item;
+				nEntrada.transportista = TempW27StandardCarrierAlphaCode;nEntrada.ordenCompra=Entradas.Entrada..po;
+				nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
+				nEntrada.idEntrada = await getNextID();
+				nEntrada.folio = await getNextID();
+				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+				//nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
+				//console.log("testEntrada");
+				await nEntrada.save()
+					.then(async (entrada) => {
+						//console.log("testpartidas");
+						await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
+						//console.log(partidas);
+						/*console.log(entrada);
+						console.log("/------------------/")*/
+					}).catch((error) => {
+						reserror=error
+					});
+			}else {
+				console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+			}
+
+		});
+
+
+	}
+	catch(error){
+			console.log(error)
+			res.status(500).send(error);
+			//console.log(error);
+	};	
+}
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
