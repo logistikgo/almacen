@@ -2072,6 +2072,7 @@ module.exports = {
 	posicionarPrioridades,
 	updateRemision,
 	updateStatus,
-	updateFecha
+	updateFecha,
+	saveEntradaEDI
 	// getPartidaById,
 }
