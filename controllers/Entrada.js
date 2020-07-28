@@ -402,20 +402,22 @@ async function saveEntradaBabel(req, res) {
 	    //console.log(indexInfopedido);
 	    let planta="";
 
-	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA")
+	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA" && indexInfopedido != -1)
 		 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		else
 			planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
+		//console.log("__------------------------------------------------"+planta);
 		if(planta==null)
 		{
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
-			console.log(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0]);
+			//console.log("AQUI----------------------------------"+req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0]);
 			if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA")
 			 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 			else
 				planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		}
-		console.log(indexInfopedido);
+		//console.log(planta);
+		//console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
 		let fechaSalidaPlanta=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
