@@ -432,6 +432,7 @@ async function saveEntradaBabel(req, res) {
 			let nEntrada = new Entrada();
 
 			nEntrada.fechaEntrada = new Date(fechaesperada);
+
 			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
 			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
 				return total + valor;
@@ -471,13 +472,30 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
-			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			let stringFolio=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+		 	countEntradas=await Entrada.find({"stringFolio":stringFolio}).exec();
+			if(countEntradas.length <1){
+				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			}
+			else
+			{
+				
+				nEntrada.folio = await getNextID();
+				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			}
 			nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 			//console.log("testEntrada");
 			await nEntrada.save()
 				.then(async (entrada) => {
 					//console.log("testpartidas");
+
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
+					countEntradas=await Entrada.find({"stringFolio":nEntrada.stringFolio}).exec();
+					if(countEntradas.length >1){
+						
+						nEntrada.folio = await getNextID();
+						nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+					}
 					//console.log(partidas);
 					/*console.log(entrada);
 					console.log("/------------------/")*/
@@ -660,7 +678,6 @@ async function validaEntrada(req, res) {
 }
 
 function getEntradasReporte(req, res) {
-	//console.log(req.body.fechaInicio)
 	var arrPartidas = [];
 	var arrPartidasFilter = [];
 	let clasificacion = req.body.clasificacion != undefined ? req.body.clasificacion : "";
@@ -691,6 +708,7 @@ function getEntradasReporte(req, res) {
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.body.clienteFiscal_id,
+		status:"APLICADA",
 		isEmpty: false
 	}
 	if(fechaInicio != "" &&  fechaFinal != ""){
@@ -898,6 +916,7 @@ function getExcelCaducidades(req, res) {
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.query.clienteFiscal_id,
+		status:"APLICADA",
 		isEmpty: false
 	}
 	if(fechaInicio != "" &&  fechaFinal != ""){
@@ -1967,12 +1986,15 @@ async function saveEntradaEDI(req, res) {
 				
 				nEntrada.referencia = Entradas.Entrada.referencia;
 				nEntrada.factura = Entradas.Entrada.item;
-				nEntrada.item = Entradas.Entrada.item;
-				nEntrada.transportista = TempW27StandardCarrierAlphaCode;nEntrada.ordenCompra=Entradas.Entrada..po;
+				//nEntrada.item = Entradas.Entrada.item;
+				//nEntrada.transportista = 
+				//nEntrada.ordenCompra=Entradas.Entrada.ordenCompra;
 				nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 				nEntrada.idEntrada = await getNextID();
 				nEntrada.folio = await getNextID();
-				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+				let stringTemp=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+				//if()
+				//nEntrada.stringFolio = 
 				//nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 				//console.log("testEntrada");
 				await nEntrada.save()
