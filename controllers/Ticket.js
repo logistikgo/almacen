@@ -4,6 +4,8 @@ const Ticket = require('../models/Ticket');
 const Partida = require('../models/Partida');
 const Helper = require('../helpers');
 const Entrada = require('../models/Entrada');
+const Posicion = require('../models/Posicion');
+const MovimientoInventario = require('../models/MovimientoInventario');
 
 function getNextID() {
 	return Helper.getNextID(Ticket, "idTicket");
@@ -97,6 +99,7 @@ async function liberarTicket(req, res) {
     let firma_id =  req.body.usuarioAprueba_id;
     let firmaName = req.body.nombreUsuarioAprueba;
     let partida_id = "";
+    let accion = "";
 
     console.log(firma_id);
     console.log(firmaName);
@@ -104,22 +107,43 @@ async function liberarTicket(req, res) {
     await Ticket.findOne({_id: _id}).then(async function(ticket) {
         partida_id = ticket.partida_id;
 
-        let params = {
-            status: "ASIGNADA",
-            lote: ticket.lote,
-            fechaCaducidad: ticket.fechaCaducidad,
-            fechaProduccion: ticket.fechaProduccion,
-            producto_id: ticket.producto_id,
-            descripcion: ticket.descripcion,
-            clave: ticket.clave,
-            embalajesEntrada: ticket.embalajesEntrada
-        };
-
-        if(tipo == "AGREGAR"){ 
+        if(tipo == "AGREGAR") { 
+            
             await Partida.updateOne({_id: partida_id}, {$set: { status: "ASIGNADA" }});
         }
         else if(tipo == "MODIFICAR") {
-            await Partida.updateOne({_id: partida_id}, {$set: params});
+            if(accion == "APROBAR") {
+                let producto_idTicket = ticket.producto_id;
+                if(producto_idTicket != null) {
+                    var partidaTicket = await Partida.findOne({_id: ticket.partida_id});
+
+                    await Posicion.findOne({_id: partidaTicket.posiciones[0].posicion_id}).then(async function (posicion) {
+                        await Helper.asyncForEach(posicion.niveles, async function(nivel) {
+                            await Helper.asyncForEach(nivel.productos, function (objProd) {
+                                if(objProd.producto_id == partidaTicket.producto_id) {
+                                    //Considerar el acumulado (varias partidas del mismo producto en la misma posicion)
+                                    objProd.producto_id = ticket.producto_id;
+                                    objProd.embalajes = ticket.embalajesEntrada;
+                                    console.log(posicion);
+                                    //posicion.save();
+                                }
+                            });
+                        });
+                    });
+                    // await MovimientoInventario.findOne({entrada_id: ticket.entrada_id}).then(movimiento =>{
+                        
+                    // })
+                }
+                else {
+
+                }
+                await Partida.updateOne({_id: partida_id}, {$set: params});
+            }
+            else {
+                //
+            }
+            
+            
             
         }
         else if(tipo == "OMITIR") {

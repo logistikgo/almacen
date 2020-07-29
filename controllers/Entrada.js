@@ -402,20 +402,22 @@ async function saveEntradaBabel(req, res) {
 	    //console.log(indexInfopedido);
 	    let planta="";
 
-	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA")
+	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA" && indexInfopedido != -1)
 		 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		else
 			planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
+		//console.log("__------------------------------------------------"+planta);
 		if(planta==null)
 		{
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
-			console.log(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0]);
+			//console.log("AQUI----------------------------------"+req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0]);
 			if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA")
 			 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 			else
 				planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		}
-		console.log(indexInfopedido);
+		//console.log(planta);
+		//console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
 		let fechaSalidaPlanta=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
@@ -430,6 +432,7 @@ async function saveEntradaBabel(req, res) {
 			let nEntrada = new Entrada();
 
 			nEntrada.fechaEntrada = new Date(fechaesperada);
+
 			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
 			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
 				return total + valor;
@@ -469,13 +472,30 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
-			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			let stringFolio=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+		 	countEntradas=await Entrada.find({"stringFolio":stringFolio}).exec();
+			if(countEntradas.length <1){
+				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			}
+			else
+			{
+				
+				nEntrada.folio = await getNextID();
+				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			}
 			nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 			//console.log("testEntrada");
 			await nEntrada.save()
 				.then(async (entrada) => {
 					//console.log("testpartidas");
+
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
+					countEntradas=await Entrada.find({"stringFolio":nEntrada.stringFolio}).exec();
+					if(countEntradas.length >1){
+						
+						nEntrada.folio = await getNextID();
+						nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+					}
 					//console.log(partidas);
 					/*console.log(entrada);
 					console.log("/------------------/")*/
@@ -658,7 +678,6 @@ async function validaEntrada(req, res) {
 }
 
 function getEntradasReporte(req, res) {
-	//console.log(req.body.fechaInicio)
 	var arrPartidas = [];
 	var arrPartidasFilter = [];
 	let clasificacion = req.body.clasificacion != undefined ? req.body.clasificacion : "";
@@ -689,6 +708,7 @@ function getEntradasReporte(req, res) {
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.body.clienteFiscal_id,
+		status:"APLICADA",
 		isEmpty: false
 	}
 	if(fechaInicio != "" &&  fechaFinal != ""){
@@ -896,6 +916,7 @@ function getExcelCaducidades(req, res) {
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.query.clienteFiscal_id,
+		status:"APLICADA",
 		isEmpty: false
 	}
 	if(fechaInicio != "" &&  fechaFinal != ""){
@@ -1904,6 +1925,103 @@ async function updateFecha(idEntrada)
 		await MovimientoInventario.updateMovimientos(idEntrada,today);
 	})
 }
+
+async function saveEntradaEDI(req, res) {
+	console.log(req);
+	try{
+		await Helper.asyncForEach(req.body.respuestaJson,async function (Entradas) {
+			var arrPartidas_id = [];
+			var partidas = [];
+			await Helper.asyncForEach(Entradas.partidas,async function (EDIpartida){
+
+				if(EDIpartida !== undefined && EDIpartida.clave !== undefined)
+				{
+				
+					var producto=await Producto.findOne({ 'clave':EDIpartida.clave }).exec();
+					if(producto==undefined)
+						return res.status(200).send("no existe item: "+EDIpartida.clave);
+					
+			        //console.log(dateFormat(fechaCaducidadTemp, "dd/mm/yy") );
+					const data={
+						producto_id:producto._id,
+						clave:producto.clave,
+						descripcion:producto.descripcion,
+						origen:"BABEL",
+						tipo: "NORMAL",
+		    			status: "WAITINGARRIVAL",
+						embalajesEntrada: { cajas:parseInt(EDIpartida.CantidadxEmbalaje)},
+			        	embalajesxSalir: { cajas:parseInt(EDIpartida.CantidadxEmbalaje)},
+			        	fechaProduccion:new Date(fechaProduccion),
+			        	fechaCaducidad: new Date(fechaCaducidad),
+			        	lote:EDIpartida.lote,
+			        	InfoPedidos:[{ "IDAlmacen": EDIpartida.IdAlmacen}],
+			        	valor:0
+			        }
+			        partida.InfoPedidos[0].IDAlmacen=EDIpartida.IdAlmacen;
+			        let nPartida = new PartidaModel(partida);
+			        await nPartida.save().then((partida) => {
+			        	partidas.push(partida)
+			            arrPartidas_id.push(partida._id);
+			        });
+		    	}
+		    });
+
+			if (partidas && partidas.length > 0) {
+				let idCliente = Entradas.Entrada.IDClienteFiscal;
+				let idSucursales = Entradas.Entrada.IDSucursal;
+
+				let nEntrada = new Entrada();
+
+				nEntrada.fechaEntrada = new Date(Entradas.Entrada.fechaEsperada);
+				nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
+				nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+					return total + valor;
+				});
+				nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+				nEntrada.clienteFiscal_id = idCliente;
+				nEntrada.sucursal_id = idSucursales;
+				nEntrada.status = "WAITINGARRIVAL";/*repalce arrival*/
+				nEntrada.tipo = "NORMAL";
+				nEntrada.partidas = partidas.map(x => x._id);
+				nEntrada.nombreUsuario = "BarcelBabel";
+				
+				nEntrada.referencia = Entradas.Entrada.referencia;
+				nEntrada.factura = Entradas.Entrada.item;
+				//nEntrada.item = Entradas.Entrada.item;
+				//nEntrada.transportista = 
+				//nEntrada.ordenCompra=Entradas.Entrada.ordenCompra;
+				nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
+				nEntrada.idEntrada = await getNextID();
+				nEntrada.folio = await getNextID();
+				let stringTemp=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+				//if()
+				//nEntrada.stringFolio = 
+				nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
+				//console.log("testEntrada");
+				await nEntrada.save()
+					.then(async (entrada) => {
+						//console.log("testpartidas");
+						await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
+						//console.log(partidas);
+						/*console.log(entrada);
+						console.log("/------------------/")*/
+					}).catch((error) => {
+						reserror=error
+					});
+			}else {
+				console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+			}
+
+		});
+
+
+	}
+	catch(error){
+			console.log(error)
+			res.status(500).send(error);
+			//console.log(error);
+	};	
+}
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -1977,6 +2095,7 @@ module.exports = {
 	posicionarPrioridades,
 	updateRemision,
 	updateStatus,
-	updateFecha
+	updateFecha,
+	saveEntradaEDI
 	// getPartidaById,
 }
