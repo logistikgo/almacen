@@ -399,14 +399,14 @@ async function saveEntradaBabel(req, res) {
 	    /*console.log(partidas);
 	    console.log(arrPartidas_id);*/
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA/MANUFACTURINGPLANT");
-	    console.log(indexInfopedido);
+	    //console.log(indexInfopedido);
 	    let planta="";
 
 	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA" && indexInfopedido != -1)
 		 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		else
 			planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
-		console.log(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0]);
+		//console.log("__------------------------------------------------"+planta);
 		if(planta==null)
 		{
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
@@ -416,7 +416,7 @@ async function saveEntradaBabel(req, res) {
 			else
 				planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		}
-		console.log(planta);
+		//console.log(planta);
 		//console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
@@ -434,11 +434,9 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.fechaEntrada = new Date(fechaesperada);
 
 			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
-			nEntrada.valor = await partidas.map(x => x.valor).reduce(function (total, valor) {
+			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
 				return total + valor;
 			});
-			nEntrada.idEntrada = await getNextID();
-		    nEntrada.folio = await getNextID();
 			nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
 			nEntrada.clienteFiscal_id = idCliente;
 			nEntrada.sucursal_id = idSucursales;
@@ -470,24 +468,13 @@ async function saveEntradaBabel(req, res) {
 			
 			nEntrada.ordenCompra=noOrden.po;
 			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
-			
-			//nEntrada.folio = await getNextID();
-			//nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			nEntrada.idEntrada = await getNextID();
+			nEntrada.folio = await getNextID();
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
-
+		 	
 			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
-			//let stringFolio=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
-		 	/*let countEntradas=await Entrada.find({"stringFolio":stringFolio}).exec();
-			if(countEntradas.length <1){
-				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
-			}
-			else
-			{
-				
-				nEntrada.folio = await getNextID();
-				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
-			}*/
+			
 			nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 			//console.log("testEntrada");
 			await nEntrada.save()
@@ -1842,7 +1829,6 @@ async function posicionarPrioridades(req, res) {
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
-
 			await entrada.save().then(async (entrada) => {
 					/*console.log("testpartidas");
 					console.log(resultpartidas);
@@ -1928,7 +1914,6 @@ async function updateFecha(idEntrada)
 }
 
 async function saveEntradaEDI(req, res) {
-	console.log(req);
 	try{
 		await Helper.asyncForEach(req.body.respuestaJson,async function (Entradas) {
 			var arrPartidas_id = [];
@@ -1988,7 +1973,7 @@ async function saveEntradaEDI(req, res) {
 				
 				nEntrada.referencia = Entradas.Entrada.referencia;
 				nEntrada.factura = Entradas.Entrada.item;
-				//nEntrada.item = Entradas.Entrada.item;
+				nEntrada.item = Entradas.Entrada.item;
 				//nEntrada.transportista = 
 				//nEntrada.ordenCompra=Entradas.Entrada.ordenCompra;
 				nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
@@ -1997,7 +1982,7 @@ async function saveEntradaEDI(req, res) {
 				let stringTemp=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 				//if()
 				//nEntrada.stringFolio = 
-				nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
+				//nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 				//console.log("testEntrada");
 				await nEntrada.save()
 					.then(async (entrada) => {
