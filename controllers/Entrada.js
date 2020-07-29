@@ -399,14 +399,14 @@ async function saveEntradaBabel(req, res) {
 	    /*console.log(partidas);
 	    console.log(arrPartidas_id);*/
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA/MANUFACTURINGPLANT");
-	    //console.log(indexInfopedido);
+	    console.log(indexInfopedido);
 	    let planta="";
 
 	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA" && indexInfopedido != -1)
 		 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		else
 			planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
-		//console.log("__------------------------------------------------"+planta);
+		console.log(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0]);
 		if(planta==null)
 		{
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
@@ -416,7 +416,7 @@ async function saveEntradaBabel(req, res) {
 			else
 				planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		}
-		//console.log(planta);
+		console.log(planta);
 		//console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
@@ -473,7 +473,7 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
 			let stringFolio=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
-		 	countEntradas=await Entrada.find({"stringFolio":stringFolio}).exec();
+		 	let countEntradas=await Entrada.find({"stringFolio":stringFolio}).exec();
 			if(countEntradas.length <1){
 				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 			}
@@ -490,7 +490,7 @@ async function saveEntradaBabel(req, res) {
 					//console.log("testpartidas");
 
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
-					countEntradas=await Entrada.find({"stringFolio":nEntrada.stringFolio}).exec();
+					let countEntradas=await Entrada.find({"stringFolio":nEntrada.stringFolio}).exec();
 					if(countEntradas.length >1){
 						
 						nEntrada.folio = await getNextID();
