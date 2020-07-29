@@ -105,6 +105,7 @@ async function getExistenciasAlmacen(almacen_id, producto) {
 		partidas = partidas.filter(x => x.entrada_id != undefined && x.entrada_id.almacen_id == almacen_id);
 
 		partidas.forEach(function (partida) {
+			console.log(almacen_id +"=="+ partida.entrada_id.almacen_id);
 			for (let x in partida.embalajesxSalir) {
 				if (existencias[x] == undefined) existencias[x] = 0;
 
@@ -230,7 +231,7 @@ function getByIDClienteFiscal(req, res) {
 	//console.log("Dennise was here");
 	let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
 	let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
-	//console.log(req.params.idClienteFiscal);
+	console.log(req.query.almacen_id);
 
 	let arrProd=[];
 	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
