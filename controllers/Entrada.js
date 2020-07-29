@@ -469,11 +469,12 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.ordenCompra=noOrden.po;
 			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 			nEntrada.idEntrada = await getNextID();
-			nEntrada.folio = await getNextID();
+			//nEntrada.folio = await getNextID();
+			//nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
-			let stringFolio=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
-		 	let countEntradas=await Entrada.find({"stringFolio":stringFolio}).exec();
+			//let stringFolio=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+		 	/*let countEntradas=await Entrada.find({"stringFolio":stringFolio}).exec();
 			if(countEntradas.length <1){
 				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 			}
@@ -482,7 +483,7 @@ async function saveEntradaBabel(req, res) {
 				
 				nEntrada.folio = await getNextID();
 				nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
-			}
+			}*/
 			nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 			//console.log("testEntrada");
 			await nEntrada.save()
@@ -490,12 +491,7 @@ async function saveEntradaBabel(req, res) {
 					//console.log("testpartidas");
 
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
-					let countEntradas=await Entrada.find({"stringFolio":nEntrada.stringFolio}).exec();
-					if(countEntradas.length >1){
-						
-						nEntrada.folio = await getNextID();
-						nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
-					}
+					
 					//console.log(partidas);
 					/*console.log(entrada);
 					console.log("/------------------/")*/
@@ -1842,6 +1838,8 @@ async function posicionarPrioridades(req, res) {
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
+		    entrada.folio = await getNextID();
+			entrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 			await entrada.save().then(async (entrada) => {
 					/*console.log("testpartidas");
 					console.log(resultpartidas);
