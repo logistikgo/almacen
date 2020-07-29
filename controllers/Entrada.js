@@ -1839,7 +1839,7 @@ async function posicionarPrioridades(req, res) {
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
 		    entrada.folio = await getNextID();
-			entrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			entrada.stringFolio = await Helper.getStringFolio(entrada.folio, entrada.clienteFiscal_id, 'I', false);
 			await entrada.save().then(async (entrada) => {
 					/*console.log("testpartidas");
 					console.log(resultpartidas);
