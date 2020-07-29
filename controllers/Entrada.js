@@ -1927,6 +1927,7 @@ async function updateFecha(idEntrada)
 }
 
 async function saveEntradaEDI(req, res) {
+	console.log(req);
 	try{
 		await Helper.asyncForEach(req.body.respuestaJson,async function (Entradas) {
 			var arrPartidas_id = [];
@@ -1995,7 +1996,7 @@ async function saveEntradaEDI(req, res) {
 				let stringTemp=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 				//if()
 				//nEntrada.stringFolio = 
-				//nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
+				nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 				//console.log("testEntrada");
 				await nEntrada.save()
 					.then(async (entrada) => {
