@@ -434,9 +434,11 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.fechaEntrada = new Date(fechaesperada);
 
 			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
-			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+			nEntrada.valor = await partidas.map(x => x.valor).reduce(function (total, valor) {
 				return total + valor;
 			});
+			nEntrada.idEntrada = await getNextID();
+		    nEntrada.folio = await getNextID();
 			nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
 			nEntrada.clienteFiscal_id = idCliente;
 			nEntrada.sucursal_id = idSucursales;
@@ -468,11 +470,13 @@ async function saveEntradaBabel(req, res) {
 			
 			nEntrada.ordenCompra=noOrden.po;
 			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
-			nEntrada.idEntrada = await getNextID();
+			
 			//nEntrada.folio = await getNextID();
 			//nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 			nEntrada.plantaOrigen=planta.Nombre;
 			nEntrada.DiasTraslado=planta.DiasTraslado;
+
+			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 			//let stringFolio=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 		 	/*let countEntradas=await Entrada.find({"stringFolio":stringFolio}).exec();
 			if(countEntradas.length <1){
@@ -1838,8 +1842,7 @@ async function posicionarPrioridades(req, res) {
 		    entrada.status="APLICADA";
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
-		    entrada.folio = await getNextID();
-			entrada.stringFolio = await Helper.getStringFolio(entrada.folio, entrada.clienteFiscal_id, 'I', false);
+
 			await entrada.save().then(async (entrada) => {
 					/*console.log("testpartidas");
 					console.log(resultpartidas);
