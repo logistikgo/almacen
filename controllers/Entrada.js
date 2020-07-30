@@ -466,7 +466,7 @@ async function saveEntradaBabel(req, res) {
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="SELLOS/SEALS");
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			await new Promise(resolve => {
-					let time=(Math.random() * 100)*100;
+					let time=(Math.random() * 1000)*10;
 			        setTimeout(resolve,time );
 			        //poconsole.log(time);
 			    });
