@@ -465,7 +465,11 @@ async function saveEntradaBabel(req, res) {
 			nEntrada.operador = req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="SELLOS/SEALS");
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
-			
+			await new Promise(resolve => {
+					let time=(Math.random() * 100)*100;
+			        setTimeout(resolve,time );
+			        //poconsole.log(time);
+			    });
 			nEntrada.ordenCompra=noOrden.po;
 			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 			nEntrada.idEntrada = await getNextID();
@@ -477,11 +481,7 @@ async function saveEntradaBabel(req, res) {
 			
 			nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 			//console.log("testEntrada");
-			await new Promise(resolve => {
-					let time=(Math.random() * 100)*100;
-			        setTimeout(resolve,time );
-			        //poconsole.log(time);
-			    });
+			
 			await nEntrada.save()
 				.then(async (entrada) => {
 					//console.log("testpartidas");
