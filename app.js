@@ -267,8 +267,10 @@ app.get('/api/getExcelSalidas', Salida.getExcelSalidas);
 //babel
 //entradas
 app.post('/api/saveEntradaBabel', Entrada.saveEntradaBabel);
+app.post('/api/updateEntradasBabel', Entrada.updateEntradasBabel);
+app.post('/api/saveEntradaEDI', Entrada.saveEntradaEDI);
 app.post('/api/updateById', Entrada.updateById);
-
+ 
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
 
