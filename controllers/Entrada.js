@@ -477,7 +477,9 @@ async function saveEntradaBabel(req, res) {
 			
 			nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 			//console.log("testEntrada");
-			//await delay(Math.random() * 1000);
+			await new Promise(resolve => {
+			        setTimeout(resolve, Math.random() * 1000);
+			    });
 			await nEntrada.save()
 				.then(async (entrada) => {
 					//console.log("testpartidas");
