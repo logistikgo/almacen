@@ -30,6 +30,7 @@ const Entrada = Schema(
 		fechaEntrada: Date,
 		fechaReciboRemision: Date,
 		fechaSalidaPlanta: Date,
+		fechaEsperada:Date,
 		observaciones: String,
 		valor: Number,
 		partidas: [
