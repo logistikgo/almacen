@@ -954,6 +954,7 @@ async function getExcelByIDs(req, res) {
             sucursal_id:  arrSucursales_id ,
             almacen_id: arrAlmacenes_id
             
+            
         };
         if(fechaInicio != "" &&  fechaFinal != ""){
             if(fecha == "fechaAltaEntrada")
