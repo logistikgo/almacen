@@ -952,8 +952,8 @@ async function getExcelByIDs(req, res) {
         let filter = {
             clienteFiscal_id: arrClientesFiscales_id ,
             sucursal_id:  arrSucursales_id ,
-            almacen_id: arrAlmacenes_id,
-            status:"APLICADA"
+            almacen_id: arrAlmacenes_id
+            
         };
         if(fechaInicio != "" &&  fechaFinal != ""){
             if(fecha == "fechaAltaEntrada")
@@ -1035,7 +1035,7 @@ async function getExcelByIDs(req, res) {
                         resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                     }
                     //console.log(resFecha+" "+ resClasificacion+" "+resSubclasificacion+" "+ resClave+" "+partida.tipo)
-                    if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
+                    if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (entrada.status=="APLICADA"||entrada.status=="FINALIZADO") && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     {   
                         //console.log(entrada.tipo);
                         let porcentaje = 0;
