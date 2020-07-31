@@ -42,7 +42,9 @@ async function get(req, res) {
 	console.log(_tipo);
 	if(_status != "FINALIZADO" && _status != null && _status !== "NINGUNO"){
 		filter = {
+			clienteFiscal_id: _idClienteFiscal,
 			sucursal_id: _idSucursal,
+			almacen_id: _idAlmacen,
 			tipo: _tipo,
 			status: _status
 		};
@@ -52,14 +54,18 @@ async function get(req, res) {
 		//console.log(isReporte);
 		if( isReporte === "true" && _status === "NINGUNO") {
 			filter = {
+				clienteFiscal_id: _idClienteFiscal,
 				sucursal_id: _idSucursal,
+				almacen_id: _idAlmacen,
 				tipo: _tipo,
 				status: { $in:['FINALIZADO','APLICADA']}
 			};
 		}
 		else {
 			filter = {
+				clienteFiscal_id: _idClienteFiscal,
 				sucursal_id: _idSucursal,
+				almacen_id: _idAlmacen,
 				tipo: _tipo,
 				status: _status
 			};
@@ -1358,6 +1364,11 @@ function getExcelCaducidades(req, res) {
 	                        tarimas = partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia ? (partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
 	                        band = true;
 	                    }
+	                    else if(equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Saco") {
+
+	                        tarimas = partidas.embalajesxSalir.sacos / equivalencia.cantidadEquivalencia ? (partidas.embalajesxSalir.sacos / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
+	                        band = true;
+	                    }
 	                });
 	                if (band !== true){
 	                    tarimas = partidas.embalajesxSalir.tarimas ? partidas.embalajesxSalir.tarimas : 0;
@@ -2038,6 +2049,122 @@ async function saveEntradaEDI(req, res) {
 	else
 		return res.status(200).send("OK");
 }
+
+async function saveEntradaChevron(req, res) {
+
+	var mongoose = require('mongoose');
+	var errores="";
+	//console.log(req.body);
+	try{
+		var arrPartidas_id = [];
+		var partidas = [];
+		console.log("test");
+		await Helper.asyncForEach(req.body.Partidas,async function (partida){
+			//console.log(EDIpartida);
+			if(partida !== undefined && partida.clave !== undefined)
+			{
+				
+				var producto=await Producto.findOne({'clave':partida.clave }).exec();
+				//console.log(producto._id);
+				if(producto == undefined){
+					//console.log("testst")
+					return res.status(200).send("no existe item: "+partida.clave);
+				}
+		        //console.log(new Date(fechaProduccion) );
+		        let resultjson=[]
+		        let embalaje={}
+		        embalaje[partida.EMBALAJE.toLowerCase()]=partida.CantidadxEmbalaje;
+		        //resultjson.push(embalaje);
+		        embalaje=JSON.parse(JSON.stringify( embalaje ))
+				const data={
+					producto_id:producto._id,
+					clave:producto.clave,
+					descripcion:producto.descripcion,
+					origen:"BABEL",
+					tipo: "NORMAL",
+	    			status: "WAITINGARRIVAL",
+					embalajesEntrada: embalaje,
+		        	embalajesxSalir: embalaje,
+		        	fechaProduccion:new Date(Date.now()-(5*3600000)),
+		        	fechaCaducidad: new Date(Date.now()-(5*3600000)),
+		        	lote:"",
+		        	InfoPedidos:[{ "IDAlmacen": "5ec3f773bfef980cf488b731"}],
+		        	valor:0
+		        }
+		        //console.log(data);
+		        
+		        data.InfoPedidos[0].IDAlmacen="5ec3f773bfef980cf488b731";
+		        let nPartida = new PartidaModel(data);
+		        //console.log(nPartida);
+		        //return res.status(200).send("no existe item: "+partida.clave);
+		        await nPartida.save().then((partida) => {
+		        	partidas.push(partida)
+		            arrPartidas_id.push(partida._id);
+		        });
+	    	}
+	    });
+
+		if (partidas && partidas.length > 0) {
+			let idCliente = "5ec3f839bfef980cf488b737";
+			let idSucursales = "5e3342f322b5651aecafea05";
+
+			let nEntrada = new Entrada();
+
+			nEntrada.fechaEntrada = new Date(Date.now()-(5*3600000));
+			nEntrada.fechaEsperada= new Date(Date.now()-(5*3600000))
+			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
+			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+				return total + valor;
+			});
+			nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+			nEntrada.clienteFiscal_id = idCliente;
+			nEntrada.sucursal_id = idSucursales;
+			nEntrada.status = "WAITINGARRIVAL";/*repalce arrival*/
+			nEntrada.tipo = "NORMAL";
+			nEntrada.partidas = partidas.map(x => x._id);
+			nEntrada.nombreUsuario = "BabelChevron";
+			
+			nEntrada.referencia ="Entrada INICIAL";
+			nEntrada.factura = "Entrada INICIAL";
+			nEntrada.item = "Entrada INICIAL";
+			nEntrada.transportista = "";
+			nEntrada.ordenCompra="";
+			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
+			nEntrada.idEntrada = await getNextID();
+			nEntrada.folio = await getNextID();
+			let stringTemp=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			//if()
+			nEntrada.stringFolio =await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			//nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
+			//console.log("testEntrada");
+			await nEntrada.save()
+				.then(async (entrada) => {
+					//console.log("testpartidas");
+					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
+					//console.log(partidas);
+					/*console.log(entrada);
+					console.log("/------------------/")*/
+				}).catch((error) => {
+					reserror=error
+				});
+		}else {
+			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+			res.status(500).send("error");
+		}
+	}	
+	catch(error){
+			console.log(error)
+			res.status(500).send(error);
+			//console.log(error);
+	};	
+	if(errores!=="")
+	{
+		console.log("error")
+		return res.status(200).send(errores);
+	}
+	else
+		return res.status(200).send("OK");
+}
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -2112,6 +2239,7 @@ module.exports = {
 	updateRemision,
 	updateStatus,
 	updateFecha,
-	saveEntradaEDI
+	saveEntradaEDI,
+	saveEntradaChevron
 	// getPartidaById,
 }
