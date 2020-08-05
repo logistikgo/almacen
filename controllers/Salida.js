@@ -779,7 +779,9 @@ async function getExcelSalidas(req, res) {
 		worksheet.cell(2, indexheaders+5).string('Fecha Caducidad').style(headersStyle);
 		worksheet.cell(2, indexheaders+6).string('Retraso').style(headersStyle);
 		worksheet.cell(2, indexheaders+7).string('On Time').style(headersStyle);
-		worksheet.cell(2, indexheaders+8).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders+8).string('Datos Tracto');
+		worksheet.cell(2, indexheaders+9).string('Datos Remolque');
+		worksheet.cell(2, indexheaders+10).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
         arrPartidas.sort(function(a, b) {
@@ -932,11 +934,14 @@ async function getExcelSalidas(req, res) {
             }
 			worksheet.cell(i, indexbody+6).number(ontime);
            	worksheet.cell(i, indexbody+7).string(resontime).style(OntimeStyle);
+			worksheet.cell(i, indexbody+8).string(partidas.placasTrailer);
+			worksheet.cell(i, indexbody+9).string(partidas.placasRemolque);
            
             let res=""
             if(partidas.posiciones.length === 1) 
             	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
-            worksheet.cell(i, indexbody+8).string(res);
+            worksheet.cell(i, indexbody+10).string(res);
+			
             i++;
         });
         workbook.write('ReporteSali'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
