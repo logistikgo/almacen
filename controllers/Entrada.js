@@ -1878,7 +1878,7 @@ function updateRemision(req, res) {
 	newPartida.save().then(async function(partida) {
 		let ticket = new Ticket();
 		ticket.idTicket = await getNextIDTicket();
-		nTicket.stringFolio = await Helper.getStringFolio(nTicket.idTicket, nTicket.clienteFiscal_id, false, true);
+		ticket.stringFolio = await Helper.getStringFolio(ticket.idTicket, ticket.clienteFiscal_id, false, true);
 		ticket.partida_id = partida._id;
 		ticket.entrada_id = entrada_id;
 		ticket.status = "PENDIENTE";
@@ -1886,7 +1886,9 @@ function updateRemision(req, res) {
 		ticket.save();
 		
 		var arrPartidas = [];
+		//console.log("test");
 		Entrada.findOne({_id: entrada_id}).then((entrada) => {
+
 			arrPartidas = entrada.partidas;
 			arrPartidas.push(newPartida._id);
 
@@ -1894,6 +1896,7 @@ function updateRemision(req, res) {
 				res.status(200).send(infoPartida);
 			})
 			.catch((error) => {
+				//console.log(error);
 				res.status(500).send(error);
 			});
 		});
