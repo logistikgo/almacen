@@ -1037,10 +1037,6 @@ async function getExcelByIDs(req, res) {
                     {
                         resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                     }
-                    if(stringFolio="BCL-I-2835"){
-                        console.log(entrada)
-                        console.log(resFecha+" "+ resClasificacion+" "+resSubclasificacion+" "+ resClave+" "+partida.tipo)
-                    }
                     if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (entrada.status=="APLICADA"||entrada.status=="FINALIZADO") && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     {   
                         //console.log(entrada.tipo);
