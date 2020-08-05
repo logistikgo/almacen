@@ -182,7 +182,7 @@ function getPosicionesxProducto(req, res) {
 function getPosicionAutomatica(req, res) {
 	let cantidad = req.query.cantidad;
 	let almacen_id = req.query.almacen_id;
-
+	//console.log(almacen_id);
 	Pasillo.find({
 		almacen_id: new ObjectId(almacen_id),
 		statusReg: "ACTIVO"
@@ -208,8 +208,11 @@ function getPosicionAutomatica(req, res) {
 				});
 
 				for (let pos of posicionesPasillo) {
+					//console.log(pos);
 					let posicion = pos.posicion_id;
 					for (let nivel of posicion.niveles) {
+						//console.log(pos._id);
+						//console.log(posicion);
 						let posicionNomenclatura = {
 							ubicacion: pasillo.nombre + nivel.nombre + posicion.nombre,
 							pasillo_id: posicion.pasillo_id._id,
@@ -241,7 +244,9 @@ function getPosicionAutomatica(req, res) {
 			}
 		})
 		.catch((error) => {
+			console.log(error);
 			return res.status(500).send({
+
 				message: error
 			});
 		});
