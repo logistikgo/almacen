@@ -934,8 +934,8 @@ async function getExcelSalidas(req, res) {
             }
 			worksheet.cell(i, indexbody+6).number(ontime);
            	worksheet.cell(i, indexbody+7).string(resontime).style(OntimeStyle);
-			worksheet.cell(i, indexbody+8).string(partidas.placasTrailer);
-			worksheet.cell(i, indexbody+9).string(partidas.placasRemolque);
+			worksheet.cell(i, indexbody+8).string(partidas.placasTrailer? partidas.placasTrailer : "SIN ASIGNAR");
+			worksheet.cell(i, indexbody+9).string(partidas.placasRemolque? partidas.placasRemolque : "SIN ASIGNAR");
            
             let res=""
             if(partidas.posiciones.length === 1) 
