@@ -2168,6 +2168,126 @@ async function saveEntradaChevron(req, res) {
 	else
 		return res.status(200).send("OK");
 }
+
+
+async function saveEntradaPisa(req, res) {
+
+	var mongoose = require('mongoose');
+	var errores="";
+	//console.log(req.body);
+	try{
+		var arrPartidas_id = [];
+		var partidas = [];
+		console.log("test");
+		await Helper.asyncForEach(req.body.Partidas,async function (partida){
+			//console.log(EDIpartida);
+			if(partida !== undefined && partida.clave !== undefined)
+			{
+				
+				var producto=await Producto.findOne({'clave':partida.clave }).exec();
+				//console.log(producto._id);
+				if(producto == undefined){
+					//console.log("testst")
+					return res.status(200).send("no existe item: "+partida.clave);
+				}
+		        //console.log(new Date(fechaProduccion) );
+		        let resultjson=[]
+		        let embalaje={}
+		        embalaje[partida.EMBALAJE.toLowerCase()]=parseInt(partida.CantidadxEmbalaje);
+		        //resultjson.push(embalaje);
+		        embalaje=JSON.parse(JSON.stringify( embalaje ))
+				const data={
+					producto_id:producto._id,
+					clave:producto.clave,
+					descripcion:producto.descripcion,
+					origen:"BABEL",
+					tipo: "NORMAL",
+	    			status: "WAITINGARRIVAL",
+					embalajesEntrada: embalaje,
+		        	embalajesxSalir: embalaje,
+		        	fechaProduccion:new Date(Date.now()-(5*3600000)),
+		        	fechaCaducidad: new Date(Date.now()-(5*3600000)),
+		        	lote:partida.lote,
+		        	InfoPedidos:[{ "IDAlmacen": "5e680205a616fe231416025f"}],
+		        	valor:0
+		        }
+		        //console.log(data);
+		        
+		        data.InfoPedidos[0].IDAlmacen="5e680205a616fe231416025f";
+		        let nPartida = new PartidaModel(data);
+		        //console.log(nPartida);
+		        //return res.status(200).send("no existe item: "+partida.clave);
+		        console.log("beforepartidas")
+		        await nPartida.save().then((partida) => {
+		        	partidas.push(partida)
+		            arrPartidas_id.push(partida._id);
+		        });
+		        console.log("partidas")
+	    	}
+	    });
+
+		if (partidas && partidas.length > 0) {
+			let idCliente = "5f199a1f437d0b3a3c7d98c9";
+			let idSucursales = "5d123ed1a5ec7398c4fc2c45";
+
+			let nEntrada = new Entrada();
+
+			nEntrada.fechaEntrada = new Date(Date.now()-(5*3600000));
+			nEntrada.fechaEsperada= new Date(Date.now()-(5*3600000))
+			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
+			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+				return total + valor;
+			});
+			nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+			nEntrada.clienteFiscal_id = idCliente;
+			nEntrada.sucursal_id = idSucursales;
+			nEntrada.status = "WAITINGARRIVAL";/*repalce arrival*/
+			nEntrada.tipo = "NORMAL";
+			nEntrada.partidas = partidas.map(x => x._id);
+			nEntrada.nombreUsuario = "BabelPISA";
+			
+			nEntrada.referencia ="Entrada INICIAL";
+			nEntrada.factura = "Entrada INICIAL";
+			nEntrada.item = "Entrada INICIAL";
+			nEntrada.transportista = "";
+			nEntrada.ordenCompra="";
+			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
+			nEntrada.idEntrada = await getNextID();
+			nEntrada.folio = await getNextID();
+			let stringTemp=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			//if()
+			nEntrada.stringFolio =await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			//nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
+			console.log("testEntrada");
+			await nEntrada.save()
+				.then(async (entrada) => {
+					console.log("testpartidas");
+					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
+					//console.log(partidas);
+					/*console.log(entrada);
+					console.log("/------------------/")*/
+				}).catch((error) => {
+					reserror=error
+				});
+		}else {
+			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+			res.status(500).send("error");
+		}
+	}	
+	catch(error){
+			console.log(error)
+			res.status(500).send(error);
+			//console.log(error);
+	};	
+	if(errores!=="")
+	{
+		console.log("error")
+		return res.status(200).send(errores);
+	}
+	else
+		return res.status(200).send("OK");
+}
+
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -2243,6 +2363,7 @@ module.exports = {
 	updateStatus,
 	updateFecha,
 	saveEntradaEDI,
-	saveEntradaChevron
+	saveEntradaChevron,
+	saveEntradaPisa
 	// getPartidaById,
 }
