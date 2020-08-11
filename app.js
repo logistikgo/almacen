@@ -263,6 +263,7 @@ app.get('/api/getExcelByIDs', Partida.getExcelByIDs);
 app.get('/api/getExcelEntradas', Entrada.getExcelEntradas);
 app.get('/api/getExcelCaducidades', Entrada.getExcelCaducidades);
 app.get('/api/getExcelSalidas', Salida.getExcelSalidas);
+app.get('/api/getExcelSalidasBarcel', Salida.getExcelSalidasBarcel);
 
 //babel
 //entradas
@@ -280,5 +281,9 @@ app.post('/api/saveTicket', Ticket.post);
 app.post('/api/getTickets', Ticket.get);
 app.get('/api/getTicketByID', Ticket.getByID);
 app.post('/api/aprobarTicket', Ticket.liberarTicket);
+
+//reprotesCheat
+app.post('/api/importsalidas',Salida.importsalidas);
+app.post('/api/saveEntradaPisa',Entrada.saveEntradaPisa);
 
 module.exports = app;
