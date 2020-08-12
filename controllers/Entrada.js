@@ -1872,13 +1872,15 @@ async function posicionarPrioridades(req, res) {
 /* Actualiza entrada y agrega partida dashboard */
 function updateRemision(req, res) {
 	let entrada_id = req.body.entrada_id;
+	let clienteFiscal_id = req.body.clienteFiscal_id;
 	var infoPartida = req.body.partida;
 	let newPartida = new PartidaModel(infoPartida);
+	//console.log(clienteFiscal_id);
 
 	newPartida.save().then(async function(partida) {
 		let ticket = new Ticket();
 		ticket.idTicket = await getNextIDTicket();
-		ticket.stringFolio = await Helper.getStringFolio(ticket.idTicket, ticket.clienteFiscal_id, false, true);
+		ticket.stringFolio = await Helper.getStringFolio(ticket.idTicket, clienteFiscal_id, false, true);
 		ticket.partida_id = partida._id;
 		ticket.entrada_id = entrada_id;
 		ticket.status = "PENDIENTE";

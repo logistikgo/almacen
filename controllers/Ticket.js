@@ -6,6 +6,7 @@ const Helper = require('../helpers');
 const Entrada = require('../models/Entrada');
 const Posicion = require('../models/Posicion');
 const MovimientoInventario = require('../models/MovimientoInventario');
+const Producto = require('../models/Producto');
 
 function getNextID() {
 	return Helper.getNextID(Ticket, "idTicket");
@@ -130,9 +131,16 @@ async function liberarTicket(req, res) {
                             });
                         });
                     });
-                    // await MovimientoInventario.findOne({entrada_id: ticket.entrada_id}).then(movimiento =>{
-                        
-                    // })
+
+                    await MovimientoInventario.findOne({entrada_id: ticket.entrada_id}).then(movimiento => {
+                        movimiento.producto_id = ticket.producto_id;
+                        movimiento.embalajes = ticket.embalajesEntrada;
+                        //movimiento.save();
+                    });
+
+                    await Producto.findOne({_id: producto_id}).then(prod => {
+                        prod
+                    });
                 }
                 else {
 
