@@ -1936,6 +1936,7 @@ async function saveEntradaEDI(req, res) {
 
 	var mongoose = require('mongoose');
 	var errores="";
+	let finish="OK"
 	//console.log(req.body);
 	try{
 		await Helper.asyncForEach(req.body.respuestaJson,async function (Entradas) {
@@ -2019,6 +2020,7 @@ async function saveEntradaEDI(req, res) {
 					await nEntrada.save()
 						.then(async (entrada) => {
 							//console.log("testpartidas");
+							finish="done";
 							await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 							//console.log(partidas);
 							/*console.log(entrada);
@@ -2050,7 +2052,7 @@ async function saveEntradaEDI(req, res) {
 		return res.status(200).send(errores);
 	}
 	else
-		return res.status(200).send("OK");
+		return res.status(200).send(finish);
 }
 
 async function saveEntradaChevron(req, res) {
@@ -2288,6 +2290,18 @@ async function saveEntradaPisa(req, res) {
 		return res.status(200).send("OK");
 }
 
+
+async function saveEntradaPisa(req, res) {
+	var _id="";
+	var entrada=await Entrada.findOne({ _id: _id }).exec();
+	var partida=await Partida.findOne({ _id: _id }).exec();
+
+	if(partticket.item!=partida.item)
+	{
+
+	}
+	return res.status(200).send("OK");
+}
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
