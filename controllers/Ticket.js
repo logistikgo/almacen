@@ -16,15 +16,17 @@ async function post(req, res) {
     let command = req.body.tipo;
     let resTicket = null;
     //console.log(req.body);
+    console.log("tickets");
     let nTicket = new Ticket(req.body ? req.body : req);
+   // console.log(nTicket);
     nTicket.fechaAlta = new Date(Date.now()-(5*3600000));
     nTicket.idTicket = await getNextID();
     nTicket.stringFolio = await Helper.getStringFolio(nTicket.idTicket, nTicket.clienteFiscal_id, false, true);
     nTicket.nombreUsuarioAprueba = null;
     nTicket.usuarioAprueba_id = null;
     nTicket.fechaLiberacion = null;
-
-    //console.log(nTicket);
+    console.log("afterid");
+    console.log(nTicket);
     switch(command) {
         case 'MODIFICAR':
             Partida.updateOne({_id: nTicket.partida_id}, { $set: { "isExtraordinaria": true, tipo: "MODIFICADA"} }).exec();
