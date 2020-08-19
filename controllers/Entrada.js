@@ -2302,40 +2302,72 @@ async function saveEntradaPisa(req, res) {
 async function getbodycorreo(req, res) {
 	var _id=req.body.entrada_id;
 	var respuesta="";
-	console.log(req.body);
+	//console.log(req.body);
 	//var entrada=await Entrada.findOne({ _id: _id }).exec();
-	var ticket=await Ticket.find({ entrada_id: _id }).exec();
+
+	var ticket=await Ticket.find({ entrada_id: _id}).exec();
 	//console.log(ticket);
 	await Helper.asyncForEach(ticket,async function (tk){
-		respuesta="---- Modificaciones de Partida-----"
-		var partida=await PartidaModel.findOne({ _id: tk.partida_id }).exec();
-		console.log(tk);
-		console.log("__________________");
-		console.log(partida);
-		console.log(tk.producto_id.toString()!=partida.producto_id.toString());
-		if(tk.producto_id.toString()!=partida.producto_id.toString())
+		console.log(tk.tipo)
+		if(tk.tipo=="MODIFICAR")
 		{
+			respuesta+="<br>---- Modificaciones de Partida-----"
+			var partida=await PartidaModel.findOne({ _id: tk.partida_id }).exec();
+			//console.log(tk);
+			//console.log("__________________");
+			//console.log(partida);
+			//console.log(tk.producto_id.toString()!=partida.producto_id.toString());
+			if(tk.producto_id.toString()!=partida.producto_id.toString())
+			{
 
-			var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
-			respuesta+="<br><br>Se realizara un cambio del item "+partida.clave +" por : "+producto.clave;
+				var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
+				respuesta+="<br><br>Se realizara un cambio del item "+partida.clave +" por : "+producto.clave;
+				//console.log(respuesta);
+			}
+			if(tk.lote!==partida.lote)
+			{
+				//var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
+				respuesta+="<br><br>Se realizara un cambio de lote "+partida.lote +" por : "+tk.lote;
+			}
+			if(tk.embalajesEntrada.cajas != partida.embalajesEntrada.cajas)
+			{
+				//var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
+				respuesta+="<br><br>Se realizara un cambio la cantidad "+partida.embalajesEntrada.cajas +" por : "+tk.embalajesEntrada.cajas;
+			}
+			if(tk.fechaCaducidad != partida.fechaCaducidad)
+			{
+				//var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
+				respuesta+="<br><br>Se realizara un cambio la fecha Caducidad "+partida.fechaCaducidad +" por : "+tk.fechaCaducidad;
+			}
+			respuesta+="<br>-----------------------------------------------------------------"
+		}
+		if(tk.tipo=="AGREGAR")
+		{
+			var partida=await PartidaModel.findOne({ _id: tk.partida_id }).exec();
+			var producto=await Producto.findOne({ _id: partida.producto_id }).exec();
+			respuesta+="<br>---- se agrego una Partida-----"
+			 
+			respuesta+="<br><br>Item "+producto.clave;
 			//console.log(respuesta);
+			respuesta+="<br><br>lote "+partida.lote;
+			respuesta+="<br><br>Cantidad "+partida.embalajesEntrada.cajas;
+			respuesta+="<br><br>fecha Caducidad "+partida.fechaCaducidad;
+			respuesta+="<br>-----------------------------------------------------------------"
+		
+
 		}
-		if(tk.lote!==partida.lote)
+		if(tk.tipo=="OMITIR")
 		{
-			//var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
-			respuesta+="<br><br>Se realizara un cambio de lote "+partida.lote +" por : "+tk.lote;
+			respuesta+="<br>---- se Omitio una Partida-----"
+			var partida=await PartidaModel.findOne({ _id: tk.partida_id }).exec();
+			var producto=await Producto.findOne({ _id: partida.producto_id }).exec();
+			respuesta+="<br><br>Item "+producto.clave;
+			//console.log(respuesta);
+			respuesta+="<br><br>lote "+tk.lote;
+			respuesta+="<br><br>Cantidad "+partida.embalajesEntrada.cajas;
+			respuesta+="<br><br>Fecha Caducidad "+partida.fechaCaducidad;
+			respuesta+="<br>-----------------------------------------------------------------"
 		}
-		if(tk.embalajesEntrada.cajas != partida.embalajesEntrada.cajas)
-		{
-			//var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
-			respuesta+="<br><br>Se realizara un cambio la cantidad "+tk.embalajesEntrada.cajas +" por : "+partida.embalajesEntrada.cajas;
-		}
-		if(tk.fechaCaducidad != partida.fechaCaducidad)
-		{
-			//var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
-			respuesta+="<br><br>Se realizara un cambio la fecha Caducidad "+tk.fechaCaducidad +" por : "+partida.fechaCaducidad;
-		}
-		respuesta+="-----------------------------------------------------------------"
 	});
 	//console.log("");
 	//console.log(respuesta);
