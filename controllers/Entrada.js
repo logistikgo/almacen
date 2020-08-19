@@ -39,7 +39,7 @@ async function get(req, res) {
 	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
 	var json = [];
-	console.log(_tipo);
+	//console.log(_tipo);
 	if(_status != "FINALIZADO" && _status != null && _status !== "NINGUNO"){
 		filter = {
 			clienteFiscal_id: _idClienteFiscal,
@@ -425,12 +425,12 @@ async function saveEntradaBabel(req, res) {
 		//console.log(planta);
 		//console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
-		console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
+		//console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
 		let fechaSalidaPlanta=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
-		console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
+		//console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
 		let fechaesperada=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido)+((60 * 60 * 24 * 1000)*planta.DiasTraslado+1);
 
-		console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
+		//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
 		if (partidas && partidas.length > 0) {
 			let idCliente = req.body.IDClienteFiscal;
 			let idSucursales = req.body.IDSucursal;
@@ -525,7 +525,7 @@ async function saveEntradaBabel(req, res) {
 async function updateEntradasBabel(req, res) {
 	var mongoose = require('mongoose');
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
-	console.log(req.body);
+	//console.log(req.body);
 
 	try{	
 		
@@ -534,7 +534,7 @@ async function updateEntradasBabel(req, res) {
         countEntradas= countEntradas == null ? await Entrada.findOne({"factura":req.body.Remision}).exec():countEntradas;
         //console.log(countEntradas);
         countEntradas= countEntradas == null ? await Entrada.findOne({"item":req.body.Remision}).exec():countEntradas;
-        console.log(countEntradas);
+        //console.log(countEntradas);
         let dataSplit=req.body.FechaPlanta.split('/');
         let fechaSalidaPlanta=new Date (dataSplit[2], dataSplit[1]-1 , dataSplit[0]); 
        //console.log(fechaSalidaPlanta.toString());
@@ -1707,6 +1707,7 @@ async function updateById(req, res) {
 }
 
 async function posicionarPrioridades(req, res) {
+	console.log("posicionar________________________________________");
 	let _id = req.body.id;
 	//console.log(_id);
 	let entrada = await Entrada.findOne({ _id: _id });
@@ -1857,8 +1858,11 @@ async function posicionarPrioridades(req, res) {
 					}
 					/*console.log(entrada);*/
 			});
-		    if(respuesta<1)
+			console.log("testREturn")
+		    if(respuesta<1){
+		    	console.log(entrada);
 				return res.status(200).send(entrada);
+			}
 			else
 				return res.status(500).send("not");
 		}
@@ -1867,18 +1871,22 @@ async function posicionarPrioridades(req, res) {
         return res.status(500).send(error);
         
     }
+    console.log("END_________________________________")
 }
 
 /* Actualiza entrada y agrega partida dashboard */
 function updateRemision(req, res) {
 	let entrada_id = req.body.entrada_id;
+	let clienteFiscal_id = req.body.clienteFiscal_id;
 	var infoPartida = req.body.partida;
 	let newPartida = new PartidaModel(infoPartida);
-
+	//console.log(clienteFiscal_id);
+	console.log("testTicket")
 	newPartida.save().then(async function(partida) {
 		let ticket = new Ticket();
 		ticket.idTicket = await getNextIDTicket();
-		ticket.stringFolio = await Helper.getStringFolio(ticket.idTicket, ticket.clienteFiscal_id, false, true);
+		console.log(ticket);
+		ticket.stringFolio = await Helper.getStringFolio(ticket.idTicket, clienteFiscal_id, false, true);
 		ticket.partida_id = partida._id;
 		ticket.entrada_id = entrada_id;
 		ticket.status = "PENDIENTE";
@@ -1936,6 +1944,7 @@ async function saveEntradaEDI(req, res) {
 
 	var mongoose = require('mongoose');
 	var errores="";
+	let finish="OK"
 	//console.log(req.body);
 	try{
 		await Helper.asyncForEach(req.body.respuestaJson,async function (Entradas) {
@@ -1943,10 +1952,10 @@ async function saveEntradaEDI(req, res) {
 			var partidas = [];
 			//console.log(Entradas)
 			let countEntradas=await Entrada.find({"ordenCompra":Entradas.Entrada.ordenCompra}).exec();
-			console.log(countEntradas.length);
+			//console.log(countEntradas.length);
 			if(countEntradas.length <1)
 			{
-				console.log("test");
+				//console.log("test");
 				await Helper.asyncForEach(Entradas.Partidas,async function (EDIpartida){
 					//console.log(EDIpartida);
 					if(EDIpartida.partida !== undefined && EDIpartida.partida.clave !== undefined)
@@ -2019,6 +2028,7 @@ async function saveEntradaEDI(req, res) {
 					await nEntrada.save()
 						.then(async (entrada) => {
 							//console.log("testpartidas");
+							finish="done";
 							await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 							//console.log(partidas);
 							/*console.log(entrada);
@@ -2050,7 +2060,7 @@ async function saveEntradaEDI(req, res) {
 		return res.status(200).send(errores);
 	}
 	else
-		return res.status(200).send("OK");
+		return res.status(200).send(finish);
 }
 
 async function saveEntradaChevron(req, res) {
@@ -2288,6 +2298,84 @@ async function saveEntradaPisa(req, res) {
 		return res.status(200).send("OK");
 }
 
+
+async function getbodycorreo(req, res) {
+	var _id=req.body.entrada_id;
+	var respuesta="";
+	//console.log(req.body);
+	//var entrada=await Entrada.findOne({ _id: _id }).exec();
+
+	var ticket=await Ticket.find({ entrada_id: _id}).exec();
+	await Helper.asyncForEach(ticket,async function (tk){
+		console.log(tk.tipo)
+		if(tk.tipo=="MODIFICAR")
+		{
+			respuesta+="<br>---- Modificaciones de Partida-----"
+			var partida=await PartidaModel.findOne({ _id: tk.partida_id }).exec();
+			//console.log(tk);
+			//console.log("__________________");
+			//console.log(partida);
+			//console.log(tk.producto_id.toString()!=partida.producto_id.toString());
+			if(tk.producto_id.toString()!=partida.producto_id.toString())
+			{
+
+				var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
+				respuesta+="<br><br>Se realizara un cambio del item "+partida.clave +" por : "+producto.clave;
+				//console.log(respuesta);
+			}
+			if(tk.lote!==partida.lote)
+			{
+				//var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
+				respuesta+="<br><br>Se realizara un cambio de lote "+partida.lote +" por : "+tk.lote;
+			}
+			if(tk.embalajesEntrada.cajas != partida.embalajesEntrada.cajas)
+			{
+				//var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
+				respuesta+="<br><br>Se realizara un cambio la cantidad "+partida.embalajesEntrada.cajas +" por : "+tk.embalajesEntrada.cajas;
+			}
+			if(tk.fechaCaducidad != partida.fechaCaducidad)
+			{
+				//var producto=await Producto.findOne({ _id: tk.producto_id }).exec(); 
+				respuesta+="<br><br>Se realizara un cambio la fecha Caducidad "+partida.fechaCaducidad +" por : "+tk.fechaCaducidad;
+			}
+			respuesta+="<br>-----------------------------------------------------------------"
+		}
+		if(tk.tipo=="AGREGAR")
+		{
+			var partida=await PartidaModel.findOne({ _id: tk.partida_id }).exec();
+			var producto=await Producto.findOne({ _id: partida.producto_id }).exec();
+			respuesta+="<br>---- se agrego una Partida-----"
+			 
+			respuesta+="<br><br>Item "+producto.clave;
+			//console.log(respuesta);
+			respuesta+="<br><br>lote "+partida.lote;
+			respuesta+="<br><br>Cantidad "+partida.embalajesEntrada.cajas;
+			respuesta+="<br><br>fecha Caducidad "+partida.fechaCaducidad;
+			respuesta+="<br>-----------------------------------------------------------------"
+		
+
+		}
+		if(tk.tipo=="OMITIR")
+		{
+			respuesta+="<br>---- se Omitio una Partida-----"
+			var partida=await PartidaModel.findOne({ _id: tk.partida_id }).exec();
+			var producto=await Producto.findOne({ _id: partida.producto_id }).exec();
+			respuesta+="<br><br>Item "+producto.clave;
+			//console.log(respuesta);
+			respuesta+="<br><br>lote "+tk.lote;
+			respuesta+="<br><br>Cantidad "+partida.embalajesEntrada.cajas;
+			respuesta+="<br><br>Fecha Caducidad "+partida.fechaCaducidad;
+			respuesta+="<br>-----------------------------------------------------------------"
+		}
+	});
+	//console.log("");
+	//console.log(respuesta);
+	if(respuesta=="")
+	{
+		return res.status(200).send({"respuesta":respuesta,"error":true});
+	}
+	return res.status(200).send({"respuesta":respuesta,"error":false});
+}
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -2364,6 +2452,7 @@ module.exports = {
 	updateFecha,
 	saveEntradaEDI,
 	saveEntradaChevron,
-	saveEntradaPisa
+	saveEntradaPisa,
+	getbodycorreo
 	// getPartidaById,
 }

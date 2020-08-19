@@ -286,4 +286,7 @@ app.post('/api/aprobarTicket', Ticket.liberarTicket);
 app.post('/api/importsalidas',Salida.importsalidas);
 app.post('/api/saveEntradaPisa',Entrada.saveEntradaPisa);
 
+//sendcorreo
+app.post('/api/getbodycorreo',Entrada.getbodycorreo);
+
 module.exports = app;

@@ -6,6 +6,7 @@ const Helper = require('../helpers');
 const Entrada = require('../models/Entrada');
 const Posicion = require('../models/Posicion');
 const MovimientoInventario = require('../models/MovimientoInventario');
+const Producto = require('../models/Producto');
 
 function getNextID() {
 	return Helper.getNextID(Ticket, "idTicket");
@@ -15,15 +16,17 @@ async function post(req, res) {
     let command = req.body.tipo;
     let resTicket = null;
     //console.log(req.body);
+    console.log("tickets");
     let nTicket = new Ticket(req.body ? req.body : req);
+   // console.log(nTicket);
     nTicket.fechaAlta = new Date(Date.now()-(5*3600000));
     nTicket.idTicket = await getNextID();
     nTicket.stringFolio = await Helper.getStringFolio(nTicket.idTicket, nTicket.clienteFiscal_id, false, true);
     nTicket.nombreUsuarioAprueba = null;
     nTicket.usuarioAprueba_id = null;
     nTicket.fechaLiberacion = null;
-
-    //console.log(nTicket);
+    console.log("afterid");
+    console.log(nTicket);
     switch(command) {
         case 'MODIFICAR':
             Partida.updateOne({_id: nTicket.partida_id}, { $set: { "isExtraordinaria": true, tipo: "MODIFICADA"} }).exec();
@@ -130,9 +133,16 @@ async function liberarTicket(req, res) {
                             });
                         });
                     });
-                    // await MovimientoInventario.findOne({entrada_id: ticket.entrada_id}).then(movimiento =>{
-                        
-                    // })
+
+                    await MovimientoInventario.findOne({entrada_id: ticket.entrada_id}).then(movimiento => {
+                        movimiento.producto_id = ticket.producto_id;
+                        movimiento.embalajes = ticket.embalajesEntrada;
+                        //movimiento.save();
+                    });
+
+                    await Producto.findOne({_id: producto_id}).then(prod => {
+                        prod
+                    });
                 }
                 else {
 

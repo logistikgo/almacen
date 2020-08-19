@@ -1472,6 +1472,7 @@ async function getExcelSalidasBarcel(req, res) {
         });
 		arrPartidas2.forEach(partidas => 
         {
+        	console.log("ter");
         	worksheet.cell(i, 1).string(partidas.pedido ? partidas.pedido:"");
         	worksheet.cell(i, 2).string(partidas.lote ? partidas.lote:"");
         	worksheet.cell(i, 3).string(partidas.stringFolio ? partidas.stringFolio:"");
@@ -1580,7 +1581,7 @@ async function getExcelSalidasBarcel(req, res) {
            	worksheet.cell(i, indexbody+7).string(resontime).style(OntimeStyle);
 			worksheet.cell(i, indexbody+8).string(partidas.placasTrailer? partidas.placasTrailer : "SIN ASIGNAR");
 			worksheet.cell(i, indexbody+9).string(partidas.placasRemolque? partidas.placasRemolque : "SIN ASIGNAR");
-            worksheet.cell(i, indexbody+10).string(partidas.ubicacion);
+            worksheet.cell(i, indexbody+10).string(partidas.ubicacion?partidas.ubicacion:"" );
 			
             i++;
         });
@@ -1599,9 +1600,10 @@ async function importsalidas(req, res) {
 
 	var mongoose = require('mongoose');
 	var errores="";
-	console.log(req.body);
+	//console.log(req.body);
 	try{
 		await Helper.asyncForEach(req.body.Partidas,async function (partida){
+				var producto=await Salida.findOne({'stringFolio': partida.stringFolio }).exec();
 				const data={
 					pedido: partida.pedido,
 					lote:partida.lote,
@@ -1610,19 +1612,19 @@ async function importsalidas(req, res) {
 					clave:partida.clave,
 					descripcion:partida.descripcion,
 					Subclasificacion: partida.Subclasificacion,
-					fechaAlta:  new Date(partida.fechaAlta.split('/')[1]+"/"+partida.fechaAlta.split('/')[0]+"/"+partida.fechaAlta.split('/')[2]),
+					fechaAlta:  new Date(partida.fechaAlta.split('/')[0]+"/"+partida.fechaAlta.split('/')[1]+"/"+partida.fechaAlta.split('/')[2]),
 					tarima:parseInt(partida.tarima),
 					despacho: parseInt(partida.despacho),
 					solicitados: parseInt(partida.solicitados),
 					infull:parseInt(partida.infull),
-					FechaCargaProgramada: new Date(partida.FechaCargaProgramada.split('/')[1]+"/"+partida.FechaCargaProgramada.split('/')[0]+"/"+partida.FechaCargaProgramada.split('/')[2]),
-					fechaSalida: new Date(partida.fechaSalida.split('/')[1]+"/"+partida.fechaSalida.split('/')[0]+"/"+partida.fechaSalida.split('/')[2]),
-					horaSello: new Date(partida.horaSello.split('/')[1]+"/"+partida.horaSello.split('/')[0]+"/"+partida.horaSello.split('/')[2]),
-					fechaCaducidad: new Date(partida.fechaCaducidad.split('/')[1]+"/"+partida.fechaCaducidad.split('/')[0]+"/"+partida.fechaCaducidad.split('/')[2]),
+					FechaCargaProgramada: partida.FechaCargaProgramada != "SIN ASIGNAR" ? new Date(partida.FechaCargaProgramada.split('/')[0]+"/"+partida.FechaCargaProgramada.split('/')[1]+"/"+partida.FechaCargaProgramada.split('/')[2]):undefined,
+					fechaSalida: new Date(partida.fechaSalida.split('/')[0]+"/"+partida.fechaSalida.split('/')[1]+"/"+partida.fechaSalida.split('/')[2]),
+					horaSello: partida.horaSello != "SIN ASIGNAR" ? new Date(partida.horaSello.split('/')[0]+"/"+partida.horaSello.split('/')[1]+"/"+partida.horaSello.split('/')[2]):undefined,
+					fechaCaducidad: new Date(partida.fechaCaducidad.split('/')[0]+"/"+partida.fechaCaducidad.split('/')[1]+"/"+partida.fechaCaducidad.split('/')[2]),
 					retraso: partida.retraso,
 					onTime: partida.onTime,
-					placasTrailer: partida.placasTrailer,
-					placasRemolque: partida.placasRemolque,
+					placasTrailer: partida.placasTrailer ? partida.placasTrailer :producto.placasTrailer,
+					placasRemolque: partida.placasRemolque? partida.placasRemolque :producto.placasRemolque,
 					ubicacion:partida.ubicacion
 		        }
 		        //console.log(data);
