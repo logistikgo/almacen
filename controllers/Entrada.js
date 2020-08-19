@@ -2306,7 +2306,6 @@ async function getbodycorreo(req, res) {
 	//var entrada=await Entrada.findOne({ _id: _id }).exec();
 
 	var ticket=await Ticket.find({ entrada_id: _id}).exec();
-	//console.log(ticket);
 	await Helper.asyncForEach(ticket,async function (tk){
 		console.log(tk.tipo)
 		if(tk.tipo=="MODIFICAR")
@@ -2371,7 +2370,11 @@ async function getbodycorreo(req, res) {
 	});
 	//console.log("");
 	//console.log(respuesta);
-	return res.status(200).send({"respuesta":respuesta});
+	if(respuesta=="")
+	{
+		return res.status(200).send({"respuesta":respuesta,"error":true});
+	}
+	return res.status(200).send({"respuesta":respuesta,"error":false});
 }
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
