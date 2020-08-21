@@ -987,14 +987,14 @@ async function getExcelSalidasBarcel(req, res) {
 	}
 
 	if(fechaInicio != "" &&  fechaFinal != ""){
-		console.log("test"+fechaInicio)
-		console.log(fechaInicio.toString());
+		//console.log("test"+fechaInicio)
+		//console.log(fechaInicio.toString());
 		if(new Date(fechaInicio)<new Date("08/1/2020")){
 
 			fechaInicio=new Date("08/1/2020");
 			quickfix=true;
 			fechaFinal2=new Date("08/1/2020");
-			console.log(fechaInicio.toString())
+		//	console.log(fechaInicio.toString())
 		}
 		if(fecha == "fechaAlta")
 		{
@@ -1028,13 +1028,13 @@ async function getExcelSalidasBarcel(req, res) {
 		}
 		quickfix=true;
 	}
+	//console.log(quickfix);
 	if(quickfix==true)
 	{
 
-		var Repo=reporteModel.find().then(async (reporte) => {
-		reporte.forEach(repo => {
+		var Repo=await reporteModel.find().then(async (reporte) => {
+			await Helper.asyncForEach(reporte,async function (repo){
 			//console.log("repo")
-			//console.log(repo.pedido);
 			var paramsSalida = {
 					pedido: repo.pedido,
 					lote: repo.lote,
@@ -1058,19 +1058,22 @@ async function getExcelSalidasBarcel(req, res) {
 					placasRemolque: repo.placasRemolque,
 					ubicacion: repo.ubicacion
 				}
+				//console.log(paramsSalida);
 				arrPartidas2.push(paramsSalida);
 				//console.log(arrPartidas2)
 				
 			});	
 		});
 
-	}
-	/*console.log("test")
+	}/*
+	console.log(arrPartidas2);
+	//console.log("test")
 	console.log(fechaInicio.toString());*/
 	if(folio != "")
 	{
 		filter.stringFolio=folio;
 	}
+	//console.log(filter);
 	Salida.find(filter)
 	.populate({
 		path: 'partidas',
@@ -1314,7 +1317,7 @@ async function getExcelSalidasBarcel(req, res) {
 		    return a>b ? -1 : a<b ? 1 : 0;
 		});
 		
-		console.log("second");
+		
         arrPartidas.forEach(partidas => 
         {
         	worksheet.cell(i, 1).string(partidas.referencia ? partidas.referencia:"");
@@ -1472,7 +1475,7 @@ async function getExcelSalidasBarcel(req, res) {
         });
 		arrPartidas2.forEach(partidas => 
         {
-        	console.log("ter");
+        	//console.log("ter");
         	worksheet.cell(i, 1).string(partidas.pedido ? partidas.pedido:"");
         	worksheet.cell(i, 2).string(partidas.lote ? partidas.lote:"");
         	worksheet.cell(i, 3).string(partidas.stringFolio ? partidas.stringFolio:"");
@@ -1585,7 +1588,7 @@ async function getExcelSalidasBarcel(req, res) {
 			
             i++;
         });
-//console.log("end")
+       console.log("end")
         workbook.write('ReporteSali'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
 
 	})
