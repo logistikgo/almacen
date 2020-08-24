@@ -1648,6 +1648,63 @@ async function importsalidas(req, res) {
 
 }
 
+async function saveSalidaBabel(req, res) {
+	var mongoose = require('mongoose');
+	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
+	//console.log(req.body);
+	var arrPartidas=[];
+	var resORDENES="";//ORDENES YA EXISTENTES
+	var arrPO=[];
+	try{
+		await Helper.asyncForEach(req.body.Pedido,async function (Pedido) {
+			if(Pedido.Pedido)
+			{
+				if(arrPO.find(obj=> (obj.pedido == Pedido.Pedido)))
+	    		{
+	    			//console.log("yes");
+	    			let index=arrPO.findIndex(obj=> (obj.pedido == Pedido.Pedido));
+	    			const data={
+	    				Clave:Pedido.Clave,
+	    				Cantidad: Pedido.Cantidad
+	    			};
+	    			arrPO[index].arrPartidas.push(data)
+		    	}
+		        else
+		        {
+		        	const data={
+	    				Clave:Pedido.Clave,
+	    				Cantidad: Pedido.Cantidad
+	    			};
+		        	const PO={
+		        	pedido:Pedido.Pedido,
+					destinatario: Pedido.SHIPTO,
+					Cliente: Pedido.Cliente,
+					Domicilio: Pedido.Domicilio,
+		        	arrPartidas:[]
+		        	}
+		        	PO.arrPartidas.push(data)
+	    			arrPO.push(PO);
+	    		}
+			}				
+		});
+		//console.log(arrPO);
+
+		await Helper.asyncForEach(arrPO,async function (Pedido) {
+
+			await Helper.asyncForEach(Pedido.arrPartidas,async function (par) {
+				let embalajesEntrada={cajas:parseInt(par.Cantidad)};
+				console.log(embalajesEntrada);
+				let partida=await PartidaModel.findOne({'clave':par.Clave,'isEmpty':false,'embalajesEntrada':embalajesEntrada,'embalajesxSalir':embalajesEntrada}).exec();
+				console.log(".0.0.0.0.0.0.0.0.");
+				console.log(partida)
+			});
+		});
+	}catch(error){
+			console.log(error)
+			res.status(500).send(error);
+			console.log(error);
+	};
+}
 
 module.exports = {
 	get,
@@ -1661,5 +1718,6 @@ module.exports = {
 	getReportePartidas,
 	getExcelSalidas,
 	importsalidas,
-	getExcelSalidasBarcel
+	getExcelSalidasBarcel,
+	saveSalidaBabel
 }

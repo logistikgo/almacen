@@ -271,7 +271,11 @@ app.post('/api/saveEntradaBabel', Entrada.saveEntradaBabel);
 app.post('/api/updateEntradasBabel', Entrada.updateEntradasBabel);
 app.post('/api/saveEntradaEDI', Entrada.saveEntradaEDI);
 app.post('/api/updateById', Entrada.updateById);
- 
+ //salidas
+app.post('/api/saveSalidaBabel', Salida.saveSalidaBabel);
+
+
+
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
 

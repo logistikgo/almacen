@@ -2376,6 +2376,8 @@ async function getbodycorreo(req, res) {
 	}
 	return res.status(200).send({"respuesta":respuesta,"error":false});
 }
+
+
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
