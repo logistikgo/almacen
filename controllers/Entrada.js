@@ -2376,6 +2376,35 @@ async function getbodycorreo(req, res) {
 	}
 	return res.status(200).send({"respuesta":respuesta,"error":false});
 }
+
+
+async function getTarimasAndCajas(req, res){
+	
+	const entrada_id = req.body.entrada_id;
+	let tarimas = 0;
+	let cajas = 0;
+	try {
+		
+		const entrada = await Entrada.findById(entrada_id).exec();
+		const partidas = entrada.partidas
+		tarimas = partidas.length;
+
+	await Helper.asyncForEach(partidas,async function (partida_id){
+		const partidaDetalle = await PartidaModel.find({_id: partida_id}).exec();
+			cajas += await partidaDetalle[0].embalajesxSalir.cajas;
+			
+	});
+		const respuesta = {"tarimas": tarimas, "cajas": cajas}
+		res.status(200).json({"respuesta": respuesta, "statusCode": res.statusCode})
+
+	} catch (error) {
+		console.log(error)
+	}		
+
+
+}
+
+
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -2453,6 +2482,7 @@ module.exports = {
 	saveEntradaEDI,
 	saveEntradaChevron,
 	saveEntradaPisa,
-	getbodycorreo
+	getbodycorreo,
+	getTarimasAndCajas
 	// getPartidaById,
 }
