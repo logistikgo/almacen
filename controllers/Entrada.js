@@ -25,6 +25,8 @@ function getNextIDTicket() {
 }
 
 async function get(req, res) {
+	
+	console.log(pagination)
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
@@ -144,6 +146,7 @@ async function get(req, res) {
 			path: 'partidas.producto_id',
 			model: 'Producto'
 		}).then((entradas) => {
+
 			res.status(200).send(_status == null ? json : entradas);
 		}).catch((error) => {
 			res.status(500).send(error);
@@ -151,8 +154,8 @@ async function get(req, res) {
 }
 
 function getById(req, res) {
-	let _id = req.query.id;
-
+	let _id = req.body.entrada_id;
+	//console.log(_id)
 	Entrada.findOne({ _id: _id })
 		.populate({
 			path: 'partidas.producto_id',
@@ -170,7 +173,12 @@ function getById(req, res) {
 			path: 'tiempoDescarga_id',
 			model: 'TiempoCargaDescarga'
 		})
-		.then((entrada) => {
+		.then(async (entrada) => {
+
+			let cantidades = await getTarimasAndCajasEntradas(entrada._id)
+			entrada.cantidades = cantidades;
+			entrada.save()
+			console.log(entrada);
 			res.status(200).send(entrada);
 		})
 		.catch((error) => {
@@ -2377,13 +2385,13 @@ async function getbodycorreo(req, res) {
 	return res.status(200).send({"respuesta":respuesta,"error":false});
 }
 
-
-async function getTarimasAndCajas(req, res){
+async function getTarimasAndCajasEntradas(entrada_id){
 	
-	const entrada_id = req.body.entrada_id;
+	//console.log(entrada_id)
 	let tarimas = 0;
 	let cajas = 0;
-	try {
+
+	 try {
 		
 		const entrada = await Entrada.findById(entrada_id).exec();
 		const partidas = entrada.partidas
@@ -2391,7 +2399,43 @@ async function getTarimasAndCajas(req, res){
 
 	await Helper.asyncForEach(partidas,async function (partida_id){
 		const partidaDetalle = await PartidaModel.find({_id: partida_id}).exec();
+		if(partidaDetalle[0].embalajesxSalir !== undefined){
 			cajas += await partidaDetalle[0].embalajesxSalir.cajas;
+		}else{
+			cajas += 0;
+		}	
+			
+	});
+		const respuesta = {"tarimas": tarimas, "cajas": cajas}
+		//res.status(200).json({"respuesta": respuesta, "statusCode": res.statusCode})
+		return respuesta;
+	} catch (error) {
+		console.log(error)
+	}		
+ 
+}
+
+
+async function getTarimasAndCajas(req, res){
+	
+	const entrada_id = req.body.entrada_id;
+	console.log(entrada_id)
+	let tarimas = 0;
+	let cajas = 0;
+
+	 try {
+		
+		const entrada = await Entrada.findById(entrada_id).exec();
+		const partidas = entrada.partidas
+		tarimas = partidas.length;
+
+	await Helper.asyncForEach(partidas,async function (partida_id){
+		const partidaDetalle = await PartidaModel.find({_id: partida_id}).exec();
+		if(partidaDetalle[0].embalajesxSalir !== undefined){
+			cajas += await partidaDetalle[0].embalajesxSalir.cajas;
+		}else{
+			cajas += 0;
+		}	
 			
 	});
 		const respuesta = {"tarimas": tarimas, "cajas": cajas}
@@ -2400,8 +2444,7 @@ async function getTarimasAndCajas(req, res){
 	} catch (error) {
 		console.log(error)
 	}		
-
-
+ 
 }
 
 
