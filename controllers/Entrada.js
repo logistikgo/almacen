@@ -26,7 +26,6 @@ function getNextIDTicket() {
 
 async function get(req, res) {
 	
-	console.log(pagination)
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
@@ -154,7 +153,7 @@ async function get(req, res) {
 }
 
 function getById(req, res) {
-	let _id = req.body.entrada_id;
+	let _id = req.query.id;
 	//console.log(_id)
 	Entrada.findOne({ _id: _id })
 		.populate({
@@ -173,12 +172,8 @@ function getById(req, res) {
 			path: 'tiempoDescarga_id',
 			model: 'TiempoCargaDescarga'
 		})
-		.then(async (entrada) => {
+		.then((entrada) => {
 
-			let cantidades = await getTarimasAndCajasEntradas(entrada._id)
-			entrada.cantidades = cantidades;
-			entrada.save()
-			console.log(entrada);
 			res.status(200).send(entrada);
 		})
 		.catch((error) => {
