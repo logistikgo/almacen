@@ -2410,7 +2410,6 @@ async function getTarimasAndCajasEntradas(entrada_id){
  
 }
 
-
 async function getTarimasAndCajas(req, res){
 	
 	const entrada_id = req.body.entrada_id;
