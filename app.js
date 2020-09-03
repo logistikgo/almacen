@@ -264,6 +264,9 @@ app.get('/api/getExcelEntradas', Entrada.getExcelEntradas);
 app.get('/api/getExcelCaducidades', Entrada.getExcelCaducidades);
 app.get('/api/getExcelSalidas', Salida.getExcelSalidas);
 app.get('/api/getExcelSalidasBarcel', Salida.getExcelSalidasBarcel);
+app.get('/api/reporteDia',Partida.reporteDia);
+app.get('/api/getExcelreporteDia',Partida.getExcelreporteDia);
+
 
 //babel
 //entradas
@@ -271,7 +274,8 @@ app.post('/api/saveEntradaBabel', Entrada.saveEntradaBabel);
 app.post('/api/updateEntradasBabel', Entrada.updateEntradasBabel);
 app.post('/api/saveEntradaEDI', Entrada.saveEntradaEDI);
 app.post('/api/updateById', Entrada.updateById);
- 
+ //salidas
+app.post('/api/saveSalidaBabel',Salida.saveSalidaBabel);
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
 
