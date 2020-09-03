@@ -278,6 +278,8 @@ app.post('/api/updateById', Entrada.updateById);
 app.post('/api/saveSalidaBabel',Salida.saveSalidaBabel);
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
+//gettotalcajas
+app.get('/api/getTarimasAndCajas/:_id', Entrada.getTarimasAndCajas);
 
 //Tickets
 app.post('/api/saveTicket', Ticket.post);
