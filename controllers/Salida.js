@@ -1651,6 +1651,7 @@ async function importsalidas(req, res) {
 
 async function saveSalidaBabel(req, res) {
 	var mongoose = require('mongoose');
+	
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
 	var IdAlmacen= req.body.IdAlmacen;
