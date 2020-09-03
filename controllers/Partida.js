@@ -6,6 +6,7 @@ const Entrada = require('../models/Entrada');
 const Pasillo = require('../models/Pasillo');
 const Producto = require('../models/Producto');
 const Posicion = require('./Posicion');
+const Embalaje = require('../models/Embalaje');
 const PosicionModelo = require('../models/Posicion');
 const MovimientoInventarioController = require('./MovimientoInventario');
 const Helper = require('../helpers');
@@ -1386,6 +1387,360 @@ async function posicionarAuto(id_pocision,id_partidas,nivelIndex)
         //console.log(partida);
     
 }
+//Reporte en base a items para la conciliacion diaria
+async function reporteDia(req, res)
+{   
+    let respuesta=[];
+    //console.log(req.query.fechaInicio);
+    let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+    let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+   //console.log(fechaInicio);
+   //console.log(fechaFinal);
+    let filter = {
+            clienteFiscal_id: req.query.clienteFiscal_id ,
+            sucursal_id:  req.query.sucursal_id ,
+            almacen_id: req.query.almacen_id ,
+            status:{$in:["APLICADA","FINALIZADO"]},
+            fechaEntrada:{$gte:fechaInicio,$lt:fechaFinal}
+        }
+    let filter2 = {
+            clienteFiscal_id: req.query.clienteFiscal_id ,
+            sucursal_id:  req.query.sucursal_id ,
+            almacen_id: req.query.almacen_id ,
+            tipo:req.query.tipo,
+            fechaSalida:{$gte:fechaInicio,$lt:fechaFinal}
+        }
+
+    var entradasDia=await Entrada.find(filter).sort({ fechaEntrada: 1 }).exec();
+    let inbyProd=[];
+    let outbyProd=[];
+    var salidas_id=[];
+    //console.log(entradasDia.length);
+    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    //console.log(tipoUsuario);
+    let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
+    var embalajesjson={};
+    await clienteEmbalaje.forEach(emb=>{
+        embalajesjson[emb]=0;
+    });
+   // console.log(embalajesjson);
+    if(entradasDia.length>0)
+    {
+        await Helper.asyncForEach(entradasDia,async function (ed){
+            await Helper.asyncForEach(ed.partidas,async function (par){
+                let partidaT=await Partida.findOne({_id:par});
+                if(inbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                {
+                    //console.log("yes");
+                    let index=inbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                    clienteEmbalaje.forEach(em=>{
+                        
+                        if(inbyProd[index].embalajesEntrada[em]!=undefined && partidaT.embalajesEntrada[em]!=undefined)
+                            inbyProd[index].embalajesEntrada[em]+=partidaT.embalajesEntrada[em];
+                    })
+                }
+                else
+                {
+                    const data={
+                        clave:partidaT.clave,
+                        embalajesEntrada: partidaT.embalajesEntrada
+                    };
+                    inbyProd.push(data)
+                }
+            });
+        });
+    }
+    var salidasDia=await Salida.find(filter2).sort({ fechaSalida: 1 }).exec();
+    if(salidasDia.length>0){
+        await Helper.asyncForEach(salidasDia,async function (sd){
+
+            await Helper.asyncForEach(sd.partidas,async function (par){
+                let partidaT=await Partida.findOne({_id:par});
+                //console.log(partidaT)
+                let embalajesSalida;
+                    salidas_id = partidaT.salidas_id;
+
+                    salidas_id.forEach(elem => {
+                        let elemId = elem.salida_id;
+                        let paramId = sd._id;
+                        if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
+                            embalajesSalida = elem.embalajes;
+                        }
+                    })
+                if(outbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                {
+                    //console.log("yes");
+                    let index=outbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                    clienteEmbalaje.forEach(em=>{
+                        //console.log(partidaT.embalajesEntrada);
+                        if(outbyProd[index].embalajesSalida[em]!=undefined && embalajesSalida[em]!=undefined)
+                            outbyProd[index].embalajesSalida[em]+=embalajesSalida[em];
+                    })
+                }
+                else
+                {
+                    const data={
+                        clave:partidaT.clave,
+                        embalajesSalida: embalajesSalida
+                    };
+                    //console.log(data);
+                    outbyProd.push(data)
+                }
+            });
+        });
+    }
+    var productosDia=await Producto.find({clienteFiscal_id: req.query.clienteFiscal_id, statusReg: "ACTIVO"}).exec();
+    console.log(outbyProd.length+"-"+inbyProd.length)
+    
+        await Helper.asyncForEach(productosDia,async function (pd){
+            let band=false;
+            //console.log(embalajes);
+            let inIndex=inbyProd.findIndex(obj=> (obj.clave == pd.clave));
+            let outIndex=outbyProd.findIndex(obj=> (obj.clave == pd.clave));
+            var auxprod={
+                    clave:pd.clave,
+                    descripcion:pd.descripcion,
+                    subclasificacion:pd.subclasificacion,
+                    corrugados:Helper.Clone(pd.embalajes),
+                    entradas:Helper.Clone(inbyProd[inIndex]? inbyProd[inIndex].embalajesEntrada : embalajesjson),
+                    salidas:Helper.Clone(outbyProd[outIndex]? outbyProd[outIndex].embalajesSalida:embalajesjson),
+                    StockFinal:Helper.Clone(pd.embalajes)
+                };
+            //console.log(auxprod)
+            await Helper.asyncForEach(clienteEmbalaje,async function (em){
+                if(auxprod.corrugados[em]!=undefined && auxprod.entradas[em]!=undefined && auxprod.salidas[em]!=undefined  && auxprod.StockFinal[em]!=undefined && auxprod.StockFinal[em]!=0 )
+                {
+                    band=true;
+                    auxprod.corrugados[em]=pd.embalajes[em]-auxprod.entradas[em] + auxprod.salidas[em];
+                }
+                
+            })
+            if(band == true){
+               // console.log(auxprod)
+                respuesta.push(auxprod);
+            }
+
+        });
+    
+    if(respuesta.length>0)
+    {
+        res.status(200).send(respuesta);
+    }
+    else
+        res.status(200).send("ERROR");
+}
+
+async function getExcelreporteDia(req, res)
+{   
+    let respuesta=[];
+    console.log(req.query);
+    let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+    let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+   //console.log(fechaInicio);
+   //console.log(fechaFinal);
+    let filter = {
+            clienteFiscal_id: req.query.clienteFiscal_id ,
+            sucursal_id:  req.query.sucursal_id ,
+            almacen_id: req.query.almacen_id ,
+            status:{$in:["APLICADA","FINALIZADO"]},
+            fechaEntrada:{$gte:fechaInicio,$lt:fechaFinal}
+        }
+    let filter2 = {
+            clienteFiscal_id: req.query.clienteFiscal_id ,
+            sucursal_id:  req.query.sucursal_id ,
+            almacen_id: req.query.almacen_id ,
+            tipo:req.query.tipo,
+            fechaSalida:{$gte:fechaInicio,$lt:fechaFinal}
+        }
+
+    var excel = require('excel4node');
+        
+    var workbook = new excel.Workbook();
+    var tituloStyle = workbook.createStyle({
+      font: {
+        bold: true,
+      },
+      alignment: {
+        wrapText: true,
+        horizontal: 'center',
+      },
+    });
+    var ResultStyle = workbook.createStyle({
+      font: {
+        bold: true,
+      },
+      alignment: {
+        wrapText: true,
+        horizontal: 'center',
+      },
+      fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        bgColor: '#FF0000',
+        fgColor: '#FF0000',
+      },
+    });
+    var headersStyle = workbook.createStyle({
+      font: {
+        bold: true,
+      },
+      alignment: {
+        wrapText: true,
+        horizontal: 'left',
+      },
+    });
+    var porcentajeStyle = workbook.createStyle({
+        numberFormat: '#.0%; -#.0%; -'
+    });
+    var fitcellStyle = workbook.createStyle({
+        alignment: {
+            wrapText: true,
+        },
+    });
+    
+     
+    var worksheet = workbook.addWorksheet('Partidas');
+    worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
+    worksheet.cell(2, 1).string('Clave').style(headersStyle);
+    worksheet.cell(2, 2).string('Descripcion').style(headersStyle);
+    worksheet.cell(2, 3).string('Subclasificacion').style(headersStyle);
+    worksheet.cell(2, 4).string('Corrugados').style(headersStyle);
+    worksheet.cell(2, 5).string('Entradas').style(headersStyle);
+    worksheet.cell(2, 6).string('Salidas').style(headersStyle);
+    worksheet.cell(2, 7).string('Stock final').style(headersStyle);
+    worksheet.cell(2, 8).string('Match').style(headersStyle);
+    worksheet.cell(2, 9).string('On Hand Logistikgo').style(headersStyle);
+
+    var entradasDia=await Entrada.find(filter).sort({ fechaEntrada: 1 }).exec();
+    let inbyProd=[];
+    let outbyProd=[];
+    var salidas_id=[];
+    //console.log(entradasDia.length);
+    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    //console.log(tipoUsuario);
+    let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
+    var embalajesjson={};
+    await clienteEmbalaje.forEach(emb=>{
+        embalajesjson[emb]=0;
+    });
+   // console.log(embalajesjson);
+    if(entradasDia.length>0)
+    {
+        await Helper.asyncForEach(entradasDia,async function (ed){
+            await Helper.asyncForEach(ed.partidas,async function (par){
+                let partidaT=await Partida.findOne({_id:par});
+                if(inbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                {
+                    //console.log("yes");
+                    let index=inbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                    clienteEmbalaje.forEach(em=>{
+                        
+                        if(inbyProd[index].embalajesEntrada[em]!=undefined && partidaT.embalajesEntrada[em]!=undefined)
+                            inbyProd[index].embalajesEntrada[em]+=partidaT.embalajesEntrada[em];
+                    })
+                }
+                else
+                {
+                    const data={
+                        clave:partidaT.clave,
+                        embalajesEntrada: partidaT.embalajesEntrada
+                    };
+                    inbyProd.push(data)
+                }
+            });
+        });
+    }
+    var salidasDia=await Salida.find(filter2).sort({ fechaSalida: 1 }).exec();
+    if(salidasDia.length>0){
+        await Helper.asyncForEach(salidasDia,async function (sd){
+
+            await Helper.asyncForEach(sd.partidas,async function (par){
+                let partidaT=await Partida.findOne({_id:par});
+                //console.log(partidaT)
+                let embalajesSalida;
+                    salidas_id = partidaT.salidas_id;
+
+                    salidas_id.forEach(elem => {
+                        let elemId = elem.salida_id;
+                        let paramId = sd._id;
+                        if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
+                            embalajesSalida = elem.embalajes;
+                        }
+                    })
+                if(outbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                {
+                    //console.log("yes");
+                    let index=outbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                    clienteEmbalaje.forEach(em=>{
+                        //console.log(partidaT.embalajesEntrada);
+                        if(outbyProd[index].embalajesSalida[em]!=undefined && embalajesSalida[em]!=undefined)
+                            outbyProd[index].embalajesSalida[em]+=embalajesSalida[em];
+                    })
+                }
+                else
+                {
+                    const data={
+                        clave:partidaT.clave,
+                        embalajesSalida: embalajesSalida
+                    };
+                    //console.log(data);
+                    outbyProd.push(data)
+                }
+            });
+        });
+    }
+    var productosDia=await Producto.find({clienteFiscal_id: req.query.clienteFiscal_id, statusReg: "ACTIVO"}).exec();
+    console.log(outbyProd.length+"-"+inbyProd.length)
+        let i=2
+        await Helper.asyncForEach(productosDia,async function (pd){
+            let band=false;
+            //console.log(embalajes);
+            let inIndex=inbyProd.findIndex(obj=> (obj.clave == pd.clave));
+            let outIndex=outbyProd.findIndex(obj=> (obj.clave == pd.clave));
+            var auxprod={
+                    clave:pd.clave,
+                    descripcion:pd.descripcion,
+                    subclasificacion:pd.subclasificacion,
+                    corrugados:Helper.Clone(pd.embalajes),
+                    entradas:Helper.Clone(inbyProd[inIndex]? inbyProd[inIndex].embalajesEntrada : embalajesjson),
+                    salidas:Helper.Clone(outbyProd[outIndex]? outbyProd[outIndex].embalajesSalida:embalajesjson),
+                    StockFinal:Helper.Clone(pd.embalajes)
+                };
+            //console.log(auxprod)
+            await Helper.asyncForEach(clienteEmbalaje,async function (em){
+                if(auxprod.corrugados[em]!=undefined && auxprod.entradas[em]!=undefined && auxprod.salidas[em]!=undefined  && auxprod.StockFinal[em]!=undefined && auxprod.StockFinal[em]!=0 )
+                {
+                    band=true;
+                    auxprod.corrugados[em]=pd.embalajes[em]-auxprod.entradas[em] + auxprod.salidas[em];
+                }
+                
+            })
+            if(band == true){
+               // console.log(auxprod)
+               i=i+1;
+               worksheet.cell(i, 1).string(auxprod.clave ? auxprod.clave:"");
+               worksheet.cell(i, 2).string(auxprod.descripcion ? auxprod.descripcion:"");
+               worksheet.cell(i, 3).string(auxprod.subclasificacion ? auxprod.subclasificacion:"");
+               worksheet.cell(i, 4).number(auxprod.corrugados.cajas ? auxprod.corrugados.cajas:0);
+               worksheet.cell(i, 5).number(auxprod.entradas.cajas ? auxprod.entradas.cajas:0);
+               worksheet.cell(i, 6).number(auxprod.salidas.cajas ? auxprod.salidas.cajas:0);
+               worksheet.cell(i, 7).number(auxprod.StockFinal.cajas ? auxprod.StockFinal.cajas:0);
+               worksheet.cell(i, 8).formula('G'+i+'-'+'I'+i);
+               worksheet.cell(i, 9).number(auxprod.StockFinal.cajas ? auxprod.StockFinal.cajas:0);
+
+                respuesta.push(auxprod);
+            }
+
+        });
+    
+    if(respuesta.length>0)
+    {
+        workbook.write('ReporteConciliacion'+dateFormat(new Date(Date.now()-(5*3600000)), "dd/mm/yyyy")+'.xlsx',res);
+    }
+    else
+        res.status(200).send("ERROR");
+}
+
 module.exports = {
     get,
     post,
@@ -1408,5 +1763,7 @@ module.exports = {
     updatePosicionPartida,
     updateCajasPedidas,
     posicionarAuto,
-    getExcelByIDs
+    getExcelByIDs,
+    reporteDia,
+    getExcelreporteDia
 }
