@@ -1755,7 +1755,13 @@ async function saveSalidaBabel(req, res) {
 //console.log(nSalida);
 					nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
 
-					nSalida.save();
+					nSalida.save().then(async (salida) => {
+						res.status(200).send(salida.stringFolio);
+					})
+					.catch((error) => {
+						res.status(500).send(error);
+					});
+
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
