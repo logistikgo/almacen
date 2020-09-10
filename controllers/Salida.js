@@ -3,6 +3,7 @@
 const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
 const PartidaModel = require('../models/Partida');
+const Producto = require('../models/Producto');
 const reporteModel = require('../models/backupRepoteSalidas');
 const Entrada = require('../models/Entrada');
 const MovimientoInventario = require('../controllers/MovimientoInventario');
@@ -235,7 +236,7 @@ async function saveSalidasEnEntrada(entrada_id, salida_id) {
 		let jEdit = {
 			salidas_id: entrada.salidas_id
 		};
-
+		console.log(jEdit);
 		await Entrada.updateOne({ _id: entrada._id }, { $set: jEdit }).exec();
 	});
 }
@@ -1650,8 +1651,12 @@ async function importsalidas(req, res) {
 
 async function saveSalidaBabel(req, res) {
 	var mongoose = require('mongoose');
+	
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
+	var IdAlmacen= req.body.IdAlmacen;
+  	var IDClienteFiscal= req.body.IDClienteFiscal;
+  	var IDSucursal= req.body.IDSucursal;
 	var arrPartidas=[];
 	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
@@ -1659,6 +1664,7 @@ async function saveSalidaBabel(req, res) {
 		await Helper.asyncForEach(req.body.Pedido,async function (Pedido) {
 			if(Pedido.Pedido)
 			{
+				//console.log(Pedido.Clave);
 				if(arrPO.find(obj=> (obj.pedido == Pedido.Pedido)))
 	    		{
 	    			//console.log("yes");
@@ -1688,19 +1694,86 @@ async function saveSalidaBabel(req, res) {
 			}				
 		});
 		//console.log(arrPO);
-
+		let hoy=new Date(Date.now()-(5*3600000));
 		await Helper.asyncForEach(arrPO,async function (Pedido) {
-
+			let parRes=[];
+			//console.log("----------------------------");
+			//console.log(Pedido.arrPartidas.length)
+			let refitem=Pedido.pedido;
+			let refDesti=Pedido.destinatario;
+			console.log(Pedido.pedido);
+			console.log("-*/-/-*/*-/*-/*-/*-/*-/*-/*-/*-/*-/-*/*-");
 			await Helper.asyncForEach(Pedido.arrPartidas,async function (par) {
+
 				let embalajesEntrada={cajas:parseInt(par.Cantidad)};
-				console.log(embalajesEntrada);
-				let partida=await PartidaModel.findOne({'clave':par.Clave,'isEmpty':false,'embalajesEntrada':embalajesEntrada,'embalajesxSalir':embalajesEntrada}).exec();
-				console.log(".0.0.0.0.0.0.0.0.");
-				console.log(partida)
+				//console.log(embalajesEntrada);
+				let producto =await Producto.findOne({'clave': par.Clave }).exec();
+				let partidas=await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesEntrada':embalajesEntrada,'embalajesxSalir':embalajesEntrada,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: -1 }).exec();
+				//console.log(".0.0.0.0.0.0.0.0.");
+				let count=0;
+				//console.log(partidas.length)
+				for (let i = 0; i < partidas.length && count == 0; i++) {
+					let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+		            //console.log(par)
+		            if(fechaFrescura.getTime()>hoy.getTime()-720*86400000)
+		            {
+
+		            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
+		            	partidaaux.pedido=true;
+		            	partidaaux.save();
+		            	parRes.push(partidas[i]);
+		            	//console.log(partidas[i]._id);
+		            	count++;
+		            }
+				}
+				
 			});
+			if (parRes && parRes.length > 0 && parRes.length==Pedido.arrPartidas.length ) {
+				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
+				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
+
+				if ((entradas && entradas.length > 0)) {
+
+					let nSalida = new Salida();
+					nSalida.salida_id = await getNextID();
+					nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
+					nSalida.fechaSalida = new Date(Date.now()-(5*3600000));
+					nSalida.nombreUsuario = "BABELSALIDA";
+					nSalida.folio = await getNextID();
+					//console.log(nSalida.folio);
+					nSalida.partidas = parRes.map(x => x._id);
+					nSalida.entrada_id = entradas_id;
+
+					nSalida.almacen_id = IdAlmacen;
+					nSalida.clienteFiscal_id = IDClienteFiscal;
+					nSalida.sucursal_id = IDSucursal;
+					//console.log(nSalida.clienteFiscal_id);
+					nSalida.destinatario=refDesti;
+					nSalida.referencia = refitem;
+					nSalida.item = refitem;
+					nSalida.tipo = "FORSHIPPING";//NORMAL
+//console.log(nSalida);
+					nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
+
+					nSalida.save().then(async (salida) => {
+						res.status(200).send(salida.stringFolio);
+					})
+					.catch((error) => {
+						res.status(500).send(error);
+					});
+
+				} else {
+					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
+				}
+				
+			} else {
+				console.log("Se trata de generar una salida sin partidas suficientes");
+				return res.status(400).send("Se trata de generar una salida sin partidas suficientes");
+			}
+			console.log(parRes)
 		});
 	}catch(error){
-			console.log(error)
+			console.log(error);
 			res.status(500).send(error);
 			console.log(error);
 	};
