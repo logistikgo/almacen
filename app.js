@@ -98,6 +98,7 @@ app.get('/api/getSalidasReporte', Salida.getReportePartidas);
 app.post('/api/salida', Salida.save);
 app.put('/api/salida', Salida.update);
 app.post('/api/salidaAutomatica', Salida.saveSalidaAutomatica);
+app.put('/api/updateStatusSalidas',Salida.updateStatusSalidas);
 
 app.get('/api/getCtesFiscales', CteFiscal.get);
 app.get('/api/getCtesFiscalesXD', Helper.getClientesFiscalesXD);

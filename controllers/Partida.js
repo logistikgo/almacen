@@ -74,7 +74,7 @@ async function getByEntradaSalida(req, res) {
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
-                if(partida.tipo == "NORMAL" && partida.status == "ASIGNADA" )
+                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL")  && partida.status == "ASIGNADA" )
                 {
                     arrpartida.push(partida);
                 }
@@ -99,9 +99,9 @@ async function getBySalida(req, res) {
         let partidaFound = await Partida.findOne({ _id: partida_id }).exec();
         let partida = JSON.parse(JSON.stringify(partidaFound));
         let salida_idFound = partida.salidas_id.find(x => x.salida_id.toString() == salida_id.toString());
-        partida.pesoBrutoEnSalida = salida_idFound.pesoBruto;
-        partida.pesoNetoEnSalida = salida_idFound.pesoNeto;
-        partida.embalajesEnSalida = salida_idFound.embalajes;
+        partida.pesoBrutoEnSalida = salida_idFound?salida_idFound.pesoBruto:0;
+        partida.pesoNetoEnSalida = salida_idFound?salida_idFound.pesoNeto:0;
+        partida.embalajesEnSalida = salida_idFound?salida_idFound.embalajes:0;
         partidas.push(partida);
     });
 
@@ -440,8 +440,10 @@ async function getByProductoEmbalaje(req, res) {
      * Filtros utilizados: producto_id, isEmpty, clienteFiscal_id, sucursal_id, almacen_id
      *
      */
+
+  
     let partidas = await Partida
-        .find({ producto_id: producto_id, isEmpty: false , tipo:"NORMAL",status:"ASIGNADA"})
+        .find({ producto_id: producto_id, isEmpty: false , tipo:{$in: ["NORMAL", "MODIFICADA"]},status:"ASIGNADA"})
         .populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id tipo',
             {
                 clienteFiscal_id: clienteFiscal_id,
@@ -450,6 +452,7 @@ async function getByProductoEmbalaje(req, res) {
             })
         .where(embalajesxSalir).gt(0)
         .exec();
+        
     //var testPartidas=[];
     partidas = partidas.filter(x => x.tipo == "EXISTENCIA_INICIAL" || (x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id));
     //console.log(partidas);
