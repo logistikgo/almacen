@@ -44,6 +44,7 @@ function get(req, res) {
 async function getByEntrada(req, res) {
     let entrada_id = req.params.entrada_id;
 
+
     Partida.find({ entrada_id: entrada_id })
         .then(async (partidas) => {
             console.log(partidas.length);
@@ -716,6 +717,13 @@ async function getByProductoEmbalaje(req, res) {
 
 /* Obtiene las partidas con respecto a los filtros de cliente fiscal, sucursal y almacen. */
 async function getPartidasByIDs(req, res) {
+
+    
+    let pagination = {
+		page: parseInt(req.query.page),
+		limit: parseInt(req.query.limit)
+	}
+    console.log(pagination)
     let arrClientesFiscales_id = req.query.clienteFiscal_id;
     let arrSucursales_id = req.query.sucursal_id;
     let arrAlmacenes_id = req.query.almacen_id;
@@ -762,10 +770,23 @@ async function getPartidasByIDs(req, res) {
         {
             filter.stringFolio=folioEntrada;
         }
-
+        console.log(filter);
         let entradas = await Entrada.find(filter).exec();
-
+        
+        let entradasTotales = await Entrada.find({clienteFiscal_id: arrClientesFiscales_id ,
+            sucursal_id:  arrSucursales_id ,
+            almacen_id: arrAlmacenes_id }).exec();
+        
         let entradas_id = entradas.map(x => x._id);
+        let cantidadPartidas = entradas.map(entrada => entrada.partidas.length)
+        let cantidadPartidasTotal = 0;
+        cantidadPartidas.forEach(cantidadPartida => {
+            cantidadPartidasTotal += cantidadPartida
+        })
+
+
+        console.log(cantidadPartidasTotal);
+
 
         let partidas = await Partida
             .find({ entrada_id: { $in: entradas_id } })
@@ -798,7 +819,7 @@ async function getPartidasByIDs(req, res) {
                 path: 'producto_id',
                 model: 'Producto',
             
-            })
+            }).skip(pagination.page).limit(pagination.limit)
             .exec();
             //console.log(partidas)
             partidas = partidas.sort(sortByfechaEntadaAsc);
@@ -840,8 +861,8 @@ async function getPartidasByIDs(req, res) {
                 if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     arrPartidas.push(partida);
             });
-        
-        res.status(200).send(arrPartidas);
+        console.log(arrPartidas.length)
+        res.status(200).json({"json":arrPartidas, "total": cantidadPartidasTotal, "statusCode": res.statusCode});
     }
     catch (error) {
         res.status(500).send(error);
