@@ -1708,17 +1708,23 @@ async function saveSalidaBabel(req, res) {
 				let embalajesEntrada={cajas:parseInt(par.Cantidad)};
 				//console.log(embalajesEntrada);
 				let producto =await Producto.findOne({'clave': par.Clave }).exec();
-				let partidas=await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesEntrada':embalajesEntrada,'embalajesxSalir':embalajesEntrada,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: -1 }).exec();
+				let partidas=await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesEntrada':embalajesEntrada,'embalajesxSalir':embalajesEntrada,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
+				partidas=partidas.length<1 ? await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
 				//console.log(".0.0.0.0.0.0.0.0.");
 				let count=0;
 				//console.log(partidas.length)
 				for (let i = 0; i < partidas.length && count == 0; i++) {
 					let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 		            //console.log(par)
-		            if(fechaFrescura.getTime()>hoy.getTime()-720*86400000)
+		            if(fechaFrescura.getTime()>hoy.getTime() && partidas[i].embalajesxSalir.cajas>=par.Cantidad )
 		            {
 
 		            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
+
+		            	/*--------------------------*/
+		            	partidaaux.CajasPedidas={cajas:parseInt(par.Cantidad)};//talves se cambie a info pedidos
+
+		            	/*--------------------------*/
 		            	partidaaux.pedido=true;
 		            	partidaaux.save();
 		            	parRes.push(partidas[i]);
@@ -1779,6 +1785,28 @@ async function saveSalidaBabel(req, res) {
 	};
 }
 
+function updateStatusSalidas(req, res) {
+	let _id = req.body.salida_id;
+	let newStatus = req.body.status;
+	console.log(_id);
+
+	let today = new Date(Date.now()-(5*3600000));
+	let datos ={ tipo: newStatus}
+	if(newStatus=="FORPICKING")
+	{
+		datos.fechaEntrada=today
+	}
+
+	Salida.updateOne({_id: _id}, { $set: datos}).then((data) => {
+		console.log(datos);
+		res.status(200).send(data);
+	})
+	.catch((error) => {
+		console.log(error);
+		res.status(500).send(error);
+	});
+}
+
 module.exports = {
 	get,
 	getByID,
@@ -1792,5 +1820,6 @@ module.exports = {
 	getExcelSalidas,
 	importsalidas,
 	getExcelSalidasBarcel,
-	saveSalidaBabel
+	saveSalidaBabel,
+	updateStatusSalidas
 }

@@ -385,10 +385,10 @@ async function saveEntradaBabel(req, res) {
 		return res.status(500).send("Ya existe las Remisiones:\n" + resORDENES+" ");
 		
 	}
-	/*console.log(arrPO);
+	//console.log(arrPO);
 	
 	console.log("test");
-	console.log(arrPartidas);*/
+	//console.log(arrPartidas);
 	let reserror="";
     var arrPartidas_id = [];
     var partidas = [];
@@ -405,17 +405,17 @@ async function saveEntradaBabel(req, res) {
 	            arrPartidas_id.push(partida._id);
 	        });
 	    });
-	    /*console.log(partidas);
-	    console.log(arrPartidas_id);*/
+	  //  console.log(partidas);
+	    //console.log(arrPartidas_id);
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA/MANUFACTURINGPLANT");
-	    //console.log(indexInfopedido);
+	    console.log(indexInfopedido);
 	    let planta="";
 
 	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA" && indexInfopedido != -1)
 		 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		else
 			planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
-		//console.log("__------------------------------------------------"+planta);
+		console.log("__------------------------------------------------"+planta);
 		if(planta==null)
 		{
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
@@ -425,7 +425,7 @@ async function saveEntradaBabel(req, res) {
 			else
 				planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		}
-		//console.log(planta);
+		console.log(planta);
 		//console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		//console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
@@ -501,6 +501,7 @@ async function saveEntradaBabel(req, res) {
 					/*console.log(entrada);
 					console.log("/------------------/")*/
 				}).catch((error) => {
+					console.log(error);
 					reserror=error
 				});
 		}else {
@@ -559,6 +560,7 @@ async function updateEntradasBabel(req, res) {
 			res.status(500).send(error);
 			console.log(error);
 	};
+	console.log("end");
 }
 //Valida que la entrada ya existe o no, devolviendo true o false
 async function validaEntradaDuplicado(embarque) {
@@ -917,8 +919,7 @@ function getExcelCaducidades(req, res) {
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.query.clienteFiscal_id,
-		status:"APLICADA",
-		isEmpty: false
+		status:{$in:["APLICADA","FINALIZADO"]}
 	}
 	if(fechaInicio != "" &&  fechaFinal != ""){
 		if(fecha == "fechaAlta")
