@@ -25,6 +25,7 @@ function getNextIDTicket() {
 }
 
 async function get(req, res) {
+	
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
@@ -144,6 +145,7 @@ async function get(req, res) {
 			path: 'partidas.producto_id',
 			model: 'Producto'
 		}).then((entradas) => {
+
 			res.status(200).send(_status == null ? json : entradas);
 		}).catch((error) => {
 			res.status(500).send(error);
@@ -152,7 +154,7 @@ async function get(req, res) {
 
 function getById(req, res) {
 	let _id = req.query.id;
-
+	//console.log(_id)
 	Entrada.findOne({ _id: _id })
 		.populate({
 			path: 'partidas.producto_id',
@@ -171,6 +173,7 @@ function getById(req, res) {
 			model: 'TiempoCargaDescarga'
 		})
 		.then((entrada) => {
+
 			res.status(200).send(entrada);
 		})
 		.catch((error) => {
@@ -382,10 +385,10 @@ async function saveEntradaBabel(req, res) {
 		return res.status(500).send("Ya existe las Remisiones:\n" + resORDENES+" ");
 		
 	}
-	/*console.log(arrPO);
+	//console.log(arrPO);
 	
 	console.log("test");
-	console.log(arrPartidas);*/
+	//console.log(arrPartidas);
 	let reserror="";
     var arrPartidas_id = [];
     var partidas = [];
@@ -402,17 +405,17 @@ async function saveEntradaBabel(req, res) {
 	            arrPartidas_id.push(partida._id);
 	        });
 	    });
-	    /*console.log(partidas);
-	    console.log(arrPartidas_id);*/
+	  //  console.log(partidas);
+	    //console.log(arrPartidas_id);
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA/MANUFACTURINGPLANT");
-	    //console.log(indexInfopedido);
+	    console.log(indexInfopedido);
 	    let planta="";
 
 	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA" && indexInfopedido != -1)
 		 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		else
 			planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
-		//console.log("__------------------------------------------------"+planta);
+		console.log("__------------------------------------------------"+planta);
 		if(planta==null)
 		{
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
@@ -422,7 +425,7 @@ async function saveEntradaBabel(req, res) {
 			else
 				planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		}
-		//console.log(planta);
+		console.log(planta);
 		//console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		//console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
@@ -472,7 +475,7 @@ async function saveEntradaBabel(req, res) {
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="SELLOS/SEALS");
 			nEntrada.sello=req.body.Infoplanta[indexInfopedido+1].InfoPedido;
 			await new Promise(resolve => {
-					let time=(Math.random() * 1000)*10;
+					let time=(Math.random() * 5000)*10;
 			        setTimeout(resolve,time );
 			        //poconsole.log(time);
 			    });
@@ -498,6 +501,7 @@ async function saveEntradaBabel(req, res) {
 					/*console.log(entrada);
 					console.log("/------------------/")*/
 				}).catch((error) => {
+					console.log(error);
 					reserror=error
 				});
 		}else {
@@ -556,6 +560,7 @@ async function updateEntradasBabel(req, res) {
 			res.status(500).send(error);
 			console.log(error);
 	};
+	console.log("end");
 }
 //Valida que la entrada ya existe o no, devolviendo true o false
 async function validaEntradaDuplicado(embarque) {
@@ -914,8 +919,7 @@ function getExcelCaducidades(req, res) {
    	let Aging=0;
 	let filter = {
 		clienteFiscal_id: req.query.clienteFiscal_id,
-		status:"APLICADA",
-		isEmpty: false
+		status:{$in:["APLICADA","FINALIZADO"]}
 	}
 	if(fechaInicio != "" &&  fechaFinal != ""){
 		if(fecha == "fechaAlta")
@@ -1148,29 +1152,29 @@ function getExcelCaducidades(req, res) {
 				indexheaders++;
 			
 		});
-
-		worksheet.cell(2, indexheaders).string('Fecha Producción').style(headersStyle);
-		worksheet.cell(2, indexheaders+1).string('Fecha Caducidad').style(headersStyle);
-		worksheet.cell(2, indexheaders+2).string('Fecha Embarque Calculada a 2 dias despues').style(headersStyle);
-		worksheet.cell(2, indexheaders+3).string('Garantia Frescura a Fecha de Embarque').style(headersStyle);
-		worksheet.cell(2, indexheaders+4).string('Garantia Frescura').style(headersStyle);
-		worksheet.cell(2, indexheaders+5).string('Dias Anaquel Original de Planta').style(headersStyle);
-		worksheet.cell(2, indexheaders+6).string('Dias Traslado Programado').style(headersStyle);
-		worksheet.cell(2, indexheaders+7).string('Fecha Salida Planta').style(headersStyle);
-		worksheet.cell(2, indexheaders+8).string('Fecha Esperada Recibo').style(headersStyle);
-		worksheet.cell(2, indexheaders+9).string('Dias Anaquel en Llegada').style(headersStyle);
-		worksheet.cell(2, indexheaders+10).string('Dias Traslado Real').style(headersStyle);
-		worksheet.cell(2, indexheaders+11).string('Fecha de Recibo Cedis').style(headersStyle);
-		worksheet.cell(2, indexheaders+12).string('Fecha de Alta LKGO').style(headersStyle);
-		worksheet.cell(2, indexheaders+13).string('Fecha Garantia Frescura').style(headersStyle);
-		worksheet.cell(2, indexheaders+14).string('Aging Report').style(headersStyle);
-		worksheet.cell(2, indexheaders+15).string('Dias Alerta 1').style(headersStyle);
-		worksheet.cell(2, indexheaders+16).string('Alerta 1').style(headersStyle);
-		worksheet.cell(2, indexheaders+17).string('Fecha Alerta 1').style(headersStyle);
-		worksheet.cell(2, indexheaders+18).string('Dias Alerta 2').style(headersStyle);
-		worksheet.cell(2, indexheaders+19).string('Alerta 2').style(headersStyle);
-		worksheet.cell(2, indexheaders+20).string('Fecha Alerta 2').style(headersStyle);
-		worksheet.cell(2, indexheaders+21).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders).string('Estatus').style(headersStyle);
+		worksheet.cell(2, indexheaders+1).string('Fecha Producción').style(headersStyle);
+		worksheet.cell(2, indexheaders+2).string('Fecha Caducidad').style(headersStyle);
+		worksheet.cell(2, indexheaders+3).string('Fecha Embarque Calculada a 2 dias despues').style(headersStyle);
+		worksheet.cell(2, indexheaders+4).string('Garantia Frescura a Fecha de Embarque').style(headersStyle);
+		worksheet.cell(2, indexheaders+5).string('Garantia Frescura').style(headersStyle);
+		worksheet.cell(2, indexheaders+6).string('Dias Anaquel Original de Planta').style(headersStyle);
+		worksheet.cell(2, indexheaders+7).string('Dias Traslado Programado').style(headersStyle);
+		worksheet.cell(2, indexheaders+8).string('Fecha Salida Planta').style(headersStyle);
+		worksheet.cell(2, indexheaders+9).string('Fecha Esperada Recibo').style(headersStyle);
+		worksheet.cell(2, indexheaders+10).string('Dias Anaquel en Llegada').style(headersStyle);
+		worksheet.cell(2, indexheaders+11).string('Dias Traslado Real').style(headersStyle);
+		worksheet.cell(2, indexheaders+12).string('Fecha de Recibo Cedis').style(headersStyle);
+		worksheet.cell(2, indexheaders+13).string('Fecha de Alta LKGO').style(headersStyle);
+		worksheet.cell(2, indexheaders+14).string('Fecha Garantia Frescura').style(headersStyle);
+		worksheet.cell(2, indexheaders+15).string('Aging Report').style(headersStyle);
+		worksheet.cell(2, indexheaders+16).string('Dias Alerta 1').style(headersStyle);
+		worksheet.cell(2, indexheaders+17).string('Alerta 1').style(headersStyle);
+		worksheet.cell(2, indexheaders+18).string('Fecha Alerta 1').style(headersStyle);
+		worksheet.cell(2, indexheaders+19).string('Dias Alerta 2').style(headersStyle);
+		worksheet.cell(2, indexheaders+20).string('Alerta 2').style(headersStyle);
+		worksheet.cell(2, indexheaders+21).string('Fecha Alerta 2').style(headersStyle);
+		worksheet.cell(2, indexheaders+22).string('Ubicacion').style(headersStyle);
 		
         let i=3;
         //console.log(arrPartidas);
@@ -1381,24 +1385,24 @@ function getExcelCaducidades(req, res) {
 	            }
            		indexbody++;
            	});
-
-           	worksheet.cell(i, indexbody).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
-           	worksheet.cell(i, indexbody+1).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
-           	worksheet.cell(i, indexbody+2).string(fechacalculada2Dias);
-           	worksheet.cell(i, indexbody+3).number(GarFresFecha).style(GarFresFechaStyle);
-           	worksheet.cell(i, indexbody+4).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
-           	worksheet.cell(i, indexbody+5).number(partidas.producto_id.vidaAnaquel ? partidas.producto_id.vidaAnaquel:0);
-           	worksheet.cell(i, indexbody+6).number(partidas.entrada_id ? partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0:0);
-           	worksheet.cell(i, indexbody+7).string(partidas.entrada_id ? partidas.entrada_id.fechaSalidaPlanta  ? dateFormat(new Date(partidas.entrada_id.fechaSalidaPlanta.getTime()), formatofecha) :"":"");
-           	worksheet.cell(i, indexbody+8).string(fechaEspRecibo);
-           	worksheet.cell(i, indexbody+9).number(1+diasEnAlm);
-           	worksheet.cell(i, indexbody+10).number(orginalshippingdays).style(shipingdaysstyle);;
-           	worksheet.cell(i, indexbody+11).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
-           	worksheet.cell(i, indexbody+12).string(partidas.entrada_id ? partidas.entrada_id.fechaAlta  ? dateFormat(new Date(partidas.entrada_id.fechaAlta.getTime()), formatofecha) :"":"");
-           	worksheet.cell(i, indexbody+13).number(Math.abs(Aging));
-           	worksheet.cell(i, indexbody+14).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
+           	worksheet.cell(i, indexbody).string(partidas.pedido!=undefined ? partidas.pedido == false ? "NORMAL": "PEDIDO":"" );
+           	worksheet.cell(i, indexbody+1).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
+           	worksheet.cell(i, indexbody+2).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
+           	worksheet.cell(i, indexbody+3).string(fechacalculada2Dias);
+           	worksheet.cell(i, indexbody+4).number(GarFresFecha).style(GarFresFechaStyle);
+           	worksheet.cell(i, indexbody+5).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
+           	worksheet.cell(i, indexbody+6).number(partidas.producto_id.vidaAnaquel ? partidas.producto_id.vidaAnaquel:0);
+           	worksheet.cell(i, indexbody+7).number(partidas.entrada_id ? partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0:0);
+           	worksheet.cell(i, indexbody+8).string(partidas.entrada_id ? partidas.entrada_id.fechaSalidaPlanta  ? dateFormat(new Date(partidas.entrada_id.fechaSalidaPlanta.getTime()), formatofecha) :"":"");
+           	worksheet.cell(i, indexbody+9).string(fechaEspRecibo);
+           	worksheet.cell(i, indexbody+10).number(1+diasEnAlm);
+           	worksheet.cell(i, indexbody+11).number(orginalshippingdays).style(shipingdaysstyle);;
+           	worksheet.cell(i, indexbody+12).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
+           	worksheet.cell(i, indexbody+13).string(partidas.entrada_id ? partidas.entrada_id.fechaAlta  ? dateFormat(new Date(partidas.entrada_id.fechaAlta.getTime()), formatofecha) :"":"");
+           	worksheet.cell(i, indexbody+14).number(Math.abs(Aging));
+           	worksheet.cell(i, indexbody+15).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
            	//worksheet.cell(i, indexbody+12).string(fechaFrescura ? fechaFrescura:"");
-           	worksheet.cell(i, indexbody+15).number(partidas.producto_id.alertaAmarilla ? partidas.producto_id.alertaAmarilla:0);
+           	worksheet.cell(i, indexbody+16).number(partidas.producto_id.alertaAmarilla ? partidas.producto_id.alertaAmarilla:0);
            	
            	if(diasAlm<0)
            	{
@@ -1457,9 +1461,9 @@ function getExcelCaducidades(req, res) {
 					  },
 			        });
        		}
-       		worksheet.cell(i, indexbody+16).string(strleyenda).style(ResultStyle);
-           	worksheet.cell(i, indexbody+17).string(fechaAlerta1);
-           	worksheet.cell(i, indexbody+18).number(partidas.producto_id.alertaRoja ? partidas.producto_id.alertaRoja:0);
+       		worksheet.cell(i, indexbody+17).string(strleyenda).style(ResultStyle);
+           	worksheet.cell(i, indexbody+18).string(fechaAlerta1);
+           	worksheet.cell(i, indexbody+19).number(partidas.producto_id.alertaRoja ? partidas.producto_id.alertaRoja:0);
            	if(diasAlm<0)
            	{
 	           	if (Math.abs(diasAlm) <= partidas.producto_id.alertaRoja) {
@@ -1518,12 +1522,12 @@ function getExcelCaducidades(req, res) {
 					  },
 			        });
        		}
-           	worksheet.cell(i, indexbody+19).string(strleyenda).style(ResultStyle);
-           	worksheet.cell(i, indexbody+20).string(fechaAlerta2);
+           	worksheet.cell(i, indexbody+20).string(strleyenda).style(ResultStyle);
+           	worksheet.cell(i, indexbody+21).string(fechaAlerta2);
            	let res="";
            	if(partidas.posiciones.length === 1) 
             	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
-           	worksheet.cell(i, indexbody+21).string(res);
+           	worksheet.cell(i, indexbody+22).string(res);
             i++;
         });
         workbook.write('ReporteCaducidad'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
@@ -2256,9 +2260,9 @@ async function saveEntradaPisa(req, res) {
 			nEntrada.partidas = partidas.map(x => x._id);
 			nEntrada.nombreUsuario = "BabelPISA";
 			
-			nEntrada.referencia ="Entrada INICIAL";
-			nEntrada.factura = "Entrada INICIAL";
-			nEntrada.item = "Entrada INICIAL";
+			nEntrada.referencia ="1325320,1325239,1325081,1325085,1325086,1325080,1325087,1325082,1325083,1325084";
+			nEntrada.factura = "1325320,1325239,1325081,1325085,1325086,1325080,1325087,1325082,1325083,1325084";
+			nEntrada.item = "1325320,1325239,1325081,1325085,1325086,1325080,1325087,1325082,1325083,1325084";
 			nEntrada.transportista = "";
 			nEntrada.ordenCompra="";
 			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
@@ -2268,10 +2272,10 @@ async function saveEntradaPisa(req, res) {
 			//if()
 			nEntrada.stringFolio =await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
 			//nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
-			console.log("testEntrada");
+			//console.log("testEntrada");
 			await nEntrada.save()
 				.then(async (entrada) => {
-					console.log("testpartidas");
+					//console.log("testpartidas");
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 					//console.log(partidas);
 					/*console.log(entrada);
@@ -2376,6 +2380,69 @@ async function getbodycorreo(req, res) {
 	}
 	return res.status(200).send({"respuesta":respuesta,"error":false});
 }
+
+async function getTarimasAndCajasEntradas(entrada_id){
+	
+	//console.log(entrada_id)
+	let tarimas = 0;
+	let cajas = 0;
+
+	 try {
+		
+		const entrada = await Entrada.findById(entrada_id).exec();
+		const partidas = entrada.partidas
+		tarimas = partidas.length;
+
+	await Helper.asyncForEach(partidas,async function (partida_id){
+		const partidaDetalle = await PartidaModel.find({_id: partida_id}).exec();
+		if(partidaDetalle[0].embalajesxSalir !== undefined){
+			cajas += await partidaDetalle[0].embalajesxSalir.cajas;
+		}else{
+			cajas += 0;
+		}	
+			
+	});
+		const respuesta = {"tarimas": tarimas, "cajas": cajas}
+		//res.status(200).json({"respuesta": respuesta, "statusCode": res.statusCode})
+		return respuesta;
+	} catch (error) {
+		console.log(error)
+	}		
+ 
+}
+
+async function getTarimasAndCajas(req, res){
+	
+	const entrada_id = req.body.entrada_id;
+	console.log(entrada_id)
+	let tarimas = 0;
+	let cajas = 0;
+
+	 try {
+		
+		const entrada = await Entrada.findById(entrada_id).exec();
+		const partidas = entrada.partidas
+		tarimas = partidas.length;
+
+	await Helper.asyncForEach(partidas,async function (partida_id){
+		const partidaDetalle = await PartidaModel.find({_id: partida_id}).exec();
+		if(partidaDetalle[0].embalajesxSalir !== undefined){
+			cajas += await partidaDetalle[0].embalajesxSalir.cajas;
+		}else{
+			cajas += 0;
+		}	
+			
+	});
+		const respuesta = {"tarimas": tarimas, "cajas": cajas}
+		res.status(200).json({"respuesta": respuesta, "statusCode": res.statusCode})
+
+	} catch (error) {
+		console.log(error)
+	}		
+ 
+}
+
+
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
 //METODOS NUEVOS CON LA ESTRUCTURA
@@ -2453,6 +2520,7 @@ module.exports = {
 	saveEntradaEDI,
 	saveEntradaChevron,
 	saveEntradaPisa,
-	getbodycorreo
+	getbodycorreo,
+	getTarimasAndCajas
 	// getPartidaById,
 }
