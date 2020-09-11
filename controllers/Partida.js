@@ -443,7 +443,7 @@ async function getByProductoEmbalaje(req, res) {
 
   
     let partidas = await Partida
-        .find({ producto_id: producto_id, isEmpty: false , tipo:{$in: ["NORMAL", "MODIFICADA"]},status:"ASIGNADA"})
+        .find({ producto_id: producto_id, isEmpty: false , tipo:{$in: ["NORMAL", "MODIFICADA","AGREGADA"]},status:"ASIGNADA"})
         .populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id tipo',
             {
                 clienteFiscal_id: clienteFiscal_id,

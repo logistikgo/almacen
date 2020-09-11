@@ -1729,7 +1729,8 @@ async function posicionarPrioridades(req, res) {
 		//console.log(freePosicions+"+<"+ entrada.partidas.length )
 		//console.log("test");
 		if(freePosicions < array.length){
-	    	 res.status(200).send("No hay suficientes posiciones");
+			console.log("No hay suficientes posiciones")
+	    	res.status(200).send("No hay suficientes posiciones");
 		}
 		else{
 			await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
@@ -1806,7 +1807,8 @@ async function posicionarPrioridades(req, res) {
 		    });
 		  //  console.log(respuesta+" < "+entrada.partidas.length)
 		    if(respuesta < 0){
-		    	 res.status(200).send("No hay suficientes posiciones en familias");
+		    	console.log("No hay suficientes posiciones en familias");
+		    	res.status(200).send("No hay suficientes posiciones en familias");
 		    }
 		   // console.log("endGET");
 
@@ -1851,16 +1853,15 @@ async function posicionarPrioridades(req, res) {
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
 			await entrada.save().then(async (entrada) => {
-					/*console.log("testpartidas");
+					console.log("testpartidas");
 					console.log(resultpartidas);
-					console.log("/------------------/");*/
+					console.log("/------------------/");
 					for (let itemPartida of reOrderPartidas) {
 						//console.log("testMovimientos");
 						let partidait = await PartidaModel.findOne({ _id: itemPartida._id });
 						//console.log(partidait.posiciones);
 						await MovimientoInventario.saveEntrada(	partidait, entrada.id);
 					}
-					/*console.log(entrada);*/
 			});
 			console.log("testREturn")
 		    if(respuesta<1){
