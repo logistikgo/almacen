@@ -47,7 +47,7 @@ async function getByEntrada(req, res) {
 
     Partida.find({ entrada_id: entrada_id })
         .then(async (partidas) => {
-            console.log(partidas.length);
+            //console.log(partidas.length);
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
@@ -56,7 +56,7 @@ async function getByEntrada(req, res) {
                     arrpartida.push(partida);
                 }
             });
-            console.log(arrpartida.length);
+           // console.log(arrpartida.length);
             res.status(200).send(arrpartida);
         })
         .catch((error) => {
@@ -70,7 +70,7 @@ async function getByEntradaSalida(req, res) {
     
     Partida.find({ entrada_id: entrada_id })
         .then(async (partidas) => {
-            console.log(partidas.length);
+            //console.log(partidas.length);
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
@@ -79,7 +79,7 @@ async function getByEntradaSalida(req, res) {
                     arrpartida.push(partida);
                 }
             });
-            console.log(arrpartida.length);
+            //console.log(arrpartida.length);
             res.status(200).send(arrpartida);
         })
         .catch((error) => {
@@ -431,7 +431,7 @@ async function getByProductoEmbalaje(req, res) {
     let cantidadRestante = parseFloat(cantidad);
     let algoritmoSalida = req.query.algoritmoSalida;
 
-    console.log("test");
+    //console.log("test");
 
     /**
      * Se obtienen las partidas necesarias para la cantidad deseada
@@ -1493,7 +1493,7 @@ async function reporteDia(req, res)
         });
     }
     var productosDia=await Producto.find({clienteFiscal_id: req.query.clienteFiscal_id, statusReg: "ACTIVO"}).exec();
-    console.log(outbyProd.length+"-"+inbyProd.length)
+    //console.log(outbyProd.length+"-"+inbyProd.length)
     
         await Helper.asyncForEach(productosDia,async function (pd){
             let band=false;
@@ -1536,7 +1536,7 @@ async function reporteDia(req, res)
 async function getExcelreporteDia(req, res)
 {   
     let respuesta=[];
-    console.log(req.query);
+    //console.log(req.query);
     let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
     let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
    //console.log(fechaInicio);
@@ -1693,7 +1693,7 @@ async function getExcelreporteDia(req, res)
         });
     }
     var productosDia=await Producto.find({clienteFiscal_id: req.query.clienteFiscal_id, statusReg: "ACTIVO"}).exec();
-    console.log(outbyProd.length+"-"+inbyProd.length)
+    //console.log(outbyProd.length+"-"+inbyProd.length)
         let i=2
         await Helper.asyncForEach(productosDia,async function (pd){
             let band=false;
