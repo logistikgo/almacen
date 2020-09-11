@@ -240,10 +240,10 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
 	 */
 	//console.log(signo);
-	console.log(posicionxPartida);
+	//console.log(posicionxPartida);
 	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
 	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
-	console.log(nivel);
+	//console.log(nivel);
 	//console.log(nivel.productos.find((x) => {
 	//	console.log(x.producto_id.toString());
 	//	console.log(producto_id.toString());
@@ -283,7 +283,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 		nivel.isCandadoDisponibilidad = true;
 	}
 
-	console.log(posicion.niveles);
+	//console.log(posicion.niveles);
 
 	let item = {
 		niveles: posicion.niveles
