@@ -770,7 +770,7 @@ async function getPartidasByIDs(req, res) {
         {
             filter.stringFolio=folioEntrada;
         }
-        console.log(filter);
+        
         let entradas = await Entrada.find(filter).exec();
         
         let entradasTotales = await Entrada.find({clienteFiscal_id: arrClientesFiscales_id ,
@@ -784,10 +784,14 @@ async function getPartidasByIDs(req, res) {
             cantidadPartidasTotal += cantidadPartida
         })
 
-
-        console.log(cantidadPartidasTotal);
-
-
+        console.log(pagination)
+        let totalPaginas = cantidadPartidasTotal / pagination.limit;
+        
+        if(Math.round(totalPaginas) < totalPaginas){
+            totalPaginas = Math.round(totalPaginas);
+        }
+        
+        console.log(totalPaginas);
         let partidas = await Partida
             .find({ entrada_id: { $in: entradas_id } })
             .populate({

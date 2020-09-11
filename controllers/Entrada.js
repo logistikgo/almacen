@@ -1,5 +1,5 @@
 'use strict'
-
+const mongoose = require('mongoose');
 const Entrada = require('../models/Entrada');
 const Producto = require('../models/Producto');
 const Salida = require('../models/Salida');
@@ -152,6 +152,69 @@ async function get(req, res) {
 		cantidadEntradas = cantidadEntrada;
 		console.log(cantidadEntrada)
 	});
+	console.log(filter);
+
+	//console.log(EntradasMatch);
+	let EntradasAggregate = await Entrada.aggregate([
+		{
+			$lookup: {
+			 from: "Partidas",
+			 localField: "partidas",    // field in the orders collection
+			 foreignField: "_id",  // field in the items collection
+			 as: "fromPartidas"
+		  }
+			},
+		{$match: {clienteFiscal_id: mongoose.Types.ObjectId(filter.clienteFiscal_id), 
+				  sucursal_id: mongoose.Types.ObjectId(filter.sucursal_id),
+				  almacen_id: mongoose.Types.ObjectId(filter.almacen_id),
+				  tipo: filter.tipo,
+			      status: filter.status }},
+		{
+			$project: {
+				_id: 1,
+				isEmpty: 1,
+				item: 1,
+				tipo: 1,
+				embarque: 1,
+				referencia: 1,
+				acuse: 1,
+				proveedor: 1,
+				ordenCompra: 1,
+				factura: 1,
+				transportista: 1,
+				operador: 1,
+				unidad: 1,
+				remolque: 1,
+				sello: 1,
+				plantaOrigen: 1,
+				fechaEntrada: 1,
+				fechaReciboRemision: 1,
+				fechaSalidaPlanta: 1,
+				observaciones: 1,
+				usuarioAlta_id: 1,
+				nombreUsuario: 1,
+				recibio: 1,
+				clienteFiscal_id: 1,
+				idClienteFiscal: 1,
+				idSucursal: 1,
+				sucursal_id: 1,
+				almacen_id: 1,
+				DiasTraslado: 1,
+				status: 1,
+				fechaAlta: 1,
+				idEntrada: 1,
+				folio: 1,
+				stringFolio: 1,
+				__v: 1,
+				cajasTotales: {$sum:"$fromPartidas.embalajesxSalir.cajas"},
+				tarimasTotales: {$size:"$fromPartidas.embalajesxSalir"}
+				}
+			},
+			{$sort: {fechaEntrada: -1}},
+			{$skip: pagination.page},
+			{$limit: pagination.limit}     
+	]
+	)
 
 	Entrada.find(filter).sort({ fechaEntrada: -1 }).skip(pagination.page).limit(pagination.limit)
 		.populate({
@@ -159,7 +222,7 @@ async function get(req, res) {
 			model: 'Producto'
 		}).then((entradas) => {
 			if(isReporte === "true"){
-				res.status(200).json({"json": entradas, "total":cantidadEntradas, "statusCode": res.statusCode})
+				res.status(200).json({"json": EntradasAggregate, "total":cantidadEntradas, "statusCode": res.statusCode})
 			}
 			else{
 				res.status(200).send(entradas);
