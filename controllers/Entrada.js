@@ -387,7 +387,7 @@ async function saveEntradaBabel(req, res) {
 	}
 	//console.log(arrPO);
 	
-	console.log("test");
+	//console.log("test");
 	//console.log(arrPartidas);
 	let reserror="";
     var arrPartidas_id = [];
@@ -408,14 +408,14 @@ async function saveEntradaBabel(req, res) {
 	  //  console.log(partidas);
 	    //console.log(arrPartidas_id);
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA/MANUFACTURINGPLANT");
-	    console.log(indexInfopedido);
+	    //console.log(indexInfopedido);
 	    let planta="";
 
 	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA" && indexInfopedido != -1)
 		 	planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[1] }).exec();
 		else
 			planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
-		console.log("__------------------------------------------------"+planta);
+		//console.log("__------------------------------------------------"+planta);
 		if(planta==null)
 		{
 			indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA");
@@ -425,7 +425,7 @@ async function saveEntradaBabel(req, res) {
 			else
 				planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		}
-		console.log(planta);
+		//console.log(planta);
 		//console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		//console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
@@ -560,7 +560,7 @@ async function updateEntradasBabel(req, res) {
 			res.status(500).send(error);
 			console.log(error);
 	};
-	console.log("end");
+	//console.log("end");
 }
 //Valida que la entrada ya existe o no, devolviendo true o false
 async function validaEntradaDuplicado(embarque) {
@@ -1713,7 +1713,7 @@ async function updateById(req, res) {
 async function posicionarPrioridades(req, res) {
 	console.log("posicionar________________________________________");
 	let _id = req.body.id;
-	//console.log(_id);
+	console.log(req.url);
 	let entrada = await Entrada.findOne({ _id: _id });
 	//console.log(entrada);
 	//console.log(req.body);
@@ -1729,7 +1729,8 @@ async function posicionarPrioridades(req, res) {
 		//console.log(freePosicions+"+<"+ entrada.partidas.length )
 		//console.log("test");
 		if(freePosicions < array.length){
-	    	return res.status(200).send("No hay suficientes posiciones");
+			console.log("No hay suficientes posiciones")
+	    	res.status(200).send("No hay suficientes posiciones");
 		}
 		else{
 			await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
@@ -1806,7 +1807,8 @@ async function posicionarPrioridades(req, res) {
 		    });
 		  //  console.log(respuesta+" < "+entrada.partidas.length)
 		    if(respuesta < 0){
-		    	return res.status(200).send("No hay suficientes posiciones en familias");
+		    	console.log("No hay suficientes posiciones en familias");
+		    	res.status(200).send("No hay suficientes posiciones en familias");
 		    }
 		   // console.log("endGET");
 
@@ -1851,24 +1853,23 @@ async function posicionarPrioridades(req, res) {
 		    entrada.partidas=resultpartidas; 
 		    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
 			await entrada.save().then(async (entrada) => {
-					/*console.log("testpartidas");
+					console.log("testpartidas");
 					console.log(resultpartidas);
-					console.log("/------------------/");*/
+					console.log("/------------------/");
 					for (let itemPartida of reOrderPartidas) {
 						//console.log("testMovimientos");
 						let partidait = await PartidaModel.findOne({ _id: itemPartida._id });
 						//console.log(partidait.posiciones);
 						await MovimientoInventario.saveEntrada(	partidait, entrada.id);
 					}
-					/*console.log(entrada);*/
 			});
 			console.log("testREturn")
 		    if(respuesta<1){
-		    	console.log(entrada);
-				return res.status(200).send(entrada);
+		    	console.log(entrada.stringFolio);
+				 res.status(200).send(entrada);
 			}
 			else
-				return res.status(500).send("not");
+				 res.status(500).send("not");
 		}
 	}catch (error) {
 		console.log(error);
@@ -1885,11 +1886,11 @@ function updateRemision(req, res) {
 	var infoPartida = req.body.partida;
 	let newPartida = new PartidaModel(infoPartida);
 	//console.log(clienteFiscal_id);
-	console.log("testTicket")
+	//console.log("testTicket")
 	newPartida.save().then(async function(partida) {
 		let ticket = new Ticket();
 		ticket.idTicket = await getNextIDTicket();
-		console.log(ticket);
+		//console.log(ticket);
 		ticket.stringFolio = await Helper.getStringFolio(ticket.idTicket, clienteFiscal_id, false, true);
 		ticket.partida_id = partida._id;
 		ticket.entrada_id = entrada_id;
@@ -1908,7 +1909,7 @@ function updateRemision(req, res) {
 				res.status(200).send(infoPartida);
 			})
 			.catch((error) => {
-				//console.log(error);
+				console.log(error);
 				res.status(500).send(error);
 			});
 		});
@@ -1931,7 +1932,7 @@ function updateStatus(req, res) {
 		res.status(200).send(data);
 	})
 	.catch((error) => {
-		//console.log(error);
+		console.log(error);
 		res.status(500).send(error);
 	});
 }
@@ -2075,7 +2076,7 @@ async function saveEntradaChevron(req, res) {
 	try{
 		var arrPartidas_id = [];
 		var partidas = [];
-		console.log("test");
+		//console.log("test");
 		await Helper.asyncForEach(req.body.Partidas,async function (partida){
 			//console.log(EDIpartida);
 			if(partida !== undefined && partida.clave !== undefined)
@@ -2192,7 +2193,7 @@ async function saveEntradaPisa(req, res) {
 	try{
 		var arrPartidas_id = [];
 		var partidas = [];
-		console.log("test");
+		//console.log("test");
 		await Helper.asyncForEach(req.body.Partidas,async function (partida){
 			//console.log(EDIpartida);
 			if(partida !== undefined && partida.clave !== undefined)
@@ -2231,12 +2232,12 @@ async function saveEntradaPisa(req, res) {
 		        let nPartida = new PartidaModel(data);
 		        //console.log(nPartida);
 		        //return res.status(200).send("no existe item: "+partida.clave);
-		        console.log("beforepartidas")
+		       // console.log("beforepartidas")
 		        await nPartida.save().then((partida) => {
 		        	partidas.push(partida)
 		            arrPartidas_id.push(partida._id);
 		        });
-		        console.log("partidas")
+		        //console.log("partidas")
 	    	}
 	    });
 
@@ -2311,7 +2312,7 @@ async function getbodycorreo(req, res) {
 
 	var ticket=await Ticket.find({ entrada_id: _id}).exec();
 	await Helper.asyncForEach(ticket,async function (tk){
-		console.log(tk.tipo)
+		//console.log(tk.tipo)
 		if(tk.tipo=="MODIFICAR")
 		{
 			respuesta+="<br>---- Modificaciones de Partida-----"
@@ -2414,7 +2415,7 @@ async function getTarimasAndCajasEntradas(entrada_id){
 async function getTarimasAndCajas(req, res){
 	
 	const entrada_id = req.body.entrada_id;
-	console.log(entrada_id)
+	//console.log(entrada_id)
 	let tarimas = 0;
 	let cajas = 0;
 

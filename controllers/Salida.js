@@ -229,14 +229,14 @@ async function updatePartidasSalidaAPI(req, res) {
 
 async function saveSalidasEnEntrada(entrada_id, salida_id) {
 	let entradas = await Entrada.find({ _id: { $in: entrada_id } }).exec();
-	console.log("ENTRADAS ENCONTRADAS DEL ARREGLO");
-	console.log(entrada_id);
+	//console.log("ENTRADAS ENCONTRADAS DEL ARREGLO");
+	//console.log(entrada_id);
 	Helper.asyncForEach(entradas, async function (entrada) {
 		entrada.salidas_id.push(salida_id);
 		let jEdit = {
 			salidas_id: entrada.salidas_id
 		};
-		console.log(jEdit);
+	//	console.log(jEdit);
 		await Entrada.updateOne({ _id: entrada._id }, { $set: jEdit }).exec();
 	});
 }
@@ -1589,7 +1589,7 @@ async function getExcelSalidasBarcel(req, res) {
 			
             i++;
         });
-       console.log("end")
+      //console.log("end")
         workbook.write('ReporteSali'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
 
 	})
