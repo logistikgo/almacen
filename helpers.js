@@ -447,6 +447,21 @@ function Compare(obj1, obj2) { //Compare json for 1 level of fields
 	return true;
 }
 
+
+async function countEntries(collection, filter){
+
+	if(filter !== undefined){
+		cantidadEntries = await collection.find(filter).countDocuments().exec();
+	}else{
+		cantidadEntries = await collection.find({}).countDocuments().exec();
+	}
+
+
+	return cantidadEntries
+
+}
+
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -460,5 +475,6 @@ module.exports = {
 	emptyEmbalajes,
 	isEmptyEmbalaje,
 	emptyAllEmbalajes,
-	Compare
+	Compare,
+	countEntries
 }
