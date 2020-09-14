@@ -137,10 +137,8 @@ async function get(req, res) {
 		filter.stringFolio = folio;
 	}
 	
-	let cantidadEntradas = await Helper.countEntries(Entrada, filter);
-
 	//console.log(EntradasMatch);
-	let EntradasAggregate = await Entrada.aggregate([
+	Entrada.aggregate([
 
 		{
 			$lookup: {
@@ -211,9 +209,10 @@ async function get(req, res) {
 		},
 		{ $sort: { fechaEntrada: -1 } }
 	]
-	)
-	/*Obtener la cantidad de tarimas, de partidas qe tengan mas de una posicion*/
-	EntradasAggregate.forEach(entrada => {
+	).then(entradas =>{
+
+		/*Obtener la cantidad de tarimas, de partidas qe tengan mas de una posicion*/
+	entradas.forEach(entrada => {
 
 		let posiciones = entrada.posiciones;
 		let cantidadTarimas = 0;
@@ -227,22 +226,12 @@ async function get(req, res) {
 		entrada.tarimasTotales = cantidadTarimas;
 
 	})
-
-	Entrada.find(filter).sort({ fechaEntrada: -1 })
-		.populate({
-			path: 'partidas.producto_id',
-			model: 'Producto'
-		}).then((entradas) => {
-			if (isReporte === "true") {
-				res.status(200).json({ "json": EntradasAggregate, "total": cantidadEntradas, "statusCode": res.statusCode })
-			}
-			else {
-				res.status(200).send(entradas);
-			}
-
-		}).catch((error) => {
-			res.status(500).send(error);
-		});
+		res.status(200).send(entradas);
+			
+	}).catch((error) => {
+		res.status(500).send(error);
+	} );
+	
 }
 
 function getById(req, res) {
