@@ -452,11 +452,10 @@ async function getByProductoEmbalaje(req, res) {
             })
         .where(embalajesxSalir).gt(0)
         .exec();
-        
+      //  console.log(partidas);
     //var testPartidas=[];
     partidas = partidas.filter(x => x.tipo == "EXISTENCIA_INICIAL" || (x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id));
     //console.log(partidas);
-
     //console.log(algoritmoSalida);
     if (algoritmoSalida !== undefined && algoritmoSalida.length > 0) {
         //Ordena por prioridad apor prioridad los algoritmos
@@ -519,6 +518,7 @@ async function getByProductoEmbalaje(req, res) {
                     let auxPartida = {
                         lote: partida.lote,
                         clave: partida.clave,
+                        origen: partida.origen,
                         descripcion: partida.descripcion,
                         fechaCaducidad: partida.fechaCaducidad ? partida.fechaCaducidad : "",
                         isEmpty: partida.isEmpty,
@@ -600,6 +600,7 @@ async function getByProductoEmbalaje(req, res) {
                         let auxPartida = {
                             lote: partida.lote,
                             clave: partida.clave,
+                            origen: partida.origen,
                             descripcion: partida.descripcion,
                             isEmpty: partida.isEmpty,
                             _id: partida._id,
@@ -657,6 +658,7 @@ async function getByProductoEmbalaje(req, res) {
                         let auxPartida = {
                             lote: partida.lote,
                             clave: partida.clave,
+                            origen: partida.origen,
                             descripcion: partida.descripcion,
                             isEmpty: partida.isEmpty,
                             _id: partida._id,
@@ -711,6 +713,7 @@ async function getByProductoEmbalaje(req, res) {
     }
     catch (e) {
         if (e == BreakException) {
+            
             res.status(200).send(partidasActuales);
         } else {
             res.status(500).send(e);
@@ -844,7 +847,7 @@ async function getPartidasByIDs(req, res) {
                 if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     arrPartidas.push(partida);
             });
-        
+        console.log(arrPartidas);
         res.status(200).send(arrPartidas);
     }
     catch (error) {
