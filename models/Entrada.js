@@ -1,10 +1,8 @@
 'use strict'
 
-const mongoose = require('mongoose');
-const mongoosePaginateAggregate = require('mongoose-aggregate-paginate-v2');
-const Schema = mongoose.Schema;
-
-const Entrada = Schema(
+const {Schema, model} = require('mongoose');
+const aggregatePaginate = require('mongoose-aggregate-paginate-v2');
+const Entrada = new Schema(
 	{
 		idEntrada: Number,
 		almacen_id: { type: Schema.ObjectId, ref: "Almacen" },
@@ -73,6 +71,6 @@ const Entrada = Schema(
 	}
 );
 
-Entrada.plugin(mongoosePaginateAggregate);
+Entrada.plugin(aggregatePaginate);
 
-module.exports = mongoose.model('Entrada', Entrada);
+module.exports = model('Entrada', Entrada);
