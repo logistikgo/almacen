@@ -773,26 +773,74 @@ async function getPartidasByIDs(req, res) {
         
         let entradas = await Entrada.find(filter).exec();
         
-        let entradasTotales = await Entrada.find({clienteFiscal_id: arrClientesFiscales_id ,
-            sucursal_id:  arrSucursales_id ,
-            almacen_id: arrAlmacenes_id }).exec();
-        
         let entradas_id = entradas.map(x => x._id);
-        let cantidadPartidas = entradas.map(entrada => entrada.partidas.length)
-        let cantidadPartidasTotal = 0;
-        cantidadPartidas.forEach(cantidadPartida => {
-            cantidadPartidasTotal += cantidadPartida
-        })
+        
+        let partidasAggregate = Partida.aggregate([
+            
+            {$lookup:{ from: "Entradas", localField: "entrada_id", foreignField: "_id", as: "Entradas"}},
+                
+            {$lookup:{ from: "ClientesFiscales", localField: "Entradas.clienteFiscal_id", foreignField: "_id", as: "ClientesFiscales"}},
+            
+            {$lookup:{ from: "Sucursales", localField: "Entradas.sucursal_id", foreignField: "_id", as: "Sucursales"}},
+            
+            {$lookup:{ from: "Almacenes", localField: "Entradas.almacen_id", foreignField: "_id", as: "Almacenes"}},
+            
+            {$lookup:{ from: "Salidas", localField: "salidas_id.salida_id", foreignField: "_id", as: "Salidas"}},
+            
+            {$lookup:{ from: "Productos", localField: "producto_id", foreignField: "_id", as: "Productos"}},
+       
+        {$match: {entrada_id: {$in: entradas_id}}},
+       
+        {$project: {
+            _id: 1,
+            valor: 1,
+            isEmpty: 1,
+            origen: 1,
+            tipo: 1,
+            status: 1,
+            isExtraordinaria: 1,
+            producto_id: "$Productos",
+            clave: 1,
+            descripcion: 1,
+            embalajesEntrada: 1,
+            embalajesxSalir: 1,
+            fechaProduccion: 1,
+            fechaCaducidad: 1,
+            lote: 1,
+            InfoPedidos: 1,
+            "salidas_id._id": 1,
+            "salidas_id.salidaxPosiciones": 1,
+            "salidas_id.salida_id": "$Salidas",
+            posiciones: 1,
+            __v: 1,
+            "Entradas._id": 1,
+            "Entradas.fechaAlta": 1,
+            "Entradas.fechaEntrada": 1,
+            "Entradas.almacen_id": "$Almacenes",
+            "Entradas.clienteFiscal_id": 1,
+            "Entradas.sucursal_id": 1,
+            "Entradas.tipo": 1,
+            "Entradas.tracto": 1,
+            "Entradas.remolque": 1,
+            "Entradas.referencia": 1,
+            "Entradas.factura": 1,
+            "Entradas.item": 1,
+            "Entradas.transportista": 1,
+            "Entradas.ordenCompra": 1,
+            "Entradas.folio": 1,
+            "Entradas.stringFolio": 1
+            
+         
+        }},
+        { $sort: { "Entradas[0].fechaEntrada": -1 } }
+               
+        ])
+ 
+       // console.log(partidasAggregate)
 
-        console.log(pagination)
-        let totalPaginas = cantidadPartidasTotal / pagination.limit;
-        
-        if(Math.round(totalPaginas) < totalPaginas){
-            totalPaginas = Math.round(totalPaginas);
-        }
-        
-        console.log(totalPaginas);
-        let partidas = await Partida
+        let partidas = await Partida.aggregatePaginate(partidasAggregate, pagination);
+/* 
+         let partidas = await Partida
             .find({ entrada_id: { $in: entradas_id } })
             .populate({
                 path: "entrada_id",
@@ -823,50 +871,57 @@ async function getPartidasByIDs(req, res) {
                 path: 'producto_id',
                 model: 'Producto',
             
-            }).skip(pagination.page).limit(pagination.limit)
-            .exec();
+            }).skip(pagination.page).limit(pagination.limit);
+  */
+          // console.log(partidas.docs);
+            //let partidas = partidasPaginate.docs.sort(sortByfechaEntadaAsc);
             //console.log(partidas)
-            partidas = partidas.sort(sortByfechaEntadaAsc);
-            let arrPartidas=[]
-            partidas.forEach(partida => 
-            {
-                //console.log(partida);
+            
+            //let paginateInfo = {...partidas};
+            //delete paginateInfo['docs'];
 
+            let arrPartidas=[]
+            partidas.docs.forEach(partida => 
+            {
+            
                 let resFecha=true
                 let resClasificacion=true;
                 let resSubclasificacion=true;
                 let resClave=true;
                 if(fecha == "fechaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
                 {
-                    resFecha = new Date(partida.salidas_id[0].salida_id.fechaSalida)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaSalida)<=new Date(fechaFinal);
+                    resFecha = new Date(partida.salidas_id[0].salida_id[0].fechaSalida)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id[0].fechaSalida)<=new Date(fechaFinal);
+                    
                 }
                 else
                     if(fecha == "fechaSalida")
                     resFecha = false;
                 if(fecha == "fechaAltaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
                 {
-                    resFecha = new Date(partida.salidas_id[0].salida_id.fechaAlta)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaAlta)<=new Date(fechaFinal);
+                    resFecha = new Date(partida.salidas_id[0].salida_id[0].fechaAlta)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id[0].fechaAlta)<=new Date(fechaFinal);
                 }
                 else
                     if(fecha == "fechaAltaSalida")
                         resFecha = false;
-                if(clave != "" && partida.producto_id._id.toString() !== clave.toString())
+                if(clave != "" && partida.producto_id[0]._id.toString() !== clave.toString())
                 {
                     resClave=false;
                 }
                 if(clasificacion != "")
                 {
-                    resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+                    resClasificacion=partida.producto_id[0].clasificacion_id.toString() == clasificacion.toString() ;
                 }
                 if(subclasificacion != "")
                 {
-                    resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
+                    resSubclasificacion=partida.producto_id[0].subclasificacion_id.toString() == subclasificacion.toString();
                 }
                 if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
                     arrPartidas.push(partida);
             });
-        console.log(arrPartidas.length)
-        res.status(200).json({"json":arrPartidas, "total": cantidadPartidasTotal, "statusCode": res.statusCode});
+        console.log(arrPartidas.length);
+        partidas.docs = arrPartidas;
+
+        res.status(200).send(partidas);
     }
     catch (error) {
         res.status(500).send(error);
