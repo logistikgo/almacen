@@ -307,6 +307,7 @@ async function saveEntradaBabel(req, res) {
 	var mongoose = require('mongoose');
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
+	console.log("1");
 	var arrPartidas=[];
 	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
@@ -314,10 +315,10 @@ async function saveEntradaBabel(req, res) {
 	for (var i=4; i<34 ; i++) {
 		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined)
 		{
-		
+			console.log("test");
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
 			if(producto==undefined)
-				return res.status(200).send("no existe item: "+req.body.Pedido[i].Clave);
+				return res.status(500).send("no existe item: "+req.body.Pedido[i].Clave);
 			let fechaCaducidadTemp=req.body.Pedido[i].Caducidad.length > 8 ? req.body.Pedido[i].Caducidad.replace(/M/g, "") :req.body.Pedido[i].Caducidad;
 			let fechaCaducidadRes= fechaCaducidadTemp.length == 8 ? Date.parse(fechaCaducidadTemp.slice(0, 4)+"/"+fechaCaducidadTemp.slice(4, 6)+"/"+fechaCaducidadTemp.slice(6, 8)):Date.parse(fechaCaducidadTemp.slice(0, 4)+"/"+fechaCaducidadTemp.slice(5, 7)+"/"+fechaCaducidadTemp.slice(8, 10));
 			if(isNaN(fechaCaducidadRes))
@@ -329,7 +330,7 @@ async function saveEntradaBabel(req, res) {
 	        let indexFecha=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 			let fechaProducionplanta=Date.parse(req.body.Infoplanta[indexFecha+1].InfoPedido);
 			fechaProducionplanta = new Date (fechaProducionplanta).getTime()-(7*3600000);
-	       // console.log(dateFormat(fechaCaducidadTemp, "dd/mm/yy") );
+	        console.log(req.body.Pedido[i].Caducidad);
 			const data={
 				producto_id:producto._id,
 				clave:producto.clave,
@@ -408,7 +409,7 @@ async function saveEntradaBabel(req, res) {
 	  //  console.log(partidas);
 	    //console.log(arrPartidas_id);
 	    let indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="PLANTAEXPORTADORA/MANUFACTURINGPLANT");
-	    //console.log(indexInfopedido);
+	    console.log(indexInfopedido);
 	    let planta="";
 
 	    if(req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] == "PLANTA" && indexInfopedido != -1)
@@ -511,18 +512,19 @@ async function saveEntradaBabel(req, res) {
 		if(reserror!= "")
 		{
 			console.log(reserror)
-			res.status(500).send(reserror);
+			return res.status(500).send(reserror);
 		}
 		else{
 			//console.log("testFINAL")
-			res.status(200).send("OK");
+			return res.status(200).send("OK");
 		}
 	}
 	catch(error){
 			console.log(error)
-			res.status(500).send(error);
+			return res.status(500).send(error);
 			console.log(error);
 	};
+	return res.status(200).send("OK");
 }
 
 
@@ -1087,6 +1089,21 @@ function getExcelCaducidades(req, res) {
 		var excel = require('excel4node');
         
         var workbook = new excel.Workbook();
+        var warningstyle = workbook.createStyle({
+						          font: {
+						            bold: true,
+						          },
+						          alignment: {
+						            wrapText: true,
+						            horizontal: 'center',
+						          },
+						          fill: {
+								    type: 'pattern',
+								    patternType: 'solid',
+								    bgColor: '#FFA500',
+								    fgColor: '#FFA500',
+								  },
+						        });
         var tituloStyle = workbook.createStyle({
           font: {
             bold: true,
@@ -1134,7 +1151,7 @@ function getExcelCaducidades(req, res) {
         let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         let ArrayEmbalaje = await EmbalajesController.getArrayEmbalajes();
         
-         
+        
         var worksheet = workbook.addWorksheet('Partidas');
         worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
         worksheet.cell(2, 1).string('Lote').style(headersStyle);
@@ -1152,35 +1169,36 @@ function getExcelCaducidades(req, res) {
 				indexheaders++;
 			
 		});
-		worksheet.cell(2, indexheaders).string('Estatus').style(headersStyle);
-		worksheet.cell(2, indexheaders+1).string('Fecha Producción').style(headersStyle);
-		worksheet.cell(2, indexheaders+2).string('Fecha Caducidad').style(headersStyle);
-		worksheet.cell(2, indexheaders+3).string('Fecha Embarque Calculada a 2 dias despues').style(headersStyle);
-		worksheet.cell(2, indexheaders+4).string('Garantia Frescura a Fecha de Embarque').style(headersStyle);
-		worksheet.cell(2, indexheaders+5).string('Garantia Frescura').style(headersStyle);
-		worksheet.cell(2, indexheaders+6).string('Dias Anaquel Original de Planta').style(headersStyle);
-		worksheet.cell(2, indexheaders+7).string('Dias Traslado Programado').style(headersStyle);
-		worksheet.cell(2, indexheaders+8).string('Fecha Salida Planta').style(headersStyle);
-		worksheet.cell(2, indexheaders+9).string('Fecha Esperada Recibo').style(headersStyle);
-		worksheet.cell(2, indexheaders+10).string('Dias Anaquel en Llegada').style(headersStyle);
-		worksheet.cell(2, indexheaders+11).string('Dias Traslado Real').style(headersStyle);
-		worksheet.cell(2, indexheaders+12).string('Fecha de Recibo Cedis').style(headersStyle);
-		worksheet.cell(2, indexheaders+13).string('Fecha de Alta LKGO').style(headersStyle);
-		worksheet.cell(2, indexheaders+14).string('Fecha Garantia Frescura').style(headersStyle);
-		worksheet.cell(2, indexheaders+15).string('Aging Report').style(headersStyle);
-		worksheet.cell(2, indexheaders+16).string('Dias Alerta 1').style(headersStyle);
-		worksheet.cell(2, indexheaders+17).string('Alerta 1').style(headersStyle);
-		worksheet.cell(2, indexheaders+18).string('Fecha Alerta 1').style(headersStyle);
-		worksheet.cell(2, indexheaders+19).string('Dias Alerta 2').style(headersStyle);
-		worksheet.cell(2, indexheaders+20).string('Alerta 2').style(headersStyle);
-		worksheet.cell(2, indexheaders+21).string('Fecha Alerta 2').style(headersStyle);
-		worksheet.cell(2, indexheaders+22).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders).string('HOLD').style(headersStyle);
+		worksheet.cell(2, indexheaders+1).string('LEFT').style(headersStyle);
+		worksheet.cell(2, indexheaders+2).string('Fecha Producción').style(headersStyle);
+		worksheet.cell(2, indexheaders+3).string('Fecha Caducidad').style(headersStyle);
+		worksheet.cell(2, indexheaders+4).string('Fecha Embarque Calculada a 2 dias despues').style(headersStyle);
+		worksheet.cell(2, indexheaders+5).string('Garantia Frescura a Fecha de Embarque').style(headersStyle);
+		worksheet.cell(2, indexheaders+6).string('Garantia Frescura').style(headersStyle);
+		worksheet.cell(2, indexheaders+7).string('Dias Anaquel Original de Planta').style(headersStyle);
+		worksheet.cell(2, indexheaders+8).string('Dias Traslado Programado').style(headersStyle);
+		worksheet.cell(2, indexheaders+9).string('Fecha Salida Planta').style(headersStyle);
+		worksheet.cell(2, indexheaders+10).string('Fecha Esperada Recibo').style(headersStyle);
+		worksheet.cell(2, indexheaders+11).string('Dias Anaquel en Llegada').style(headersStyle);
+		worksheet.cell(2, indexheaders+12).string('Dias Traslado Real').style(headersStyle);
+		worksheet.cell(2, indexheaders+13).string('Fecha de Recibo Cedis').style(headersStyle);
+		worksheet.cell(2, indexheaders+14).string('Fecha de Alta LKGO').style(headersStyle);
+		worksheet.cell(2, indexheaders+15).string('Fecha Garantia Frescura').style(headersStyle);
+		worksheet.cell(2, indexheaders+16).string('Aging Report').style(headersStyle);
+		worksheet.cell(2, indexheaders+17).string('Dias Alerta 1').style(headersStyle);
+		worksheet.cell(2, indexheaders+18).string('Alerta 1').style(headersStyle);
+		worksheet.cell(2, indexheaders+19).string('Fecha Alerta 1').style(headersStyle);
+		worksheet.cell(2, indexheaders+20).string('Dias Alerta 2').style(headersStyle);
+		worksheet.cell(2, indexheaders+21).string('Alerta 2').style(headersStyle);
+		worksheet.cell(2, indexheaders+22).string('Fecha Alerta 2').style(headersStyle);
+		worksheet.cell(2, indexheaders+23).string('Ubicacion').style(headersStyle);
 		
         let i=3;
         //console.log(arrPartidas);
         arrPartidas.forEach(partidas => 
         {
-        	
+        	//console.log(partidas);
         	fechaEspRecibo="";
         	leyenda=0;
         	diasAlm=0;
@@ -1360,7 +1378,7 @@ function getExcelCaducidades(req, res) {
            	clienteEmbalaje.forEach(emb=>
            	{	
            		let tarimas =0
-           		if (emb == 'tarimas' && partidas.producto_id.arrEquivalencias.length > 0) {
+           		if (emb == 'tarimas' && partidas.producto_id !=undefined && partidas.producto_id.arrEquivalencias.length > 0) {
 	                let band = false;
 	                partidas.producto_id.arrEquivalencias.forEach(function (equivalencia) {
 	                    if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
@@ -1381,28 +1399,34 @@ function getExcelCaducidades(req, res) {
 	                worksheet.cell(i, indexbody).number(parseInt(tarimas));
 	            }
 	            else {
+	            	console.log(partidas)
 	                worksheet.cell(i, indexbody).number(partidas.embalajesxSalir[emb] ? parseInt(partidas.embalajesxSalir[emb]):0);
 	            }
            		indexbody++;
            	});
-           	worksheet.cell(i, indexbody).string(partidas.pedido!=undefined ? partidas.pedido == false ? "NORMAL": "PEDIDO":"" );
-           	worksheet.cell(i, indexbody+1).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
-           	worksheet.cell(i, indexbody+2).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
-           	worksheet.cell(i, indexbody+3).string(fechacalculada2Dias);
-           	worksheet.cell(i, indexbody+4).number(GarFresFecha).style(GarFresFechaStyle);
-           	worksheet.cell(i, indexbody+5).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
-           	worksheet.cell(i, indexbody+6).number(partidas.producto_id.vidaAnaquel ? partidas.producto_id.vidaAnaquel:0);
-           	worksheet.cell(i, indexbody+7).number(partidas.entrada_id ? partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0:0);
-           	worksheet.cell(i, indexbody+8).string(partidas.entrada_id ? partidas.entrada_id.fechaSalidaPlanta  ? dateFormat(new Date(partidas.entrada_id.fechaSalidaPlanta.getTime()), formatofecha) :"":"");
-           	worksheet.cell(i, indexbody+9).string(fechaEspRecibo);
-           	worksheet.cell(i, indexbody+10).number(1+diasEnAlm);
-           	worksheet.cell(i, indexbody+11).number(orginalshippingdays).style(shipingdaysstyle);;
-           	worksheet.cell(i, indexbody+12).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
-           	worksheet.cell(i, indexbody+13).string(partidas.entrada_id ? partidas.entrada_id.fechaAlta  ? dateFormat(new Date(partidas.entrada_id.fechaAlta.getTime()), formatofecha) :"":"");
-           	worksheet.cell(i, indexbody+14).number(Math.abs(Aging));
-           	worksheet.cell(i, indexbody+15).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
+           	if(partidas.pedido == false){
+            	worksheet.cell(i, indexbody).number(partidas.pedido!=undefined ? partidas.pedido == false ? 0: partidas.CajasPedidas.cajas:0 );
+            }else
+            	worksheet.cell(i, indexbody).number(partidas.pedido!=undefined ? partidas.pedido == false ? 0: partidas.CajasPedidas.cajas:0 ).style(warningstyle);
+            
+            worksheet.cell(i, indexbody+1).number(partidas.pedido!=undefined ? partidas.pedido == false ?  partidas.embalajesxSalir.cajas : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :0 );
+           	worksheet.cell(i, indexbody+2).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
+           	worksheet.cell(i, indexbody+3).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
+           	worksheet.cell(i, indexbody+4).string(fechacalculada2Dias);
+           	worksheet.cell(i, indexbody+5).number(GarFresFecha).style(GarFresFechaStyle);
+           	worksheet.cell(i, indexbody+6).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
+           	worksheet.cell(i, indexbody+7).number(partidas.producto_id.vidaAnaquel ? partidas.producto_id.vidaAnaquel:0);
+           	worksheet.cell(i, indexbody+8).number(partidas.entrada_id ? partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0:0);
+           	worksheet.cell(i, indexbody+9).string(partidas.entrada_id ? partidas.entrada_id.fechaSalidaPlanta  ? dateFormat(new Date(partidas.entrada_id.fechaSalidaPlanta.getTime()), formatofecha) :"":"");
+           	worksheet.cell(i, indexbody+10).string(fechaEspRecibo);
+           	worksheet.cell(i, indexbody+11).number(1+diasEnAlm);
+           	worksheet.cell(i, indexbody+12).number(orginalshippingdays).style(shipingdaysstyle);;
+           	worksheet.cell(i, indexbody+13).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
+           	worksheet.cell(i, indexbody+14).string(partidas.entrada_id ? partidas.entrada_id.fechaAlta  ? dateFormat(new Date(partidas.entrada_id.fechaAlta.getTime()), formatofecha) :"":"");
+           	worksheet.cell(i, indexbody+15).number(Math.abs(Aging));
+           	worksheet.cell(i, indexbody+16).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
            	//worksheet.cell(i, indexbody+12).string(fechaFrescura ? fechaFrescura:"");
-           	worksheet.cell(i, indexbody+16).number(partidas.producto_id.alertaAmarilla ? partidas.producto_id.alertaAmarilla:0);
+           	worksheet.cell(i, indexbody+17).number(partidas.producto_id.alertaAmarilla ? partidas.producto_id.alertaAmarilla:0);
            	
            	if(diasAlm<0)
            	{
@@ -1461,9 +1485,9 @@ function getExcelCaducidades(req, res) {
 					  },
 			        });
        		}
-       		worksheet.cell(i, indexbody+17).string(strleyenda).style(ResultStyle);
-           	worksheet.cell(i, indexbody+18).string(fechaAlerta1);
-           	worksheet.cell(i, indexbody+19).number(partidas.producto_id.alertaRoja ? partidas.producto_id.alertaRoja:0);
+       		worksheet.cell(i, indexbody+18).string(strleyenda).style(ResultStyle);
+           	worksheet.cell(i, indexbody+19).string(fechaAlerta1);
+           	worksheet.cell(i, indexbody+20).number(partidas.producto_id.alertaRoja ? partidas.producto_id.alertaRoja:0);
            	if(diasAlm<0)
            	{
 	           	if (Math.abs(diasAlm) <= partidas.producto_id.alertaRoja) {
@@ -1522,12 +1546,12 @@ function getExcelCaducidades(req, res) {
 					  },
 			        });
        		}
-           	worksheet.cell(i, indexbody+20).string(strleyenda).style(ResultStyle);
-           	worksheet.cell(i, indexbody+21).string(fechaAlerta2);
+           	worksheet.cell(i, indexbody+21).string(strleyenda).style(ResultStyle);
+           	worksheet.cell(i, indexbody+22).string(fechaAlerta2);
            	let res="";
            	if(partidas.posiciones.length === 1) 
             	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
-           	worksheet.cell(i, indexbody+22).string(res);
+           	worksheet.cell(i, indexbody+23).string(res);
             i++;
         });
         workbook.write('ReporteCaducidad'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
@@ -1535,6 +1559,7 @@ function getExcelCaducidades(req, res) {
 
 	})
 	.catch((error) => {
+		console.log(error);
 		res.status(500).send(error);
 	})
 }
