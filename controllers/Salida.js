@@ -1650,6 +1650,7 @@ async function importsalidas(req, res) {
 }
 
 async function saveSalidaBabel(req, res) {
+	console.log("----------------------------------------------------------------------start------------------------------------------------------")
 	var mongoose = require('mongoose');
 	
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
@@ -1661,6 +1662,8 @@ async function saveSalidaBabel(req, res) {
 	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
 	try{
+		console.log(req.body.Pedido.length)
+		let ttttt=0;
 		await Helper.asyncForEach(req.body.Pedido,async function (Pedido) {
 			if(Pedido.Pedido)
 			{
@@ -1671,7 +1674,8 @@ async function saveSalidaBabel(req, res) {
 	    			let index=arrPO.findIndex(obj=> (obj.pedido == Pedido.Pedido));
 	    			const data={
 	    				Clave:Pedido.Clave,
-	    				Cantidad: Pedido.Cantidad
+	    				Cantidad: Pedido.Cantidad,
+	    				equivalencia: Pedido.equivalencia
 	    			};
 	    			arrPO[index].arrPartidas.push(data)
 		    	}
@@ -1679,7 +1683,8 @@ async function saveSalidaBabel(req, res) {
 		        {
 		        	const data={
 	    				Clave:Pedido.Clave,
-	    				Cantidad: Pedido.Cantidad
+	    				Cantidad: Pedido.Cantidad,
+	    				equivalencia: Pedido.equivalencia
 	    			};
 		        	const PO={
 		        	pedido:Pedido.Pedido,
@@ -1690,51 +1695,80 @@ async function saveSalidaBabel(req, res) {
 		        	}
 		        	PO.arrPartidas.push(data)
 	    			arrPO.push(PO);
+	    			
 	    		}
 			}				
 		});
 		//console.log(arrPO);
 		let hoy=new Date(Date.now()-(5*3600000));
+
 		await Helper.asyncForEach(arrPO,async function (Pedido) {
 			let parRes=[];
 			//console.log("----------------------------");
 			//console.log(Pedido.arrPartidas.length)
+			let totalpartidas =0;
 			let refitem=Pedido.pedido;
 			let refDesti=Pedido.destinatario;
 			console.log(Pedido.pedido);
+			console.log(Pedido.arrPartidas.length);
 			console.log("-*/-/-*/*-/*-/*-/*-/*-/*-/*-/*-/*-/-*/*-");
 			await Helper.asyncForEach(Pedido.arrPartidas,async function (par) {
-
-				let embalajesEntrada={cajas:parseInt(par.Cantidad)};
-				//console.log(embalajesEntrada);
+				console.log("----partida: "+par.Clave+ "----");
 				let producto =await Producto.findOne({'clave': par.Clave }).exec();
-				let partidas=await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesEntrada':embalajesEntrada,'embalajesxSalir':embalajesEntrada,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
-				partidas=partidas.length<1 ? await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
-				//console.log(".0.0.0.0.0.0.0.0.");
-				let count=0;
-				//console.log(partidas.length)
-				for (let i = 0; i < partidas.length && count == 0; i++) {
-					let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
-		            //console.log(par)
-		            if(fechaFrescura.getTime()>hoy.getTime() && partidas[i].embalajesxSalir.cajas>=par.Cantidad )
-		            {
-
-		            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
-
-		            	/*--------------------------*/
-		            	partidaaux.CajasPedidas={cajas:parseInt(par.Cantidad)};//talves se cambie a info pedidos
-
-		            	/*--------------------------*/
-		            	partidaaux.pedido=true;
-		            	partidaaux.save();
-		            	parRes.push(partidas[i]);
-		            	//console.log(partidas[i]._id);
-		            	count++;
-		            }
-				}
+				/*console.log(producto.clave);
+				console.log(par.Cantidad);
+				console.log(producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia);*/
+				let equivalencia =producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia;
 				
+				let needed=Math.round(par.Cantidad/equivalencia);
+				totalpartidas+=needed;
+
+				//console.log(needed);
+				
+				//console.log(".0.0.0.0.0.0.0.0.");
+				
+				//console.log(partidas.length)/*
+				
+				let cantidadneeded=par.Cantidad;
+				while(cantidadneeded>0)
+				{
+					console.log("-------------asdasd-------------")
+					console.log(cantidadneeded);
+					
+		            let cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
+		            cantidadneeded-=equivalencia;
+		            console.log("buscar: "+cantidadPedida)
+		            let embalajesEntrada={cajas:cantidadPedida};
+		            let partidas=await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesxSalir':embalajesEntrada,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
+					partidas=partidas.length<1 ? await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+					console.log("totalpartidas: "+partidas.length)
+					let count=0;
+					for (let i = 0; i < partidas.length && count<1; i++)
+					{
+						//console.log(i);
+						let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+			            //console.log(par)
+			            if(fechaFrescura.getTime()>hoy.getTime() && partidas[i].embalajesxSalir.cajas>=cantidadPedida )
+			            {
+			            	
+			            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
+
+			            	partidaaux.CajasPedidas={cajas:cantidadPedida};//talves se cambie a info pedidos
+
+			            	partidaaux.pedido=true;
+			            	partidaaux.save();
+			            	parRes.push(partidas[i]);
+			            	console.log("/*/*/*/*/*/*/*/");
+			            	console.log(partidaaux);
+			            	console.log("--------------");
+			            	count++;
+			            }
+			        }
+				}
 			});
-			if (parRes && parRes.length > 0 && parRes.length==Pedido.arrPartidas.length ) {
+			console.log("********************"+totalpartidas+"=="+parRes.length+"********************");
+			
+			if (parRes && parRes.length > 0 && parRes.length==totalpartidas ) {
 				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
 				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
 
@@ -1761,12 +1795,7 @@ async function saveSalidaBabel(req, res) {
 //console.log(nSalida);
 					nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
 
-					nSalida.save().then(async (salida) => {
-						res.status(200).send(salida.stringFolio);
-					})
-					.catch((error) => {
-						res.status(500).send(error);
-					});
+					nSalida.save();
 
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
@@ -1783,6 +1812,7 @@ async function saveSalidaBabel(req, res) {
 			res.status(500).send(error);
 			console.log(error);
 	};
+	return res.status(200).send("MAYBEOK");
 }
 
 function updateStatusSalidas(req, res) {
