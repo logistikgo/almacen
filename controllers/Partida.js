@@ -1654,6 +1654,7 @@ async function getExcelreporteDia(req, res)
         });
     }
     var salidasDia=await Salida.find(filter2).sort({ fechaSalida: 1 }).exec();
+    console.log(salidasDia.length);
     if(salidasDia.length>0){
         await Helper.asyncForEach(salidasDia,async function (sd){
 
@@ -1744,6 +1745,203 @@ async function getExcelreporteDia(req, res)
         res.status(200).send("ERROR");
 }
 
+
+async function reporteFEFOS(req, res)
+{   
+
+    let respuesta=[];
+    //console.log(req.query.fechaInicio);
+    let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+    let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+   //console.log(fechaInicio);
+   //console.log(fechaFinal);
+    try {
+        let filter = {
+                clienteFiscal_id: req.query.clienteFiscal_id ,
+                sucursal_id:  req.query.sucursal_id ,
+                almacen_id: req.query.almacen_id ,
+                status:{$in:["APLICADA","FINALIZADO"]}
+            }
+        let filter2 = {
+                clienteFiscal_id: req.query.clienteFiscal_id ,
+                sucursal_id:  req.query.sucursal_id ,
+                almacen_id: req.query.almacen_id ,
+                tipo:req.query.tipo,
+                fechaSalida:{$gte:fechaInicio,$lt:fechaFinal}
+            }
+
+       
+        let inbyProd=[];
+        let outbyProd=[];
+        var salidas_id=[];
+        //console.log(entradasDia.length);
+        let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+        //console.log(req.query.clienteFiscal_id);
+        let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
+        var embalajesjson={};
+        await clienteEmbalaje.forEach(emb=>{
+            embalajesjson[emb]=0;
+        });
+        console.log("entradas")
+        await Entrada.find(filter).sort({ fechaEntrada: 1 })
+        .populate({
+            path: 'partidas',
+            populate: {
+                path: 'entrada_id',
+                model: 'Entrada',
+                select: 'stringFolio isEmpty clave embalajesEntrada embalajesxSalir fechaCaducidad tipo status'
+            },
+            select: 'stringFolio isEmpty clave embalajesEntrada embalajesxSalir fechaCaducidad tipo status'
+        })
+        .then(async(entradas) => {
+            await entradas.forEach (async entrada => {
+                var partida = entrada.partidas;
+                await partida.forEach(partidaT => {
+                        //console.log(partidaT);
+                        if(partidaT!= null){
+                            const data={
+                                clave:partidaT.clave,
+                                embalajesEntrada: partidaT.embalajesEntrada,
+                                embalajesxSalir: partidaT.embalajesxSalir,
+                                fechaCaducidad: partidaT.fechaCaducidad
+                            };
+                            //console.log(partidaT)
+                            if(partidaT.isEmpty == false && (partidaT.tipo=="NORMAL" || partidaT.tipo=="AGREGADA" || partidaT.tipo=="MODIFICADA") && partidaT.status=="ASIGNADA")
+                                inbyProd.push(data)
+                        }
+                });
+            });
+        });
+        console.log(inbyProd.length);
+        console.log("salidas");
+        var salidasDia=await Salida.find(filter2).sort({ fechaSalida: 1 }).exec();
+        console.log(salidasDia.length);
+        
+        if(salidasDia.length>0){
+            await Helper.asyncForEach(salidasDia,async function (sd){
+                console.log(inbyProd.length);
+                await Helper.asyncForEach(sd.partidas,async function (par){
+                    let partidaT=await Partida.findOne({_id:par});
+                    //console.log(partidaT)
+                    let embalajesSalida;
+                        salidas_id = partidaT.salidas_id;
+
+                        salidas_id.forEach(elem => {
+                            let elemId = elem.salida_id;
+                            let paramId = sd._id;
+                            if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
+                                embalajesSalida = elem.embalajes;
+                            }
+                        })
+                    if(outbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                    {
+                        let correct=0;
+                        let wrong=0;
+                        let total=0;
+                        let fecha=0;
+                        await Helper.asyncForEach(inbyProd,async function (p){
+                            if (p.clave == partidaT.clave)
+                            total++;
+                            if(partidaT.fechaCaducidad < p.fechaCaducidad && p.clave == partidaT.clave)
+                                correct++;
+                            else
+                                if(p.clave == partidaT.clave)
+                                    wrong++;
+                        });
+                        let index=outbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                        clienteEmbalaje.forEach(em=>{
+                            //console.log(partidaT.embalajesEntrada);
+                            if(outbyProd[index].embalajesSalida[em]!=undefined && embalajesSalida[em]!=undefined){
+                                outbyProd[index].embalajesSalida[em]+=embalajesSalida[em];
+                               
+                            }
+                        })
+                        if(partidaT.fechaCaducidad>sd.fechaSalida)       
+                            fecha++;
+                        outbyProd[index].correct=outbyProd[index].correct+correct;
+                        outbyProd[index].wrong=outbyProd[index].wrong+wrong;
+                        outbyProd[index].total=outbyProd[index].total+total;
+                        outbyProd[index].totalT=outbyProd[index].totalT+1;
+                        outbyProd[index].correctFecha=outbyProd[index].correctFecha+fecha;
+                    }
+                    else
+                    {
+                        let correct=0;
+                        let wrong=0;
+                        let total=0;
+                        let fecha=0;
+                        await Helper.asyncForEach(inbyProd,async function (p){
+                            if (p.clave == partidaT.clave)
+                            total++;
+                            if(partidaT.fechaCaducidad < p.fechaCaducidad && p.clave == partidaT.clave)
+                                correct++;
+                            else
+                                if (p.clave == partidaT.clave)
+                                    wrong++;
+                        
+                        });
+                        if(partidaT.fechaCaducidad>sd.fechaSalida)       
+                            fecha++;
+                        const data={ 
+                            clave:partidaT.clave,
+                            embalajesSalida: embalajesSalida,
+                            correct:correct,
+                            wrong:wrong,
+                            totalT:1,
+                            total:total,
+                            correctFecha:fecha
+                        };
+                        //console.log("/---------------------------/");
+                        //console.log(data);
+                        outbyProd.push(data);
+                    }
+                });
+            });
+        }
+        var productosDia=await Producto.find({clienteFiscal_id: req.query.clienteFiscal_id, statusReg: "ACTIVO"}).exec();
+        //console.log(outbyProd.length+"-"+inbyProd.length)
+        
+            await Helper.asyncForEach(productosDia,async function (pd){
+                let band=false;
+                //console.log(embalajes);
+                let inIndex=inbyProd.findIndex(obj=> (obj.clave == pd.clave));
+                let outIndex=outbyProd.findIndex(obj=> (obj.clave == pd.clave));
+                var auxprod={
+                    clave:pd.clave,
+                    descripcion:pd.descripcion,
+                    subclasificacion:pd.subclasificacion,
+                    salidas:Helper.Clone(outbyProd[outIndex] ? outbyProd[outIndex].embalajesSalida:embalajesjson),
+                    totalCorrectos:outbyProd[outIndex] ? outbyProd[outIndex].correct:0,
+                    totalWrong:outbyProd[outIndex] ? outbyProd[outIndex].wrong:0,
+                    CorFEFO:outbyProd[outIndex] ? Math.round((outbyProd[outIndex].correct/outbyProd[outIndex].total)*100):0,
+                    WroFEFO:outbyProd[outIndex] ? Math.round((outbyProd[outIndex].wrong/outbyProd[outIndex].total)*100):0,
+                    totalT:outbyProd[outIndex] ?outbyProd[outIndex].totalT:0,
+                    total:outbyProd[outIndex] ?outbyProd[outIndex].total:0,
+                    correctFecha: outbyProd[outIndex] ?outbyProd[outIndex].correctFecha:0,
+                    wrongFecha: outbyProd[outIndex] ?(outbyProd[outIndex].totalT-outbyProd[outIndex].correctFecha):0,
+                    correctFechaPor: outbyProd[outIndex] ?(outbyProd[outIndex].correctFecha/outbyProd[outIndex].totalT)*100:0,
+                    wrongFechaPor: outbyProd[outIndex] ?((outbyProd[outIndex].totalT-outbyProd[outIndex].correctFecha)/outbyProd[outIndex].totalT)*100:0
+                    
+                };
+                //console.log(auxprod)
+                respuesta.push(auxprod);
+
+            });
+        
+        if(respuesta.length>0)
+        {
+            res.status(200).send(respuesta);
+        }
+        else
+            res.status(200).send("ERROR");
+    }
+    catch (error) {
+        console.log(error)
+        res.status(500).send(error);
+    }
+}
+
+
 module.exports = {
     get,
     post,
@@ -1768,5 +1966,6 @@ module.exports = {
     posicionarAuto,
     getExcelByIDs,
     reporteDia,
-    getExcelreporteDia
+    getExcelreporteDia,
+    reporteFEFOS
 }
