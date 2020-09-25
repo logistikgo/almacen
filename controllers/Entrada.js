@@ -1993,7 +1993,7 @@ async function saveEntradaEDI(req, res) {
 					
 						var producto=await Producto.findOne({ 'clave':EDIpartida.partida.clave }).exec();
 						if(producto==undefined)
-							return res.status(200).send("no existe item: "+EDIpartida.partida.clave);
+							return res.status(400).send("no existe item: "+EDIpartida.partida.clave);
 						let fechaProduccion = EDIpartida.partida.fechaProduccion;
 						let fechaCaducidad = EDIpartida.partida.fechaCaducidad;
 				        //console.log(new Date(fechaProduccion) );
@@ -2009,11 +2009,11 @@ async function saveEntradaEDI(req, res) {
 				        	fechaProduccion:new Date(fechaProduccion),
 				        	fechaCaducidad: new Date(fechaCaducidad),
 				        	lote:EDIpartida.partida.lote,
-				        	InfoPedidos:[{ "IDAlmacen": EDIpartida.partida.IdAlmacen}],
+				        	InfoPedidos:[{ "IDAlmacen": Entradas.Entrada.IdAlmacen}],
 				        	valor:0
 				        }
 				        //console.log(data);
-				        data.InfoPedidos[0].IDAlmacen=EDIpartida.partida.IdAlmacen;
+				        data.InfoPedidos[0].IDAlmacen=Entradas.Entrada.IdAlmacen;
 				        let nPartida = new PartidaModel(data);
 				        await nPartida.save().then((partida) => {
 				        	partidas.push(partida)
@@ -2025,6 +2025,7 @@ async function saveEntradaEDI(req, res) {
 				if (partidas && partidas.length > 0) {
 					let idCliente = Entradas.Entrada.IDClienteFiscal;
 					let idSucursales = Entradas.Entrada.IDSucursal;
+					let idAlmacen = Entradas.Entrada.IdAlmacen;
 
 					let nEntrada = new Entrada();
 
@@ -2034,7 +2035,7 @@ async function saveEntradaEDI(req, res) {
 					nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
 						return total + valor;
 					});
-					nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+					nEntrada.almacen_id=idAlmacen;
 					nEntrada.clienteFiscal_id = idCliente;
 					nEntrada.sucursal_id = idSucursales;
 					nEntrada.status = "WAITINGARRIVAL";/*repalce arrival*/
@@ -2068,7 +2069,7 @@ async function saveEntradaEDI(req, res) {
 						});
 				}else {
 					console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
-					res.status(500).send("error");
+					return res.status(500).send("error");
 				}
 			}
 			else{
@@ -2081,7 +2082,7 @@ async function saveEntradaEDI(req, res) {
 	}
 	catch(error){
 			console.log(error)
-			res.status(500).send(error);
+			return res.status(500).send(error);
 			//console.log(error);
 	};	
 	if(errores!=="")
@@ -2091,6 +2092,7 @@ async function saveEntradaEDI(req, res) {
 	}
 	else
 		return res.status(200).send(finish);
+	return res.status(200).send(finish);
 }
 
 async function saveEntradaChevron(req, res) {

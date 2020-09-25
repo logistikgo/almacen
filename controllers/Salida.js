@@ -1733,14 +1733,14 @@ async function saveSalidaBabel(req, res) {
 				while(cantidadneeded>0)
 				{
 					console.log("-------------asdasd-------------")
-					console.log(cantidadneeded);
+					//console.log(cantidadneeded);
 					
 		            let cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
 		            cantidadneeded-=equivalencia;
 		            console.log("buscar: "+cantidadPedida)
 		            let embalajesEntrada={cajas:cantidadPedida};
-		            let partidas=await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesxSalir':embalajesEntrada,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
-					partidas=partidas.length<1 ? await PartidaModel.find({'clave':par.Clave,'pedido':false,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+		            let partidas=await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesxSalir':embalajesEntrada,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
+					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
 					console.log("totalpartidas: "+partidas.length)
 					let count=0;
 					for (let i = 0; i < partidas.length && count<1; i++)
@@ -1748,7 +1748,7 @@ async function saveSalidaBabel(req, res) {
 						//console.log(i);
 						let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 			            //console.log(par)
-			            if(fechaFrescura.getTime()>hoy.getTime() && partidas[i].embalajesxSalir.cajas>=cantidadPedida )
+			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida )
 			            {
 			            	
 			            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
@@ -1759,7 +1759,7 @@ async function saveSalidaBabel(req, res) {
 			            	partidaaux.save();
 			            	parRes.push(partidas[i]);
 			            	console.log("/*/*/*/*/*/*/*/");
-			            	console.log(partidaaux);
+			            	//console.log(partidaaux);
 			            	console.log("--------------");
 			            	count++;
 			            }
@@ -1769,6 +1769,7 @@ async function saveSalidaBabel(req, res) {
 			console.log("********************"+totalpartidas+"=="+parRes.length+"********************");
 			
 			if (parRes && parRes.length > 0 && parRes.length==totalpartidas ) {
+				//console.log(parRes);
 				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
 				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
 
