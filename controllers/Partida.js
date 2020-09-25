@@ -537,7 +537,7 @@ async function getByProductoEmbalaje(req, res) {
                         nivel: posicion.nivel,
                         producto_id: producto_id,
                         ubicacion_id: posicion._id,
-                        origen:origen, 
+                        origen:partida.origen, 
                         posicionesFull: Helper.Clone(partida.posiciones),
                         posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
                         subConsecutivo: subConsecutivo,
