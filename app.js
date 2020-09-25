@@ -267,7 +267,7 @@ app.get('/api/getExcelSalidas', Salida.getExcelSalidas);
 app.get('/api/getExcelSalidasBarcel', Salida.getExcelSalidasBarcel);
 app.get('/api/reporteDia',Partida.reporteDia);
 app.get('/api/getExcelreporteDia',Partida.getExcelreporteDia);
-
+app.get('/api/reporteFEFOS',Partida.reporteFEFOS);
 
 //babel
 //entradas
