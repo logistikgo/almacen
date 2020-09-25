@@ -537,6 +537,7 @@ async function getByProductoEmbalaje(req, res) {
                         nivel: posicion.nivel,
                         producto_id: producto_id,
                         ubicacion_id: posicion._id,
+                        origen:origen, 
                         posicionesFull: Helper.Clone(partida.posiciones),
                         posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
                         subConsecutivo: subConsecutivo,
@@ -1930,14 +1931,14 @@ async function reporteFEFOS(req, res)
         
         if(respuesta.length>0)
         {
-            res.status(200).send(respuesta);
+            return res.status(200).send(respuesta);
         }
         else
-            res.status(200).send("ERROR");
+            return res.status(200).send("ERROR");
     }
     catch (error) {
         console.log(error)
-        res.status(500).send(error);
+        return res.status(500).send(error);
     }
 }
 
