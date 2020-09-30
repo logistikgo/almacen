@@ -720,8 +720,8 @@ async function getPartidasByIDs(req, res) {
 
     
     let pagination = {
-		page: parseInt(req.query.page),
-		limit: parseInt(req.query.limit)
+		page: parseInt(req.query.page) || 10,
+		limit: parseInt(req.query.limit) || 1
 	}
     console.log(pagination)
     let arrClientesFiscales_id = req.query.clienteFiscal_id;
@@ -828,7 +828,8 @@ async function getPartidasByIDs(req, res) {
             "Entradas.transportista": 1,
             "Entradas.ordenCompra": 1,
             "Entradas.folio": 1,
-            "Entradas.stringFolio": 1
+            "Entradas.stringFolio": 1,
+            "Enradas.recibio": 1
             
          
         }},
