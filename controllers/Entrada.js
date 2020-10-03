@@ -792,9 +792,15 @@ async function validaEntrada(req, res) {
 
 async function getEntradasReporte(req, res) {
 
+	let isFilter = false;
+
+	//Verificar si el reporte contiene filtros
+	if(req.body.page === undefined || req.body.limit === undefined)
+		isFilter = true;
+
 	let pagination = {
-		page: parseInt(req.query.page) || 10,
-		limit: parseInt(req.query.limit) || 1
+		page: parseInt(req.body.page) || 10,
+		limit: parseInt(req.body.limit) || 1
 	}
 
 	var arrPartidas = [];
@@ -852,7 +858,171 @@ async function getEntradasReporte(req, res) {
 	}
 	let reporte = 0;
 
-		let partidasReporteCad = PartidaModel.aggregate([
+		
+		
+		//const partidas = await PartidaModel.aggregatePaginate(partidasReporteCad, pagination )
+		let partidas = [];
+		if(isFilter){
+			
+			Entrada.find(filter, {partidas: 1, _id: 0})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'entrada_id',
+			model: 'Entrada',
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
+		},
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
+	})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'producto_id',
+			model: 'Producto',
+		}
+	}).then(entradas =>{
+		entradas.forEach(entrada =>{
+			let partida = entrada.partidas;
+			
+		partida.forEach((elem) => {
+			/* 
+			elem.entrada_id = elem.entrada_id[0];
+			elem.producto_id = elem.producto_id[0]; */
+			let resFecha=true;
+				let resAlerta1=true;
+				let resAlerta2=true;
+				if(fecha== "fechaProduccion")
+				{
+					if(elem.fechaProduccion)
+						resFecha = new Date(elem.fechaProduccion)>new Date(fechaInicio) && new Date(elem.fechaProduccion)<new Date(fechaFinal);
+					else
+						resFecha = false;
+				}
+				if(fecha == "fechaCaducidad")
+				{
+					if(elem.fechaProduccion)
+						resFecha = new Date(elem.fechaCaducidad)>new Date(fechaInicio) && new Date(elem.fechaCaducidad)<new Date(fechaFinal);
+					else
+						resFecha = false;
+				}
+				if(elem.entrada_id)
+				{
+					if(elem.fechaCaducidad !== undefined && elem.fechaCaducidad != null && elem.entrada_id.fechaEntrada !== undefined)
+					{	
+
+						if(isFilter){
+							 fCaducidad = elem.fechaCaducidad.getTime();
+							diff = Math.abs(fCaducidad - elem.entrada_id.fechaEntrada.getTime());
+							diasAlm=Math.floor((hoy - fCaducidad)/ 86400000);
+							diasEnAlm = Math.floor(diff / 86400000);
+							Aging=Math.floor((hoy-elem.entrada_id.fechaEntrada.getTime())/ 86400000);
+							let fEntrada = elem.entrada_id.fechaEntrada.getTime();
+							
+							if(elem.producto_id.garantiaFrescura)
+								fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+							if(elem.producto_id.alertaAmarilla)
+								fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+							
+							if(elem.producto_id.alertaRoja)
+								fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+							if(elem.producto_id.vidaAnaquel)
+								leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
+
+							}
+
+						
+						 
+						//let fEntrada = elem.entrada_id[0].fechaEntrada.getTime();
+					}
+					else{
+						if(fecha == "fechaFrescura" || fecha == "fechaAlerta1" || fecha == "fechaAlerta2")
+							resFecha=false;
+					}
+				}
+				//console.log("2");
+				if(fecha == "fechaFrescura" && fechaFrescura != "")
+				{
+					resFecha = new Date(fechaFrescura)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaFrescura)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
+				}
+				if(fecha == "fechaAlerta1" && fechaAlerta1 != "")
+				{	
+						
+					resFecha = new Date(fechaAlerta1)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta1)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
+					
+				}
+				if(fecha == "fechaAlerta2" && fechaAlerta2 != "")
+				{
+					resFecha = new Date(fechaAlerta2)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta2)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
+				}
+				if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio=="" && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA")  && elem.status=="ASIGNADA"){
+					arrPartidas.push(elem);
+				}
+				else{
+					//console.log("3");
+					let resClasificacion=true;
+					let resSubclasificacion=true;
+					let resAlerta1=true;
+					let resAlerta2=true;
+					let resAgeing=true;
+					let resClave=true;
+					if(ageingInit != "" && ageingFin!= "")
+					{
+						if(Aging >= parseInt(ageingInit) && Aging <= parseInt(ageingFin))
+						{
+							resAgeing=true;
+						}
+						else
+							resAgeing=false;
+					}
+					if(clave != "" && elem.producto_id.id.toString() !== clave.toString())
+					{
+						resClave=false;
+					}
+					if(alerta1 !="" && fechaAlerta1 != "")
+					{
+						if(diasAlm < 0)
+							if(Math.abs(diasAlm) >= elem.producto_id.alertaAmarilla)
+								resAlerta1= alerta1 == "ATIEMPO";
+							else
+								resAlerta1= alerta1 == "RECHAZO";
+						else
+							resAlerta1= alerta1 == "RECHAZO" ;
+					
+					}
+					if(alerta2 !="" && fechaAlerta2 != "")
+					{
+						if(diasAlm < 0)
+							if(Math.abs(diasAlm) >= elem.producto_id.alertaRoja)
+								resAlerta2= alerta1 == "ATIEMPO";
+							else
+								resAlerta2= alerta1 == "RECHAZO";
+						else
+							resAlerta2= alerta1 == "RECHAZO" ;
+					}
+
+					if(clasificacion != "" && elem.producto_id.statusReg == "ACTIVO")
+					{
+						resClasificacion=elem.producto_id.clasificacion_id.toString() === clasificacion.toString() ;
+					}
+					if(subclasificacion != "" && elem.producto_id.statusReg == "ACTIVO")
+					{
+						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
+					}
+					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true  && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA") && elem.status=="ASIGNADA")
+					{	
+						arrPartidas.push(elem);
+					}
+					//console.log("4");
+				}
+		});
+
+		})
+		res.status(200).send(arrPartidas);
+	})
+
+		}else{
+
+			let partidasReporteCad = PartidaModel.aggregate([
 
 			{
 				$lookup: {
@@ -871,8 +1041,13 @@ async function getEntradasReporte(req, res) {
 					}           
 			},
 			
-			
-			{$match: {"fromEntradas.isEmpty": filter.isEmpty, "fromEntradas.status": filter.status,
+			/* {
+				$replaceRoot: { newRoot: { $mergeObjects: [ { $arrayElemAt: [ "$fromEntradas", 0 ] }, "$$ROOT" ] } }   
+				   },
+				   {
+				$replaceRoot: { newRoot: { $mergeObjects: [ { $arrayElemAt: [ "$fromProductos", 0 ] }, "$$ROOT" ] } }   
+				   }, */
+			{$match: {"fromEntradas.isEmpty": filter.isEmpty, "fromEntradas.status": filter.status, isEmpty: false,
 					"fromEntradas.clienteFiscal_id": mongoose.Types.ObjectId(filter.clienteFiscal_id),
 					"fromEntradas.fechaEntrada": {$gte: fechaInicio, $lt: fechaFinal}}}
 			,
@@ -906,147 +1081,104 @@ async function getEntradasReporte(req, res) {
 					fechaReciboRemision: 1,
 					fechaSalidaPlanta: 1,
 					tipo: 1,
-					//fechaAlta: 1,
-					//garantiaFrescura: 1,
-					//alertaAmarilla: 1,
-					//alertaRoja: 1,
-					//vidaAnaquel: 1,
+					fechaAlta: 1,
+					garantiaFrescura: 1,
+					alertaAmarilla: 1,
+					alertaRoja: 1,
+					vidaAnaquel: 1,
 					producto_id: "$fromProductos",
 					entrada_id: "$fromEntradas"
 				}
-			}
+			},
+			{
+				$addFields:{
+					fechaDiff:{$abs:{$subtract: ["$fechaCaducidad", "$fechaEntrada"]}},
+					diasAlm:  {$floor:{  $divide: [{$subtract: [ new Date(), "$fechaCaducidad" ] }, 86400000] }},
+					}
+					
+			   },
+			   {
+				$addFields:{
+					diasEnAlm: {$floor: { $divide: ["$fechaDiff", 86400000]}},
+					Aging: {$floor:{$divide:[{$subtract:[new Date(), "$fechaEntrada"]}, 86400000]}},
+					fechaFres: {$subtract:[{$subtract: ["$fechaCaducidad", {$multiply: [{$add: ["$garantiaFrescura", 1]}, 86400000]}]}, 2]},
+            		fechaAlerta1: {$subtract:[{$subtract: ["$fechaCaducidad", {$multiply: [{$add: ["$alertaAmarilla", 1]}, 86400000]}]}, 2]},
+            		fechaAlerta2: {$subtract:[{$subtract: ["$fechaCaducidad", {$multiply: [{$add: ["$alertaRoja", 1]}, 86400000]}]}, 2]},
+            
+					}
+			   },
+			   {
+				$addFields:{
+				   leyenda: {$subtract:[{$subtract: ["$vidaAnaquel", "$diasEnAlm"]}, 1]}
+				   }
+			   }
 	
 		])
 			
-		
-		
-		const partidas = await PartidaModel.aggregatePaginate(partidasReporteCad, pagination )
-		
-		partidas.docs.forEach((elem) => {
-		
-				let resFecha=true;
-					let resAlerta1=true;
-					let resAlerta2=true;
-					if(fecha== "fechaProduccion")
-					{
-						if(elem.fechaProduccion)
-							resFecha = new Date(elem.fechaProduccion)>new Date(fechaInicio) && new Date(elem.fechaProduccion)<new Date(fechaFinal);
-						else
-							resFecha = false;
-					}
-					if(fecha == "fechaCaducidad")
-					{
-						if(elem.fechaProduccion)
-							resFecha = new Date(elem.fechaCaducidad)>new Date(fechaInicio) && new Date(elem.fechaCaducidad)<new Date(fechaFinal);
-						else
-							resFecha = false;
-					}
-					if(elem.entrada_id)
-					{
-						if(elem.fechaCaducidad !== undefined && elem.fechaCaducidad != null && elem.entrada_id[0].fechaEntrada !== undefined)
-						{
-							fCaducidad = elem.fechaCaducidad.getTime();
-							diff = Math.abs(fCaducidad - elem.entrada_id[0].fechaEntrada.getTime());
+			partidas = await PartidaModel.aggregatePaginate(partidasReporteCad, pagination );
+
+			partidas.docs.forEach(elem =>{
+
+				let producto_id = elem.producto_id[0];
+				let entrada_id = elem.entrada_id[0];
+				elem.entrada_id = entrada_id;
+				elem.producto_id = producto_id;
+				elem.alertaAmarilla = producto_id.alertaAmarilla;
+				elem.alertaRoja = producto_id.alertaRoja;
+				elem.garantiaFrescura = producto_id.garantiaFrescura;
+				elem.vidaAnaquel = producto_id.vidaAnaquel;
+
+				elem.fechaAlta = entrada_id.fechaAlta;
+				elem.fechaEntrada = entrada_id.fechaEntrada;
+				elem.fechaReciboRemision = entrada_id.fechaReciboRemision;
+				elem.DiasTraslado = entrada_id.DiasTraslado;
+				elem.fechaSalidaPlanta = entrada_id.fechaSalidaPlanta;
+				
+
+				if(elem.entrada_id)
+				{
+					if(elem.fechaCaducidad !== undefined && elem.fechaCaducidad != null && entrada_id.fechaEntrada !== undefined)
+					{	
+
+							 fCaducidad = elem.fechaCaducidad.getTime();
+							diff = Math.abs(fCaducidad - elem.entrada_id.fechaEntrada.getTime());
 							diasAlm=Math.floor((hoy - fCaducidad)/ 86400000);
 							diasEnAlm = Math.floor(diff / 86400000);
-							Aging=Math.floor((hoy-elem.entrada_id[0].fechaEntrada.getTime())/ 86400000);
-							let fEntrada = elem.entrada_id[0].fechaEntrada.getTime();
+							Aging=Math.floor((hoy-elem.entrada_id.fechaEntrada.getTime())/ 86400000);
+							let fEntrada = elem.entrada_id.fechaEntrada.getTime();
 							
-							if(elem.producto_id[0].garantiaFrescura)
-								fechaFrescura = new Date(fCaducidad - (elem.producto_id[0].garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
-							if(elem.producto_id[0].alertaAmarilla)
-								fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id[0].alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+							if(elem.producto_id.garantiaFrescura)
+								fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+							if(elem.producto_id.alertaAmarilla)
+								fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
 							
-							if(elem.producto_id[0].alertaRoja)
-								fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id[0].alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
-							if(elem.producto_id[0].vidaAnaquel)
-								leyenda = elem.producto_id[0].vidaAnaquel- diasEnAlm - 1
-							
-							
-						}
-						else{
-							if(fecha == "fechaFrescura" || fecha == "fechaAlerta1" || fecha == "fechaAlerta2")
-								resFecha=false;
-						}
+							if(elem.producto_id.alertaRoja)
+								fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+							if(elem.producto_id.vidaAnaquel)
+								leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
+
+							elem.diff = diff;
+							elem.diasAlm = diasAlm;
+							elem.diasEnAlm = diasEnAlm;
+							elem.Aging = Aging;
+							elem.fechaFrescura = fechaFrescura;
+							elem.fechaAlerta1 = fechaAlerta1;
+							elem.fechaAlerta2 = fechaAlerta2;
+							elem.leyenda = leyenda;
+
 					}
-					//console.log("2");
-					if(fecha == "fechaFrescura" && fechaFrescura != "")
-					{
-						resFecha = new Date(fechaFrescura)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaFrescura)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
-					}
-					if(fecha == "fechaAlerta1" && fechaAlerta1 != "")
-					{	
-							
-						resFecha = new Date(fechaAlerta1)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta1)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
 						
-					}
-					if(fecha == "fechaAlerta2" && fechaAlerta2 != "")
-					{
-						resFecha = new Date(fechaAlerta2)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaAlerta2)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
-					}
-					if(elem.isEmpty == false && clasificacion == "" && subclasificacion == "" && fecha == "" &&alerta1 == "" && alerta2 == "" && ageingFin =="" && ageingInit == "" && clave=="" && folio=="" && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA")  && elem.status=="ASIGNADA"){
-						arrPartidas.push(elem);
-					}
-					else{
-						//console.log("3");
-						let resClasificacion=true;
-						let resSubclasificacion=true;
-						let resAlerta1=true;
-						let resAlerta2=true;
-						let resAgeing=true;
-						let resClave=true;
-						if(ageingInit != "" && ageingFin!= "")
-						{
-							if(Aging >= parseInt(ageingInit) && Aging <= parseInt(ageingFin))
-							{
-								resAgeing=true;
-							}
-							else
-								resAgeing=false;
-						}
-						if(clave != "" && elem.producto_id[0].id.toString() !== clave.toString())
-						{
-							resClave=false;
-						}
-						if(alerta1 !="" && fechaAlerta1 != "")
-						{
-							if(diasAlm < 0)
-								if(Math.abs(diasAlm) >= elem.producto_id[0].alertaAmarilla)
-									resAlerta1= alerta1 == "ATIEMPO";
-								else
-									resAlerta1= alerta1 == "RECHAZO";
-							else
-								resAlerta1= alerta1 == "RECHAZO" ;
-						
-						}
-						if(alerta2 !="" && fechaAlerta2 != "")
-						{
-							if(diasAlm < 0)
-								if(Math.abs(diasAlm) >= elem.producto_id[0].alertaRoja)
-									resAlerta2= alerta1 == "ATIEMPO";
-								else
-									resAlerta2= alerta1 == "RECHAZO";
-							else
-								resAlerta2= alerta1 == "RECHAZO" ;
-						}
+				}
+					arrPartidas.push(elem);
+					});			
+
+			partidas.docs = arrPartidas;		
+			res.status(200).send(partidas);
+			
+		}
+
+
 	
-						if(clasificacion != "" && elem.producto_id[0].statusReg == "ACTIVO")
-						{
-							resClasificacion=elem.producto_id[0].clasificacion_id.toString() === clasificacion.toString() ;
-						}
-						if(subclasificacion != "" && elem.producto_id[0].statusReg == "ACTIVO")
-						{
-							resSubclasificacion=elem.producto_id[0].subclasificacion_id.toString() === subclasificacion.toString();
-						}
-						if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true  && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA") && elem.status=="ASIGNADA")
-						{	
-							arrPartidas.push(elem);
-						}
-						//console.log("4");
-					}
-			});
-	partidas.docs = arrPartidas;
-	res.status(200).send(partidas);
 		
 	
 
