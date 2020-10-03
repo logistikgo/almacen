@@ -20,32 +20,7 @@ const Salida = Schema(
 		},
 		folio: String,
 		stringFolio: String,
-		item: String,
-		tipo: String,
-		embarco: String,
-		referencia: String,
-		po: String,
-		numeroOrden: String,
-		numeroRastreo: String,
-		destinatario: String,
-		transportista: String,
-		operador: String,
-		tipoUnidad: String,
-		placasTrailer: String,
-		placasRemolque: String,
-		sello: String,
-		horaSello: Date,
-		tiempoCarga_id: {
-			type: Schema.ObjectId,
-			ref: "TiempoCargaDescarga"
-		},
-		fechaSalida: Date,
-		entrada_id: [
-			{
-				type: Schema.ObjectId,
-				ref: "Entrada"
-			}
-		],
+		referencia:String,
 		partidas: [
 			{
 				type: Schema.ObjectId,
@@ -58,15 +33,7 @@ const Salida = Schema(
 		},
 		usuarioSalida_id: Number,
 		usuarioAlta_id: Number,
-		nombreUsuario: String,
-		//DEPURAR LOS SIGUIENTES CAMPOS (AUN SE USAN?)
-		valor: Number,
-		cliente: String,
-		idClienteFiscal: Number,
-		idSucursal: Number,
-		idSucursal: Number,
-		//CAMPOS AUXILIARES
-		//partidas : {}
+		nombreUsuario: String
 	},
 	{
 		collection: 'Salidas'

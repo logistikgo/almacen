@@ -6,6 +6,7 @@ const Entrada = require('../models/Entrada');
 const Pasillo = require('../models/Pasillo');
 const Producto = require('../models/Producto');
 const Posicion = require('./Posicion');
+const Embalaje = require('../models/Embalaje');
 const PosicionModelo = require('../models/Posicion');
 const MovimientoInventarioController = require('./MovimientoInventario');
 const Helper = require('../helpers');
@@ -47,7 +48,7 @@ async function getByEntrada(req, res) {
 
     Partida.find({ entrada_id: entrada_id })
         .then(async (partidas) => {
-            console.log(partidas.length);
+            //console.log(partidas.length);
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
@@ -56,7 +57,7 @@ async function getByEntrada(req, res) {
                     arrpartida.push(partida);
                 }
             });
-            console.log(arrpartida.length);
+           // console.log(arrpartida.length);
             res.status(200).send(arrpartida);
         })
         .catch((error) => {
@@ -70,16 +71,16 @@ async function getByEntradaSalida(req, res) {
     
     Partida.find({ entrada_id: entrada_id })
         .then(async (partidas) => {
-            console.log(partidas.length);
+            //console.log(partidas.length);
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
-                if(partida.tipo == "NORMAL" && partida.status == "ASIGNADA" )
+                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL")  && partida.status == "ASIGNADA" )
                 {
                     arrpartida.push(partida);
                 }
             });
-            console.log(arrpartida.length);
+            //console.log(arrpartida.length);
             res.status(200).send(arrpartida);
         })
         .catch((error) => {
@@ -99,9 +100,9 @@ async function getBySalida(req, res) {
         let partidaFound = await Partida.findOne({ _id: partida_id }).exec();
         let partida = JSON.parse(JSON.stringify(partidaFound));
         let salida_idFound = partida.salidas_id.find(x => x.salida_id.toString() == salida_id.toString());
-        partida.pesoBrutoEnSalida = salida_idFound.pesoBruto;
-        partida.pesoNetoEnSalida = salida_idFound.pesoNeto;
-        partida.embalajesEnSalida = salida_idFound.embalajes;
+        partida.pesoBrutoEnSalida = salida_idFound?salida_idFound.pesoBruto:0;
+        partida.pesoNetoEnSalida = salida_idFound?salida_idFound.pesoNeto:0;
+        partida.embalajesEnSalida = salida_idFound?salida_idFound.embalajes:0;
         partidas.push(partida);
     });
 
@@ -431,7 +432,7 @@ async function getByProductoEmbalaje(req, res) {
     let cantidadRestante = parseFloat(cantidad);
     let algoritmoSalida = req.query.algoritmoSalida;
 
-    console.log("test");
+    //console.log("test");
 
     /**
      * Se obtienen las partidas necesarias para la cantidad deseada
@@ -440,8 +441,10 @@ async function getByProductoEmbalaje(req, res) {
      * Filtros utilizados: producto_id, isEmpty, clienteFiscal_id, sucursal_id, almacen_id
      *
      */
+
+  
     let partidas = await Partida
-        .find({ producto_id: producto_id, isEmpty: false , tipo:"NORMAL",status:"ASIGNADA"})
+        .find({ producto_id: producto_id, isEmpty: false , tipo:{$in: ["NORMAL", "MODIFICADA","AGREGADA"]},status:"ASIGNADA"})
         .populate('entrada_id', 'fechaEntrada clienteFiscal_id sucursal_id almacen_id tipo',
             {
                 clienteFiscal_id: clienteFiscal_id,
@@ -450,6 +453,7 @@ async function getByProductoEmbalaje(req, res) {
             })
         .where(embalajesxSalir).gt(0)
         .exec();
+        
     //var testPartidas=[];
     partidas = partidas.filter(x => x.tipo == "EXISTENCIA_INICIAL" || (x.entrada_id != undefined && x.entrada_id.clienteFiscal_id == clienteFiscal_id && x.entrada_id.sucursal_id == sucursal_id && x.entrada_id.almacen_id == almacen_id));
     //console.log(partidas);
@@ -534,6 +538,7 @@ async function getByProductoEmbalaje(req, res) {
                         nivel: posicion.nivel,
                         producto_id: producto_id,
                         ubicacion_id: posicion._id,
+                        origen:partida.origen, 
                         posicionesFull: Helper.Clone(partida.posiciones),
                         posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
                         subConsecutivo: subConsecutivo,
@@ -1467,6 +1472,558 @@ async function posicionarAuto(id_pocision,id_partidas,nivelIndex)
         //console.log(partida);
     
 }
+//Reporte en base a items para la conciliacion diaria
+async function reporteDia(req, res)
+{   
+    let respuesta=[];
+    //console.log(req.query.fechaInicio);
+    let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+    let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+   //console.log(fechaInicio);
+   //console.log(fechaFinal);
+    let filter = {
+            clienteFiscal_id: req.query.clienteFiscal_id ,
+            sucursal_id:  req.query.sucursal_id ,
+            almacen_id: req.query.almacen_id ,
+            status:{$in:["APLICADA","FINALIZADO"]},
+            fechaEntrada:{$gte:fechaInicio,$lt:fechaFinal}
+        }
+    let filter2 = {
+            clienteFiscal_id: req.query.clienteFiscal_id ,
+            sucursal_id:  req.query.sucursal_id ,
+            almacen_id: req.query.almacen_id ,
+            tipo:req.query.tipo,
+            fechaSalida:{$gte:fechaInicio,$lt:fechaFinal}
+        }
+
+    var entradasDia=await Entrada.find(filter).sort({ fechaEntrada: 1 }).exec();
+    let inbyProd=[];
+    let outbyProd=[];
+    var salidas_id=[];
+    //console.log(entradasDia.length);
+    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    //console.log(tipoUsuario);
+    let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
+    var embalajesjson={};
+    await clienteEmbalaje.forEach(emb=>{
+        embalajesjson[emb]=0;
+    });
+   // console.log(embalajesjson);
+    if(entradasDia.length>0)
+    {
+        await Helper.asyncForEach(entradasDia,async function (ed){
+            await Helper.asyncForEach(ed.partidas,async function (par){
+                let partidaT=await Partida.findOne({_id:par});
+                if(inbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                {
+                    //console.log("yes");
+                    let index=inbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                    clienteEmbalaje.forEach(em=>{
+                        
+                        if(inbyProd[index].embalajesEntrada[em]!=undefined && partidaT.embalajesEntrada[em]!=undefined)
+                            inbyProd[index].embalajesEntrada[em]+=partidaT.embalajesEntrada[em];
+                    })
+                }
+                else
+                {
+                    const data={
+                        clave:partidaT.clave,
+                        embalajesEntrada: partidaT.embalajesEntrada
+                    };
+                    inbyProd.push(data)
+                }
+            });
+        });
+    }
+    var salidasDia=await Salida.find(filter2).sort({ fechaSalida: 1 }).exec();
+    if(salidasDia.length>0){
+        await Helper.asyncForEach(salidasDia,async function (sd){
+
+            await Helper.asyncForEach(sd.partidas,async function (par){
+                let partidaT=await Partida.findOne({_id:par});
+                //console.log(partidaT)
+                let embalajesSalida;
+                    salidas_id = partidaT.salidas_id;
+
+                    salidas_id.forEach(elem => {
+                        let elemId = elem.salida_id;
+                        let paramId = sd._id;
+                        if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
+                            embalajesSalida = elem.embalajes;
+                        }
+                    })
+                if(outbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                {
+                    //console.log("yes");
+                    let index=outbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                    clienteEmbalaje.forEach(em=>{
+                        //console.log(partidaT.embalajesEntrada);
+                        if(outbyProd[index].embalajesSalida[em]!=undefined && embalajesSalida[em]!=undefined)
+                            outbyProd[index].embalajesSalida[em]+=embalajesSalida[em];
+                    })
+                }
+                else
+                {
+                    const data={
+                        clave:partidaT.clave,
+                        embalajesSalida: embalajesSalida
+                    };
+                    //console.log(data);
+                    outbyProd.push(data)
+                }
+            });
+        });
+    }
+    var productosDia=await Producto.find({clienteFiscal_id: req.query.clienteFiscal_id, statusReg: "ACTIVO"}).exec();
+    //console.log(outbyProd.length+"-"+inbyProd.length)
+    
+        await Helper.asyncForEach(productosDia,async function (pd){
+            let band=false;
+            //console.log(embalajes);
+            let inIndex=inbyProd.findIndex(obj=> (obj.clave == pd.clave));
+            let outIndex=outbyProd.findIndex(obj=> (obj.clave == pd.clave));
+            var auxprod={
+                    clave:pd.clave,
+                    descripcion:pd.descripcion,
+                    subclasificacion:pd.subclasificacion,
+                    corrugados:Helper.Clone(pd.embalajes),
+                    entradas:Helper.Clone(inbyProd[inIndex]? inbyProd[inIndex].embalajesEntrada : embalajesjson),
+                    salidas:Helper.Clone(outbyProd[outIndex]? outbyProd[outIndex].embalajesSalida:embalajesjson),
+                    StockFinal:Helper.Clone(pd.embalajes)
+                };
+            //console.log(auxprod)
+            await Helper.asyncForEach(clienteEmbalaje,async function (em){
+                if(auxprod.corrugados[em]!=undefined && auxprod.entradas[em]!=undefined && auxprod.salidas[em]!=undefined  && auxprod.StockFinal[em]!=undefined && auxprod.StockFinal[em]!=0 )
+                {
+                    band=true;
+                    auxprod.corrugados[em]=pd.embalajes[em]-auxprod.entradas[em] + auxprod.salidas[em];
+                }
+                
+            })
+            if(band == true){
+               // console.log(auxprod)
+                respuesta.push(auxprod);
+            }
+
+        });
+    
+    if(respuesta.length>0)
+    {
+        res.status(200).send(respuesta);
+    }
+    else
+        res.status(200).send("ERROR");
+}
+
+async function getExcelreporteDia(req, res)
+{   
+    let respuesta=[];
+    //console.log(req.query);
+    let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+    let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+   //console.log(fechaInicio);
+   //console.log(fechaFinal);
+    let filter = {
+            clienteFiscal_id: req.query.clienteFiscal_id ,
+            sucursal_id:  req.query.sucursal_id ,
+            almacen_id: req.query.almacen_id ,
+            status:{$in:["APLICADA","FINALIZADO"]},
+            fechaEntrada:{$gte:fechaInicio,$lt:fechaFinal}
+        }
+    let filter2 = {
+            clienteFiscal_id: req.query.clienteFiscal_id ,
+            sucursal_id:  req.query.sucursal_id ,
+            almacen_id: req.query.almacen_id ,
+            tipo:req.query.tipo,
+            fechaSalida:{$gte:fechaInicio,$lt:fechaFinal}
+        }
+
+    var excel = require('excel4node');
+        
+    var workbook = new excel.Workbook();
+    var tituloStyle = workbook.createStyle({
+      font: {
+        bold: true,
+      },
+      alignment: {
+        wrapText: true,
+        horizontal: 'center',
+      },
+    });
+    var ResultStyle = workbook.createStyle({
+      font: {
+        bold: true,
+      },
+      alignment: {
+        wrapText: true,
+        horizontal: 'center',
+      },
+      fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        bgColor: '#FF0000',
+        fgColor: '#FF0000',
+      },
+    });
+    var headersStyle = workbook.createStyle({
+      font: {
+        bold: true,
+      },
+      alignment: {
+        wrapText: true,
+        horizontal: 'left',
+      },
+    });
+    var porcentajeStyle = workbook.createStyle({
+        numberFormat: '#.0%; -#.0%; -'
+    });
+    var fitcellStyle = workbook.createStyle({
+        alignment: {
+            wrapText: true,
+        },
+    });
+    
+     
+    var worksheet = workbook.addWorksheet('Partidas');
+    worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
+    worksheet.cell(2, 1).string('Clave').style(headersStyle);
+    worksheet.cell(2, 2).string('Descripcion').style(headersStyle);
+    worksheet.cell(2, 3).string('Subclasificacion').style(headersStyle);
+    worksheet.cell(2, 4).string('Corrugados').style(headersStyle);
+    worksheet.cell(2, 5).string('Entradas').style(headersStyle);
+    worksheet.cell(2, 6).string('Salidas').style(headersStyle);
+    worksheet.cell(2, 7).string('Stock final').style(headersStyle);
+    worksheet.cell(2, 8).string('Match').style(headersStyle);
+    worksheet.cell(2, 9).string('On Hand Logistikgo').style(headersStyle);
+
+    var entradasDia=await Entrada.find(filter).sort({ fechaEntrada: 1 }).exec();
+    let inbyProd=[];
+    let outbyProd=[];
+    var salidas_id=[];
+    //console.log(entradasDia.length);
+    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    //console.log(tipoUsuario);
+    let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
+    var embalajesjson={};
+    await clienteEmbalaje.forEach(emb=>{
+        embalajesjson[emb]=0;
+    });
+   // console.log(embalajesjson);
+    if(entradasDia.length>0)
+    {
+        await Helper.asyncForEach(entradasDia,async function (ed){
+            await Helper.asyncForEach(ed.partidas,async function (par){
+                let partidaT=await Partida.findOne({_id:par});
+                if(inbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                {
+                    //console.log("yes");
+                    let index=inbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                    clienteEmbalaje.forEach(em=>{
+                        
+                        if(inbyProd[index].embalajesEntrada[em]!=undefined && partidaT.embalajesEntrada[em]!=undefined)
+                            inbyProd[index].embalajesEntrada[em]+=partidaT.embalajesEntrada[em];
+                    })
+                }
+                else
+                {
+                    const data={
+                        clave:partidaT.clave,
+                        embalajesEntrada: partidaT.embalajesEntrada
+                    };
+                    inbyProd.push(data)
+                }
+            });
+        });
+    }
+    var salidasDia=await Salida.find(filter2).sort({ fechaSalida: 1 }).exec();
+    console.log(salidasDia.length);
+    if(salidasDia.length>0){
+        await Helper.asyncForEach(salidasDia,async function (sd){
+
+            await Helper.asyncForEach(sd.partidas,async function (par){
+                let partidaT=await Partida.findOne({_id:par});
+                //console.log(partidaT)
+                let embalajesSalida;
+                    salidas_id = partidaT.salidas_id;
+
+                    salidas_id.forEach(elem => {
+                        let elemId = elem.salida_id;
+                        let paramId = sd._id;
+                        if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
+                            embalajesSalida = elem.embalajes;
+                        }
+                    })
+                if(outbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                {
+                    //console.log("yes");
+                    let index=outbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                    clienteEmbalaje.forEach(em=>{
+                        //console.log(partidaT.embalajesEntrada);
+                        if(outbyProd[index].embalajesSalida[em]!=undefined && embalajesSalida[em]!=undefined)
+                            outbyProd[index].embalajesSalida[em]+=embalajesSalida[em];
+                    })
+                }
+                else
+                {
+                    const data={
+                        clave:partidaT.clave,
+                        embalajesSalida: embalajesSalida
+                    };
+                    //console.log(data);
+                    outbyProd.push(data)
+                }
+            });
+        });
+    }
+    var productosDia=await Producto.find({clienteFiscal_id: req.query.clienteFiscal_id, statusReg: "ACTIVO"}).exec();
+    //console.log(outbyProd.length+"-"+inbyProd.length)
+        let i=2
+        await Helper.asyncForEach(productosDia,async function (pd){
+            let band=false;
+            //console.log(embalajes);
+            let inIndex=inbyProd.findIndex(obj=> (obj.clave == pd.clave));
+            let outIndex=outbyProd.findIndex(obj=> (obj.clave == pd.clave));
+            var auxprod={
+                    clave:pd.clave,
+                    descripcion:pd.descripcion,
+                    subclasificacion:pd.subclasificacion,
+                    corrugados:Helper.Clone(pd.embalajes),
+                    entradas:Helper.Clone(inbyProd[inIndex]? inbyProd[inIndex].embalajesEntrada : embalajesjson),
+                    salidas:Helper.Clone(outbyProd[outIndex]? outbyProd[outIndex].embalajesSalida:embalajesjson),
+                    StockFinal:Helper.Clone(pd.embalajes)
+                };
+            //console.log(auxprod)
+            await Helper.asyncForEach(clienteEmbalaje,async function (em){
+                if(auxprod.corrugados[em]!=undefined && auxprod.entradas[em]!=undefined && auxprod.salidas[em]!=undefined  && auxprod.StockFinal[em]!=undefined && auxprod.StockFinal[em]!=0 )
+                {
+                    band=true;
+                    auxprod.corrugados[em]=pd.embalajes[em]-auxprod.entradas[em] + auxprod.salidas[em];
+                }
+                
+            })
+            if(band == true){
+               // console.log(auxprod)
+               i=i+1;
+               worksheet.cell(i, 1).string(auxprod.clave ? auxprod.clave:"");
+               worksheet.cell(i, 2).string(auxprod.descripcion ? auxprod.descripcion:"");
+               worksheet.cell(i, 3).string(auxprod.subclasificacion ? auxprod.subclasificacion:"");
+               worksheet.cell(i, 4).number(auxprod.corrugados.cajas ? auxprod.corrugados.cajas:0);
+               worksheet.cell(i, 5).number(auxprod.entradas.cajas ? auxprod.entradas.cajas:0);
+               worksheet.cell(i, 6).number(auxprod.salidas.cajas ? auxprod.salidas.cajas:0);
+               worksheet.cell(i, 7).number(auxprod.StockFinal.cajas ? auxprod.StockFinal.cajas:0);
+               worksheet.cell(i, 8).formula('G'+i+'-'+'I'+i);
+               worksheet.cell(i, 9).number(auxprod.StockFinal.cajas ? auxprod.StockFinal.cajas:0);
+
+                respuesta.push(auxprod);
+            }
+
+        });
+    
+    if(respuesta.length>0)
+    {
+        workbook.write('ReporteConciliacion'+dateFormat(new Date(Date.now()-(5*3600000)), "dd/mm/yyyy")+'.xlsx',res);
+    }
+    else
+        res.status(200).send("ERROR");
+}
+
+
+async function reporteFEFOS(req, res)
+{   
+
+    let respuesta=[];
+    //console.log(req.query.fechaInicio);
+    let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
+    let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+   //console.log(fechaInicio);
+   //console.log(fechaFinal);
+    try {
+        let filter = {
+                clienteFiscal_id: req.query.clienteFiscal_id ,
+                sucursal_id:  req.query.sucursal_id ,
+                almacen_id: req.query.almacen_id ,
+                status:{$in:["APLICADA","FINALIZADO"]}
+            }
+        let filter2 = {
+                clienteFiscal_id: req.query.clienteFiscal_id ,
+                sucursal_id:  req.query.sucursal_id ,
+                almacen_id: req.query.almacen_id ,
+                tipo:req.query.tipo,
+                fechaSalida:{$gte:fechaInicio,$lt:fechaFinal}
+            }
+
+       
+        let inbyProd=[];
+        let outbyProd=[];
+        var salidas_id=[];
+        //console.log(entradasDia.length);
+        let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+        //console.log(req.query.clienteFiscal_id);
+        let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
+        var embalajesjson={};
+        await clienteEmbalaje.forEach(emb=>{
+            embalajesjson[emb]=0;
+        });
+        console.log("entradas")
+        await Entrada.find(filter).sort({ fechaEntrada: 1 })
+        .populate({
+            path: 'partidas',
+            populate: {
+                path: 'entrada_id',
+                model: 'Entrada',
+                select: 'stringFolio isEmpty clave embalajesEntrada embalajesxSalir fechaCaducidad tipo status'
+            },
+            select: 'stringFolio isEmpty clave embalajesEntrada embalajesxSalir fechaCaducidad tipo status'
+        })
+        .then(async(entradas) => {
+            await entradas.forEach (async entrada => {
+                var partida = entrada.partidas;
+                await partida.forEach(partidaT => {
+                        //console.log(partidaT);
+                        if(partidaT!= null){
+                            const data={
+                                clave:partidaT.clave,
+                                embalajesEntrada: partidaT.embalajesEntrada,
+                                embalajesxSalir: partidaT.embalajesxSalir,
+                                fechaCaducidad: partidaT.fechaCaducidad
+                            };
+                            //console.log(partidaT)
+                            if(partidaT.isEmpty == false && (partidaT.tipo=="NORMAL" || partidaT.tipo=="AGREGADA" || partidaT.tipo=="MODIFICADA") && partidaT.status=="ASIGNADA")
+                                inbyProd.push(data)
+                        }
+                });
+            });
+        });
+        console.log(inbyProd.length);
+        console.log("salidas");
+        var salidasDia=await Salida.find(filter2).sort({ fechaSalida: 1 }).exec();
+        console.log(salidasDia.length);
+        
+        if(salidasDia.length>0){
+            await Helper.asyncForEach(salidasDia,async function (sd){
+                console.log(inbyProd.length);
+                await Helper.asyncForEach(sd.partidas,async function (par){
+                    let partidaT=await Partida.findOne({_id:par});
+                    //console.log(partidaT)
+                    let embalajesSalida;
+                        salidas_id = partidaT.salidas_id;
+
+                        salidas_id.forEach(elem => {
+                            let elemId = elem.salida_id;
+                            let paramId = sd._id;
+                            if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
+                                embalajesSalida = elem.embalajes;
+                            }
+                        })
+                    if(outbyProd.find(obj=> (obj.clave == partidaT.clave)))
+                    {
+                        let correct=0;
+                        let wrong=0;
+                        let total=0;
+                        let fecha=0;
+                        await Helper.asyncForEach(inbyProd,async function (p){
+                            if (p.clave == partidaT.clave)
+                            total++;
+                            if(partidaT.fechaCaducidad < p.fechaCaducidad && p.clave == partidaT.clave)
+                                correct++;
+                            else
+                                if(p.clave == partidaT.clave)
+                                    wrong++;
+                        });
+                        let index=outbyProd.findIndex(obj=> (obj.clave == partidaT.clave));
+                        clienteEmbalaje.forEach(em=>{
+                            //console.log(partidaT.embalajesEntrada);
+                            if(outbyProd[index].embalajesSalida[em]!=undefined && embalajesSalida[em]!=undefined){
+                                outbyProd[index].embalajesSalida[em]+=embalajesSalida[em];
+                               
+                            }
+                        })
+                        if(partidaT.fechaCaducidad>sd.fechaSalida)       
+                            fecha++;
+                        outbyProd[index].correct=outbyProd[index].correct+correct;
+                        outbyProd[index].wrong=outbyProd[index].wrong+wrong;
+                        outbyProd[index].total=outbyProd[index].total+total;
+                        outbyProd[index].totalT=outbyProd[index].totalT+1;
+                        outbyProd[index].correctFecha=outbyProd[index].correctFecha+fecha;
+                    }
+                    else
+                    {
+                        let correct=0;
+                        let wrong=0;
+                        let total=0;
+                        let fecha=0;
+                        await Helper.asyncForEach(inbyProd,async function (p){
+                            if (p.clave == partidaT.clave)
+                            total++;
+                            if(partidaT.fechaCaducidad < p.fechaCaducidad && p.clave == partidaT.clave)
+                                correct++;
+                            else
+                                if (p.clave == partidaT.clave)
+                                    wrong++;
+                        
+                        });
+                        if(partidaT.fechaCaducidad>sd.fechaSalida)       
+                            fecha++;
+                        const data={ 
+                            clave:partidaT.clave,
+                            embalajesSalida: embalajesSalida,
+                            correct:correct,
+                            wrong:wrong,
+                            totalT:1,
+                            total:total,
+                            correctFecha:fecha
+                        };
+                        //console.log("/---------------------------/");
+                        //console.log(data);
+                        outbyProd.push(data);
+                    }
+                });
+            });
+        }
+        var productosDia=await Producto.find({clienteFiscal_id: req.query.clienteFiscal_id, statusReg: "ACTIVO"}).exec();
+        //console.log(outbyProd.length+"-"+inbyProd.length)
+        
+            await Helper.asyncForEach(productosDia,async function (pd){
+                let band=false;
+                //console.log(embalajes);
+                let inIndex=inbyProd.findIndex(obj=> (obj.clave == pd.clave));
+                let outIndex=outbyProd.findIndex(obj=> (obj.clave == pd.clave));
+                var auxprod={
+                    clave:pd.clave,
+                    descripcion:pd.descripcion,
+                    subclasificacion:pd.subclasificacion,
+                    salidas:Helper.Clone(outbyProd[outIndex] ? outbyProd[outIndex].embalajesSalida:embalajesjson),
+                    totalCorrectos:outbyProd[outIndex] ? outbyProd[outIndex].correct:0,
+                    totalWrong:outbyProd[outIndex] ? outbyProd[outIndex].wrong:0,
+                    CorFEFO:outbyProd[outIndex] ? Math.round((outbyProd[outIndex].correct/outbyProd[outIndex].total)*100):0,
+                    WroFEFO:outbyProd[outIndex] ? Math.round((outbyProd[outIndex].wrong/outbyProd[outIndex].total)*100):0,
+                    totalT:outbyProd[outIndex] ?outbyProd[outIndex].totalT:0,
+                    total:outbyProd[outIndex] ?outbyProd[outIndex].total:0,
+                    correctFecha: outbyProd[outIndex] ?outbyProd[outIndex].correctFecha:0,
+                    wrongFecha: outbyProd[outIndex] ?(outbyProd[outIndex].totalT-outbyProd[outIndex].correctFecha):0,
+                    correctFechaPor: outbyProd[outIndex] ?(outbyProd[outIndex].correctFecha/outbyProd[outIndex].totalT)*100:0,
+                    wrongFechaPor: outbyProd[outIndex] ?((outbyProd[outIndex].totalT-outbyProd[outIndex].correctFecha)/outbyProd[outIndex].totalT)*100:0
+                    
+                };
+                //console.log(auxprod)
+                respuesta.push(auxprod);
+
+            });
+        
+        if(respuesta.length>0)
+        {
+            return res.status(200).send(respuesta);
+        }
+        else
+            return res.status(200).send("ERROR");
+    }
+    catch (error) {
+        console.log(error)
+        return res.status(500).send(error);
+    }
+}
+
+
 module.exports = {
     get,
     post,
@@ -1489,5 +2046,8 @@ module.exports = {
     updatePosicionPartida,
     updateCajasPedidas,
     posicionarAuto,
-    getExcelByIDs
+    getExcelByIDs,
+    reporteDia,
+    getExcelreporteDia,
+    reporteFEFOS
 }

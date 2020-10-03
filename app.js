@@ -98,6 +98,7 @@ app.get('/api/getSalidasReporte', Salida.getReportePartidas);
 app.post('/api/salida', Salida.save);
 app.put('/api/salida', Salida.update);
 app.post('/api/salidaAutomatica', Salida.saveSalidaAutomatica);
+app.put('/api/updateStatusSalidas',Salida.updateStatusSalidas);
 
 app.get('/api/getCtesFiscales', CteFiscal.get);
 app.get('/api/getCtesFiscalesXD', Helper.getClientesFiscalesXD);
@@ -264,6 +265,9 @@ app.get('/api/getExcelEntradas', Entrada.getExcelEntradas);
 app.get('/api/getExcelCaducidades', Entrada.getExcelCaducidades);
 app.get('/api/getExcelSalidas', Salida.getExcelSalidas);
 app.get('/api/getExcelSalidasBarcel', Salida.getExcelSalidasBarcel);
+app.get('/api/reporteDia',Partida.reporteDia);
+app.get('/api/getExcelreporteDia',Partida.getExcelreporteDia);
+app.get('/api/reporteFEFOS',Partida.reporteFEFOS);
 
 //babel
 //entradas
@@ -272,11 +276,15 @@ app.post('/api/updateEntradasBabel', Entrada.updateEntradasBabel);
 app.post('/api/saveEntradaEDI', Entrada.saveEntradaEDI);
 app.post('/api/updateById', Entrada.updateById);
 
-app.get('/api/getTarimasAndCajas', Entrada.getTarimasAndCajas);
+app.post('/api/saveEntradaChevron',Entrada.saveEntradaChevron);
 
- 
+ //salidas
+app.post('/api/saveSalidaBabel', Salida.saveSalidaBabel);
+
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
+//gettotalcajas
+app.get('/api/getTarimasAndCajas/:_id', Entrada.getTarimasAndCajas);
 
 //Tickets
 app.post('/api/saveTicket', Ticket.post);
@@ -290,5 +298,6 @@ app.post('/api/saveEntradaPisa',Entrada.saveEntradaPisa);
 
 //sendcorreo
 app.post('/api/getbodycorreo',Entrada.getbodycorreo);
+
 
 module.exports = app;
