@@ -25,7 +25,6 @@ function getNextIDTicket() {
 }
 
 async function get(req, res) {
-<<<<<<< HEAD
 
 	let pagination = {
 		page: parseInt(req.query.page),
@@ -33,9 +32,6 @@ async function get(req, res) {
 	}
 	console.log(pagination)
 
-=======
-	
->>>>>>> fe345b1cb3d634a9570cf93fc76fd80a393c079f
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
@@ -256,7 +252,6 @@ async function get(req, res) {
 		.populate({
 			path: 'partidas.producto_id',
 			model: 'Producto'
-<<<<<<< HEAD
 		}).then(entradas =>{
 
 			res.status(200).send(entradas);
@@ -271,19 +266,6 @@ function getById(req, res) {
 
 	let _id = req.query.id;
 	console.log(req.query);
-=======
-		}).then((entradas) => {
-
-			res.status(200).send(_status == null ? json : entradas);
-		}).catch((error) => {
-			res.status(500).send(error);
-		});
-}
-
-function getById(req, res) {
-	let _id = req.query.id;
-	//console.log(_id)
->>>>>>> fe345b1cb3d634a9570cf93fc76fd80a393c079f
 	Entrada.findOne({ _id: _id })
 		.populate({
 			path: 'partidas.producto_id',
@@ -884,6 +866,7 @@ async function getEntradasReporte(req, res) {
 		
 		//const partidas = await PartidaModel.aggregatePaginate(partidasReporteCad, pagination )
 		let partidas = [];
+		let cajasPedidas = [];
 		if(isFilter){
 			
 			Entrada.find(filter, {partidas: 1, _id: 0})
@@ -910,6 +893,7 @@ async function getEntradasReporte(req, res) {
 			/* 
 			elem.entrada_id = elem.entrada_id[0];
 			elem.producto_id = elem.producto_id[0]; */
+			
 			let resFecha=true;
 				let resAlerta1=true;
 				let resAlerta2=true;
@@ -1071,10 +1055,9 @@ async function getEntradasReporte(req, res) {
 				   }, */
 			{$match: {"fromEntradas.isEmpty": filter.isEmpty, "fromEntradas.status": filter.status, isEmpty: false,
 					"fromEntradas.clienteFiscal_id": mongoose.Types.ObjectId(filter.clienteFiscal_id),
-					"fromEntradas.fechaEntrada": {$gte: fechaInicio, $lt: fechaFinal}}}
-			,
-	
-			
+					tipo: {$in: ["NORMAL", "AGREGADA", "MODIICADA"]},
+					status: "ASIGNADA",
+					"fromEntradas.fechaEntrada": {$gte: fechaInicio, $lt: fechaFinal}}},
 			{      
 				$project:{
 					producto_id: 1,
@@ -1111,30 +1094,7 @@ async function getEntradasReporte(req, res) {
 					producto_id: "$fromProductos",
 					entrada_id: "$fromEntradas"
 				}
-			},
-			{
-				$addFields:{
-					fechaDiff:{$abs:{$subtract: ["$fechaCaducidad", "$fechaEntrada"]}},
-					diasAlm:  {$floor:{  $divide: [{$subtract: [ new Date(), "$fechaCaducidad" ] }, 86400000] }},
-					}
-					
-			   },
-			   {
-				$addFields:{
-					diasEnAlm: {$floor: { $divide: ["$fechaDiff", 86400000]}},
-					Aging: {$floor:{$divide:[{$subtract:[new Date(), "$fechaEntrada"]}, 86400000]}},
-					fechaFres: {$subtract:[{$subtract: ["$fechaCaducidad", {$multiply: [{$add: ["$garantiaFrescura", 1]}, 86400000]}]}, 2]},
-            		fechaAlerta1: {$subtract:[{$subtract: ["$fechaCaducidad", {$multiply: [{$add: ["$alertaAmarilla", 1]}, 86400000]}]}, 2]},
-            		fechaAlerta2: {$subtract:[{$subtract: ["$fechaCaducidad", {$multiply: [{$add: ["$alertaRoja", 1]}, 86400000]}]}, 2]},
-            
-					}
-			   },
-			   {
-				$addFields:{
-				   leyenda: {$subtract:[{$subtract: ["$vidaAnaquel", "$diasEnAlm"]}, 1]}
-				   }
-			   }
-	
+			}
 		])
 			
 			partidas = await PartidaModel.aggregatePaginate(partidasReporteCad, pagination );
@@ -2774,20 +2734,11 @@ async function getTarimasAndCajasEntradas(entrada_id){
 	}		
  
 }
-<<<<<<< HEAD
-
-
-async function getTarimasAndCajas(req, res){
-	
-	//const entrada_id = req.params._id;
-	console.log(entrada_id)
-=======
 
 async function getTarimasAndCajas(req, res){
 	
 	const entrada_id = req.body.entrada_id;
 	//console.log(entrada_id)
->>>>>>> fe345b1cb3d634a9570cf93fc76fd80a393c079f
 	let tarimas = 0;
 	let cajas = 0;
 
