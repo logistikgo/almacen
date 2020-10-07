@@ -224,15 +224,11 @@ async function save(req, res) {
 	nEntrada.folio = await getNextID();
 	nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 	nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
-	let countEntradas=await Entrada.find({"referencia":nEntrada.referencia}).exec();
+	let countEntradas=await Entrada.find({"item":nEntrada.item}).exec();
+
 	if(countEntradas.length>0)
 	{
-		return res.status(203).send({error:"Referencia ya existe"});
-	}
-	countEntradas=await Entrada.find({"factura":nEntrada.referencia}).exec();
-	if(countEntradas.length>0)
-	{
-		return res.status(203).send({error:"Referencia ya existe"});
+		return res.status(203).send({error:"Numero de Control ya existe"});
 	}
 	await nEntrada.save()
 		.then(async (entrada) => {
@@ -330,6 +326,12 @@ async function saveEntradaBabel(req, res) {
 	        let indexFecha=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 			let fechaProducionplanta=Date.parse(req.body.Infoplanta[indexFecha+1].InfoPedido);
 			fechaProducionplanta = new Date (fechaProducionplanta).getTime()-(7*3600000);
+			if(fechaCaducidadRes < new Date(fechaProducionplanta+(70*3600000)))
+			{
+				return res.status(500).send("FechaMenor\n" + resORDENES+" ");
+
+
+			}
 	        console.log(req.body.Pedido[i].Caducidad);
 			const data={
 				producto_id:producto._id,
@@ -346,7 +348,7 @@ async function saveEntradaBabel(req, res) {
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
 	        }
-	       // console.log(data.InfoPedidos)
+	        // console.log(data.InfoPedidos)
 	        let countEntradas=await Entrada.find({"factura":req.body.Pedido[i].Factura}).exec();
 	        countEntradas= countEntradas.length<1 ? await Entrada.find({"referencia":req.body.Pedido[i].Factura}).exec():countEntradas;
 	        countEntradas= countEntradas.length<1 ? await Entrada.find({"item":req.body.Pedido[i].Factura}).exec():countEntradas;
@@ -426,7 +428,7 @@ async function saveEntradaBabel(req, res) {
 			else
 				planta=await PlantaProductora.findOne({ 'Nombre': req.body.Infoplanta[indexInfopedido+1].InfoPedido.split(" ")[0] }).exec();
 		}
-		//console.log(planta);
+		console.log(req.body.Infoplanta[indexInfopedido+1].InfoPedido);
 		//console.log(indexInfopedido);
 		indexInfopedido=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 		//console.log(Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido));
@@ -1423,8 +1425,9 @@ function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+12).number(orginalshippingdays).style(shipingdaysstyle);;
            	worksheet.cell(i, indexbody+13).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
            	worksheet.cell(i, indexbody+14).string(partidas.entrada_id ? partidas.entrada_id.fechaAlta  ? dateFormat(new Date(partidas.entrada_id.fechaAlta.getTime()), formatofecha) :"":"");
-           	worksheet.cell(i, indexbody+15).number(Math.abs(Aging));
-           	worksheet.cell(i, indexbody+16).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
+           	
+           	worksheet.cell(i, indexbody+15).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
+           	worksheet.cell(i, indexbody+16).number(Math.abs(Aging));
            	//worksheet.cell(i, indexbody+12).string(fechaFrescura ? fechaFrescura:"");
            	worksheet.cell(i, indexbody+17).number(partidas.producto_id.alertaAmarilla ? partidas.producto_id.alertaAmarilla:0);
            	
@@ -2051,10 +2054,11 @@ async function saveEntradaEDI(req, res) {
 					nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
 					nEntrada.idEntrada = await getNextID();
 					nEntrada.folio = await getNextID();
-					let stringTemp=await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+					nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+					//nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
 					//if()
 					//nEntrada.stringFolio = 
-					//nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
+					//
 					//console.log("testEntrada");
 					await nEntrada.save()
 						.then(async (entrada) => {

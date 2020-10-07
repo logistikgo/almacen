@@ -167,7 +167,7 @@ async function getPocionesAuto(Family,almacen_id)
 		})
 		
 
-		for ( let i = 0; i <= 5 ; i++ )
+		for ( let i = 0; i <= 10 ; i++ )
 		{
 			await Helper.asyncForEach(pasillos, async function (pasillo) 
 			{
@@ -213,7 +213,7 @@ async function getPocionesAuto(Family,almacen_id)
 			almacen_id: new ObjectId(almacen_id),
 			statusReg: "ACTIVO"
 			})
-			for ( let i = 0; i <= 5 ; i++ )
+			for ( let i = 0; i <= 10 ; i++ )
 			{
 				await Helper.asyncForEach(pasillos, async function (pasillo) 
 				{
