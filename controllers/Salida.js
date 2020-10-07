@@ -1663,15 +1663,20 @@ async function saveSalidaBabel(req, res) {
 	var arrPO=[];
 	try{
 		console.log(req.body.Pedido.length)
-		let ttttt=0;
+		let index=0;
 		await Helper.asyncForEach(req.body.Pedido,async function (Pedido) {
-			if(Pedido.Pedido)
+			
+			if(Pedido.NO && index > 13 && Pedido.Clave && Pedido.Cantidad)
 			{
-				//console.log(Pedido.Clave);
-				if(arrPO.find(obj=> (obj.pedido == Pedido.Pedido)))
+				console.log(Pedido);
+				var producto=await Producto.findOne({ 'clave':Pedido.Clave }).exec();
+				if(producto==undefined)
+					return res.status(400).send("no existe item: "+Pedido.Clave);
+
+				if(arrPO.find(obj=> (obj.pedido == req.body.Pedido[1].Pedido)))
 	    		{
 	    			//console.log("yes");
-	    			let index=arrPO.findIndex(obj=> (obj.pedido == Pedido.Pedido));
+	    			let index=arrPO.findIndex(obj=> (obj.pedido == req.body.Pedido[1].Pedido));
 	    			const data={
 	    				Clave:Pedido.Clave,
 	    				Cantidad: Pedido.Cantidad,
@@ -1687,19 +1692,21 @@ async function saveSalidaBabel(req, res) {
 	    				equivalencia: Pedido.equivalencia
 	    			};
 		        	const PO={
-		        	pedido:Pedido.Pedido,
-					destinatario: Pedido.SHIPTO,
-					Cliente: Pedido.Cliente,
-					Domicilio: Pedido.Domicilio,
+		        	pedido:req.body.Pedido[1].Pedido,
+					destinatario: req.body.Pedido[9].producto,
+					Cliente: req.body.Pedido[4].Cliente,
+					Domicilio: req.body.Pedido[5].Cliente,
 		        	arrPartidas:[]
 		        	}
 		        	PO.arrPartidas.push(data)
 	    			arrPO.push(PO);
 	    			
 	    		}
-			}				
+			}		
+			index++;		
 		});
-		//console.log(arrPO);
+		console.log(arrPO);
+		
 		let hoy=new Date(Date.now()-(5*3600000));
 
 		await Helper.asyncForEach(arrPO,async function (Pedido) {
@@ -1711,13 +1718,13 @@ async function saveSalidaBabel(req, res) {
 			let refDesti=Pedido.destinatario;
 			console.log(Pedido.pedido);
 			console.log(Pedido.arrPartidas.length);
-			console.log("-*/-/-*/*-/*-/*-/*-/*-/*-/*-/*-/*-/-*/*-");
+			
 			await Helper.asyncForEach(Pedido.arrPartidas,async function (par) {
-				console.log("----partida: "+par.Clave+ "----");
+				//console.log("----partida: "+par.Clave+ "----");
 				let producto =await Producto.findOne({'clave': par.Clave }).exec();
-				/*console.log(producto.clave);
-				console.log(par.Cantidad);
-				console.log(producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia);*/
+				//console.log(producto.clave);
+				//console.log(par.Cantidad);
+				//console.log(producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia);
 				let equivalencia =producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia;
 				
 				let needed=Math.round(par.Cantidad/equivalencia);
@@ -1758,7 +1765,6 @@ async function saveSalidaBabel(req, res) {
 			            	partidaaux.pedido=true;
 			            	partidaaux.save();
 			            	parRes.push(partidas[i]);
-			            	console.log("/*/*/*/*/*/*/*/");
 			            	//console.log(partidaaux);
 			            	console.log("--------------");
 			            	count++;

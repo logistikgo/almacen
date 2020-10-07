@@ -272,6 +272,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 			let index = nivel.productos.indexOf(producto);
 			nivel.productos.splice(index, 1);
 			nivel.isCandadoDisponibilidad = false;
+			nivel.apartado = false;
 		}
 	}
 	else if (signo > 0) {
@@ -344,10 +345,15 @@ function getByProducto(req, res) {
 			path: 'producto_id'
 		})
 		.populate({
-			path: 'entrada_id'
+			path: 'entrada_id',
+			model: 'Entrada',
+			match: { 'status': {$in:["APLICADA","FINALIZADO"]} }
 		})
 		.populate({
-			path: 'salida_id'
+			path: 'salida_id',
+			model: 'Salida',
+			match:{"tipo" : "NORMAL"}
+			
 		})
 		.populate({
 			path: 'posicion_id'
