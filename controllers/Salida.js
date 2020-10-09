@@ -1746,6 +1746,10 @@ async function saveSalidaBabel(req, res) {
 			if(Pedido.Pedido)
 			{
 				//console.log(Pedido.Clave);
+				let countEntradas=await Entrada.find({"po":Pedido.Pedido}).exec();
+		        countEntradas= countEntradas.length<1 ? await Entrada.find({"referencia":Pedido.Pedido}).exec():countEntradas;
+				if(countEntradas>1)
+					return res.status(400).send("Ya existe el pedido:\n" + Pedido.Pedido+" ");
 				if(arrPO.find(obj=> (obj.pedido == Pedido.Pedido)))
 	    		{
 	    			//console.log("yes");
@@ -1832,7 +1836,7 @@ async function saveSalidaBabel(req, res) {
 			            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
 
 			            	partidaaux.CajasPedidas={cajas:cantidadPedida};//talves se cambie a info pedidos
-
+			            	partidaaux.refpedido=Pedido.pedido;
 			            	partidaaux.pedido=true;
 			            	partidaaux.save();
 			            	parRes.push(partidas[i]);
