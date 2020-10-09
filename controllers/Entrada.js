@@ -324,7 +324,7 @@ async function saveEntradaBabel(req, res) {
 	        let today=new Date(Date.now()-(5*3600000));
 	        let days=(producto.garantiaFrescura ? producto.garantiaFrescura : 85)-1;
 	        if(fechaCaducidadRes.getTime()<(today.getTime()+days*86400000)) 
-	        	return res.status(500).send("No cumple con la fecha: "+req.body.Pedido[i].Clave);
+	        	return res.status(500).send("No cumple con la fecha: "+req.body.Pedido[i].Clave); 
 	        //console.log(producto.clave);
 	        let indexFecha=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 			let fechaProducionplanta=Date.parse(req.body.Infoplanta[indexFecha+1].InfoPedido);

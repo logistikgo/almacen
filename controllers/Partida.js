@@ -1809,7 +1809,7 @@ async function reporteFEFOS(req, res)
                             //console.log(partidaT)
 
                             let elem=await Producto.findOne({ _id: partidaT.producto_id });
-                            let fechaFrescura = new Date(partidaT.fechaCaducidad.getTime()- (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+                            let fechaFrescura = new Date(partidaT.fechaCaducidad.getTime()- (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); 
                             
                             if(fechaFrescura > fechaInicio && partidaT.isEmpty == false && (partidaT.tipo=="NORMAL" || partidaT.tipo=="AGREGADA" || partidaT.tipo=="MODIFICADA") && partidaT.status=="ASIGNADA")
                                 inbyProd.push(data)
