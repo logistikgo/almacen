@@ -320,8 +320,11 @@ async function saveEntradaBabel(req, res) {
 			if(isNaN(fechaCaducidadRes))
 	        {
 	        	fechaCaducidadRes= fechaCaducidadTemp.length == 8 ? Date.parse(fechaCaducidadTemp.slice(0, 2)+"/"+fechaCaducidadTemp.slice(2, 4)+"/"+fechaCaducidadTemp.slice(4, 8)):Date.parse(fechaCaducidadTemp.slice(0, 2)+"/"+fechaCaducidadTemp.slice(3, 5)+"/"+fechaCaducidadTemp.slice(6, 10));
-	        
 	        }
+	        let today=new Date(Date.now()-(5*3600000));
+	        let days=(producto.garantiaFrescura ? producto.garantiaFrescura : 85)-1;
+	        if(fechaCaducidadRes.getTime()<(today.getTime()+days*86400000)) 
+	        	return res.status(500).send("No cumple con la fecha: "+req.body.Pedido[i].Clave);
 	        //console.log(producto.clave);
 	        let indexFecha=req.body.Infoplanta.findIndex((obj) => obj.InfoPedido.replace(/\s+/g, "") =="FECHA/DATE");
 			let fechaProducionplanta=Date.parse(req.body.Infoplanta[indexFecha+1].InfoPedido);
@@ -1407,11 +1410,11 @@ function getExcelCaducidades(req, res) {
            		indexbody++;
            	});
            	if(partidas.pedido == false){
-            	worksheet.cell(i, indexbody).number(partidas.pedido!=undefined ? partidas.pedido == false ? 0: partidas.CajasPedidas.cajas:0 );
+            	worksheet.cell(i, indexbody).number(partidas.pedido!=undefined ? partidas.pedido == false ? 0: parseInt(partidas.CajasPedidas.cajas):0 );
             }else
-            	worksheet.cell(i, indexbody).number(partidas.pedido!=undefined ? partidas.pedido == false ? 0: partidas.CajasPedidas.cajas:0 ).style(warningstyle);
+            	worksheet.cell(i, indexbody).number(partidas.pedido!=undefined ? partidas.pedido == false ? 0: parseInt(partidas.CajasPedidas.cajas):0 ).style(warningstyle);
             
-            worksheet.cell(i, indexbody+1).number(partidas.pedido!=undefined ? partidas.pedido == false ?  partidas.embalajesxSalir.cajas : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :0 );
+            worksheet.cell(i, indexbody+1).number(partidas.pedido!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :0 );
            	worksheet.cell(i, indexbody+2).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
            	worksheet.cell(i, indexbody+3).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
            	worksheet.cell(i, indexbody+4).string(fechacalculada2Dias);
