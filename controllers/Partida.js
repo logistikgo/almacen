@@ -1797,7 +1797,7 @@ async function reporteFEFOS(req, res)
         .then(async(entradas) => {
             await entradas.forEach (async entrada => {
                 var partida = entrada.partidas;
-                await partida.forEach(partidaT => {
+                await partida.forEach(async partidaT => {
                         //console.log(partidaT);
                         if(partidaT!= null){
                             const data={
@@ -1807,7 +1807,10 @@ async function reporteFEFOS(req, res)
                                 fechaCaducidad: partidaT.fechaCaducidad
                             };
                             //console.log(partidaT)
-                            let fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+
+                            let elem=await Producto.findOne({ _id: partidaT.producto_id });
+                            let fechaFrescura = new Date(partidaT.fechaCaducidad.getTime()- (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); 
+                            
                             if(fechaFrescura > fechaInicio && partidaT.isEmpty == false && (partidaT.tipo=="NORMAL" || partidaT.tipo=="AGREGADA" || partidaT.tipo=="MODIFICADA") && partidaT.status=="ASIGNADA")
                                 inbyProd.push(data)
                         }
