@@ -1671,7 +1671,7 @@ async function saveSalidaBabel(req, res) {
 				let countEntradas=await Entrada.find({"po":Pedido.Pedido}).exec();
 		        countEntradas= countEntradas.length<1 ? await Entrada.find({"referencia":Pedido.Pedido}).exec():countEntradas;
 				if(countEntradas>1)
-					return res.status(500).send("Ya existe el pedido:\n" + Pedido.Pedido+" ");
+					return res.status(400).send("Ya existe el pedido:\n" + Pedido.Pedido+" ");
 				if(arrPO.find(obj=> (obj.pedido == Pedido.Pedido)))
 	    		{
 	    			//console.log("yes");
