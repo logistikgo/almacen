@@ -1649,6 +1649,7 @@ async function importsalidas(req, res) {
 
 }
 
+
 async function saveSalidaBabel(req, res) {
 	console.log("----------------------------------------------------------------------start------------------------------------------------------")
 	var mongoose = require('mongoose');
@@ -1672,19 +1673,21 @@ async function saveSalidaBabel(req, res) {
 				var producto=await Producto.findOne({ 'clave':Pedido.Clave }).exec();
 				if(producto==undefined)
 					return res.status(400).send("no existe item: "+Pedido.Clave);
-				
-				//console.log(Pedido.Clave);
-				let countEntradas=await Entrada.find({"po":Pedido.Pedido}).exec();
-		        countEntradas= countEntradas.length<1 ? await Entrada.find({"referencia":Pedido.Pedido}).exec():countEntradas;
-				if(countEntradas>1)
-					return res.status(400).send("Ya existe el pedido:\n" + Pedido.Pedido+" ");
-				if(arrPO.find(obj=> (obj.pedido == Pedido.Pedido)))
+
+				let countEntradas=await Salida.find({"po":req.body.Pedido[1].Pedido}).exec();
+				console.log("total: "+countEntradas.length)
+		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido}).exec():countEntradas;
+				if(countEntradas>0){
+					console.log("Ya existe el pedido "+ req.body.Pedido[1].Pedido)
+					return res.status(400).send("Ya existe el pedido:\n" + req.body.Pedido[1].Pedido+" ");
+				}
+				if(arrPO.find(obj=> (obj.pedido == req.body.Pedido[1].Pedido)))
 	    		{
 	    			//console.log("yes");
 	    			let index=arrPO.findIndex(obj=> (obj.pedido == req.body.Pedido[1].Pedido));
 	    			const data={
 	    				Clave:Pedido.Clave,
-	    				Cantidad: Pedido.Cantidad,
+	    				Cantidad: parseInt(Pedido.Cantidad.toString()),
 	    				equivalencia: Pedido.equivalencia
 	    			};
 	    			arrPO[index].arrPartidas.push(data)
@@ -1693,7 +1696,7 @@ async function saveSalidaBabel(req, res) {
 		        {
 		        	const data={
 	    				Clave:Pedido.Clave,
-	    				Cantidad: Pedido.Cantidad,
+	    				Cantidad: parseInt(Pedido.Cantidad.toString()),
 	    				equivalencia: Pedido.equivalencia
 	    			};
 		        	const PO={
@@ -1746,10 +1749,12 @@ async function saveSalidaBabel(req, res) {
 				{
 					console.log("-------------asdasd-------------")
 					//console.log(cantidadneeded);
-					
+					console.log("cantidadneeded "+cantidadneeded);
 		            let cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
 		            cantidadneeded-=equivalencia;
+
 		            console.log("buscar: "+cantidadPedida)
+		            console.log("beforeleft: "+cantidadneeded);
 		            let embalajesEntrada={cajas:cantidadPedida};
 		            let partidas=await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesxSalir':embalajesEntrada,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
 					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
@@ -1762,17 +1767,19 @@ async function saveSalidaBabel(req, res) {
 			            //console.log(par)
 			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida )
 			            {
-			            	
-			            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
 
-			            	partidaaux.CajasPedidas={cajas:cantidadPedida};//talves se cambie a info pedidos
-			            	partidaaux.refpedido=Pedido.pedido;
-			            	partidaaux.pedido=true;
-			            	partidaaux.save();
-			            	parRes.push(partidas[i]);
-			            	//console.log(partidaaux);
-			            	console.log("--------------");
-			            	count++;
+			            	if(partidaaux.pedido==false)
+			            	{
+				            	partidaaux.CajasPedidas={cajas:cantidadPedida};//talves se cambie a info pedidos
+
+				            	partidaaux.pedido=true;
+				            	partidaaux.refpedido=req.body.Pedido[1].Pedido;
+				            	await partidaaux.save();
+				            	parRes.push(partidas[i]);
+				            	//console.log(partidaaux);
+				            	console.log("--------------");
+				            	count++;
+				            }
 			            }
 			        }
 				}
@@ -1805,9 +1812,11 @@ async function saveSalidaBabel(req, res) {
 					nSalida.item = refitem;
 					nSalida.tipo = "FORSHIPPING";//NORMAL
 //console.log(nSalida);
+console.log("******************************************--------------------**********************")
 					nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
-
-					nSalida.save();
+					console.log("******************************************--------------------**********************")
+					console.log(nSalida);
+					//nSalida.save();
 
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
@@ -1824,8 +1833,11 @@ async function saveSalidaBabel(req, res) {
 			res.status(500).send(error);
 			console.log(error);
 	};
+
 	return res.status(200).send("MAYBEOK");
 }
+
+
 
 function updateStatusSalidas(req, res) {
 	let _id = req.body.salida_id;
