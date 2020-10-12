@@ -1195,8 +1195,8 @@ function getExcelCaducidades(req, res) {
 		worksheet.cell(2, indexheaders+13).string('Dias Traslado Real').style(headersStyle);
 		worksheet.cell(2, indexheaders+14).string('Fecha de Recibo Cedis').style(headersStyle);
 		worksheet.cell(2, indexheaders+15).string('Fecha de Alta LKGO').style(headersStyle);
-		worksheet.cell(2, indexheaders+16).string('Fecha Garantia Frescura').style(headersStyle);
-		worksheet.cell(2, indexheaders+17).string('Aging Report').style(headersStyle);
+		worksheet.cell(2, indexheaders+16).string('Aging Report').style(headersStyle);
+		worksheet.cell(2, indexheaders+17).string('Fecha Garantia Frescura').style(headersStyle);
 		worksheet.cell(2, indexheaders+18).string('Dias Alerta 1').style(headersStyle);
 		worksheet.cell(2, indexheaders+19).string('Alerta 1').style(headersStyle);
 		worksheet.cell(2, indexheaders+20).string('Fecha Alerta 1').style(headersStyle);
