@@ -1767,7 +1767,9 @@ async function saveSalidaBabel(req, res) {
 			            //console.log(par)
 			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida )
 			            {
-
+			            	
+			            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
+			            	
 			            	if(partidaaux.pedido==false)
 			            	{
 				            	partidaaux.CajasPedidas={cajas:cantidadPedida};//talves se cambie a info pedidos
