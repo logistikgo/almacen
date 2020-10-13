@@ -385,7 +385,7 @@ async function saveEntradaBabel(req, res) {
     	}
     	else
     	{
-    		if(req.body.Pedido[i].Clave == undefined)
+    		if(req.body.Pedido[i].Clave == undefined arrPartidas.length==0)
     			return res.status(500).send("clave no existe\n" + resORDENES+" ");
     	}
 	}
