@@ -67,6 +67,7 @@ const Salida = Schema(
 		idSucursal: Number,
 		idSucursal: Number,
 		//CAMPOS AUXILIARES
+		statusPedido:{type:String, default: "SIN_ASIGNAR"},
 		//partidas : {}
 	},
 	{

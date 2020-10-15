@@ -59,13 +59,19 @@ function getPosiciones(req, res) {
 				for (let pos of pasillo.posiciones) {
 					let posicion = pos.posicion_id;
 					for (let nivel of posicion.niveles) {
+						let namenivel=nivel.nombre;
+						//console.log(almacen_id);
+						if(almacen_id=='5e33437422b5651aecafea70'){
+							namenivel=namenivel.charCodeAt(0) - 64
+							//console.log(namenivel);
+						}
 						let posicionNomenclatura = {
-							nombre: pasillo.nombre + nivel.nombre + posicion.nombre,
+							nombre: pasillo.nombre.replace(/\./g, '')+"-" + posicion.nombre+"-" +namenivel,
 							pasillo_id: posicion.pasillo_id._id,
 							posicion_id: posicion._id,
 							nivel: nivel.nombre
 						};
-
+						if(almacen_id!='5e33437422b5651aecafea70' || (pasillo.familia == "CADUCADO" || pasillo.familia == "frios" ) )
 						posiciones.push(posicionNomenclatura);
 					}
 				}
