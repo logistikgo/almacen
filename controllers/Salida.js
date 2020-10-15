@@ -1765,7 +1765,7 @@ async function saveSalidaBabel(req, res) {
 						//console.log(i);
 						let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 			            //console.log(par)
-			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida )
+			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaFrescura.getTime()>hoy.getTime())
 			            {
 			            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
 			            	if(partidaaux.pedido==false)
@@ -1774,6 +1774,7 @@ async function saveSalidaBabel(req, res) {
 
 				            	partidaaux.pedido=true;
 				            	partidaaux.refpedido=req.body.Pedido[1].Pedido;
+				            	partidaaux.statusPedido="COMPLETO";
 				            	await partidaaux.save();
 				            	parRes.push(partidas[i]);
 				            	//console.log(partidaaux);
@@ -1786,7 +1787,7 @@ async function saveSalidaBabel(req, res) {
 			});
 			console.log("********************"+totalpartidas+"=="+parRes.length+"********************");
 			
-			if (parRes && parRes.length > 0 && parRes.length==totalpartidas ) {
+			if (parRes && parRes.length > 0  ) {
 				//console.log(parRes);
 				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
 				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
@@ -1811,13 +1812,24 @@ async function saveSalidaBabel(req, res) {
 					nSalida.referencia = refitem;
 					nSalida.item = refitem;
 					nSalida.tipo = "FORSHIPPING";//NORMAL
-//console.log(nSalida);
-console.log("******************************************--------------------**********************")
+					//console.log(nSalida);
+					nSalida.statusPedido="COMPLETO";
 					nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
 					console.log("******************************************--------------------**********************")
 					console.log(nSalida);
-					//nSalida.save();
+					console.log("******************************************--------------------**********************")
+					
+					if( parRes.length!=totalpartidas){
+						await Helper.asyncForEach(parRes,async function (par) {
+							partidaaux.statusPedido="INCOMPLETO";
+							var partidaaux=await PartidaModel.findOne({_id:par._id}).exec();
+			            	nSalida.statusPedido="INCOMPLETO";
+			            	await partidaaux.save();
+						})
+					}
+					//saveSalida
 
+					//nSalida.save();
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
