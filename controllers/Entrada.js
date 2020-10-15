@@ -1996,7 +1996,7 @@ async function saveEntradaEDI(req, res) {
 			var arrPartidas_id = [];
 			var partidas = [];
 			//console.log(Entradas)
-			let countEntradas=await Entrada.find({"ordenCompra":Entradas.Entrada.ordenCompra}).exec();
+			let countEntradas=await Entrada.find({"ordenCompra":Entradas.Entrada.ordenCompra,"item":Entrada.item}).exec();
 			//console.log(countEntradas.length);
 			if(countEntradas.length <1)
 			{
