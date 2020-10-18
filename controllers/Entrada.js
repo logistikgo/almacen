@@ -308,8 +308,9 @@ async function saveEntradaBabel(req, res) {
 	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
 	try{
-	for (var i=4; i<34 ; i++) {
-		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined)
+	for (var i=0; i<req.body.Pedido.length ; i++) {
+		console.log(req.body.Pedido[i]);
+		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined && req.body.Pedido[i].NO !== undefined)
 		{
 			console.log("test");
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
@@ -387,7 +388,7 @@ async function saveEntradaBabel(req, res) {
     	}
     	else
     	{
-    		if(req.body.Pedido[i].Clave == undefined && arrPO.length<1)
+    		if(resORDENES =="" && req.body.Pedido[i].Clave == undefined && arrPO.length<1 && i>6)
     			return res.status(500).send("clave no existe\n" + resORDENES+" ");
     	}
 	}
