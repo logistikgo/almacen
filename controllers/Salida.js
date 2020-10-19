@@ -1653,7 +1653,7 @@ async function importsalidas(req, res) {
 async function saveSalidaBabel(req, res) {
 	console.log("----------------------------------------------------------------------start------------------------------------------------------")
 	var mongoose = require('mongoose');
-	
+	var respuestacomplete="";
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
 	var IdAlmacen= req.body.IdAlmacen;
@@ -1735,9 +1735,10 @@ async function saveSalidaBabel(req, res) {
 				let equivalencia =producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia;
 				
 				let needed=Math.round(par.Cantidad/equivalencia);
+				console.log("test: "+needed);
 				totalpartidas+=needed;
 
-				//console.log(needed);
+				
 				
 				//console.log(".0.0.0.0.0.0.0.0.");
 				
@@ -1746,7 +1747,7 @@ async function saveSalidaBabel(req, res) {
 				let cantidadneeded=par.Cantidad;
 				while(cantidadneeded>0)
 				{
-					console.log("-------------asdasd-------------")
+					console.log("-------------asdasd-------------"+"clave: "+producto.clave+"equivalencia: "+equivalencia)
 					//console.log(cantidadneeded);
 					console.log("cantidadneeded "+cantidadneeded);
 		            let cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
@@ -1820,9 +1821,11 @@ async function saveSalidaBabel(req, res) {
 					
 					if( parRes.length!=totalpartidas){
 						await Helper.asyncForEach(parRes,async function (par) {
-							partidaaux.statusPedido="INCOMPLETO";
+
+							nSalida.statusPedido="INCOMPLETO";
 							var partidaaux=await PartidaModel.findOne({_id:par._id}).exec();
 			            	nSalida.statusPedido="INCOMPLETO";
+			            	respuestacomplete="INCOMPLETO";
 			            	await partidaaux.save();
 						})
 					}
@@ -1845,7 +1848,7 @@ async function saveSalidaBabel(req, res) {
 			console.log(error);
 	};
 
-	return res.status(200).send("MAYBEOK");
+	return res.status(200).send("MAYBEOK"+respuestacomplete);
 }
 
 

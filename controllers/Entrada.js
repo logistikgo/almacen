@@ -1563,7 +1563,14 @@ function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+23).string(fechaAlerta2);
            	let res="";
            	if(partidas.posiciones.length === 1) 
-            	res = partidas.posiciones[0].pasillo + partidas.posiciones[0].nivel + partidas.posiciones[0].posicion;
+           	{
+           		let namenivel=partidas.posiciones[0].nivel;
+           		if(req.query.clienteFiscal_id=='5e33420d22b5651aecafe934'){
+					namenivel=namenivel.charCodeAt(0) - 64;
+					//console.log(namenivel);
+				}
+            	res = partidas.posiciones[0].pasillo  + partidas.posiciones[0].posicion+ namenivel;
+           	}
            	worksheet.cell(i, indexbody+24).string(res);
             i++;
         });
