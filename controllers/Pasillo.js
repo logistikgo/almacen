@@ -3,6 +3,7 @@
 const Pasillo = require('../models/Pasillo');
 const Posicion = require('../controllers/Posicion');
 const PosicionModel = require('../models/Posicion');
+const Producto = require('../models/Producto');
 const Helper = require('../helpers');
 var ObjectId = (require('mongoose').Types.ObjectId);
 
@@ -63,6 +64,8 @@ function getPosiciones(req, res) {
 						//console.log(almacen_id);
 						if(almacen_id=='5e33437422b5651aecafea70'){
 							namenivel=namenivel.charCodeAt(0) - 64
+							if (namenivel.toString().length < 2)
+                        		namenivel = "0" + namenivel.toString()
 							//console.log(namenivel);
 						}
 						let posicionNomenclatura = {
@@ -86,13 +89,27 @@ function getPosiciones(req, res) {
 		})
 }
 
-function getDisponibles(req, res) {
+async function getDisponibles(req, res) {
 	let almacen_id = req.query.almacen_id;
-
-	Pasillo.find({
+	let producto_id = req.query.prod_id;
+	let query = {
 		almacen_id: new ObjectId(almacen_id),
 		statusReg: "ACTIVO"
-	})
+	}
+	//console.log(producto_id)
+	if(producto_id)
+	{
+		let producto =await Producto.findOne({'_id': producto_id }).exec();
+		//console.log(producto)
+		if(producto.subclasificacion == "Confiteria" ){
+			query.familia={$in:["frios"]};
+		}
+		if(producto.subclasificacion == "Botana" ){
+			query.familia={$in:["secos"]};
+		}
+	}
+	//console.log(query);
+	Pasillo.find(query)
 		.populate({
 			path: 'posiciones.posicion_id'
 		})
@@ -102,7 +119,7 @@ function getDisponibles(req, res) {
 			for (let pasillo of data) {
 				for (let pos of pasillo.posiciones) {
 					let posicion = pos.posicion_id;
-					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false || x.productos.length == 0) != undefined) {
+					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0) != undefined) {
 						if (disponibles.find(x => x == pasillo) == undefined)
 							disponibles.push(pasillo);
 						else
@@ -118,8 +135,9 @@ function getDisponibles(req, res) {
 					// }
 				}
 			}
-
+//console.log(disponibles)
 			res.status(200).send(disponibles);
+
 		})
 		.catch((error) => {
 			res.status(500).send(error);
