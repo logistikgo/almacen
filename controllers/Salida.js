@@ -95,7 +95,7 @@ async function save(req, res) {
 	nSalida.folio = await getNextID();
 	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
 	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
-
+	let refpedido=nSalida.item;
 	nSalida.save()
 		.then(async (salida) => {
 			//si es pedido, no hace afectacion de existencias
@@ -110,7 +110,21 @@ async function save(req, res) {
 			// console.log(partidas);
 
 			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
-			await Salida.updateOne({ _id: salida._id }, { $set: { partidas: partidas } }).then((updated) => {
+			await Salida.updateOne({ _id: salida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
+				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'refpedido':refpedido}).exec(); 
+				await Helper.asyncForEach(parRes,async function (par) {
+
+					//nSalida.statusPedido="INCOMPLETO";
+					var partidaaux=await PartidaModel.findOne({_id:par._id}).exec();
+					partidaaux.CajasPedidas={cajas:0};//talves se cambie a info pedidos
+
+	            	partidaaux.pedido=false;
+	            	partidaaux.refpedido="SIN_ASIGNAR";
+	            	partidaaux.statusPedido="SIN_ASIGNAR";
+	            	//nSalida.statusPedido="INCOMPLETO";
+	            	//respuestacomplete="INCOMPLETO";
+	            	await partidaaux.save();
+				})
 				res.status(200).send(salida);
 			});
 		})

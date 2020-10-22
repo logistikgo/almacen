@@ -55,7 +55,7 @@ function getxPasilloDisponibles(req, res) {
 			let disponibles = [];
 
 			for (let pos of posiciones) {
-				if (pos.niveles.find(x => x.isCandadoDisponibilidad == false || x.productos.length == 0) != undefined) {
+				if (pos.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0) != undefined) {
 					if (disponibles.find(x => x == pos) == undefined)
 						disponibles.push(pos);
 					else

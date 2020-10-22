@@ -1413,7 +1413,7 @@ function getExcelCaducidades(req, res) {
 	                worksheet.cell(i, indexbody).number(parseInt(tarimas));
 	            }
 	            else {
-	            	console.log(partidas)
+	            	//console.log(partidas)
 	                worksheet.cell(i, indexbody).number(partidas.embalajesxSalir[emb] ? parseInt(partidas.embalajesxSalir[emb]):0);
 	            }
            		indexbody++;
@@ -1921,6 +1921,103 @@ async function posicionarPrioridades(req, res) {
 			else
 				 res.status(500).send("not");
 		}
+	}catch (error) {
+		console.log(error);
+        return res.status(500).send(error);
+        
+    }
+    console.log("END_________________________________")
+}
+
+async function posicionarManual(req, res) {
+	console.log("posicionar________________________________________");
+	let _id = req.body.id;
+	console.log(req.url);
+	let entrada = await Entrada.findOne({ _id: _id });
+	//console.log(entrada);
+	//console.log(req.body);
+	let arrayFamilias=[];
+	var reOrderPartidas=[];
+	/*when to order by date???*/
+	let array=req.body.nPartidas;
+	let resultpartidas=[];
+	try 
+	{
+		
+		await Helper.asyncForEach(entrada.partidas, async function (id_partidas) {
+			//console.log(id_partidas in array.find(element => element =id_partidas))
+			
+		    	let partida = await PartidaModel.findOne({ _id: id_partidas });
+		    	//console.log("-------------------------------");
+		    	//console.log(partida.descripcion);
+		    	//console.log(dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"));
+		    if(array.find(element => element == id_partidas)){	
+		    	let producto = await Producto.findOne({ _id: partida.producto_id });
+		    	//console.log("-------------------------------");
+		 		//console.log(producto.prioridad)
+		    	partida.status="ASIGNADA";
+				partida.save();
+		    	if(producto.familia)
+		    	{
+		    		if(arrayFamilias.find(obj=> (obj.nombre == producto.familia  && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"))))
+		    		{
+		    			//console.log("yes");
+		    			let index=arrayFamilias.findIndex(obj=> (obj.nombre == producto.familia && obj.prioridad == producto.prioridad && obj.fechaCaducidad == dateFormat(partida.fechaCaducidad, "dd/mm/yyyy")));
+		    			arrayFamilias[index].needed=1+arrayFamilias[index].needed;
+			    	}
+			        else{
+			        	//console.log("NO");
+			        	const data={
+						nombre:producto.familia,
+						prioridad: producto.prioridad,
+						descripcion:producto.descripcion,
+			        	needed:1,
+			        	fechaCaducidad:dateFormat(partida.fechaCaducidad, "dd/mm/yyyy"),
+			        	arrayPosiciones:[]
+			        	}
+		    			arrayFamilias.push(data)  
+			        
+		    		}  	
+		    	}
+		    	reOrderPartidas.push(partida)
+		    	resultpartidas.push(partida._id)
+		    }
+		    else
+		    {
+		    	partida.status="REMOVED";
+		    	partida.entrada_id=undefined;
+				partida.save();
+		    }
+	    });
+	    
+	    arrayFamilias=arrayFamilias.sort(function(a, b) {
+	    	return b.prioridad - a.prioridad;
+		});
+	    arrayFamilias=arrayFamilias.sort(function(a, b) {
+		    a = a.fechaCaducidad;
+		    b = b.fechaCaducidad;
+		    return a<b ? -1 : a>b ? 1 : 0;
+		});
+	    
+	    entrada.usuarioAlta_id= req.body.usuarioAlta_id;
+        entrada.nombreUsuario= req.body.nombreUsuario;
+        entrada.recibio= req.body.recibio;
+	    entrada.status="APLICADA";
+	    entrada.partidas=resultpartidas; 
+	    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
+		await entrada.save().then(async (entrada) => {
+				console.log("testpartidas");
+				console.log(resultpartidas);
+				console.log("/------------------/");
+				for (let itemPartida of reOrderPartidas) {
+					//console.log("testMovimientos");
+					let partidait = await PartidaModel.findOne({ _id: itemPartida._id });
+					//console.log(partidait.posiciones);
+					await MovimientoInventario.saveEntrada(	partidait, entrada.id);
+				}
+		});
+		res.status(200).send(entrada);
+		
 	}catch (error) {
 		console.log(error);
         return res.status(500).send(error);
@@ -2568,6 +2665,7 @@ module.exports = {
 	updateEntradasBabel,
 	updateById,
 	posicionarPrioridades,
+	posicionarManual,
 	updateRemision,
 	updateStatus,
 	updateFecha,

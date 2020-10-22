@@ -15,6 +15,7 @@ const BreakException = { info: "Break" };
 const dateFormat = require('dateformat');
 const EmbalajesController = require('../controllers/Embalaje');
 const ClienteFiscal = require('../models/ClienteFiscal');
+var ObjectId = (require('mongoose').Types.ObjectId);
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
@@ -1402,6 +1403,72 @@ async function posicionarAuto(id_pocision,id_partidas,nivelIndex)
         //console.log(partida);
     
 }
+
+async function posicionarPartidas(req, res)
+{
+    try {
+        console.log(req.body);
+        let id_partidas=req.body.partida_id;
+        let id_pasillo=req.body.ubicacion.pasillo_id;
+        let id_pocision=req.body.ubicacion.posicion_id;
+        let nivel=req.body.ubicacion.nivel;
+        let nivelIndex=parseInt(nivel)-1;
+        let partida = await Partida.findOne({ _id: id_partidas });
+        let posicion = await PosicionModelo.findOne({ _id: id_pocision});
+        let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
+        /*console.log("Posicion---------------");
+        console.log(posicion);
+        console.log("Pasillo---------------");
+        console.log(pasillo);
+        console.log("---------------");
+        console.log("nivel"+nivelIndex);*/
+        posicion.niveles[nivelIndex].isCandadoDisponibilidad = true; 
+        posicion.niveles[nivelIndex].apartado = true;
+        //console.log(posicion);
+        await posicion.save();
+        partida.posiciones=[];
+        let jPosicionBahia = {
+            embalajesEntrada: partida.embalajesEntrada,
+            embalajesxSalir: partida.embalajesxSalir,
+            pasillo: pasillo.nombre,
+            pasillo_id: pasillo._id,
+            posicion: posicion.nombre,
+            posicion_id: posicion._id,
+            nivel_id: posicion.niveles[nivelIndex]._id,
+            nivel: posicion.niveles[nivelIndex].nombre,
+            ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
+        };
+        partida.posiciones.push(jPosicionBahia);
+
+        await partida.save();
+        console.log(partida);
+        res.status(200).send("ok");
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send(e);
+    }
+    /*
+    
+    let posicion = await PosicionModelo.findOne({ _id: id_pocision});
+    let pasillo = await Pasillo.findOne({ _id: posicion.pasillo_id});
+    partida.posiciones=[];
+        let jPosicionBahia = {
+            embalajesEntrada: partida.embalajesEntrada,
+            embalajesxSalir: partida.embalajesxSalir,
+            pasillo: pasillo.nombre,
+            pasillo_id: pasillo._id,
+            posicion: posicion.nombre,
+            posicion_id: posicion._id,
+            nivel_id: posicion.niveles[nivelIndex]._id,
+            nivel: posicion.niveles[nivelIndex].nombre,
+            ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
+        };
+        partida.posiciones.push(jPosicionBahia);
+        await partida.save();
+        //console.log(partida);*/
+    
+}
 //Reporte en base a items para la conciliacion diaria
 async function reporteDia(req, res)
 {   
@@ -1956,8 +2023,63 @@ async function reporteFEFOS(req, res)
         return res.status(500).send(error);
     }
 }
+async function ModificaPartidas(req, res)
+{
+    console.log(req.body);
+    let partida = await Partida.findOne({ _id: req.body.partida_id });
+    if(partida.lote!=req.body.lote)
+        partida.lote=req.body.lote;
+    if(partida.fechaProduccion!=req.body.fechaProduccion)
+        partida.fechaProduccion=new Date(req.body.fechaProduccion);
+    if(partida.fechaCaducidad!=req.body.fechaCaducidad)
+        partida.fechaCaducidad=new Date(req.body.fechaCaducidad);
+    if(req.body.ubicacion)
+    {
+        let id_pasillo=req.body.ubicacion.pasillo_id;
+        let id_pocision=req.body.ubicacion.posicion_id;
+        let nivel=req.body.ubicacion.nivel;
+        let nivelIndex=parseInt(nivel)-1;
+        let posicion = await PosicionModelo.findOne({ _id: id_pocision});
+        let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
+        /*console.log("Posicion---------------");
+        console.log(posicion);
+        console.log("Pasillo---------------");
+        console.log(pasillo);
+        console.log("---------------");
+        console.log("nivel"+nivelIndex);*/
+        posicion.niveles[nivelIndex].isCandadoDisponibilidad = true; 
+        posicion.niveles[nivelIndex].apartado = true;
+        //console.log(posicion);
+        await posicion.save();
+        partida.posiciones=[];
+        let jPosicionBahia = {
+            embalajesEntrada: partida.embalajesEntrada,
+            embalajesxSalir: partida.embalajesxSalir,
+            pasillo: pasillo.nombre,
+            pasillo_id: pasillo._id,
+            posicion: posicion.nombre,
+            posicion_id: posicion._id,
+            nivel_id: posicion.niveles[nivelIndex]._id,
+            nivel: posicion.niveles[nivelIndex].nombre,
+            ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
+        };
+        partida.posiciones.push(jPosicionBahia);
 
+        
+    }
+    else
+    {
 
+            if(partida.producto_id != req.body.producto_id)
+                partida.producto_id = req.body.producto_id;
+            if(partida.embalajesEntrada != req.body.embalajesEntrada)
+                partida.embalajesEntrada = req.body.embalajesEntrada;
+
+    }
+
+    await partida.save();
+
+}
 module.exports = {
     get,
     post,
@@ -1983,5 +2105,7 @@ module.exports = {
     getExcelByIDs,
     reporteDia,
     getExcelreporteDia,
-    reporteFEFOS
+    reporteFEFOS,
+    posicionarPartidas,
+    ModificaPartidas
 }
