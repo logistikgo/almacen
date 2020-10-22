@@ -2025,7 +2025,13 @@ async function reporteFEFOS(req, res)
 async function ModificaPartidas(req, res)
 {
     console.log(req.body);
-    let partida = await Partida.findOne({ _id: partida_id });
+    let partida = await Partida.findOne({ _id: req.body.partida_id });
+    if(partida.lote!=req.body.lote)
+        partida.lote=req.body.lote;
+    if(partida.fechaProduccion!=req.body.fechaProduccion)
+        partida.fechaProduccion=new Date(req.body.fechaProduccion);
+    if(partida.fechaCaducidad!=req.body.fechaCaducidad)
+        partida.fechaCaducidad=new Date(req.body.fechaCaducidad);
     if(req.body.ubicacion)
     {
         let id_pasillo=req.body.ubicacion.pasillo_id;
@@ -2060,20 +2066,16 @@ async function ModificaPartidas(req, res)
 
         
     }
-    if(partida.lote!=req.body.lote)
-        partida.lote=req.body.lote;
-    if(partida.fechaProduccion!=req.body.fechaProduccion)
-        partida.fechaProduccion=new Date(req.body.fechaProduccion);
-    if(partida.fechaCaducidad!=req.body.fechaCaducidad)
-        partida.fechaCaducidad=new Date(req.body.fechaCaducidad);
-    if(partida.embalajesEntrada != req.body.embalajesEntrada)
-        partida.embalajesEntrada = req.body.embalajesEntrada;
-    if(partida.producto_id != req.body.producto_id)
+    else
     {
-        partida.producto_id = req.body.producto_id;
-        produ=await Producto.find({_id: req.body.producto_id, statusReg: "ACTIVO"})
-        partida.descripcion = produ.descripcion;
+
+            if(partida.producto_id != req.body.producto_id)
+                partida.producto_id = req.body.producto_id;
+            if(partida.embalajesEntrada != req.body.embalajesEntrada)
+                partida.embalajesEntrada = req.body.embalajesEntrada;
+
     }
+
     await partida.save();
 
 }
