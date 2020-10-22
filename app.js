@@ -177,9 +177,9 @@ app.get('/api/partidas', Partida.getByProductoEmbalaje);
 app.post('/api/partida', Partida.save);
 app.get('/api/partida/pedido/get', Partida.getByPedido);
 app.put('/api/partida/pedido/update', Partida._update);
-app.put('/api/posicionPartida', Partida.updatePosicionPartida)
+app.put('/api/posicionPartida', Partida.updatePosicionPartida);
 app.put('/api/partida/updateCajasPedidas', Partida.updateCajasPedidas);
-
+app.post('/api/posicionarPartidas', Partida.posicionarPartidas);
 //app.get('/api/partida', Entrada.getPartidaById);
 //app.put('/api/partida', Entrada.updatePartida);
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
@@ -279,11 +279,13 @@ app.post('/api/updateById', Entrada.updateById);
 app.post('/api/saveSalidaBabel',Salida.saveSalidaBabel);
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
+app.post('/api/posicionarManual', Entrada.posicionarManual);
 //gettotalcajas
 app.get('/api/getTarimasAndCajas/:_id', Entrada.getTarimasAndCajas);
 
 //Tickets
 app.post('/api/saveTicket', Ticket.post);
+app.post('/api/ModificaPartidas', Partida.ModificaPartidas);
 app.post('/api/getTickets', Ticket.get);
 app.get('/api/getTicketByID', Ticket.getByID);
 app.post('/api/aprobarTicket', Ticket.liberarTicket);
