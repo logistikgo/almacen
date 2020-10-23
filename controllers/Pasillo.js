@@ -112,7 +112,7 @@ async function getDisponibles(req, res) {
 	Pasillo.find(query)
 		.populate({
 			path: 'posiciones.posicion_id'
-		})
+		}).sort({nombre:1})
 		.then((data) => {
 			let disponibles = [];
 

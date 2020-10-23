@@ -25,8 +25,8 @@ async function post(req, res) {
     nTicket.nombreUsuarioAprueba = null;
     nTicket.usuarioAprueba_id = null;
     nTicket.fechaLiberacion = null;
-    console.log("afterid");
-    console.log(nTicket);
+    //console.log("afterid");
+    //console.log(nTicket);
     switch(command) {
         case 'MODIFICAR':
             Partida.updateOne({_id: nTicket.partida_id}, { $set: { "isExtraordinaria": true, tipo: "MODIFICADA"} }).exec();
