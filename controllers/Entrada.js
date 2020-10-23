@@ -1,5 +1,5 @@
 'use strict'
-
+const mongoose = require('mongoose');
 const Entrada = require('../models/Entrada');
 const Producto = require('../models/Producto');
 const Salida = require('../models/Salida');
@@ -25,7 +25,13 @@ function getNextIDTicket() {
 }
 
 async function get(req, res) {
-	
+
+	let pagination = {
+		page: parseInt(req.query.page),
+		limit: parseInt(req.query.limit)
+	}
+	console.log(pagination)
+
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
@@ -140,21 +146,126 @@ async function get(req, res) {
 	{
 		filter.stringFolio=folio;
 	}
-	Entrada.find(filter).sort({ fechaEntrada: -1 })
+
+
+	if(isReporte === "true"){
+		let entradaAggregate = Entrada.aggregate([
+
+			{
+				$lookup: {
+					from: "Partidas",
+					localField: "partidas",    // field in the orders collection
+					foreignField: "_id",  // field in the items collection
+					as: "fromPartidas"
+				}
+			},
+			{
+				$lookup: {
+					from: "Productos",
+					localField: "fromPartidas.producto_id",
+					foreignField: "_id",
+					as: "fromProductos"
+				}
+			},
+			{
+				$match: {
+					clienteFiscal_id: mongoose.Types.ObjectId(filter.clienteFiscal_id),
+					sucursal_id: mongoose.Types.ObjectId(filter.sucursal_id),
+					almacen_id: mongoose.Types.ObjectId(filter.almacen_id),
+					tipo: filter.tipo,
+					status: filter.status
+				}
+			},
+			{
+				$project: {
+					_id: 1,
+					isEmpty: 1,
+					item: 1,
+					tipo: 1,
+					embarque: 1,
+					referencia: 1,
+					acuse: 1,
+					proveedor: 1,
+					ordenCompra: 1,
+					factura: 1,
+					transportista: 1,
+					operador: 1,
+					unidad: 1,
+					remolque: 1,
+					sello: 1,
+					plantaOrigen: 1,
+					fechaEntrada: 1,
+					fechaReciboRemision: 1,
+					fechaSalidaPlanta: 1,
+					observaciones: 1,
+					usuarioAlta_id: 1,
+					nombreUsuario: 1,
+					recibio: 1,
+					clienteFiscal_id: 1,
+					idClienteFiscal: 1,
+					idSucursal: 1,
+					sucursal_id: 1,
+					almacen_id: 1,
+					DiasTraslado: 1,
+					status: 1,
+					fechaAlta: 1,
+					idEntrada: 1,
+					folio: 1,
+					stringFolio: 1,
+					posiciones: "$fromPartidas.posiciones",
+					__v: 1,
+					cajasTotales: { $sum: "$fromPartidas.embalajesxSalir.cajas" },
+					
+				}
+			},
+			{ $sort: { fechaEntrada: -1 } }
+		])
+
+		Entrada.aggregatePaginate(entradaAggregate, pagination).
+	
+		then(entradas =>{
+		
+			entradas.docs.forEach(entrada => {
+	
+				let posiciones = entrada.posiciones;
+				let cantidadTarimas = 0;
+				posiciones.forEach(posicion => {
+					//print(posicion.length)
+					posicion = posicion.filter(pos => pos.isEmpty === false);
+		
+					cantidadTarimas = cantidadTarimas + posicion.length;
+					})
+		
+				entrada.tarimasTotales = cantidadTarimas;
+		
+			})
+	
+				
+					res.status(200).send(entradas);
+				
+	
+		}).catch(error => res.status(500).send(error))
+	
+	}else{
+		console.log("No es reporte");
+		Entrada.find(filter).sort({ fechaEntrada: -1 })
 		.populate({
 			path: 'partidas.producto_id',
 			model: 'Producto'
-		}).then((entradas) => {
+		}).then(entradas =>{
 
-			res.status(200).send(_status == null ? json : entradas);
-		}).catch((error) => {
-			res.status(500).send(error);
-		});
+			res.status(200).send(entradas);
+				
+
+		}).catch(error => res.status(500).send(error))
+	}
+
 }
 
 function getById(req, res) {
+
 	let _id = req.query.id;
-	//console.log(_id)
+	console.log(req.query);
 	Entrada.findOne({ _id: _id })
 		.populate({
 			path: 'partidas.producto_id',
@@ -179,6 +290,7 @@ function getById(req, res) {
 		.catch((error) => {
 			res.status(500).send(error);
 		});
+	
 }
 
 function getSalidasByEntradaID(req, res) {
@@ -693,13 +805,25 @@ async function validaEntrada(req, res) {
 	}
 }
 
-function getEntradasReporte(req, res) {
+async function getEntradasReporte(req, res) {
+
+	let isFilter = false;
+
+	//Verificar si el reporte contiene filtros
+	if(req.body.page === undefined || req.body.limit === undefined)
+		isFilter = true;
+
+	let pagination = {
+		page: parseInt(req.body.page) || 10,
+		limit: parseInt(req.body.limit) || 1
+	}
+
 	var arrPartidas = [];
 	var arrPartidasFilter = [];
 	let clasificacion = req.body.clasificacion != undefined ? req.body.clasificacion : "";
 	let subclasificacion = req.body.subclasificacion != undefined ? req.body.subclasificacion :"";
-	let fechaInicio= req.body.fechaInicio != undefined ? req.body.fechaInicio !="" ? new Date(req.body.fechaInicio).toISOString() :"" :"";
-	let fechaFinal= req.body.fechaFinal != undefined ? req.body.fechaFinal !="" ? new Date(req.body.fechaFinal).toISOString() :"" :"";
+	let fechaInicio= req.body.fechaInicio != undefined ? req.body.fechaInicio !="" ? new Date(req.body.fechaInicio) :"" :"";
+	let fechaFinal= req.body.fechaFinal != undefined ? req.body.fechaFinal !="" ? new Date(req.body.fechaFinal) :"" :"";
 	let fecha=req.body.fecha != undefined ? req.body.fecha : "";
 	let alerta1=req.body.alerta1 != undefined ? req.body.alerta1 : "";
 	let alerta2=req.body.alerta2 != undefined ? req.body.alerta2 : "";
@@ -737,7 +861,7 @@ function getEntradasReporte(req, res) {
 		}
 		if(fecha == "fechaEntrada")
 		{
-			filter.fechaEntrada={
+			filter.fechaEntrada ={
 		        $gte:fechaInicio,
 		        $lt: fechaFinal
 		    };
@@ -748,8 +872,15 @@ function getEntradasReporte(req, res) {
 		filter.stringFolio=folio;
 	}
 	let reporte = 0;
-	
-	Entrada.find(filter, {partidas: 1, _id: 0})
+
+		
+		
+		//const partidas = await PartidaModel.aggregatePaginate(partidasReporteCad, pagination )
+		let partidas = [];
+		let cajasPedidas = [];
+		if(isFilter){
+			
+			Entrada.find(filter, {partidas: 1, _id: 0})
 	.populate({
 		path: 'partidas',
 		populate: {
@@ -765,13 +896,16 @@ function getEntradasReporte(req, res) {
 			path: 'producto_id',
 			model: 'Producto',
 		}
-	})
-	.then((entradas) => {
-		entradas.forEach(entrada => {
-			var partida = entrada.partidas;
-			partida.forEach(elem => {
-				//console.log("1");
-				let resFecha=true;
+	}).then(entradas =>{
+		entradas.forEach(entrada =>{
+			let partida = entrada.partidas;
+			
+		partida.forEach((elem) => {
+			/* 
+			elem.entrada_id = elem.entrada_id[0];
+			elem.producto_id = elem.producto_id[0]; */
+			
+			let resFecha=true;
 				let resAlerta1=true;
 				let resAlerta2=true;
 				if(fecha== "fechaProduccion")
@@ -791,32 +925,38 @@ function getEntradasReporte(req, res) {
 				if(elem.entrada_id)
 				{
 					if(elem.fechaCaducidad !== undefined && elem.fechaCaducidad != null && elem.entrada_id.fechaEntrada !== undefined)
-		        	{
-		        		fCaducidad = elem.fechaCaducidad.getTime();
-		                diff = Math.abs(fCaducidad - elem.entrada_id.fechaEntrada.getTime());
-		                diasAlm=Math.floor((hoy - fCaducidad)/ 86400000);
-		            	diasEnAlm = Math.floor(diff / 86400000);
-		            	Aging=Math.floor((hoy-elem.entrada_id.fechaEntrada.getTime())/ 86400000);
-		        		let fEntrada = elem.entrada_id.fechaEntrada.getTime();
-		        		
-		                if(elem.producto_id.garantiaFrescura)
-		                	fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
-		                if(elem.producto_id.alertaAmarilla)
-		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
-		            	
-		            	if(elem.producto_id.alertaRoja)
-		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
-		            	if(elem.producto_id.vidaAnaquel)
-		            		leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
-		            	
-		            	
-		        	}
-		        	else{
-	        			if(fecha == "fechaFrescura" || fecha == "fechaAlerta1" || fecha == "fechaAlerta2")
-	        				resFecha=false;
-	        		}
-        		}
-        		//console.log("2");
+					{	
+
+						if(isFilter){
+							 fCaducidad = elem.fechaCaducidad.getTime();
+							diff = Math.abs(fCaducidad - elem.entrada_id.fechaEntrada.getTime());
+							diasAlm=Math.floor((hoy - fCaducidad)/ 86400000);
+							diasEnAlm = Math.floor(diff / 86400000);
+							Aging=Math.floor((hoy-elem.entrada_id.fechaEntrada.getTime())/ 86400000);
+							let fEntrada = elem.entrada_id.fechaEntrada.getTime();
+							
+							if(elem.producto_id.garantiaFrescura)
+								fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+							if(elem.producto_id.alertaAmarilla)
+								fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+							
+							if(elem.producto_id.alertaRoja)
+								fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+							if(elem.producto_id.vidaAnaquel)
+								leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
+
+							}
+
+						
+						 
+						//let fEntrada = elem.entrada_id[0].fechaEntrada.getTime();
+					}
+					else{
+						if(fecha == "fechaFrescura" || fecha == "fechaAlerta1" || fecha == "fechaAlerta2")
+							resFecha=false;
+					}
+				}
+				//console.log("2");
 				if(fecha == "fechaFrescura" && fechaFrescura != "")
 				{
 					resFecha = new Date(fechaFrescura)>=new Date(dateFormat(req.body.fechaInicio, "mm/dd/yyyy")) && new Date(fechaFrescura)<new Date(dateFormat(req.body.fechaFinal, "mm/dd/yyyy"));
@@ -891,13 +1031,169 @@ function getEntradasReporte(req, res) {
 					}
 					//console.log("4");
 				}
-			})		
 		});
+
+		})
 		res.status(200).send(arrPartidas);
 	})
-	.catch((error) => {
-		res.status(500).send(error);
+
+		}else{
+
+			let partidasReporteCad = PartidaModel.aggregate([
+
+			{
+				$lookup: {
+					from: "Entradas",
+					localField: "entrada_id",
+					foreignField: "_id",
+					as: "fromEntradas"
+					}           
+			},
+			{
+				$lookup: {
+					from: "Productos",
+					localField: "producto_id",
+					foreignField: "_id",
+					as: "fromProductos"
+					}           
+			},
+			
+			/* {
+				$replaceRoot: { newRoot: { $mergeObjects: [ { $arrayElemAt: [ "$fromEntradas", 0 ] }, "$$ROOT" ] } }   
+				   },
+				   {
+				$replaceRoot: { newRoot: { $mergeObjects: [ { $arrayElemAt: [ "$fromProductos", 0 ] }, "$$ROOT" ] } }   
+				   }, */
+			{$match: {"fromEntradas.isEmpty": filter.isEmpty, "fromEntradas.status": filter.status, isEmpty: false,
+					"fromEntradas.clienteFiscal_id": mongoose.Types.ObjectId(filter.clienteFiscal_id),
+					tipo: {$in: ["NORMAL", "AGREGADA", "MODIICADA"]},
+					status: "ASIGNADA",
+					"fromEntradas.fechaEntrada": {$gte: fechaInicio, $lt: fechaFinal}}},
+			{      
+				$project:{
+					producto_id: 1,
+					clave: 1,
+					descripcion: 1,
+					entrada_id: 1,
+					lote: 1,
+					fechaProduccion: 1,
+					fechaCaducidad: 1,
+					valor: 1,
+					salidas_id: 1,
+					posiciones: 1,
+					embalajesEntrada: 1,
+					embalajesxSalir: 1,
+					embalajesAlmacen: 1,
+					CajasPedidas: 1,
+					InfoPedidos: 1,
+					isEmpty: 1,
+					origen: 1,
+					tipo: 1,
+					status: 1,
+					posicionCarga: 1,
+					isExtraordinaria: 1,
+					fechaEntrada: 1,
+					DiasTraslado: 1,
+					fechaReciboRemision: 1,
+					fechaSalidaPlanta: 1,
+					tipo: 1,
+					fechaAlta: 1,
+					garantiaFrescura: 1,
+					alertaAmarilla: 1,
+					alertaRoja: 1,
+					vidaAnaquel: 1,
+					producto_id: "$fromProductos",
+					entrada_id: "$fromEntradas"
+				}
+			}
+		])
+			
+			partidas = await PartidaModel.aggregatePaginate(partidasReporteCad, pagination );
+
+			partidas.docs.forEach(elem =>{
+
+				let producto_id = elem.producto_id[0];
+				let entrada_id = elem.entrada_id[0];
+				elem.entrada_id = entrada_id;
+				elem.producto_id = producto_id;
+				elem.alertaAmarilla = producto_id.alertaAmarilla;
+				elem.alertaRoja = producto_id.alertaRoja;
+				elem.garantiaFrescura = producto_id.garantiaFrescura;
+				elem.vidaAnaquel = producto_id.vidaAnaquel;
+
+				elem.fechaAlta = entrada_id.fechaAlta;
+				elem.fechaEntrada = entrada_id.fechaEntrada;
+				elem.fechaReciboRemision = entrada_id.fechaReciboRemision;
+				elem.DiasTraslado = entrada_id.DiasTraslado;
+				elem.fechaSalidaPlanta = entrada_id.fechaSalidaPlanta;
+				
+
+				if(elem.entrada_id)
+				{
+					if(elem.fechaCaducidad !== undefined && elem.fechaCaducidad != null && entrada_id.fechaEntrada !== undefined)
+					{	
+
+							 fCaducidad = elem.fechaCaducidad.getTime();
+							diff = Math.abs(fCaducidad - elem.entrada_id.fechaEntrada.getTime());
+							diasAlm=Math.floor((hoy - fCaducidad)/ 86400000);
+							diasEnAlm = Math.floor(diff / 86400000);
+							Aging=Math.floor((hoy-elem.entrada_id.fechaEntrada.getTime())/ 86400000);
+							let fEntrada = elem.entrada_id.fechaEntrada.getTime();
+							
+							if(elem.producto_id.garantiaFrescura)
+								fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+							if(elem.producto_id.alertaAmarilla)
+								fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+							
+							if(elem.producto_id.alertaRoja)
+								fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+							if(elem.producto_id.vidaAnaquel)
+								leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
+
+							elem.diff = diff;
+							elem.diasAlm = diasAlm;
+							elem.diasEnAlm = diasEnAlm;
+							elem.Aging = Aging;
+							elem.fechaFrescura = fechaFrescura;
+							elem.fechaAlerta1 = fechaAlerta1;
+							elem.fechaAlerta2 = fechaAlerta2;
+							elem.leyenda = leyenda;
+
+					}
+						
+				}
+					arrPartidas.push(elem);
+					});			
+
+			partidas.docs = arrPartidas;		
+			res.status(200).send(partidas);
+			
+		}
+
+
+	
+		
+	
+
+/* 
+	Entrada.find(filter, {partidas: 1, _id: 0})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'entrada_id',
+			model: 'Entrada',
+			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
+		},
+		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
 	})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'producto_id',
+			model: 'Producto',
+		}
+	}) */
+	
 }
 
 function getExcelCaducidades(req, res) {

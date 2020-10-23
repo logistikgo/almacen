@@ -276,8 +276,12 @@ app.post('/api/saveEntradaBabel', Entrada.saveEntradaBabel);
 app.post('/api/updateEntradasBabel', Entrada.updateEntradasBabel);
 app.post('/api/saveEntradaEDI', Entrada.saveEntradaEDI);
 app.post('/api/updateById', Entrada.updateById);
+
+app.post('/api/saveEntradaChevron',Entrada.saveEntradaChevron);
+
  //salidas
-app.post('/api/saveSalidaBabel',Salida.saveSalidaBabel);
+app.post('/api/saveSalidaBabel', Salida.saveSalidaBabel);
+
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
 app.post('/api/posicionarManual', Entrada.posicionarManual);

@@ -14,7 +14,7 @@ function get(req, res) {
 	let jFilter = {
 		statusReg: "ACTIVO"
 	};
-
+	
 	ClienteFiscal.find(jFilter).sort({ nombreCorto: 1 })
 		.then((cliente) => {
 			res.status(200).send(cliente);
