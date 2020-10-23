@@ -2092,6 +2092,7 @@ async function getPartidaMod(req, res)
 
     let partida=await Partida.find({isEmpty:false ,tipo:{$in:["NORMAL","AGREGADA","MODIFICADA"]} ,status:"ASIGNADA"}).populate({ path: 'entrada_id', select: 'stringFolio' }).exec();
     console.log(partida[0]);
+    return res.status(200).send(partida);
 }
 
 module.exports = {
