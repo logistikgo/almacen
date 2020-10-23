@@ -2068,9 +2068,16 @@ async function ModificaPartidas(req, res)
     }
     else
     {
+        console.log("**************************************************")
+            console.log( partida.producto_id+"===="+req.body.producto_id);
 
-            if(partida.producto_id != req.body.producto_id)
-                partida.producto_id = req.body.producto_id;
+            if(partida.producto_id != req.body.producto_id){
+                 let productosDia=await Producto.findOne({_id:req.body.producto_id}).exec();
+                 console.log(productosDia);
+                 partida.producto_id=productosDia._id;
+                 partida.descripcion=productosDia.descripcion;
+                 partida.clave=productosDia.clave;
+            }
             if(partida.embalajesEntrada != req.body.embalajesEntrada)
                 partida.embalajesEntrada = req.body.embalajesEntrada;
 
