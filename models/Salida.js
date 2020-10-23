@@ -1,6 +1,7 @@
 'use strict'
 
 const mongoose = require('mongoose');
+const aggregatePaginate = require('mongoose-aggregate-paginate-v2');
 const Schema = mongoose.Schema;
 
 const Salida = Schema(
@@ -74,5 +75,5 @@ const Salida = Schema(
 		collection: 'Salidas'
 	}
 );
-
+Salida.plugin(aggregatePaginate);
 module.exports = mongoose.model('Salida', Salida);
