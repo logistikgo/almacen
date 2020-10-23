@@ -95,7 +95,7 @@ async function save(req, res) {
 	nSalida.folio = await getNextID();
 	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
 	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
-	let refpedido=nSalida.item;
+	let refpedido=nSalida.referencia;
 	nSalida.save()
 		.then(async (salida) => {
 			//si es pedido, no hace afectacion de existencias
