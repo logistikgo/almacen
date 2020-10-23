@@ -1930,9 +1930,9 @@ async function posicionarPrioridades(req, res) {
 }
 
 async function posicionarManual(req, res) {
-	console.log("posicionar________________________________________");
+	//console.log("posicionar________________________________________");
 	let _id = req.body.id;
-	console.log(req.url);
+	//console.log(req.url);
 	let entrada = await Entrada.findOne({ _id: _id });
 	//console.log(entrada);
 	//console.log(req.body);
@@ -1990,15 +1990,6 @@ async function posicionarManual(req, res) {
 		    }
 	    });
 	    
-	    arrayFamilias=arrayFamilias.sort(function(a, b) {
-	    	return b.prioridad - a.prioridad;
-		});
-	    arrayFamilias=arrayFamilias.sort(function(a, b) {
-		    a = a.fechaCaducidad;
-		    b = b.fechaCaducidad;
-		    return a<b ? -1 : a>b ? 1 : 0;
-		});
-	    
 	    entrada.usuarioAlta_id= req.body.usuarioAlta_id;
         entrada.nombreUsuario= req.body.nombreUsuario;
         entrada.recibio= req.body.recibio;
@@ -2006,9 +1997,9 @@ async function posicionarManual(req, res) {
 	    entrada.partidas=resultpartidas; 
 	    entrada.fechaAlta=new Date(Date.now()-(5*3600000));
 		await entrada.save().then(async (entrada) => {
-				console.log("testpartidas");
-				console.log(resultpartidas);
-				console.log("/------------------/");
+				//console.log("testpartidas");
+				//console.log(resultpartidas);
+				//console.log("/------------------/");
 				for (let itemPartida of reOrderPartidas) {
 					//console.log("testMovimientos");
 					let partidait = await PartidaModel.findOne({ _id: itemPartida._id });
