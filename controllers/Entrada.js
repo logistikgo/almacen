@@ -253,8 +253,8 @@ async function get(req, res) {
 			path: 'partidas.producto_id',
 			model: 'Producto'
 		}).then(entradas =>{
-
-			res.status(200).send(entradas);
+			
+			res.status(200).send(_status == null ? json : entradas);
 				
 
 		}).catch(error => res.status(500).send(error))
