@@ -45,6 +45,7 @@ async function get(req, res) {
 	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
 	var json = [];
+	let iscontadores = false;
 	//console.log(_tipo);
 	if(_status != "FINALIZADO" && _status != null && _status !== "NINGUNO" && _status !== "isContador"){
 		filter = {
