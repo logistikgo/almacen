@@ -31,7 +31,6 @@ async function get(req, res) {
 		limit: parseInt(req.query.limit)
 	}
 	console.log(pagination)
-
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
@@ -42,12 +41,12 @@ async function get(req, res) {
 	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
 	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
 	let isReporte=req.query.isReporte != undefined ? req.query.isReporte: "";
-	//console.log(_status);
+	console.log(_status);
 	let folio=req.query.stringFolio != undefined ? req.query.stringFolio : "";
 	let filter ="", WaitingArrival = 0, ARRIVED = 0, APLICADA = 0, RECHAZO = 0, FINALIZADO = 0;
 	var json = [];
 	//console.log(_tipo);
-	if(_status != "FINALIZADO" && _status != null && _status !== "NINGUNO"){
+	if(_status != "FINALIZADO" && _status != null && _status !== "NINGUNO" && _status !== "isContador"){
 		filter = {
 			clienteFiscal_id: _idClienteFiscal,
 			sucursal_id: _idSucursal,
@@ -56,7 +55,7 @@ async function get(req, res) {
 			status: _status
 		};
 	}
-	else if(_status != null)
+	else if(_status != null && _status !== "isContador")
 	{
 		//console.log(isReporte);
 		if( isReporte === "true" && _status === "NINGUNO") {
@@ -77,15 +76,17 @@ async function get(req, res) {
 				status: _status
 			};
 		}
+		
 	}
-	else if(_status === null){
+	else if(_status === "isContador"){
+		console.log("test12");
 		filter = {
 			sucursal_id: _idSucursal,
 			clienteFiscal_id: _idClienteFiscal,
 			almacen_id: _idAlmacen,
 			tipo: _tipo
 		};
-		Entrada.find(filter)
+		await Entrada.find(filter)
 		.then((entradasByStatus) => {
 			entradasByStatus.forEach(resp => {
 				if(resp.status == "WAITINGARRIVAL")
@@ -107,6 +108,8 @@ async function get(req, res) {
 				Finalizado: FINALIZADO
 			};
 			json = jsonResponse;
+			//console.log(json);
+			iscontadores=true;
 		})
 		.catch((error) => {
 			console.log(error);
@@ -247,17 +250,23 @@ async function get(req, res) {
 		}).catch(error => res.status(500).send(error))
 	
 	}else{
-		console.log("No es reporte");
-		Entrada.find(filter).sort({ fechaEntrada: -1 })
-		.populate({
-			path: 'partidas.producto_id',
-			model: 'Producto'
-		}).then(entradas =>{
+		if(_status === "isContador")
+		{
+			console.log("asdsa")
+			res.status(200).send(json);
+		}else{
+			console.log("No es reporte");
+			Entrada.find(filter).sort({ fechaEntrada: -1 })
+			.populate({
+				path: 'partidas.producto_id',
+				model: 'Producto'
+			}).then(entradas =>{
 
-			res.status(200).send(entradas);
-				
+				res.status(200).send(entradas);
+					
 
-		}).catch(error => res.status(500).send(error))
+			}).catch(error => res.status(500).send(error))
+		}
 	}
 
 }

@@ -181,6 +181,7 @@ app.put('/api/posicionPartida', Partida.updatePosicionPartida);
 app.put('/api/partida/updateCajasPedidas', Partida.updateCajasPedidas);
 app.post('/api/posicionarPartidas', Partida.posicionarPartidas);
 app.get('/api/getPartidaMod', Partida.getPartidaMod);
+app.post('/api/LimpiaPosicion', Partida.LimpiaPosicion);
 //app.get('/api/partida', Entrada.getPartidaById);
 //app.put('/api/partida', Entrada.updatePartida);
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);

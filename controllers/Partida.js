@@ -2185,8 +2185,10 @@ async function ModificaPartidas(req, res)
                  partida.descripcion=productosDia.descripcion;
                  partida.clave=productosDia.clave;
             }
-            if(partida.embalajesEntrada != req.body.embalajesEntrada)
+            if(partida.embalajesEntrada != req.body.embalajesEntrada){
                 partida.embalajesEntrada = req.body.embalajesEntrada;
+                partida.embalajesxSalir = req.body.embalajesxSalir;
+            }
 
     }
 
@@ -2202,6 +2204,59 @@ async function getPartidaMod(req, res)
     return res.status(200).send(partida);
 }
 
+
+
+async function LimpiaPosicion(req, res)
+{
+    try {
+        console.log(req.body);
+        let id_partidas=req.body.partida_id;
+        let partida = await Partida.findOne({ _id: id_partidas });
+        let posicion = await PosicionModelo.findOne({ _id: partida.posiciones[0].posicion_id});
+        /*console.log("Posicion---------------");
+        console.log(posicion);
+        console.log("Pasillo---------------");
+        console.log(pasillo);
+        console.log("---------------");
+        console.log("nivel"+nivelIndex);*/
+        let nivelIndex=partida.posiciones[0].nivel.charCodeAt(0) - 64;
+        nivelIndex=nivelIndex-1;
+        posicion.niveles[nivelIndex].isCandadoDisponibilidad = false; 
+        posicion.niveles[nivelIndex].apartado = false;
+        //console.log(posicion);
+        await posicion.save();
+        partida.posiciones=[];
+        
+
+        await partida.save();
+        console.log(partida);
+        res.status(200).send("ok");
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send(e);
+    }
+    /*
+    
+    let posicion = await PosicionModelo.findOne({ _id: id_pocision});
+    let pasillo = await Pasillo.findOne({ _id: posicion.pasillo_id});
+    partida.posiciones=[];
+        let jPosicionBahia = {
+            embalajesEntrada: partida.embalajesEntrada,
+            embalajesxSalir: partida.embalajesxSalir,
+            pasillo: pasillo.nombre,
+            pasillo_id: pasillo._id,
+            posicion: posicion.nombre,
+            posicion_id: posicion._id,
+            nivel_id: posicion.niveles[nivelIndex]._id,
+            nivel: posicion.niveles[nivelIndex].nombre,
+            ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
+        };
+        partida.posiciones.push(jPosicionBahia);
+        await partida.save();
+        //console.log(partida);*/
+    
+}
 module.exports = {
     get,
     post,
@@ -2230,5 +2285,6 @@ module.exports = {
     reporteFEFOS,
     posicionarPartidas,
     ModificaPartidas,
-    getPartidaMod
+    getPartidaMod,
+    LimpiaPosicion
 }
