@@ -108,8 +108,6 @@ async function get(req, res) {
 				Finalizado: FINALIZADO
 			};
 			json = jsonResponse;
-			//console.log(json);
-			iscontadores=true;
 		})
 		.catch((error) => {
 			console.log(error);
@@ -244,7 +242,7 @@ async function get(req, res) {
 			})
 	
 				
-					res.status(200).send(entradas);
+			res.status(200).send(entradas);
 				
 	
 		}).catch(error => res.status(500).send(error))
@@ -257,7 +255,7 @@ async function get(req, res) {
 			model: 'Producto'
 		}).then(entradas =>{
 			
-			res.status(200).send(_status == null ? json : entradas);
+			res.status(200).send(_status === "isContador" ? json : entradas);
 
 			}).catch(error => res.status(500).send(error))
 		
