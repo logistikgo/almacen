@@ -250,23 +250,17 @@ async function get(req, res) {
 		}).catch(error => res.status(500).send(error))
 	
 	}else{
-		if(_status === "isContador")
-		{
-			console.log("asdsa")
-			res.status(200).send(json);
-		}else{
-			console.log("No es reporte");
-			Entrada.find(filter).sort({ fechaEntrada: -1 })
-			.populate({
-				path: 'partidas.producto_id',
-				model: 'Producto'
-			}).then(entradas =>{
-
-				res.status(200).send(entradas);
-					
+		console.log("No es reporte");
+		Entrada.find(filter).sort({ fechaEntrada: -1 })
+		.populate({
+			path: 'partidas.producto_id',
+			model: 'Producto'
+		}).then(entradas =>{
+			
+			res.status(200).send(_status == null ? json : entradas);
 
 			}).catch(error => res.status(500).send(error))
-		}
+		
 	}
 
 }
