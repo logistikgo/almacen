@@ -180,6 +180,8 @@ app.put('/api/partida/pedido/update', Partida._update);
 app.put('/api/posicionPartida', Partida.updatePosicionPartida);
 app.put('/api/partida/updateCajasPedidas', Partida.updateCajasPedidas);
 app.post('/api/posicionarPartidas', Partida.posicionarPartidas);
+app.get('/api/getPartidaMod', Partida.getPartidaMod);
+app.post('/api/LimpiaPosicion', Partida.LimpiaPosicion);
 //app.get('/api/partida', Entrada.getPartidaById);
 //app.put('/api/partida', Entrada.updatePartida);
 //app.get('/api/partidas/:producto_id/:embalaje/:cantidad',Partida.getByProductoEmbalaje);
@@ -275,8 +277,12 @@ app.post('/api/saveEntradaBabel', Entrada.saveEntradaBabel);
 app.post('/api/updateEntradasBabel', Entrada.updateEntradasBabel);
 app.post('/api/saveEntradaEDI', Entrada.saveEntradaEDI);
 app.post('/api/updateById', Entrada.updateById);
+
+app.post('/api/saveEntradaChevron',Entrada.saveEntradaChevron);
+
  //salidas
 app.post('/api/saveSalidaBabel', Salida.saveSalidaBabel);
+
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
 app.post('/api/posicionarManual', Entrada.posicionarManual);
