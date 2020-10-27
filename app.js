@@ -65,6 +65,8 @@ app.get('/api/getExistenciasByAlmacen/:almacen_id/:producto_id', Producto.getExi
 app.get('/api/getPartidasxProductoenExistencia/:producto_id', Producto.getPartidasxProductoenExistencia);
 app.get('/api/getEquivalencias', Producto.getEquivalencias);
 
+app.get('/api/getPartidasMod/:idClienteFiscal', Partida.getPartidaMod);
+
 app.get('/api/movimientosInventarioByProducto', MovimientosInventario.getByProducto);
 app.get('/api/posicionesxProducto', MovimientosInventario.getPosicionesByProducto);
 app.get('/api/movimientosInventario', MovimientosInventario.get);

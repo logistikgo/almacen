@@ -2198,13 +2198,85 @@ async function ModificaPartidas(req, res)
 
 async function getPartidaMod(req, res)
 {
+
+    try {
+        
+        const { idClienteFiscal } = req.params;
+
+    let partidas =await Partida.find({isEmpty:false ,
+                                    tipo:{$in:["NORMAL","AGREGADA","MODIFICADA"]}, 
+                                    status:"ASIGNADA"}).populate({ path: 'entrada_id', select: 'stringFolio clienteFiscal_id' }).exec();
+        
+        let partidasPorCliente = [];
+        partidas.forEach(partida =>{
+            
+            if(partida.entrada_id !== null){
+                    if(partida.entrada_id.clienteFiscal_id.toString() === idClienteFiscal){
+
+                        let posiciones = partida.posiciones;
+                        
+                        if(posiciones.length > 1){
+
+                            let posicionesADividir = posiciones.filter(pos => pos.isEmpty === false);
+                            //Se obtiene la informacion 
+                            
+                            for(let i = 0; i < posicionesADividir.length; i++){
+                                let infoPartida = getInfoPartida(partida);
+                                
+                                infoPartida["embalajesxSalir"] = posicionesADividir[i].embalajesxSalir;
+                                infoPartida["embalajesEntradas"] = posicionesADividir[i].embalajesEntrada;
+                                infoPartida["posiciones"] = posicionesADividir[i];
+
+                                partidasPorCliente.push(infoPartida);
+                              
+                            }
+
+                        }
+
+                        partidasPorCliente.push(partida);
+                    }
+            }
+
+        })
+
     
-    let partida=await Partida.find({isEmpty:false ,tipo:{$in:["NORMAL","AGREGADA","MODIFICADA"]} ,status:"ASIGNADA"}).populate({ path: 'entrada_id', select: 'stringFolio' }).exec();
-    console.log(partida[0]);
-    return res.status(200).send(partida);
+        res.status(200).send(partidasPorCliente);
+    } catch (e) {
+        console.log(e);
+        res.status(500).send(e);
+    }
+
+    
 }
 
+function getInfoPartida(partida){
 
+    let infoPartida = { };
+
+    infoPartida["valor"] = partida.valor;
+    infoPartida["isEmpty"] = partida.isEmpty;
+    infoPartida["origen"] = partida.origen;
+    infoPartida["tipo"] = partida.tipo;
+    infoPartida["isExtraordinaria"] = partida.isExtraordinaria;
+    infoPartida["pedido"] = partida.pedido;
+    infoPartida["refPedido"] = partida.refPedido;
+    infoPartida["statusPedido"] = partida.statusPedido;
+    infoPartida["saneado"] = partida.saneado;
+    infoPartida["_id"] = ObjectId();
+    infoPartida["producto_id"] = partida.producto_id;
+    infoPartida["clave"] = partida.clave;
+    infoPartida["descripcion"] = partida.descripcion;
+    infoPartida["lote"] = partida.lote;
+    infoPartida["fechaProduccion"] = partida.fechaProduccion;
+    infoPartida["fechaCaducidad"] = partida.fechaCaducidad;
+    infoPartida["salidas_id"] = partida.salidas_id;
+    infoPartida["InfoPedidos"] = partida.InfoPedidos;
+    infoPartida["entrada_id"] = partida.entrada_id;
+
+    return infoPartida;
+
+
+}
 
 async function LimpiaPosicion(req, res)
 {
