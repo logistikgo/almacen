@@ -43,6 +43,20 @@ function get(req, res) {
     }
 }
 
+async function getbyid(req, res)
+{
+    try{
+        let partida_id = req.query.partida_id;
+        console.log(partida_id);
+        var partida =await Partida.findOne({ _id:new ObjectId(partida_id)}).exec();
+            console.log(partida)
+        res.status(200).send(partida);
+    }catch (e) {
+        console.log(e);
+        res.status(500).send(e);
+    }
+}
+
 async function getByEntrada(req, res) {
     let entrada_id = req.params.entrada_id;
 
@@ -2187,7 +2201,11 @@ async function ModificaPartidas(req, res)
             }
             if(partida.embalajesEntrada != req.body.embalajesEntrada){
                 partida.embalajesEntrada = req.body.embalajesEntrada;
-                partida.embalajesxSalir = req.body.embalajesxSalir;
+                partida.embalajesxSalir = req.body.embalajesEntrada;
+                if(partida.posiciones.length>0){
+                    partida.posiciones[0].embalajesEntrada= req.body.embalajesEntrada;
+                    partida.posiciones[0].embalajesxSalir= req.body.embalajesEntrada;
+                }
             }
 
     }
@@ -2200,8 +2218,7 @@ async function getPartidaMod(req, res)
 {
 
     try {
-        
-        const { idClienteFiscal } = req.params;
+        const { idClienteFiscal } = req.query;
 
     let partidas =await Partida.find({isEmpty:false ,
                                     tipo:{$in:["NORMAL","AGREGADA","MODIFICADA"]}, 
@@ -2209,7 +2226,7 @@ async function getPartidaMod(req, res)
         
         let partidasPorCliente = [];
         partidas.forEach(partida =>{
-            
+            console.log(partida._id)
             if(partida.entrada_id !== null){
                     if(partida.entrada_id.clienteFiscal_id.toString() === idClienteFiscal){
 
@@ -2226,14 +2243,14 @@ async function getPartidaMod(req, res)
                                 infoPartida["embalajesxSalir"] = posicionesADividir[i].embalajesxSalir;
                                 infoPartida["embalajesEntradas"] = posicionesADividir[i].embalajesEntrada;
                                 infoPartida["posiciones"] = posicionesADividir[i];
-
+                                infoPartida["posIndex"]=i;
                                 partidasPorCliente.push(infoPartida);
                               
                             }
 
                         }
-
-                        partidasPorCliente.push(partida);
+                        else
+                            partidasPorCliente.push(partida);
                     }
             }
 
@@ -2262,7 +2279,7 @@ function getInfoPartida(partida){
     infoPartida["refPedido"] = partida.refPedido;
     infoPartida["statusPedido"] = partida.statusPedido;
     infoPartida["saneado"] = partida.saneado;
-    infoPartida["_id"] = ObjectId();
+    infoPartida["_id"] = partida._id;
     infoPartida["producto_id"] = partida.producto_id;
     infoPartida["clave"] = partida.clave;
     infoPartida["descripcion"] = partida.descripcion;
@@ -2333,6 +2350,7 @@ module.exports = {
     get,
     post,
     addSalida,
+    getbyid,
     getByEntrada,
     getByEntradaSalida,
     getBySalida,

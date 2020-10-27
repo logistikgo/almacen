@@ -169,6 +169,7 @@ app.get('/api/columnasOperacion/:idTable/:clienteFiscal_id/:sucursal_id/:almacen
 app.get('/api/getSucursalALM', Interfaz_ALM_XD.getIDSucursalALMAPI);
 
 app.get('/api/partidasByIDs', Partida.getPartidasByIDs);
+app.get('/api/getbyid', Partida.getbyid);
 app.get('/api/partida/:filtro', Partida.get);
 app.get('/api/partida/entrada/:entrada_id', Partida.getByEntrada);
 app.get('/api/partida/entradaSalida/:entrada_id', Partida.getByEntradaSalida);
