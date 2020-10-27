@@ -102,10 +102,10 @@ async function getDisponibles(req, res) {
 		let producto =await Producto.findOne({'_id': producto_id }).exec();
 		//console.log(producto)
 		if(producto.subclasificacion == "Confiteria" ){
-			query.familia={$in:["frios"]};
+			query.familia={$in:["frios","STAGING"]};
 		}
 		if(producto.subclasificacion == "Botana" ){
-			query.familia={$in:["secos"]};
+			query.familia={$in:["secos","STAGING"]};
 		}
 	}
 	//console.log(query);
