@@ -1,5 +1,5 @@
 'use strict'
-
+const mongoose = require('mongoose');
 const Salida = require('../models/Salida');
 const Partida = require('../controllers/Partida');
 const PartidaModel = require('../models/Partida');
@@ -95,7 +95,7 @@ async function save(req, res) {
 	nSalida.folio = await getNextID();
 	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
 	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
-	let refpedido=nSalida.item;
+	let refpedido=nSalida.referencia;
 	nSalida.save()
 		.then(async (salida) => {
 			//si es pedido, no hace afectacion de existencias
@@ -332,9 +332,22 @@ function getPartidasDeEntrada(partidasDeEntrada, partidasDeSalida) {
 	return partidas;
 }
 
-function getReportePartidas(req, res) {
-	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
-	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
+async function getReportePartidas(req, res) {
+
+
+	let isFilter = false;
+
+	//Verificar si el reporte contiene filtros
+	if(req.query.page === undefined || req.query.limit === undefined)
+		isFilter = true;
+
+	let pagination = {
+		page: parseInt(req.query.page) || 10,
+		limit: parseInt(req.query.limit) || 1
+	}
+
+	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio) :"" :"";
+	let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal):"" :"";
 	let fecha=req.query.fecha != undefined ? req.query.fecha : "";
 	//console.log(req.query);
 	var arrPartidas = [];
@@ -378,6 +391,10 @@ function getReportePartidas(req, res) {
 	{
 		filter.stringFolio=folio;
 	}
+
+
+	if(isFilter){
+		
 	Salida.find(filter)
 	.populate({
 		path: 'partidas',
@@ -514,7 +531,68 @@ function getReportePartidas(req, res) {
 		res.status(500).send(error);
 		console.log(error);
 	});
-}
+	}else{
+
+		let partidasSalidasAggregate = PartidaModel.aggregate([
+
+			{ $lookup: { from: "Salidas", localField: "salidas_id.salida_id", foreignField: "_id", as: "fromSalidas" } },
+			
+			{ $lookup: { from: "Productos", localField: "producto_id", foreignField: "_id", as: "fromProductos"} },
+
+			{$match: {"fromSalidas.clienteFiscal_id": mongoose.Types.ObjectId(filter.clienteFiscal_id),
+					  "fromSalidas.fechaSalida": {$gte: fechaInicio, $lt: fechaFinal}}}, 
+
+		]);
+
+
+		
+		let arrPartidas = [];
+		let partidasSalidasPaguinate = await PartidaModel.aggregatePaginate(partidasSalidasAggregate, pagination);
+
+		partidasSalidasPaguinate.docs.forEach((partida) =>{
+
+
+			let salida = partida.fromSalidas[0];
+			partida.producto_id = partida.fromProductos[0];
+			//let salidas_id = partida.fromSalidas;
+
+			let embalajes = partida.salidas_id[0].embalajes
+
+			var paramsSalida = {
+				_id: salida._id,
+				stringFolio: salida.stringFolio,
+				fechaAlta: salida.fechaAlta,
+				fechaSalida: salida.fechaSalida,
+				fechaCaducidad: partida.fechaCaducidad,
+				transportista: salida.transportista,
+				placas: salida.placas,
+				placasRemolque: salida.placasRemolque,
+				placasTrailer: salida.placasTrailer,
+				embarco: salida.embarco,
+				operador: salida.operador,
+				referencia: salida.referencia,
+				item: salida.item,
+				clave: partida.clave,
+				lote: partida.lote,
+				descripcion: partida.descripcion,
+				subclasificacion: partida.producto_id.subclasificacion,
+				posiciones: partida.posiciones,
+				CajasPedidas: partida.CajasPedidas,
+				embalajes: embalajes,
+				fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
+				producto_id:partida.producto_id,
+				horaSello: salida.horaSello
+			} 
+
+			arrPartidas.push(paramsSalida);
+		})
+		partidasSalidasPaguinate.docs = arrPartidas;
+		res.status(200).send(partidasSalidasPaguinate);
+
+	}
+
+
+	}
 
 async function getExcelSalidas(req, res) {
 	let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
