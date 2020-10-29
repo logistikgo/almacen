@@ -45,7 +45,8 @@ function getxPasillo(req, res) {
 
 function getxPasilloDisponibles(req, res) {
 	let pasillo_id = req.query.pasillo_id;
-
+	var ismod =req.query.ismod != undefined ? req.query.ismod :false
+	console.log(req.query)
 	Posicion.find({
 		pasillo_id: new ObjectId(pasillo_id),
 		statusReg: "ACTIVO"
@@ -53,13 +54,25 @@ function getxPasilloDisponibles(req, res) {
 		.sort({ nombre: 1 })
 		.then((posiciones) => {
 			let disponibles = [];
-
 			for (let pos of posiciones) {
+				
 				if (pos.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0) != undefined) {
 					if (disponibles.find(x => x == pos) == undefined)
 						disponibles.push(pos);
 					else
 						break;
+				}
+				else{
+					
+					if(ismod=="true")
+					{
+						console.log(req.query.posicion_id+"/"+pos._id.toString())
+						if(req.query.posicion_id == pos._id.toString())
+						{
+							console.log(pos);
+							disponibles.push(pos);
+						}
+					}
 				}
 
 				// for (let nivel of pos.niveles) {
