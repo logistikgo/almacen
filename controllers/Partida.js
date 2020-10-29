@@ -2213,7 +2213,7 @@ async function ModificaPartidas(req, res)
             });
             await posicion.save();
         }
-        if(partida.posiciones[posIndex].embalajesxSalir != req.body.embalajesEntrada){
+        if(partida.posiciones[posIndex].embalajesxSalir.cajas != req.body.embalajesEntrada.cajas){
             partida.embalajesxSalir ={"cajas": (partida.embalajesxSalir["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"])+req.body.embalajesEntrada["cajas"]};
 
             if(partida.posiciones.length>0){
