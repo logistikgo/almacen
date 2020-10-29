@@ -92,6 +92,7 @@ function getPosiciones(req, res) {
 async function getDisponibles(req, res) {
 	let almacen_id = req.query.almacen_id;
 	let producto_id = req.query.prod_id;
+	let pasilloId =req.query.pasilloId
 	let query = {
 		almacen_id: new ObjectId(almacen_id),
 		statusReg: "ACTIVO"
@@ -102,10 +103,10 @@ async function getDisponibles(req, res) {
 		let producto =await Producto.findOne({'_id': producto_id }).exec();
 		//console.log(producto)
 		if(producto.subclasificacion == "Confiteria" ){
-			query.familia={$in:["frios","STAGING"]};
+			query.familia={$in:["frios","STAGING","CADUCADO"]};
 		}
 		if(producto.subclasificacion == "Botana" ){
-			query.familia={$in:["secos","STAGING"]};
+			query.familia={$in:["secos","STAGING","CADUCADO"]};
 		}
 	}
 	//console.log(query);
@@ -113,7 +114,7 @@ async function getDisponibles(req, res) {
 		.populate({
 			path: 'posiciones.posicion_id'
 		}).sort({nombre:1})
-		.then((data) => {
+		.then(async(data) => {
 			let disponibles = [];
 
 			for (let pasillo of data) {
@@ -125,6 +126,7 @@ async function getDisponibles(req, res) {
 						else
 							break;
 					}
+
 					// for (let nivel of posicion.niveles) {
 					// 	if (nivel.isCandadoDisponibilidad == false || nivel.productos.length == 0) {
 					// 		if (disponibles.find(x => x == pasillo) == undefined)
@@ -136,6 +138,15 @@ async function getDisponibles(req, res) {
 				}
 			}
 //console.log(disponibles)
+			if(pasilloId)
+			{
+				console.log("test");
+				console.log(disponibles.findIndex(obj=> (obj._id.toString() == pasilloId)));
+				if(disponibles.findIndex(obj=> (obj._id.toString() == pasilloId)) <0){
+					let pasilloaux = await Pasillo.findOne({ _id: new ObjectId(pasilloId)});
+					disponibles.push(pasilloaux);
+				}
+			}
 			res.status(200).send(disponibles);
 
 		})
