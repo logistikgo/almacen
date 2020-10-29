@@ -279,6 +279,7 @@ app.get('/api/reporteFEFOS',Partida.reporteFEFOS);
 app.post('/api/saveEntradaBabel', Entrada.saveEntradaBabel);
 app.post('/api/updateEntradasBabel', Entrada.updateEntradasBabel);
 app.post('/api/saveEntradaEDI', Entrada.saveEntradaEDI);
+app.post('/api/saveEntradaCPD', Entrada.saveEntradaCPD);
 app.post('/api/updateById', Entrada.updateById);
 
 app.post('/api/saveEntradaChevron',Entrada.saveEntradaChevron);

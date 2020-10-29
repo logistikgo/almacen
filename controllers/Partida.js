@@ -2146,6 +2146,7 @@ async function reporteFEFOS(req, res)
 async function ModificaPartidas(req, res)
 {
     console.log(req.body);
+    try{
     let partida = await Partida.findOne({ _id: req.body.partida_id });
     if(partida.lote!=req.body.lote)
         partida.lote=req.body.lote;
@@ -2161,13 +2162,15 @@ async function ModificaPartidas(req, res)
         let nivel=req.body.ubicacion.nivel;
         let nivelIndex=parseInt(nivel)-1;
         let posIndex=req.body.posIndex;
-        let posicion = await PosicionModelo.findOne({ _id: id_pocision});
+        let posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
         let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
         let oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id});
         let productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
+        //console.log("begin")
         if(nivel._id!=partida.posiciones[posIndex].nivel_id.toString())
         {
-            console.log(partida.posiciones[posIndex].nivel_id);
+            // console.log("testmove")
+           // console.log(partida.posiciones[posIndex].nivel_id);
 
             let indexniveles=oldpos.niveles.findIndex(obj=> (obj._id == partida.posiciones[posIndex].nivel_id.toString()));console.log(indexniveles);
             let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id == partida.producto_id.toString()));
@@ -2211,22 +2214,32 @@ async function ModificaPartidas(req, res)
                 producto_id: productosDia._id,
                 embalajes: partida.posiciones[posIndex].embalajesxSalir
             });
+            let item2 = {
+                niveles: posicion.niveles
+            }
+            await PosicionModelo.updateOne({ _id: posicion._id }, { $set: item2 });
             await posicion.save();
         }
+       // console.log("second");
         if(partida.posiciones[posIndex].embalajesxSalir.cajas != req.body.embalajesEntrada.cajas){
+            posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
+          //  console.log("test");
             partida.embalajesxSalir ={"cajas": (partida.embalajesxSalir["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"])+req.body.embalajesEntrada["cajas"]};
 
             if(partida.posiciones.length>0){
                // partida.posiciones[posIndex].embalajesEntrada= req.body.embalajesEntrada;
-
+              // console.log("test1");
                 productosDia.embalajes.cajas=(productosDia.embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"])+req.body.embalajesEntrada["cajas"];
                 let item = {
                     embalajes: productosDia.embalajes
                 }
+              //  console.log("test2");
                 await Producto.updateOne({ _id: productosDia._id }, { $set: item });
                 await productosDia.save();
+              //  console.log("test3");
                 partida.posiciones[posIndex].embalajesxSalir= req.body.embalajesEntrada;
                 let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
+                console.log(indexnivelesNew+nivel_id);
                 posicion.niveles[indexnivelesNew].productos=[];
                 posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
                 posicion.niveles[indexnivelesNew].apartado =true;
@@ -2234,7 +2247,13 @@ async function ModificaPartidas(req, res)
                 producto_id: productosDia._id,
                 embalajes: partida.posiciones[posIndex].embalajesxSalir
                 });
-                await posicion.save();
+              //  console.log("test5")
+                let item2 = {
+                niveles: posicion.niveles
+                }
+                await PosicionModelo.updateOne({ _id: posicion._id }, { $set: item2 });
+                await posicion.save();//console.log("test6")
+
             }
 
         }
@@ -2265,6 +2284,11 @@ async function ModificaPartidas(req, res)
 
     await partida.save();
     res.status(200).send("ok");
+    }
+    catch (error) {
+        console.log(error)
+        return res.status(500).send(error);
+    }
 }
 
 async function getPartidaMod(req, res)

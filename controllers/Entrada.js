@@ -421,13 +421,13 @@ async function saveEntradaBabel(req, res) {
 	var mongoose = require('mongoose');
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
-	console.log("1");
+	//console.log("1");
 	var arrPartidas=[];
 	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
 	try{
 	for (var i=0; i<req.body.Pedido.length ; i++) {
-		console.log(req.body.Pedido[i]);
+		//console.log(req.body.Pedido[i]);
 		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined && req.body.Pedido[i].NO !== undefined)
 		{
 			console.log("test");
@@ -2879,6 +2879,194 @@ async function getTarimasAndCajas(req, res){
  
 }
 
+async function saveEntradaCPD(req, res) {
+	var mongoose = require('mongoose');
+	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
+	//console.log(req.body);
+	//console.log("1");
+	var arrPartidas=[];
+	var resORDENES="";//ORDENES YA EXISTENTES
+	var arrPO=[];
+	try{
+	for (var i=0; i<req.body.Pedido.length ; i++) {
+		//console.log(req.body.Pedido[i]);
+		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined && req.body.Pedido[i].NO !== undefined)
+		{
+			console.log("test");
+			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
+			if(producto==undefined)
+				return res.status(500).send("no existe item: "+req.body.Pedido[i].Clave);
+	        //console.log(producto.clave);
+			let fechaProducionplanta=Date.parse(req.body.Pedido[i].Caducidad);
+			fechaProducionplanta = new Date (fechaProducionplanta).getTime()-(7*3600000);
+			const data={
+				producto_id:producto._id,
+				clave:producto.clave,
+				descripcion:producto.descripcion,
+				origen:"BABEL",
+				tipo: "NORMAL",
+    			status: "WAITINGARRIVAL",
+				embalajesEntrada: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
+	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
+	        	fechaProduccion:new Date(fechaProducionplanta),
+	        	//fechaCaducidad: fechaCaducidadRes,
+	        	//lote:req.body.Pedido[i].Lote,
+	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
+	        	valor:0
+	        }
+	       // console.log(data.InfoPedidos)
+	        let countEntradas=await Entrada.find({"factura":req.body.Pedido[i].Factura}).exec();
+	        countEntradas= countEntradas.length<1 ? await Entrada.find({"referencia":req.body.Pedido[i].Factura}).exec():countEntradas;
+	        countEntradas= countEntradas.length<1 ? await Entrada.find({"item":req.body.Pedido[i].Factura}).exec():countEntradas;
+	        console.log("test"+countEntradas.length)
+    		if(countEntradas.length ==0)
+    		{
+		        if(arrPO.find(obj=> (obj.factura == req.body.Pedido[i].Factura)))
+	    		{
+	    			//console.log("yes");
+	    			let index=arrPO.findIndex(obj=> (obj.factura == req.body.Pedido[i].Factura));
+	    			arrPO[index].arrPartidas.push(data)
+		    	}
+		        else{
+		        	//console.log("NO");
+		        	
+			        	arrPartidas.push(data);
+			        	const PO={
+						po:req.body.Pedido[i].NoOrden,
+						fechasalida:req.body.Pedido[i].Caducidad,
+						factura:req.body.Pedido[i].Factura,
+						trailer:req.body.Pedido[i].trailer,
+						sello:req.body.Pedido[i].sello,
+						chofer:req.body.Pedido[i].chofer,
+						transportista:req.body.Pedido[i].transporte,
+			        	arrPartidas:[]
+			        	}
+			        	PO.arrPartidas.push(data)
+		    			arrPO.push(PO);
+		    		}
+		    		
+	    	} 
+    		if(countEntradas.length >0)
+    		{
+    			resORDENES=resORDENES+req.body.Pedido[i].Factura+"\n";
+    		}
+	        
+    	}
+    	else
+    	{
+    		if(resORDENES =="" && req.body.Pedido[i].Clave == undefined && arrPO.length<1 && i>6)
+    			return res.status(500).send("clave no existe\n" + resORDENES+" ");
+    	}
+	}
+	if(resORDENES != "" && arrPO.length<1)
+	{
+
+		//arrPO=[];
+		return res.status(500).send("Ya existe las Remisiones:\n" + resORDENES+" ");
+		
+	}
+	//console.log(arrPO);
+	
+	//console.log("test");
+	//console.log(arrPartidas);
+	let reserror="";
+    var arrPartidas_id = [];
+    var partidas = [];
+	await Helper.asyncForEach(arrPO,async function (noOrden) {
+		arrPartidas_id = [];
+    	partidas = [];
+	    await Helper.asyncForEach(noOrden.arrPartidas, async function (partida) {
+	        partida.InfoPedidos[0].IDAlmacen=req.body.IdAlmacen;
+	        let nPartida = new PartidaModel(partida);
+	        //console.log(nPartida.InfoPedidos[0].IDAlmacen);
+	        //console.log(nPartida);
+	        await nPartida.save().then((partida) => {
+	        	partidas.push(partida)
+	            arrPartidas_id.push(partida._id);
+	        });
+	    });
+	  //  console.log(partidas);
+	    //console.log(arrPartidas_id);
+	    
+		let fechaSalidaPlanta=Date.parse(noOrden.fechasalida);
+		let fechaesperada=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido)+((60 * 60 * 24 * 1000)*7+1);
+
+		//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
+		if (partidas && partidas.length > 0) {
+			let idCliente = req.body.IDClienteFiscal;
+			let idSucursales = req.body.IDSucursal;
+
+			let nEntrada = new Entrada();
+
+			nEntrada.fechaEntrada = new Date(fechaesperada);
+			nEntrada.fechaEsperada = new Date(fechaesperada);
+			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
+			nEntrada.valor = partidas.map(x => x.valor).reduce(function (total, valor) {
+				return total + valor;
+			});
+			nEntrada.almacen_id=mongoose.Types.ObjectId(partidas[0].InfoPedidos[0].IDAlmacen);
+			nEntrada.clienteFiscal_id = idCliente;
+			nEntrada.sucursal_id = idSucursales;
+			nEntrada.status = "WAITINGARRIVAL";/*repalce arrival*/
+			nEntrada.tipo = "NORMAL";
+			nEntrada.partidas = partidas.map(x => x._id);
+			nEntrada.nombreUsuario = "BarcelBabel";
+			nEntrada.tracto = noOrden.trailer;			
+			nEntrada.referencia = noOrden.factura;
+			nEntrada.factura = noOrden.factura;
+			nEntrada.item = noOrden.factura;
+			nEntrada.transportista = noOrden.transportista;
+			nEntrada.operador = noOrden.chofer;
+			nEntrada.sello=noOrden.sello;
+			await new Promise(resolve => {
+					let time=(Math.random() * 5000)*10;
+			        setTimeout(resolve,time );
+			        //poconsole.log(time);
+			    });
+			nEntrada.ordenCompra=noOrden.po;
+			nEntrada.fechaAlta = new Date(Date.now()-(5*3600000));
+			nEntrada.idEntrada = await getNextID();
+			nEntrada.folio = await getNextID();
+		 	
+			nEntrada.stringFolio = await Helper.getStringFolio(nEntrada.folio, nEntrada.clienteFiscal_id, 'I', false);
+			
+			nEntrada.fechaSalidaPlanta = new Date(fechaSalidaPlanta);
+			//console.log("testEntrada");
+			
+			await nEntrada.save()
+				.then(async (entrada) => {
+					//console.log("testpartidas");
+
+					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
+					
+					//console.log(partidas);
+					/*console.log(entrada);
+					console.log("/------------------/")*/
+				}).catch((error) => {
+					console.log(error);
+					reserror=error
+				});
+		}else {
+			console.log("No se puede, no existen partidas con los IDs de los pedidos indicados");
+		}
+	});
+		if(reserror!= "")
+		{
+			console.log(reserror)
+			return res.status(500).send(reserror);
+		}
+		else{
+			//console.log("testFINAL")
+			return res.status(200).send("OK");
+		}
+	}
+	catch(error){
+			console.log(error)
+			return res.status(500).send(error);
+			console.log(error);
+	};
+	return res.status(200).send("OK");
+}
 
 /////////////// D E P U R A C I O N   D E   C O D I G O ///////////////
 
@@ -2959,6 +3147,7 @@ module.exports = {
 	saveEntradaChevron,
 	saveEntradaPisa,
 	getbodycorreo,
-	getTarimasAndCajas
+	getTarimasAndCajas,
+	saveEntradaCPD
 	// getPartidaById,
 }
