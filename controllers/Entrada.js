@@ -1692,7 +1692,7 @@ function getExcelCaducidades(req, res) {
 	                let band = false;
 	                partidas.producto_id.arrEquivalencias.forEach(function (equivalencia) {
 	                    if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
-	                    	console.log(partidas._id)
+	                    	//console.log(partidas._id)
 	                        tarimas = partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia ? (partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
 	                        band = true;
 	                    }
