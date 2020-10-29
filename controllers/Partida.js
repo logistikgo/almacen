@@ -47,9 +47,9 @@ async function getbyid(req, res)
 {
     try{
         let partida_id = req.query.partida_id;
-        console.log(partida_id);
+       // console.log(partida_id);
         var partida =await Partida.findOne({ _id:new ObjectId(partida_id)}).exec();
-            console.log(partida)
+           // console.log(partida)
         res.status(200).send(partida);
     }catch (e) {
         console.log(e);
@@ -2158,35 +2158,88 @@ async function ModificaPartidas(req, res)
     {
         let id_pasillo=req.body.ubicacion.pasillo_id;
         let id_pocision=req.body.ubicacion.posicion_id;
+        let nivel_id=req.body.ubicacion.nivel_id;
         let nivel=req.body.ubicacion.nivel;
         let nivelIndex=parseInt(nivel)-1;
+        let posIndex=req.body.posIndex;
         let posicion = await PosicionModelo.findOne({ _id: id_pocision});
         let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
-        /*console.log("Posicion---------------");
-        console.log(posicion);
-        console.log("Pasillo---------------");
-        console.log(pasillo);
-        console.log("---------------");
-        console.log("nivel"+nivelIndex);*/
-        posicion.niveles[nivelIndex].isCandadoDisponibilidad = true; 
-        posicion.niveles[nivelIndex].apartado = true;
-        //console.log(posicion);
-        await posicion.save();
-        partida.posiciones=[];
-        let jPosicionBahia = {
-            embalajesEntrada: partida.embalajesEntrada,
-            embalajesxSalir: partida.embalajesxSalir,
-            pasillo: pasillo.nombre,
-            pasillo_id: pasillo._id,
-            posicion: posicion.nombre,
-            posicion_id: posicion._id,
-            nivel_id: posicion.niveles[nivelIndex]._id,
-            nivel: posicion.niveles[nivelIndex].nombre,
-            ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
-        };
-        partida.posiciones.push(jPosicionBahia);
+        let oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id});
+        let productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
+        if(nivel._id!=partida.posiciones[posIndex].nivel_id.toString())
+        {
+            console.log(partida.posiciones[posIndex].nivel_id);
 
-        
+            let indexniveles=oldpos.niveles.findIndex(obj=> (obj._id == partida.posiciones[posIndex].nivel_id.toString()));console.log(indexniveles);
+            let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id == partida.producto_id.toString()));
+            oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]=oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"];
+            let item = {
+                niveles: oldpos.niveles
+            }
+            await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
+            if(oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]<1)
+            {
+                oldpos.niveles[indexniveles].productos.splice(indexprod, 1);
+            }
+            if(oldpos.niveles[indexniveles].productos.length<1)
+            {
+                oldpos.niveles[indexniveles].productos=[]
+                oldpos.niveles[indexniveles].isCandadoDisponibilidad= false;
+                oldpos.niveles[indexniveles].apartado =false;
+            }
+            //posicion.niveles[nivelIndex].productos.find(obj=> (obj.factura == req.body.Pedido[i].Factura))
+            //console.log(posicion);
+            await oldpos.save();
+           // partida.posiciones[]=[];
+            let jPosicionBahia = {
+                embalajesEntrada: partida.posiciones[posIndex].embalajesxSalir,
+                embalajesxSalir: partida.posiciones[posIndex].embalajesxSalir,
+                pasillo: pasillo.nombre,
+                pasillo_id: pasillo._id,
+                posicion: posicion.nombre,
+                posicion_id: posicion._id,
+                nivel_id: posicion.niveles[nivelIndex]._id,
+                nivel: posicion.niveles[nivelIndex].nombre,
+                ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
+            };
+            partida.posiciones[posIndex]=jPosicionBahia;
+            //console.log("E"+nivel)
+            let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
+           // console.log(indexnivelesNew)
+            posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+            posicion.niveles[indexnivelesNew].apartado =true;
+            posicion.niveles[indexnivelesNew].productos.push({
+                producto_id: productosDia._id,
+                embalajes: partida.posiciones[posIndex].embalajesxSalir
+            });
+            await posicion.save();
+        }
+        if(partida.posiciones[posIndex].embalajesxSalir != req.body.embalajesEntrada){
+            partida.embalajesxSalir ={"cajas": (partida.embalajesxSalir["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"])+req.body.embalajesEntrada["cajas"]};
+
+            if(partida.posiciones.length>0){
+               // partida.posiciones[posIndex].embalajesEntrada= req.body.embalajesEntrada;
+
+                productosDia.embalajes.cajas=(productosDia.embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"])+req.body.embalajesEntrada["cajas"];
+                let item = {
+                    embalajes: productosDia.embalajes
+                }
+                await Producto.updateOne({ _id: productosDia._id }, { $set: item });
+                await productosDia.save();
+                partida.posiciones[posIndex].embalajesxSalir= req.body.embalajesEntrada;
+                let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
+                posicion.niveles[indexnivelesNew].productos=[];
+                posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+                posicion.niveles[indexnivelesNew].apartado =true;
+                posicion.niveles[indexnivelesNew].productos.push({
+                producto_id: productosDia._id,
+                embalajes: partida.posiciones[posIndex].embalajesxSalir
+                });
+                await posicion.save();
+            }
+
+        }
+
     }
     else
     {
@@ -2212,7 +2265,7 @@ async function ModificaPartidas(req, res)
     }
 
     await partida.save();
-
+    res.status(200).send("ok");
 }
 
 async function getPartidaMod(req, res)
@@ -2227,31 +2280,25 @@ async function getPartidaMod(req, res)
         
         let partidasPorCliente = [];
         partidas.forEach(partida =>{
-            console.log(partida._id)
             if(partida.entrada_id !== null){
                     if(partida.entrada_id.clienteFiscal_id.toString() === idClienteFiscal){
 
                         let posiciones = partida.posiciones;
                         
-                        if(posiciones.length > 1){
-
-                            let posicionesADividir = posiciones.filter(pos => pos.isEmpty === false);
-                            //Se obtiene la informacion 
+                        for(let i = 0; i < posiciones.length; i++){
+                            if(posiciones[i].isEmpty === false){
+                            let infoPartida = getInfoPartida(partida);
                             
-                            for(let i = 0; i < posicionesADividir.length; i++){
-                                let infoPartida = getInfoPartida(partida);
-                                
-                                infoPartida["embalajesxSalir"] = posicionesADividir[i].embalajesxSalir;
-                                infoPartida["embalajesEntradas"] = posicionesADividir[i].embalajesEntrada;
-                                infoPartida["posiciones"] = posicionesADividir[i];
+                                infoPartida["embalajesxSalir"] = posiciones[i].embalajesxSalir;
+                                infoPartida["embalajesEntradas"] = posiciones[i].embalajesEntrada;
+                                infoPartida["posiciones"] = [];
+                                infoPartida["posiciones"].push(posiciones[i]);
                                 infoPartida["posIndex"]=i;
+                                //console.log( infoPartida["posiciones"]);
                                 partidasPorCliente.push(infoPartida);
-                              
                             }
-
                         }
-                        else
-                            partidasPorCliente.push(partida);
+
                     }
             }
 
