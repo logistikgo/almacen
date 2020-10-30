@@ -689,6 +689,7 @@ async function getExcelSalidas(req, res) {
 					descripcion: partida.descripcion,
 					subclasificacion: partida.producto_id.subclasificacion,
 					posiciones: partida.posiciones,
+					destinatario:partida.destinatario
 					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes,
 					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
@@ -1404,7 +1405,7 @@ async function getExcelSalidasBarcel(req, res) {
 		worksheet.cell(2, indexheaders+8).string('Destinatario').style(headersStyle);
 		worksheet.cell(2, indexheaders+9).string('Datos Tracto');
 		worksheet.cell(2, indexheaders+10).string('Datos Remolque');
-		worksheet.cell(2, indexheaders+10).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders+11).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
         arrPartidas.sort(function(a, b) {
