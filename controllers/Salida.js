@@ -689,7 +689,7 @@ async function getExcelSalidas(req, res) {
 					descripcion: partida.descripcion,
 					subclasificacion: partida.producto_id.subclasificacion,
 					posiciones: partida.posiciones,
-					destinatario:partida.destinatario
+					destinatario:partida.destinatario,
 					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes,
 					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
