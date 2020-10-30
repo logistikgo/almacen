@@ -2883,21 +2883,24 @@ async function saveEntradaCPD(req, res) {
 	var mongoose = require('mongoose');
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
 	//console.log(req.body);
-	//console.log("1");
+	console.log("1");
 	var arrPartidas=[];
 	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
 	try{
 	for (var i=0; i<req.body.Pedido.length ; i++) {
 		//console.log(req.body.Pedido[i]);
-		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined && req.body.Pedido[i].NO !== undefined)
+		if(req.body.Pedido[i] !== undefined && req.body.Pedido[i].Clave !== undefined )
 		{
-			console.log("test");
+			//console.log("test");
 			var producto=await Producto.findOne({ 'clave': req.body.Pedido[i].Clave }).exec();
 			if(producto==undefined)
 				return res.status(500).send("no existe item: "+req.body.Pedido[i].Clave);
 	        //console.log(producto.clave);
-			let fechaProducionplanta=Date.parse(req.body.Pedido[i].Caducidad);
+
+			let fechaProducionplanta=Date.parse(req.body.Pedido[i].Caducidad.slice(0, 10));
+				//console.log(fechaProducionplanta);
+				let fechaSalidaPla=new Date (fechaProducionplanta)
 			fechaProducionplanta = new Date (fechaProducionplanta).getTime()-(7*3600000);
 			const data={
 				producto_id:producto._id,
@@ -2933,7 +2936,7 @@ async function saveEntradaCPD(req, res) {
 			        	arrPartidas.push(data);
 			        	const PO={
 						po:req.body.Pedido[i].NoOrden,
-						fechasalida:req.body.Pedido[i].Caducidad,
+						fechasalida:fechaSalidaPla,
 						factura:req.body.Pedido[i].Factura,
 						trailer:req.body.Pedido[i].trailer,
 						sello:req.body.Pedido[i].sello,
@@ -2985,11 +2988,11 @@ async function saveEntradaCPD(req, res) {
 	            arrPartidas_id.push(partida._id);
 	        });
 	    });
-	  //  console.log(partidas);
-	    //console.log(arrPartidas_id);
+	   console.log(partidas);
+	    console.log(noOrden.fechasalida.toString());
 	    
 		let fechaSalidaPlanta=Date.parse(noOrden.fechasalida);
-		let fechaesperada=Date.parse(req.body.Infoplanta[indexInfopedido+1].InfoPedido)+((60 * 60 * 24 * 1000)*7+1);
+		let fechaesperada=Date.parse(noOrden.fechasalida)+((60 * 60 * 24 * 1000)*7+1);
 
 		//console.log(dateFormat(fechaesperada, "dd/mm/yyyy"));
 		if (partidas && partidas.length > 0) {
@@ -2997,7 +3000,7 @@ async function saveEntradaCPD(req, res) {
 			let idSucursales = req.body.IDSucursal;
 
 			let nEntrada = new Entrada();
-
+			console.log(fechaesperada.toString())
 			nEntrada.fechaEntrada = new Date(fechaesperada);
 			nEntrada.fechaEsperada = new Date(fechaesperada);
 			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
