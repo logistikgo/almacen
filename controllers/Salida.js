@@ -689,6 +689,7 @@ async function getExcelSalidas(req, res) {
 					descripcion: partida.descripcion,
 					subclasificacion: partida.producto_id.subclasificacion,
 					posiciones: partida.posiciones,
+					destinatario:partida.destinatario
 					CajasPedidas: partida.CajasPedidas,
 					embalajes: embalajes,
 					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
@@ -876,7 +877,7 @@ async function getExcelSalidas(req, res) {
 		worksheet.cell(2, indexheaders+8).string('Destinatario').style(headersStyle);
 		worksheet.cell(2, indexheaders+9).string('Datos Tracto');
 		worksheet.cell(2, indexheaders+10).string('Datos Remolque');
-		worksheet.cell(2, indexheaders+10).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders+11).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
         arrPartidas.sort(function(a, b) {
@@ -1401,9 +1402,10 @@ async function getExcelSalidasBarcel(req, res) {
 		worksheet.cell(2, indexheaders+5).string('Fecha Caducidad').style(headersStyle);
 		worksheet.cell(2, indexheaders+6).string('Retraso').style(headersStyle);
 		worksheet.cell(2, indexheaders+7).string('On Time').style(headersStyle);
-		worksheet.cell(2, indexheaders+8).string('Datos Tracto');
-		worksheet.cell(2, indexheaders+9).string('Datos Remolque');
-		worksheet.cell(2, indexheaders+10).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders+8).string('Destinatario').style(headersStyle);
+		worksheet.cell(2, indexheaders+9).string('Datos Tracto');
+		worksheet.cell(2, indexheaders+10).string('Datos Remolque');
+		worksheet.cell(2, indexheaders+11).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
         arrPartidas.sort(function(a, b) {
@@ -1767,6 +1769,7 @@ async function saveSalidaBabel(req, res) {
 				var producto=await Producto.findOne({ 'clave':Pedido.Clave }).exec();
 				if(producto==undefined)
 					return res.status(400).send("no existe item: "+Pedido.Clave);
+
 				let countEntradas=await Salida.find({"po":req.body.Pedido[1].Pedido}).exec();
 				console.log("total: "+countEntradas.length)
 		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido}).exec():countEntradas;
