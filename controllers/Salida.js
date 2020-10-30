@@ -876,7 +876,7 @@ async function getExcelSalidas(req, res) {
 		worksheet.cell(2, indexheaders+8).string('Destinatario').style(headersStyle);
 		worksheet.cell(2, indexheaders+9).string('Datos Tracto');
 		worksheet.cell(2, indexheaders+10).string('Datos Remolque');
-		worksheet.cell(2, indexheaders+10).string('Ubicacion').style(headersStyle);
+		worksheet.cell(2, indexheaders+11).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
         arrPartidas.sort(function(a, b) {
@@ -1401,8 +1401,9 @@ async function getExcelSalidasBarcel(req, res) {
 		worksheet.cell(2, indexheaders+5).string('Fecha Caducidad').style(headersStyle);
 		worksheet.cell(2, indexheaders+6).string('Retraso').style(headersStyle);
 		worksheet.cell(2, indexheaders+7).string('On Time').style(headersStyle);
-		worksheet.cell(2, indexheaders+8).string('Datos Tracto');
-		worksheet.cell(2, indexheaders+9).string('Datos Remolque');
+		worksheet.cell(2, indexheaders+8).string('Destinatario').style(headersStyle);
+		worksheet.cell(2, indexheaders+9).string('Datos Tracto');
+		worksheet.cell(2, indexheaders+10).string('Datos Remolque');
 		worksheet.cell(2, indexheaders+10).string('Ubicacion').style(headersStyle);
         let i=3;
         //console.log("test1")
