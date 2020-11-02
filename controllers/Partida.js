@@ -1953,8 +1953,8 @@ async function reporteFEFOS(req, res)
     //console.log(req.query.fechaInicio);
     let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
     let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
-   console.log(fechaInicio);
-   console.log(fechaFinal);
+   //console.log(fechaInicio);
+   //console.log(fechaFinal);
     try {
         let filter = {
                 clienteFiscal_id: req.query.clienteFiscal_id ,
@@ -2006,7 +2006,6 @@ async function reporteFEFOS(req, res)
                                 fechaCaducidad: partidaT.fechaCaducidad
                             };
                             //console.log(partidaT)
-
                             let elem=await Producto.findOne({ _id: partidaT.producto_id });
                             let fechaFrescura = new Date(partidaT.fechaCaducidad.getTime()- (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); 
                             
@@ -2077,7 +2076,7 @@ async function reporteFEFOS(req, res)
                         await Helper.asyncForEach(inbyProd,async function (p){
                             if (p.clave == partidaT.clave)
                             total++;
-                            if(partidaT.fechaCaducidad < p.fechaCaducidad && p.clave == partidaT.clave )
+                            if(partidaT.fechaCaducidad < p.fechaCaducidad && p.clave == partidaT.clave)
                                 correct++;
                             else
                                 if (p.clave == partidaT.clave)

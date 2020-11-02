@@ -1687,6 +1687,7 @@ function getExcelCaducidades(req, res) {
            	worksheet.cell(i, 4).string(partidas.clave ? partidas.clave:"");
            	worksheet.cell(i, 5).string(partidas.descripcion ? partidas.descripcion:"");
            	let indexbody=6;
+           	
            	clienteEmbalaje.forEach(emb=>
            	{	
            		let tarimas =0
