@@ -752,14 +752,14 @@ async function getPartidasByIDs(req, res) {
 
     let isFilter = false;
 
-	//Verificar si el reporte contiene filtros
-	if(req.query.page === undefined || req.query.limit === undefined)
-		isFilter = true;
+    //Verificar si el reporte contiene filtros
+    if(req.query.page === undefined || req.query.limit === undefined)
+        isFilter = true;
     
     let pagination = {
-		page: parseInt(req.query.page) || 10,
-		limit: parseInt(req.query.limit) || 1
-	}
+        page: parseInt(req.query.page) || 10,
+        limit: parseInt(req.query.limit) || 1
+    }
     console.log(pagination)
     let arrClientesFiscales_id = req.query.clienteFiscal_id;
     let arrSucursales_id = req.query.sucursal_id;
