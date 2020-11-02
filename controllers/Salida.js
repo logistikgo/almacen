@@ -1042,7 +1042,7 @@ async function getExcelSalidas(req, res) {
             i++;
         });
         workbook.write('ReporteSali'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
-
+        console.log("END")
 	})
 	.catch((error) => {
 		console.log(error);
