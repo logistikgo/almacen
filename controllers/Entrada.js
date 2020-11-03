@@ -2901,10 +2901,9 @@ async function saveEntradaCPD(req, res) {
 			if(producto==undefined)
 				return res.status(500).send("no existe item: "+req.body.Pedido[i].Clave);
 	        //console.log(producto.clave);
-
-			let fechaProducionplanta=Date.parse(req.body.Pedido[i].Caducidad.slice(0, 10));
+	        let fechaProducionplanta=Date.parse(req.body.Pedido[i].Caducidad.slice(6, 10)+"/"+req.body.Pedido[i].Caducidad.slice(3, 5)+"/"+req.body.Pedido[i].Caducidad.slice(0, 2));
 				//console.log(fechaProducionplanta);
-				let fechaSalidaPla=new Date (fechaProducionplanta)
+				let fechaSalidaPla=new Date (fechaProducionplanta);
 			fechaProducionplanta = new Date (fechaProducionplanta).getTime()-(7*3600000);
 			const data={
 				producto_id:producto._id,
@@ -2915,7 +2914,7 @@ async function saveEntradaCPD(req, res) {
     			status: "WAITINGARRIVAL",
 				embalajesEntrada: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
-	        	fechaProduccion:new Date(fechaProducionplanta),
+	        	fechaProduccion:fechaProducionplanta,
 	        	//fechaCaducidad: fechaCaducidadRes,
 	        	//lote:req.body.Pedido[i].Lote,
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
@@ -3047,8 +3046,8 @@ async function saveEntradaCPD(req, res) {
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 					
 					//console.log(partidas);
-					/*console.log(entrada);
-					console.log("/------------------/")*/
+					//console.log(entrada);*/
+					console.log("/--------end----------/")
 				}).catch((error) => {
 					console.log(error);
 					reserror=error
@@ -3072,6 +3071,7 @@ async function saveEntradaCPD(req, res) {
 			return res.status(500).send(error);
 			console.log(error);
 	};
+	console.log("ok");
 	return res.status(200).send("OK");
 }
 

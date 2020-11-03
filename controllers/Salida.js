@@ -641,138 +641,9 @@ async function getExcelSalidas(req, res) {
 	{
 		filter.stringFolio=folio;
 	}
-	Salida.find(filter)
-	.populate({
-		path: 'partidas',
-		model: 'Partida'
-	})
-	.populate({
-		path: 'partidas',
-		populate: {
-			path: 'producto_id',
-			model: 'Producto'
-		}
-	})
-	.then(async (salidas) => {
-		salidas.forEach(salida => {
-			
-			partidas = salida.partidas;
 
-			partidas.forEach((partida) => {
-				let embalajes;
-				salidas_id = partida.salidas_id;
 
-				salidas_id.forEach(elem => {
-					let elemId = elem.salida_id;
-					let paramId = salida._id;
-					if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
-						embalajes = elem.embalajes;
-					}
-				})
-				//console.log(partida);
-				var paramsSalida = {
-					_id: salida._id,
-					stringFolio: salida.stringFolio,
-					fechaAlta: salida.fechaAlta,
-					fechaSalida: salida.fechaSalida,
-					fechaCaducidad: partida.fechaCaducidad,
-					transportista: salida.transportista,
-					placas: salida.placas,
-					placasRemolque: salida.placasRemolque,
-					placasTrailer: salida.placasTrailer,
-					embarco: salida.embarco,
-					operador: salida.operador,
-					referencia: salida.referencia,
-					item: salida.item,
-					clave: partida.clave,
-					lote: partida.lote,
-					descripcion: partida.descripcion,
-					subclasificacion: partida.producto_id.subclasificacion,
-					posiciones: partida.posiciones,
-					destinatario:salida.destinatario,
-					CajasPedidas: partida.CajasPedidas,
-					embalajes: embalajes,
-					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
-					producto_id:partida.producto_id,
-					horaSello: salida.horaSello
-				}
-				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == "" && paramsSalida.embalajes!= undefined){
-					arrPartidas.push(paramsSalida);
-					//console.log("in")
-				}
-				else
-				{	
-					let resClasificacion=true;
-					let resSubclasificacion=true;
-					let value = 0
-		        	if(paramsSalida.CajasPedidas && paramsSalida.embalajes)
-		        		value=(  paramsSalida.embalajes.cajas/paramsSalida.CajasPedidas.cajas) ? (paramsSalida.embalajes.cajas/(paramsSalida.CajasPedidas.cajas)) : 0;
-					let resFull=true;
-					let resClave=true;
-					let resResontime=true;
-					ontime=0;
-					resontime="SIN ASIGNAR";
-					if (paramsSalida.fechaReciboRemision !== "SIN ASIGNAR" && paramsSalida.fechaSalida) {
-						fRecibo = paramsSalida.fechaReciboRemision.getTime();
-					    fSalida = paramsSalida.fechaSalida.getTime();
-					    ontime = Math.abs(Math.floor((fRecibo- fSalida)/86400000));
-						if (ontime < 0)
-			                resontime = "RETRASO"
-
-			            else
-			                resontime = "ATIEMPO";
-		        	}
-					if(clasificacion != "" && partida.producto_id.statusReg == "ACTIVO")
-					{
-						resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
-					}
-					if(subclasificacion != "" && partida.producto_id.statusReg == "ACTIVO")
-					{
-						resSubclasificacion=partida.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
-					}
-					//console.log(valorontime + "==" + resontime )
-					if(resontime != valorontime && valorontime !="")
-					{
-						resResontime =false;
-					}
-					if(clave != "" && partida.producto_id._id.toString() != clave.toString())
-					{
-						resClave=false;
-					}
-					if(Infull!="")
-					{
-						//console.log(InfullInit +"-"+(value*100)+"-"+InfullFin)
-						if(InfullInit != "" && InfullFin!= "" && InfullFin!= "x")
-						{
-							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
-							{
-								resFull=true;
-							}
-							else
-								resFull=false;
-						}
-						if(InfullInit != "" && InfullFin == "x")
-						{
-							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
-							{
-								resFull=true;
-							}
-							else
-								resFull=false;
-						}
-					}
-					//console.log(resFull);
-					//console.log(resFull+" == true && "+resClasificacion+" == true && "+resSubclasificacion+" == true && "+resClave+"==true && "+resResontime+"==true")
-					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true && paramsSalida.embalajes!= undefined)
-					{
-						arrPartidas.push(paramsSalida);
-					}
-				}
-				
-
-			})
-		})
-		var excel = require('excel4node');
+	var excel = require('excel4node');
         var dateFormat = require('dateformat');
         var workbook = new excel.Workbook();
         var tituloStyle = workbook.createStyle({
@@ -879,12 +750,145 @@ async function getExcelSalidas(req, res) {
 		worksheet.cell(2, indexheaders+10).string('Datos Remolque');
 		worksheet.cell(2, indexheaders+11).string('Ubicacion').style(headersStyle);
         let i=3;
+
+
+	Salida.find(filter)
+	.populate({
+		path: 'partidas',
+		model: 'Partida'
+	})
+	.populate({
+		path: 'partidas',
+		populate: {
+			path: 'producto_id',
+			model: 'Producto'
+		}
+	})
+	.then(async (salidas) => {
+		salidas.forEach(salida => {
+			
+			partidas = salida.partidas;
+
+			partidas.forEach((partida) => {
+				let embalajes;
+				salidas_id = partida.salidas_id;
+
+				salidas_id.forEach(elem => {
+					let elemId = elem.salida_id;
+					let paramId = salida._id;
+					if(JSON.stringify(elemId) == JSON.stringify(paramId)) {
+						embalajes = elem.embalajes;
+					}
+				})
+				//console.log(partida);
+				var paramsSalida = {
+					_id: salida._id,
+					stringFolio: salida.stringFolio,
+					fechaAlta: salida.fechaAlta,
+					fechaSalida: salida.fechaSalida,
+					fechaCaducidad: partida.fechaCaducidad,
+					transportista: salida.transportista,
+					placas: salida.placas,
+					placasRemolque: salida.placasRemolque,
+					placasTrailer: salida.placasTrailer,
+					embarco: salida.embarco,
+					operador: salida.operador,
+					referencia: salida.referencia,
+					item: salida.item,
+					clave: partida.clave,
+					lote: partida.lote,
+					descripcion: partida.descripcion,
+					subclasificacion: partida.producto_id.subclasificacion,
+					posiciones: partida.posiciones,
+					destinatario:salida.destinatario,
+					CajasPedidas: partida.CajasPedidas,
+					embalajes: embalajes,
+					fechaReciboRemision: salida.fechaReciboRemision ? salida.fechaReciboRemision : "SIN ASIGNAR",
+					producto_id:partida.producto_id,
+					horaSello: salida.horaSello
+				}
+				if( Infull =="" && clave=="" && folio=="" && valorontime =="" && clasificacion == "" && subclasificacion == "" && paramsSalida.embalajes!= undefined){
+					arrPartidas.push(paramsSalida);
+				}
+				else
+				{	
+					let resClasificacion=true;
+					let resSubclasificacion=true;
+					let value = 0
+		        	if(paramsSalida.CajasPedidas && paramsSalida.embalajes)
+		        		value=(  paramsSalida.embalajes.cajas/paramsSalida.CajasPedidas.cajas) ? (paramsSalida.embalajes.cajas/(paramsSalida.CajasPedidas.cajas)) : 0;
+					let resFull=true;
+					let resClave=true;
+					let resResontime=true;
+					ontime=0;
+					resontime="SIN ASIGNAR";
+					if (paramsSalida.fechaReciboRemision !== "SIN ASIGNAR" && paramsSalida.fechaSalida) {
+						fRecibo = paramsSalida.fechaReciboRemision.getTime();
+					    fSalida = paramsSalida.fechaSalida.getTime();
+					    ontime = Math.abs(Math.floor((fRecibo- fSalida)/86400000));
+						if (ontime < 0)
+			                resontime = "RETRASO"
+
+			            else
+			                resontime = "ATIEMPO";
+		        	}
+					if(clasificacion != "" && partida.producto_id.statusReg == "ACTIVO")
+					{
+						resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+					}
+					if(subclasificacion != "" && partida.producto_id.statusReg == "ACTIVO")
+					{
+						resSubclasificacion=partida.producto_id.subclasificacion_id.toString() === subclasificacion.toString();
+					}
+					//console.log(valorontime + "==" + resontime )
+					if(resontime != valorontime && valorontime !="")
+					{
+						resResontime =false;
+					}
+					if(clave != "" && partida.producto_id._id.toString() != clave.toString())
+					{
+						resClave=false;
+					}
+					if(Infull!="")
+					{
+						//console.log(InfullInit +"-"+(value*100)+"-"+InfullFin)
+						if(InfullInit != "" && InfullFin!= "" && InfullFin!= "x")
+						{
+							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
+							{
+								resFull=true;
+							}
+							else
+								resFull=false;
+						}
+						if(InfullInit != "" && InfullFin == "x")
+						{
+							if(value*100 >= parseInt(InfullInit) && value*100 <= parseInt(InfullFin))
+							{
+								resFull=true;
+							}
+							else
+								resFull=false;
+						}
+					}
+					//console.log(resFull);
+					//console.log(resFull+" == true && "+resClasificacion+" == true && "+resSubclasificacion+" == true && "+resClave+"==true && "+resResontime+"==true")
+					if(resFull == true && resClasificacion == true && resSubclasificacion == true && resClave==true && resResontime==true && paramsSalida.embalajes!= undefined)
+					{
+						arrPartidas.push(paramsSalida);
+					}
+				}
+				
+
+			})
+		})
+		
         //console.log("test1")
-        arrPartidas.sort(function(a, b) {
+       /* arrPartidas.sort(function(a, b) {
 		    a = new Date(a.fechaSalida);
 		    b = new Date(b.fechaSalida);
 		    return a>b ? -1 : a<b ? 1 : 0;
-		});
+		});*/
         arrPartidas.forEach(partidas => 
         {
         	worksheet.cell(i, 1).string(partidas.referencia ? partidas.referencia:"");
