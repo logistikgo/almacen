@@ -67,7 +67,7 @@ async function getByEntrada(req, res) {
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
-                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL") && (partida.status == "ASIGNADA" || partida.status == "WAITINGARRIVAL"))
+                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"||partida.tipo == "NORMAL") && (partida.status == "ASIGNADA" || partida.status == "WAITINGARRIVAL"))
                 {
                     arrpartida.push(partida);
                 }
@@ -90,7 +90,7 @@ async function getByEntradaSalida(req, res) {
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
-                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL")  && partida.status == "ASIGNADA" )
+                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"||partida.tipo == "NORMAL")  && partida.status == "ASIGNADA" )
                 {
                     arrpartida.push(partida);
                 }
@@ -887,7 +887,7 @@ async function getPartidasByIDs(req, res) {
                     {
                         resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                     }
-                    if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
+                    if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"))
                         arrPartidas.push(partida);
     
                 });
@@ -1175,7 +1175,7 @@ async function getExcelByIDs(req, res) {
                     {
                         resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                     }
-                    if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (entrada.status=="APLICADA"||entrada.status=="FINALIZADO") && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA")) 
+                    if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (entrada.status=="APLICADA"||entrada.status=="FINALIZADO") && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA")) 
                     {   
                         //console.log(entrada.tipo);
                         let porcentaje = 0;
@@ -2009,7 +2009,7 @@ async function reporteFEFOS(req, res)
                             let elem=await Producto.findOne({ _id: partidaT.producto_id });
                             let fechaFrescura = new Date(partidaT.fechaCaducidad.getTime()- (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); 
                             
-                            if(fechaFrescura > fechaInicio && partidaT.isEmpty == false && (partidaT.tipo=="NORMAL" || partidaT.tipo=="AGREGADA" || partidaT.tipo=="MODIFICADA") && partidaT.status=="ASIGNADA")
+                            if(fechaFrescura > fechaInicio && partidaT.isEmpty == false && (partidaT.tipo=="NORMAL" || partidaT.tipo=="AGREGADA" || partidaT.tipo=="MODIFICADA" || partidaT.tipo=="OUTMODIFICADA") && partidaT.status=="ASIGNADA")
                                 inbyProd.push(data)
                         }
                 });
