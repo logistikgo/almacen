@@ -461,7 +461,7 @@ async function saveEntradaBabel(req, res) {
 	        	embalajesxSalir: { cajas:parseInt(req.body.Pedido[i].Cantidad)},
 	        	fechaProduccion:new Date(fechaProducionplanta),
 	        	fechaCaducidad: fechaCaducidadRes,
-	        	lote:req.body.Pedido[i].Lote,
+	        	lote:req.body.Pedido[i].Lote.replace(" ", "").trim(),
 	        	InfoPedidos:[{ "IDAlmacen": req.body.IdAlmacen}],
 	        	valor:0
 	        }
