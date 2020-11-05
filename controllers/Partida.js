@@ -16,6 +16,7 @@ const dateFormat = require('dateformat');
 const EmbalajesController = require('../controllers/Embalaje');
 const ClienteFiscal = require('../models/ClienteFiscal');
 var ObjectId = (require('mongoose').Types.ObjectId);
+const Helpers = require('../helpers');
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
@@ -2294,41 +2295,79 @@ async function ModificaPartidas(req, res)
 async function getPartidaMod(req, res)
 {
 
-    try {
-        const { idClienteFiscal } = req.query;
+    let mongoose = require("mongoose");
 
-    let partidas =await Partida.find({isEmpty:false ,
+    try {
+
+        let pagination = {
+            page: parseInt(req.body.page) || 10,
+            limit: parseInt(req.body.limit) || 1
+        }
+
+        const idClienteFiscal = req.params.idClienteFiscal;
+
+
+    let partidasAggregate = Partida.aggregate([
+
+        {$lookup: {"from":"Entradas", "localField": "entrada_id", "foreignField": "_id", "as":"fromEntradas"}},
+
+        {$match: {isEmpty: false,
+                 tipo: {$in: ["NORMAL", "AGREGADA", "MODIFICADA"]}, 
+                 status: "ASIGNADA",
+                "fromEntradas.clienteFiscal_id": mongoose.Types.ObjectId(idClienteFiscal)}},
+
+                {$project: {
+                    _id: 1,
+                    valor: 1,
+                    isEmpty: 1,
+                    origen: 1,
+                    tipo: 1,
+                    status: 1,
+                    isExtraordinaria: 1,
+                    clave: 1,
+                    descripcion: 1,
+                    embalajesEntrada: 1,
+                    embalajesxSalir: 1,
+                    fechaProduccion: 1,
+                    fechaCaducidad: 1,
+                    lote: 1,
+                    InfoPedidos: 1,
+                    posiciones: 1,
+                    __v: 1,
+                    "fromEntradas.stringFolio": 1,
+                    "fromEntradas.clienteFiscal_id": 1
+                 }},
+
+    ])
+    
+    let partidasPaginate = await Partida.aggregatePaginate(partidasAggregate, pagination);
+    
+   /*  let partidas =await Partida.find({isEmpty:false ,
                                     tipo:{$in:["NORMAL","AGREGADA","MODIFICADA"]}, 
                                     status:"ASIGNADA"}).populate({ path: 'entrada_id', select: 'stringFolio clienteFiscal_id' }).exec();
-        
+         */
         let partidasPorCliente = [];
-        partidas.forEach(partida =>{
-            if(partida.entrada_id !== null){
-                    if(partida.entrada_id.clienteFiscal_id.toString() === idClienteFiscal){
-
-                        let posiciones = partida.posiciones;
-                        
-                        for(let i = 0; i < posiciones.length; i++){
-                            if(posiciones[i].isEmpty === false){
-                            let infoPartida = getInfoPartida(partida);
-                            
-                                infoPartida["embalajesxSalir"] = posiciones[i].embalajesxSalir;
-                                infoPartida["embalajesEntradas"] = posiciones[i].embalajesEntrada;
-                                infoPartida["posiciones"] = [];
-                                infoPartida["posiciones"].push(posiciones[i]);
-                                infoPartida["posIndex"]=i;
-                                //console.log( infoPartida["posiciones"]);
-                                partidasPorCliente.push(infoPartida);
-                            }
-                        }
-
-                    }
+        partidasPaginate.docs.forEach(partida =>{
+            let posiciones = partida.posiciones;
+            
+            for(let i = 0; i < posiciones.length; i++){
+                if(posiciones[i].isEmpty === false){
+                let infoPartida = getInfoPartida(partida);
+                
+                    infoPartida["embalajesxSalir"] = posiciones[i].embalajesxSalir;
+                    infoPartida["embalajesEntradas"] = posiciones[i].embalajesEntrada;
+                    infoPartida["posiciones"] = [];
+                    infoPartida["posiciones"].push(posiciones[i]);
+                    infoPartida["posIndex"]=i;
+                    //console.log( infoPartida["posiciones"]);
+                    partidasPorCliente.push(infoPartida);
+                }
             }
-
+            partidasPorCliente.push(partida);
         })
 
-    
-        res.status(200).send(partidasPorCliente);
+        partidasPaginate.docs = partidasPorCliente;
+        res.status(200).send(partidasPaginate);
     } catch (e) {
         console.log(e);
         res.status(500).send(e);
@@ -2417,6 +2456,7 @@ async function LimpiaPosicion(req, res)
         //console.log(partida);*/
     
 }
+
 module.exports = {
     get,
     post,
@@ -2448,4 +2488,5 @@ module.exports = {
     ModificaPartidas,
     getPartidaMod,
     LimpiaPosicion
+    //getExcelInventory
 }
