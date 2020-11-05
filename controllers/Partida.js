@@ -2166,32 +2166,36 @@ async function ModificaPartidas(req, res)
         let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
         let oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id});
         let productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
-        //console.log("begin")
-        if(nivel._id!=partida.posiciones[posIndex].nivel_id.toString())
+        console.log(nivel_id+"!="+partida.posiciones[posIndex].nivel_id.toString())
+        if(nivel_id!=partida.posiciones[posIndex].nivel_id.toString())
         {
-            // console.log("testmove")
+             console.log("testmove")
            // console.log(partida.posiciones[posIndex].nivel_id);
 
             let indexniveles=oldpos.niveles.findIndex(obj=> (obj._id == partida.posiciones[posIndex].nivel_id.toString()));console.log(indexniveles);
-            let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id == partida.producto_id.toString()));
-            oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]=oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"];
-            let item = {
-                niveles: oldpos.niveles
+            if(indexniveles<0){
+                let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id == partida.producto_id.toString()));
+                if(indexprod<0){
+                    oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]=oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"];
+                    let item = {
+                        niveles: oldpos.niveles
+                    }
+                    await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
+                    if(oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]<1)
+                    {
+                        oldpos.niveles[indexniveles].productos.splice(indexprod, 1);
+                    }
+                    if(oldpos.niveles[indexniveles].productos.length<1)
+                    {
+                        oldpos.niveles[indexniveles].productos=[]
+                        oldpos.niveles[indexniveles].isCandadoDisponibilidad= false;
+                        oldpos.niveles[indexniveles].apartado =false;
+                    }
+                    //posicion.niveles[nivelIndex].productos.find(obj=> (obj.factura == req.body.Pedido[i].Factura))
+                    //console.log(posicion);
+                    await oldpos.save();
+                }
             }
-            await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
-            if(oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]<1)
-            {
-                oldpos.niveles[indexniveles].productos.splice(indexprod, 1);
-            }
-            if(oldpos.niveles[indexniveles].productos.length<1)
-            {
-                oldpos.niveles[indexniveles].productos=[]
-                oldpos.niveles[indexniveles].isCandadoDisponibilidad= false;
-                oldpos.niveles[indexniveles].apartado =false;
-            }
-            //posicion.niveles[nivelIndex].productos.find(obj=> (obj.factura == req.body.Pedido[i].Factura))
-            //console.log(posicion);
-            await oldpos.save();
            // partida.posiciones[]=[];
             let jPosicionBahia = {
                 embalajesEntrada: partida.posiciones[posIndex].embalajesxSalir,
@@ -2208,22 +2212,35 @@ async function ModificaPartidas(req, res)
             //console.log("E"+nivel)
             let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
            // console.log(indexnivelesNew)
-            posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
-            posicion.niveles[indexnivelesNew].apartado =true;
-            posicion.niveles[indexnivelesNew].productos.push({
-                producto_id: productosDia._id,
-                embalajes: partida.posiciones[posIndex].embalajesxSalir
-            });
+           if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
+                 
+                posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+                posicion.niveles[indexnivelesNew].apartado =true;
+                posicion.niveles[indexnivelesNew].productos.push({
+                    producto_id: productosDia._id,
+                    embalajes: partida.posiciones[posIndex].embalajesxSalir
+                });
+            }
+            else
+            {
+                let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
+                
+                console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
+                posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+                posicion.niveles[indexnivelesNew].apartado =true;
+                posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas=(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)+partida.posiciones[posIndex].embalajesxSalir["cajas"];
+            }
             let item2 = {
                 niveles: posicion.niveles
             }
             await PosicionModelo.updateOne({ _id: posicion._id }, { $set: item2 });
-            await posicion.save();
+            //await posicion.save();
         }
-       // console.log("second");
+        console.log("second");
         if(partida.posiciones[posIndex].embalajesxSalir.cajas != req.body.embalajesEntrada.cajas){
             posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
-          //  console.log("test");
+            console.log("testCant");
+           let tempembalajes=partida.posiciones[posIndex].embalajesxSalir["cajas"];
             partida.embalajesxSalir ={"cajas": (partida.embalajesxSalir["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"])+req.body.embalajesEntrada["cajas"]};
 
             if(partida.posiciones.length>0){
@@ -2235,24 +2252,36 @@ async function ModificaPartidas(req, res)
                 }
               //  console.log("test2");
                 await Producto.updateOne({ _id: productosDia._id }, { $set: item });
-                await productosDia.save();
+                //await productosDia.save();
               //  console.log("test3");
                 partida.posiciones[posIndex].embalajesxSalir= req.body.embalajesEntrada;
                 let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
                 console.log(indexnivelesNew+nivel_id);
-                posicion.niveles[indexnivelesNew].productos=[];
-                posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
-                posicion.niveles[indexnivelesNew].apartado =true;
-                posicion.niveles[indexnivelesNew].productos.push({
-                producto_id: productosDia._id,
-                embalajes: partida.posiciones[posIndex].embalajesxSalir
-                });
+                console.log(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())+"<0")
+                if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
+                    posicion.niveles[indexnivelesNew].productos=[];
+                    posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+                    posicion.niveles[indexnivelesNew].apartado =true;
+                    posicion.niveles[indexnivelesNew].productos.push({
+                        producto_id: productosDia._id,
+                        embalajes: partida.posiciones[posIndex].embalajesxSalir
+                    });
+                }
+                else
+                {
+                    let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
+                    
+                    console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
+                    posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+                    posicion.niveles[indexnivelesNew].apartado =true;
+                    posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas=(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas-tempembalajes)+partida.posiciones[posIndex].embalajesxSalir["cajas"];
+                }
               //  console.log("test5")
                 let item2 = {
                 niveles: posicion.niveles
                 }
                 await PosicionModelo.updateOne({ _id: posicion._id }, { $set: item2 });
-                await posicion.save();//console.log("test6")
+                //await posicion.save();//console.log("test6")
 
             }
 
