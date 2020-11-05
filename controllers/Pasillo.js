@@ -120,7 +120,7 @@ async function getDisponibles(req, res) {
 			for (let pasillo of data) {
 				for (let pos of pasillo.posiciones) {
 					let posicion = pos.posicion_id;
-					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0) != undefined) {
+					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0 || posicion.familia=="CADUCADO") != undefined) {
 						if (disponibles.find(x => x == pasillo) == undefined)
 							disponibles.push(pasillo);
 						else
@@ -202,7 +202,7 @@ async function getPocionesAuto(Family,almacen_id)
 		})
 		
 
-		for ( let i = 0; i <= 5 ; i++ )
+		for ( let i = 0; i <= 10 ; i++ )
 		{
 			await Helper.asyncForEach(pasillos, async function (pasillo) 
 			{
@@ -248,7 +248,7 @@ async function getPocionesAuto(Family,almacen_id)
 			almacen_id: new ObjectId(almacen_id),
 			statusReg: "ACTIVO"
 			})
-			for ( let i = 0; i <= 5 ; i++ )
+			for ( let i = 0; i <= 10 ; i++ )
 			{
 				await Helper.asyncForEach(pasillos, async function (pasillo) 
 				{
