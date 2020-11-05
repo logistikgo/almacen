@@ -67,7 +67,7 @@ async function getByEntrada(req, res) {
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
-                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL") && (partida.status == "ASIGNADA" || partida.status == "WAITINGARRIVAL"))
+                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"||partida.tipo == "NORMAL") && (partida.status == "ASIGNADA" || partida.status == "WAITINGARRIVAL"))
                 {
                     arrpartida.push(partida);
                 }
@@ -90,7 +90,7 @@ async function getByEntradaSalida(req, res) {
             let arrpartida=[];
             await Helper.asyncForEach(partidas, async function (partida) 
             {
-                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA"||partida.tipo == "NORMAL")  && partida.status == "ASIGNADA" )
+                if((partida.tipo=="AGREGADA"||partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"||partida.tipo == "NORMAL")  && partida.status == "ASIGNADA" )
                 {
                     arrpartida.push(partida);
                 }
@@ -752,14 +752,14 @@ async function getPartidasByIDs(req, res) {
 
     let isFilter = false;
 
-	//Verificar si el reporte contiene filtros
-	if(req.query.page === undefined || req.query.limit === undefined)
-		isFilter = true;
+    //Verificar si el reporte contiene filtros
+    if(req.query.page === undefined || req.query.limit === undefined)
+        isFilter = true;
     
     let pagination = {
-		page: parseInt(req.query.page) || 10,
-		limit: parseInt(req.query.limit) || 1
-	}
+        page: parseInt(req.query.page) || 10,
+        limit: parseInt(req.query.limit) || 1
+    }
     console.log(pagination)
     let arrClientesFiscales_id = req.query.clienteFiscal_id;
     let arrSucursales_id = req.query.sucursal_id;
@@ -887,7 +887,7 @@ async function getPartidasByIDs(req, res) {
                     {
                         resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                     }
-                    if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
+                    if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"))
                         arrPartidas.push(partida);
     
                 });
@@ -1175,7 +1175,7 @@ async function getExcelByIDs(req, res) {
                     {
                         resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
                     }
-                    if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (entrada.status=="APLICADA"||entrada.status=="FINALIZADO") && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA"))
+                    if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (entrada.status=="APLICADA"||entrada.status=="FINALIZADO") && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA")) 
                     {   
                         //console.log(entrada.tipo);
                         let porcentaje = 0;
@@ -1953,8 +1953,8 @@ async function reporteFEFOS(req, res)
     //console.log(req.query.fechaInicio);
     let fechaInicio= req.query.fechaInicio != undefined ? req.query.fechaInicio !="" ? new Date(req.query.fechaInicio).toISOString() :"" :"";
     let fechaFinal= req.query.fechaFinal != undefined ? req.query.fechaFinal !="" ? new Date(req.query.fechaFinal).toISOString() :"" :"";
-   console.log(fechaInicio);
-   console.log(fechaFinal);
+   //console.log(fechaInicio);
+   //console.log(fechaFinal);
     try {
         let filter = {
                 clienteFiscal_id: req.query.clienteFiscal_id ,
@@ -2006,11 +2006,10 @@ async function reporteFEFOS(req, res)
                                 fechaCaducidad: partidaT.fechaCaducidad
                             };
                             //console.log(partidaT)
-
                             let elem=await Producto.findOne({ _id: partidaT.producto_id });
                             let fechaFrescura = new Date(partidaT.fechaCaducidad.getTime()- (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); 
                             
-                            if(fechaFrescura > fechaInicio && partidaT.isEmpty == false && (partidaT.tipo=="NORMAL" || partidaT.tipo=="AGREGADA" || partidaT.tipo=="MODIFICADA") && partidaT.status=="ASIGNADA")
+                            if(fechaFrescura > fechaInicio && partidaT.isEmpty == false && (partidaT.tipo=="NORMAL" || partidaT.tipo=="AGREGADA" || partidaT.tipo=="MODIFICADA" || partidaT.tipo=="OUTMODIFICADA") && partidaT.status=="ASIGNADA")
                                 inbyProd.push(data)
                         }
                 });
@@ -2077,7 +2076,7 @@ async function reporteFEFOS(req, res)
                         await Helper.asyncForEach(inbyProd,async function (p){
                             if (p.clave == partidaT.clave)
                             total++;
-                            if(partidaT.fechaCaducidad < p.fechaCaducidad && p.clave == partidaT.clave )
+                            if(partidaT.fechaCaducidad < p.fechaCaducidad && p.clave == partidaT.clave)
                                 correct++;
                             else
                                 if (p.clave == partidaT.clave)
@@ -2167,32 +2166,36 @@ async function ModificaPartidas(req, res)
         let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
         let oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id});
         let productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
-        //console.log("begin")
-        if(nivel._id!=partida.posiciones[posIndex].nivel_id.toString())
+        console.log(nivel_id+"!="+partida.posiciones[posIndex].nivel_id.toString())
+        if(nivel_id!=partida.posiciones[posIndex].nivel_id.toString())
         {
-            // console.log("testmove")
+             console.log("testmove")
            // console.log(partida.posiciones[posIndex].nivel_id);
 
             let indexniveles=oldpos.niveles.findIndex(obj=> (obj._id == partida.posiciones[posIndex].nivel_id.toString()));console.log(indexniveles);
-            let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id == partida.producto_id.toString()));
-            oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]=oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"];
-            let item = {
-                niveles: oldpos.niveles
+            if(indexniveles<0){
+                let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id == partida.producto_id.toString()));
+                if(indexprod<0){
+                    oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]=oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"];
+                    let item = {
+                        niveles: oldpos.niveles
+                    }
+                    await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
+                    if(oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]<1)
+                    {
+                        oldpos.niveles[indexniveles].productos.splice(indexprod, 1);
+                    }
+                    if(oldpos.niveles[indexniveles].productos.length<1)
+                    {
+                        oldpos.niveles[indexniveles].productos=[]
+                        oldpos.niveles[indexniveles].isCandadoDisponibilidad= false;
+                        oldpos.niveles[indexniveles].apartado =false;
+                    }
+                    //posicion.niveles[nivelIndex].productos.find(obj=> (obj.factura == req.body.Pedido[i].Factura))
+                    //console.log(posicion);
+                    await oldpos.save();
+                }
             }
-            await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
-            if(oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]<1)
-            {
-                oldpos.niveles[indexniveles].productos.splice(indexprod, 1);
-            }
-            if(oldpos.niveles[indexniveles].productos.length<1)
-            {
-                oldpos.niveles[indexniveles].productos=[]
-                oldpos.niveles[indexniveles].isCandadoDisponibilidad= false;
-                oldpos.niveles[indexniveles].apartado =false;
-            }
-            //posicion.niveles[nivelIndex].productos.find(obj=> (obj.factura == req.body.Pedido[i].Factura))
-            //console.log(posicion);
-            await oldpos.save();
            // partida.posiciones[]=[];
             let jPosicionBahia = {
                 embalajesEntrada: partida.posiciones[posIndex].embalajesxSalir,
@@ -2209,22 +2212,35 @@ async function ModificaPartidas(req, res)
             //console.log("E"+nivel)
             let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
            // console.log(indexnivelesNew)
-            posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
-            posicion.niveles[indexnivelesNew].apartado =true;
-            posicion.niveles[indexnivelesNew].productos.push({
-                producto_id: productosDia._id,
-                embalajes: partida.posiciones[posIndex].embalajesxSalir
-            });
+           if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
+                 
+                posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+                posicion.niveles[indexnivelesNew].apartado =true;
+                posicion.niveles[indexnivelesNew].productos.push({
+                    producto_id: productosDia._id,
+                    embalajes: partida.posiciones[posIndex].embalajesxSalir
+                });
+            }
+            else
+            {
+                let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
+                
+                console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
+                posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+                posicion.niveles[indexnivelesNew].apartado =true;
+                posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas=(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)+partida.posiciones[posIndex].embalajesxSalir["cajas"];
+            }
             let item2 = {
                 niveles: posicion.niveles
             }
             await PosicionModelo.updateOne({ _id: posicion._id }, { $set: item2 });
-            await posicion.save();
+            //await posicion.save();
         }
-       // console.log("second");
+        console.log("second");
         if(partida.posiciones[posIndex].embalajesxSalir.cajas != req.body.embalajesEntrada.cajas){
             posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
-          //  console.log("test");
+            console.log("testCant");
+           let tempembalajes=partida.posiciones[posIndex].embalajesxSalir["cajas"];
             partida.embalajesxSalir ={"cajas": (partida.embalajesxSalir["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"])+req.body.embalajesEntrada["cajas"]};
 
             if(partida.posiciones.length>0){
@@ -2236,24 +2252,36 @@ async function ModificaPartidas(req, res)
                 }
               //  console.log("test2");
                 await Producto.updateOne({ _id: productosDia._id }, { $set: item });
-                await productosDia.save();
+                //await productosDia.save();
               //  console.log("test3");
                 partida.posiciones[posIndex].embalajesxSalir= req.body.embalajesEntrada;
                 let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
                 console.log(indexnivelesNew+nivel_id);
-                posicion.niveles[indexnivelesNew].productos=[];
-                posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
-                posicion.niveles[indexnivelesNew].apartado =true;
-                posicion.niveles[indexnivelesNew].productos.push({
-                producto_id: productosDia._id,
-                embalajes: partida.posiciones[posIndex].embalajesxSalir
-                });
+                console.log(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())+"<0")
+                if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
+                    posicion.niveles[indexnivelesNew].productos=[];
+                    posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+                    posicion.niveles[indexnivelesNew].apartado =true;
+                    posicion.niveles[indexnivelesNew].productos.push({
+                        producto_id: productosDia._id,
+                        embalajes: partida.posiciones[posIndex].embalajesxSalir
+                    });
+                }
+                else
+                {
+                    let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
+                    
+                    console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
+                    posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
+                    posicion.niveles[indexnivelesNew].apartado =true;
+                    posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas=(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas-tempembalajes)+partida.posiciones[posIndex].embalajesxSalir["cajas"];
+                }
               //  console.log("test5")
                 let item2 = {
                 niveles: posicion.niveles
                 }
                 await PosicionModelo.updateOne({ _id: posicion._id }, { $set: item2 });
-                await posicion.save();//console.log("test6")
+                //await posicion.save();//console.log("test6")
 
             }
 

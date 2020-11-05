@@ -120,7 +120,7 @@ async function getDisponibles(req, res) {
 			for (let pasillo of data) {
 				for (let pos of pasillo.posiciones) {
 					let posicion = pos.posicion_id;
-					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0) != undefined) {
+					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0 || posicion.familia=="CADUCADO") != undefined) {
 						if (disponibles.find(x => x == pasillo) == undefined)
 							disponibles.push(pasillo);
 						else
