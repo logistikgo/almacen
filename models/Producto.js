@@ -63,7 +63,8 @@ const Producto = Schema({
 	isSafetyStock: Boolean,
 	safetystock: Number,
 	familia:{ type: String, default: "NONE" },
-	prioridad:{ type: Number, default: 5 }
+	prioridad:{ type: Number, default: 5 },
+	isDobleEstiba:{ type: Boolean, default: false }
 },
 	{ collection: 'Productos' }
 );
