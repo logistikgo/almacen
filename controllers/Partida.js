@@ -17,6 +17,7 @@ const EmbalajesController = require('../controllers/Embalaje');
 const ClienteFiscal = require('../models/ClienteFiscal');
 var ObjectId = (require('mongoose').Types.ObjectId);
 const Helpers = require('../helpers');
+const helpers = require('../helpers');
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
@@ -2329,54 +2330,95 @@ async function getPartidaMod(req, res)
     try {
 
         let pagination = {
-            page: parseInt(req.body.page) || 10,
-            limit: parseInt(req.body.limit) || 1
+            page: parseInt(req.query.page) || 10,
+            limit: parseInt(req.query.limit) || 1
+        }
+        let partidas = [];
+
+        const idClienteFiscal = req.query.idClienteFiscal;
+        
+        const filtro = {
+            "isEmpty": false,
+            "tipo": {$in: ["NORMAL", "AGREGADA", "MODIFICADA"]},
+            "status": "ASIGNADA",
+            
+        };
+
+        const lote = req.query.lote !== undefined ? req.query.lote.toUpperCase() : "";
+        let clave = req.query.clave !== undefined ? req.query.clave : "";
+        let semana= req.query.semana != undefined ? req.query.semana : "";
+        const pasillo = req.query.pasillo !== undefined ? req.query.pasillo.toUpperCase() : "";
+        const posicion = req.query.posicion !== undefined ? req.query.posicion : "";
+        const nivel = req.query.nivel !== undefined ?  req.query.nivel : "";
+        
+
+        //Creacion del filtro avanzado, dependiendo los parametros enviados en el Endpoint
+        if(clave !== ""){
+            let regexForClave = new RegExp(clave, 'g');
+            filtro.clave = {$regex: regexForClave};
         }
 
-        const idClienteFiscal = req.params.idClienteFiscal;
+        if(lote !== ""){
+            let regexForLote = new RegExp(lote, 'g');
+            filtro.lote = {$regex: regexForLote};
+        }
+
+        if(semana !== ""){
+            let regexForSemana = new RegExp(semana, 'g');
+            filtro.lote = {$regex: regexForSemana};
+        }
+
+        if(pasillo !== ""){
+           filtro["posiciones.pasillo"] = pasillo;
+        }
+
+        if(posicion !== ""){
+            filtro["posiciones.posicion"] = posicion;
+        }
+
+        if(nivel !== ""){
+            filtro["posiciones.nivel"] = Helper.getLevelNameFromNumber(nivel)
+        }
 
 
-    let partidasAggregate = Partida.aggregate([
+            filtro["fromEntradas.clienteFiscal_id"] = mongoose.Types.ObjectId(idClienteFiscal)
 
-        {$lookup: {"from":"Entradas", "localField": "entrada_id", "foreignField": "_id", "as":"fromEntradas"}},
+            let partidasAggregate = Partida.aggregate([
 
-        {$match: {isEmpty: false,
-                 tipo: {$in: ["NORMAL", "AGREGADA", "MODIFICADA"]}, 
-                 status: "ASIGNADA",
-                "fromEntradas.clienteFiscal_id": mongoose.Types.ObjectId(idClienteFiscal)}},
+                {$lookup: {"from":"Entradas", "localField": "entrada_id", "foreignField": "_id", "as":"fromEntradas"}},
+        
+                {$match: filtro},
+        
+                        {$project: {
+                            _id: 1,
+                            valor: 1,
+                            isEmpty: 1,
+                            origen: 1,
+                            tipo: 1,
+                            status: 1,
+                            isExtraordinaria: 1,
+                            clave: 1,
+                            descripcion: 1,
+                            embalajesEntrada: 1,
+                            embalajesxSalir: 1,
+                            fechaProduccion: 1,
+                            fechaCaducidad: 1,
+                            lote: 1,
+                            InfoPedidos: 1,
+                            posiciones: 1,
+                            __v: 1,
+                            "fromEntradas.stringFolio": 1,
+                            "fromEntradas.clienteFiscal_id": 1
+                         }},
+        
+            ])
+            
+            partidas = await Partida.aggregatePaginate(partidasAggregate, pagination);
+            //partidas = partidas.docs;    
 
-                {$project: {
-                    _id: 1,
-                    valor: 1,
-                    isEmpty: 1,
-                    origen: 1,
-                    tipo: 1,
-                    status: 1,
-                    isExtraordinaria: 1,
-                    clave: 1,
-                    descripcion: 1,
-                    embalajesEntrada: 1,
-                    embalajesxSalir: 1,
-                    fechaProduccion: 1,
-                    fechaCaducidad: 1,
-                    lote: 1,
-                    InfoPedidos: 1,
-                    posiciones: 1,
-                    __v: 1,
-                    "fromEntradas.stringFolio": 1,
-                    "fromEntradas.clienteFiscal_id": 1
-                 }},
-
-    ])
-    
-    let partidasPaginate = await Partida.aggregatePaginate(partidasAggregate, pagination);
-    
-   /*  let partidas =await Partida.find({isEmpty:false ,
-                                    tipo:{$in:["NORMAL","AGREGADA","MODIFICADA"]}, 
-                                    status:"ASIGNADA"}).populate({ path: 'entrada_id', select: 'stringFolio clienteFiscal_id' }).exec();
-         */
+        
         let partidasPorCliente = [];
-        partidasPaginate.docs.forEach(partida =>{
+        partidas.docs.forEach(partida =>{
             let posiciones = partida.posiciones;
             
             for(let i = 0; i < posiciones.length; i++){
@@ -2392,11 +2434,14 @@ async function getPartidaMod(req, res)
                     partidasPorCliente.push(infoPartida);
                 }
             }
-            partidasPorCliente.push(partida);
+           // partidasPorCliente.push(partida);
         })
 
-        partidasPaginate.docs = partidasPorCliente;
-        res.status(200).send(partidasPaginate);
+
+            partidas.docs = partidasPorCliente;
+            res.status(200).send(partidas);
+        
+
     } catch (e) {
         console.log(e);
         res.status(500).send(e);
