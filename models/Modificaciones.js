@@ -24,10 +24,11 @@ const Modificaciones = Schema(
         usuarioAlta_id: Number,
         nombreUsuario: String,
         status: String,
+        ubicacion:String,
     },
     {
         collection: 'Modificaciones'
     }
 );
 
-module.exports = mongoose.model('Modificaciones', Ticket);
+module.exports = mongoose.model('Modificaciones', Modificaciones);

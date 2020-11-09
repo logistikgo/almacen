@@ -1864,9 +1864,10 @@ async function saveSalidaBabel(req, res) {
 					for (let i = 0; i < partidas.length && count<1; i++)
 					{
 						//console.log(i);
-						let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
+			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*2)); 
 			            //console.log(par)
-			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaFrescura.getTime()>hoy.getTime())
+			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaAlerta1.getTime()>hoy.getTime())
 			            {
 			            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
 			            	if(partidaaux.pedido==false)
@@ -1932,7 +1933,7 @@ async function saveSalidaBabel(req, res) {
 					}
 					//saveSalida
 
-					//nSalida.save();
+					nSalida.save();
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
