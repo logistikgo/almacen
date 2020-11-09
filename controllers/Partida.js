@@ -18,6 +18,7 @@ const ClienteFiscal = require('../models/ClienteFiscal');
 const ModificacionesModel = require('../models/Modificaciones');
 var ObjectId = (require('mongoose').Types.ObjectId);
 const Helpers = require('../helpers');
+const helpers = require('../helpers');
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
@@ -2165,8 +2166,8 @@ async function ModificaPartidas(req, res)
             sucursal_id: req.body.sucursal_id,
             almacen_id: req.body.almacen_id,
             clienteFiscal_id: req.body.idClienteFiscal,
-            usuarioAlta_id:usuarioAlta_id,
-            nombreUsuario:nombreUsuario
+            usuarioAlta_id:req.usuarioAlta_id,
+            nombreUsuario:req.nombreUsuario
         }
     if(partida.lote!=req.body.lote){
         partida.lote=req.body.lote;
@@ -2378,56 +2379,95 @@ async function getPartidaMod(req, res)
     try {
 
         let pagination = {
-            page: parseInt(req.body.page) || 10,
-            limit: parseInt(req.body.limit) || 1
+            page: parseInt(req.query.page) || 10,
+            limit: parseInt(req.query.limit) || 1
+        }
+        let partidas = [];
+
+        const idClienteFiscal = req.query.idClienteFiscal;
+        
+        const filtro = {
+            "isEmpty": false,
+            "tipo": {$in: ["NORMAL", "AGREGADA", "MODIFICADA"]},
+            "status": "ASIGNADA",
+            
+        };
+
+        const lote = req.query.lote !== undefined ? req.query.lote.toUpperCase() : "";
+        let clave = req.query.clave !== undefined ? req.query.clave : "";
+        let semana= req.query.semana != undefined ? req.query.semana : "";
+        const pasillo = req.query.pasillo !== undefined ? req.query.pasillo.toUpperCase() : "";
+        const posicion = req.query.posicion !== undefined ? req.query.posicion : "";
+        const nivel = req.query.nivel !== undefined ?  req.query.nivel : "";
+        
+
+        //Creacion del filtro avanzado, dependiendo los parametros enviados en el Endpoint
+        if(clave !== ""){
+            let regexForClave = new RegExp(clave, 'g');
+            filtro.clave = {$regex: regexForClave};
         }
 
-        const idClienteFiscal = req.params.idClienteFiscal;
+        if(lote !== ""){
+            let regexForLote = new RegExp(lote, 'g');
+            filtro.lote = {$regex: regexForLote};
+        }
 
-        let filter ={
-            isEmpty: false,
-            tipo: {$in: ["NORMAL", "AGREGADA", "MODIFICADA"]}, 
-            status: "ASIGNADA",
-            "fromEntradas.clienteFiscal_id": mongoose.Types.ObjectId(idClienteFiscal)
-            }
-    let partidasAggregate = Partida.aggregate([
+        if(semana !== ""){
+            let regexForSemana = new RegExp(semana, 'g');
+            filtro.lote = {$regex: regexForSemana};
+        }
 
-        {$lookup: {"from":"Entradas", "localField": "entrada_id", "foreignField": "_id", "as":"fromEntradas"}},
+        if(pasillo !== ""){
+           filtro["posiciones.pasillo"] = pasillo;
+        }
 
-        {$match: filter},
+        if(posicion !== ""){
+            filtro["posiciones.posicion"] = posicion;
+        }
 
-                {$project: {
-                    _id: 1,
-                    valor: 1,
-                    isEmpty: 1,
-                    origen: 1,
-                    tipo: 1,
-                    status: 1,
-                    isExtraordinaria: 1,
-                    clave: 1,
-                    descripcion: 1,
-                    embalajesEntrada: 1,
-                    embalajesxSalir: 1,
-                    fechaProduccion: 1,
-                    fechaCaducidad: 1,
-                    lote: 1,
-                    InfoPedidos: 1,
-                    posiciones: 1,
-                    __v: 1,
-                    "fromEntradas.stringFolio": 1,
-                    "fromEntradas.clienteFiscal_id": 1
-                 }},
+        if(nivel !== ""){
+            filtro["posiciones.nivel"] = Helper.getLevelNameFromNumber(nivel)
+        }
 
-    ])
-    
-    let partidasPaginate = await Partida.aggregatePaginate(partidasAggregate, pagination);
-    
-   /*  let partidas =await Partida.find({isEmpty:false ,
-                                    tipo:{$in:["NORMAL","AGREGADA","MODIFICADA"]}, 
-                                    status:"ASIGNADA"}).populate({ path: 'entrada_id', select: 'stringFolio clienteFiscal_id' }).exec();
-         */
+
+            filtro["fromEntradas.clienteFiscal_id"] = mongoose.Types.ObjectId(idClienteFiscal)
+
+            let partidasAggregate = Partida.aggregate([
+
+                {$lookup: {"from":"Entradas", "localField": "entrada_id", "foreignField": "_id", "as":"fromEntradas"}},
+        
+                {$match: filtro},
+        
+                        {$project: {
+                            _id: 1,
+                            valor: 1,
+                            isEmpty: 1,
+                            origen: 1,
+                            tipo: 1,
+                            status: 1,
+                            isExtraordinaria: 1,
+                            clave: 1,
+                            descripcion: 1,
+                            embalajesEntrada: 1,
+                            embalajesxSalir: 1,
+                            fechaProduccion: 1,
+                            fechaCaducidad: 1,
+                            lote: 1,
+                            InfoPedidos: 1,
+                            posiciones: 1,
+                            __v: 1,
+                            "fromEntradas.stringFolio": 1,
+                            "fromEntradas.clienteFiscal_id": 1
+                         }},
+        
+            ])
+            
+            partidas = await Partida.aggregatePaginate(partidasAggregate, pagination);
+            //partidas = partidas.docs;    
+
+        
         let partidasPorCliente = [];
-        partidasPaginate.docs.forEach(partida =>{
+        partidas.docs.forEach(partida =>{
             let posiciones = partida.posiciones;
             
             for(let i = 0; i < posiciones.length; i++){
@@ -2445,8 +2485,11 @@ async function getPartidaMod(req, res)
             }
         })
 
-        partidasPaginate.docs = partidasPorCliente;
-        res.status(200).send(partidasPaginate);
+
+            partidas.docs = partidasPorCliente;
+            res.status(200).send(partidas);
+        
+
     } catch (e) {
         console.log(e);
         res.status(500).send(e);
