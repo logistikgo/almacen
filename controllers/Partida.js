@@ -16,6 +16,7 @@ const dateFormat = require('dateformat');
 const EmbalajesController = require('../controllers/Embalaje');
 const ClienteFiscal = require('../models/ClienteFiscal');
 var ObjectId = (require('mongoose').Types.ObjectId);
+const Helpers = require('../helpers');
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
@@ -2417,6 +2418,137 @@ async function LimpiaPosicion(req, res)
         //console.log(partida);*/
     
 }
+
+async function getExcelInventory(req, res){
+
+    let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
+    let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
+
+	//console.log(req.query.almacen_id);
+    
+    let arrProd=[];
+	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
+		.populate({
+			path: 'presentacion_id',
+			model: 'Presentacion'
+		})
+		.populate({
+			path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+		})
+		.then(async (productos) => {
+			//console.log(productos);
+			if (almacen_id != undefined && almacen_id != "") {
+				await Helpers.asyncForEach(productos, async function (producto) {
+					producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
+				});
+			}
+				await Helpers.asyncForEach(productos, async function (producto) {
+                    
+                    const { clave } = producto;
+                    const embalaje = producto.embalajes
+
+                    let cantidadProductoPartidas = await getInventoarioPorPartidas(clave);
+
+                    if(cantidadProductoPartidas.length !== 0){
+                        producto.embalajes.cajas = cantidadProductoPartidas[0].cantidadProducto;
+                    }
+
+					if(almacen_id !== "")
+					{
+						if(producto.almacen_id.find(element => element.toString() == almacen_id)){
+							//console.log(producto.almacen_id +"==="+almacen_id);
+							arrProd.push(producto);
+						}
+					}
+					else
+					{
+						arrProd.push(producto);
+					}
+                });
+
+
+                // Require library
+                var xl = require('excel4node');
+                
+                // Create a new instance of a Workbook class
+                var wb = new xl.Workbook();
+                
+                // Add Worksheets to the workbook
+                var worksheet = wb.addWorksheet('Inventario');
+                
+                // Create a reusable style
+                var style = wb.createStyle({
+                font: {
+                    color: '#FF0800',
+                    size: 12,
+                },
+                numberFormat: '$#,##0.00; ($#,##0.00); -',
+                });
+
+                var tituloStyle = workbook.createStyle({
+                    font: {
+                      bold: true,
+                    },
+                    alignment: {
+                      wrapText: true,
+                      horizontal: 'center',
+                    },
+                  });
+
+                worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
+                worksheet.cell(2, 1).string('Clave').style(headersStyle);
+                worksheet.cell(2, 2).string('Descripción').style(headersStyle);
+                worksheet.cell(2, 3).string('Subclasificacion').style(headersStyle);
+                worksheet.cell(2, 4).string('Presentacion').style(headersStyle);
+                worksheet.cell(2, 5).string('Tarimas').style(headersStyle);
+                worksheet.cell(2, 6).string("Corrugados").style(headersStyle);
+                worksheet.cell(2, 7).string("Valor").style(headersStyle);
+                worksheet.cell(2, 8).string("SafetyStock T.").style(headersStyle);
+                worksheet.cell(2, 9).string("Safety Stock C.").style(headersStyle);
+                worksheet.cell(2, 10).string("% SS").style(headersStyle);
+
+
+                let row = 3;
+                arrProd.forEach((producto, index) =>{
+
+                    let clave = producto.clave;
+                    let descripcion = producto.descripcion;
+                    let subclasificacion = producto.subclasificacion;
+                    let presentacion = producto.presentacion;
+                    let tarimas = producto.embalajes.tarimas;
+                    let corrugados = producto.embalajes.cajas;
+                    let valor = producto.valor;
+
+                    worksheet.cell(row, 1).string(clave);
+                    worksheet.cell(row, 2).string(descripcion);
+                    worksheet.cell(row, 3).string(subclasificacion);
+                    worksheet.cell(row, 4).string(presentacion);
+                    worksheet.cell(row, 5).string(tarimas);
+                    worksheet.cell(row, 6).string(corrugados);
+                    worksheet.cell(row, 7).string(valor);
+                    
+                    row++:
+                })
+
+
+                res.status(200).send(arrProd);
+
+               
+        })   
+ }
+
+ async function getInventoarioPorPartidas(clave){
+
+    let cantidadPartidas = await Partida.aggregate([
+
+        {$match:{"clave": clave, isEmpty: false, status : "ASIGNADA"}},
+        {$group: {_id: "$clave", cantidadProducto: {$sum: "$embalajesxSalir.cajas"}}}
+    ])
+
+    return cantidadPartidas;
+ }
+
 module.exports = {
     get,
     post,
@@ -2447,5 +2579,6 @@ module.exports = {
     posicionarPartidas,
     ModificaPartidas,
     getPartidaMod,
-    LimpiaPosicion
+    LimpiaPosicion,
+    getExcelInventory
 }
