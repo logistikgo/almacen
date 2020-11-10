@@ -2433,9 +2433,13 @@ async function getExcelInventory(req, res){
 			model: 'Presentacion'
 		})
 		.populate({
-			path: 'clasificacion_id',
+            path: 'clasificacion_id',
 			model: 'ClasificacionesProductos'
-		}).sort({clave: 1}).collation({ locale: "af", numericOrdering: true})
+        }).populate({
+            path: "clienteFiscal_id",
+            model: "ClienteFiscal"
+        })
+        .sort({clave: 1}).collation({ locale: "af", numericOrdering: true})
 		.then(async (productos) => {
 			//console.log(productos);
 			if (almacen_id != undefined && almacen_id != "") {
@@ -2447,11 +2451,12 @@ async function getExcelInventory(req, res){
                     
                     const { clave } = producto;
                     const embalaje = producto.embalajes
-
-                    let cantidadProductoPartidas = await getInventoarioPorPartidas(clave);
+                    let clienteEmbalaje = producto.clienteFiscal_id.arrEmbalajes
+                    let cantidadProductoPartidas = await getInventoarioPorPartidas(clave, clienteEmbalaje);
 
                     if(cantidadProductoPartidas.length !== 0){
                         producto.embalajes.cajas = cantidadProductoPartidas[0].cantidadProducto;
+                        producto.embalajes.tarimas = cantidadProductoPartidas[0].cantidadTarimas;
                     }
 
 					if(almacen_id !== "")
@@ -2520,6 +2525,14 @@ async function getExcelInventory(req, res){
                     fgColor: '#57D377',
                     },
                 });
+                worksheet.column(2).setWidth(50);
+                worksheet.column(1).setWidth(15);
+                worksheet.column(3).setWidth(15);
+                worksheet.column(4).setWidth(15);
+                worksheet.column(8).setWidth(15);
+                worksheet.column(9).setWidth(15);
+                worksheet.column(10).setWidth(15);
+                
 
                 worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
                 worksheet.cell(2, 1).string('Clave').style(headersStyle);
@@ -2597,15 +2610,18 @@ async function getExcelInventory(req, res){
         })   
  }
 
- async function getInventoarioPorPartidas(clave, embalaje = "cajas"){
+ async function getInventoarioPorPartidas(clave, clienteEmbalaje = "cajas"){
+
+    let embalaje = clienteEmbalaje.split(",")[1];
+
+    let matchProducto = {
+        _id: "$clave", cantidadProducto: {$sum:`$embalajesxSalir.${embalaje}`}, cantidadTarimas: {$sum: 1} 
+    }
 
     let cantidadPartidas = await Partida.aggregate([
-
-
-
-
+    
         {$match:{"clave": clave, isEmpty: false, status : "ASIGNADA"}},
-        {$group: {_id: "$clave", cantidadProducto: {$sum: "$embalajesxSalir.cajas"}, cantidadTarimas: {$sum: 1}}}
+        {$group: matchProducto}
     ])
 
     return cantidadPartidas;
