@@ -2435,7 +2435,7 @@ async function getExcelInventory(req, res){
 		.populate({
 			path: 'clasificacion_id',
 			model: 'ClasificacionesProductos'
-		})
+		}).sort({clave: 1}).collation({ locale: "af", numericOrdering: true})
 		.then(async (productos) => {
 			//console.log(productos);
 			if (almacen_id != undefined && almacen_id != "") {
@@ -2467,34 +2467,59 @@ async function getExcelInventory(req, res){
 					}
                 });
 
-
-                // Require library
-                var xl = require('excel4node');
-                
-                // Create a new instance of a Workbook class
-                var wb = new xl.Workbook();
-                
-                // Add Worksheets to the workbook
-                var worksheet = wb.addWorksheet('Inventario');
-                
-                // Create a reusable style
-                var style = wb.createStyle({
-                font: {
-                    color: '#FF0800',
-                    size: 12,
-                },
-                numberFormat: '$#,##0.00; ($#,##0.00); -',
-                });
-
+                //EXCELL HEADERS-----
+                var excel = require('excel4node');
+                var dateFormat = require('dateformat');
+                var workbook = new excel.Workbook();
+                var worksheet = workbook.addWorksheet('Inventario');
                 var tituloStyle = workbook.createStyle({
+                font: {
+                    bold: true,
+                },
+                alignment: {
+                    wrapText: true,
+                    horizontal: 'center',
+                },
+                });
+                var headersStyle = workbook.createStyle({
+                font: {
+                    bold: true,
+                },
+                alignment: {
+                    horizontal: 'center',
+                },
+    });
+
+                let alertstyle = workbook.createStyle({
                     font: {
-                      bold: true,
+                    bold: true,
                     },
                     alignment: {
-                      wrapText: true,
-                      horizontal: 'center',
+                    wrapText: true,
+                    horizontal: 'center',
                     },
-                  });
+                    fill: {
+                    type: 'pattern',
+                    patternType: 'solid',
+                    bgColor: '#F01B2F',
+                    fgColor: '#F01B2F',
+                    },
+                });
+                let correctStyle = workbook.createStyle({
+                    font: {
+                    bold: true,
+                    },
+                    alignment: {
+                    wrapText: true,
+                    horizontal: 'center',
+                    },
+                    fill: {
+                    type: 'pattern',
+                    patternType: 'solid',
+                    bgColor: '#57D377',
+                    fgColor: '#57D377',
+                    },
+                });
 
                 worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
                 worksheet.cell(2, 1).string('Clave').style(headersStyle);
@@ -2507,43 +2532,80 @@ async function getExcelInventory(req, res){
                 worksheet.cell(2, 8).string("SafetyStock T.").style(headersStyle);
                 worksheet.cell(2, 9).string("Safety Stock C.").style(headersStyle);
                 worksheet.cell(2, 10).string("% SS").style(headersStyle);
-
+                worksheet.cell(2, 11).string("Ultima Entrada").style(headersStyle);
+                worksheet.cell(2, 12).string("Ultima Salida").style(headersStyle);
+                
 
                 let row = 3;
                 arrProd.forEach((producto, index) =>{
 
+                    try {
+                      
                     let clave = producto.clave;
                     let descripcion = producto.descripcion;
                     let subclasificacion = producto.subclasificacion;
                     let presentacion = producto.presentacion;
-                    let tarimas = producto.embalajes.tarimas;
-                    let corrugados = producto.embalajes.cajas;
+                    let tarimas = parseInt(producto.embalajes.tarimas);
+                    let corrugados = parseInt(producto.embalajes.cajas);
                     let valor = producto.valor;
-
-                    worksheet.cell(row, 1).string(clave);
-                    worksheet.cell(row, 2).string(descripcion);
-                    worksheet.cell(row, 3).string(subclasificacion);
-                    worksheet.cell(row, 4).string(presentacion);
-                    worksheet.cell(row, 5).string(tarimas);
-                    worksheet.cell(row, 6).string(corrugados);
-                    worksheet.cell(row, 7).string(valor);
+                    let safetyStock =  0;
+                        if(producto.safetystock !== null && producto.safetystock !== undefined){
+                            safetyStock = parseInt(producto.safetystock);
+                        } 
+                    let safetyStockPorcentaje = "0.0%";
                     
-                    row++:
+
+                    let ultimaEntrada = dateFormat(producto.fechaUltimaEntrada, "dd/mm/yyyy");
+                    let ultimaSalida = dateFormat(producto.fechaUltimaSalida, "dd/mm/yyyy");
+
+                    worksheet.cell(row, 1).string(clave === undefined || null ? "" : clave);
+                    worksheet.cell(row, 2).string(descripcion === undefined || null ? "" : descripcion);
+                    worksheet.cell(row, 3).string(subclasificacion === undefined || null ? "" : subclasificacion);
+                    worksheet.cell(row, 4).string(presentacion === undefined || null ? "" : presentacion);
+                    worksheet.cell(row, 5).number(tarimas === undefined || null ? 0 : tarimas);
+                    worksheet.cell(row, 6).number(corrugados === undefined || null ? 0 : corrugados);
+                    worksheet.cell(row, 7).number(valor === undefined || null ? 0 : valor);
+                    worksheet.cell(row, 8).number(0);
+                    worksheet.cell(row, 9).number(safetyStock);
+
+                    if(safetyStock !== 0 && corrugados !== 0){
+                        let porcentaje = (corrugados / safetyStock) * 100;
+                        safetyStockPorcentaje = ((safetyStock || corrugados) === 0) ? `0.0%` : `${porcentaje.toFixed(1)}%`;
+
+                        if(porcentaje >= 100){
+                            worksheet.cell(row, 10).string(safetyStockPorcentaje === undefined || null ? "0.0%" : safetyStockPorcentaje).style(correctStyle);
+                        }else{
+                            worksheet.cell(row, 10).string(safetyStockPorcentaje === undefined || null ? "0.0%" : safetyStockPorcentaje).style(alertstyle);
+                        }
+                    }else{
+                        worksheet.cell(row, 10).string(safetyStockPorcentaje === undefined || null ? "0.0%" : safetyStockPorcentaje).style(alertstyle);
+                    } 
+                    worksheet.cell(row, 11).string(ultimaEntrada === undefined || null ? 0 : ultimaEntrada);
+                    worksheet.cell(row, 12).string(ultimaSalida === undefined || null ? 0 : ultimaSalida);
+                    
+                    row++;
+                    } catch (error) {
+                        res.status(500).send(error);
+                    }
+
                 })
 
-
-                res.status(200).send(arrProd);
+                workbook.write('InventarioPorProducto'+dateFormat(Date.now(), "dd/mm/yyyy")+'.xlsx',res);
+                //res.status(200).send(arrProd);
 
                
         })   
  }
 
- async function getInventoarioPorPartidas(clave){
+ async function getInventoarioPorPartidas(clave, embalaje = "cajas"){
 
     let cantidadPartidas = await Partida.aggregate([
 
+
+
+
         {$match:{"clave": clave, isEmpty: false, status : "ASIGNADA"}},
-        {$group: {_id: "$clave", cantidadProducto: {$sum: "$embalajesxSalir.cajas"}}}
+        {$group: {_id: "$clave", cantidadProducto: {$sum: "$embalajesxSalir.cajas"}, cantidadTarimas: {$sum: 1}}}
     ])
 
     return cantidadPartidas;
