@@ -459,6 +459,16 @@ function getLevelNameFromNumber(nivel = 1){
 
 }
 
+function getLevelNumberFromName(nivel = "A"){
+
+	const LETTER_INIT = 64;
+
+	const nivelName = nivel.charCodeAt() - LETTER_INIT;
+
+	return nivelName;
+
+}
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -473,5 +483,6 @@ module.exports = {
 	isEmptyEmbalaje,
 	emptyAllEmbalajes,
 	Compare,
-	getLevelNameFromNumber
+	getLevelNameFromNumber,
+	getLevelNumberFromName
 }

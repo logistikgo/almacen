@@ -2508,6 +2508,193 @@ async function getPartidaMod(req, res)
     
 }
 
+
+async function getPartidaModExcel(req, res)
+{
+
+    let mongoose = require("mongoose");
+
+    try {
+        let partidas = [];
+
+        const idClienteFiscal = req.query.idClienteFiscal;
+        
+        const filtro = {
+            "isEmpty": false,
+            "tipo": {$in: ["NORMAL", "AGREGADA", "MODIFICADA"]},
+            "status": "ASIGNADA",
+            
+        };
+
+        const lote = req.query.lote !== undefined ? req.query.lote.toUpperCase() : "";
+        let clave = req.query.clave !== undefined ? req.query.clave : "";
+        let semana= req.query.semana != undefined ? req.query.semana : "";
+        const pasillo = req.query.pasillo !== undefined ? req.query.pasillo.toUpperCase() : "";
+        const posicion = req.query.posicion !== undefined ? req.query.posicion : "";
+        const nivel = req.query.nivel !== undefined ?  req.query.nivel : "";
+        
+
+        //Creacion del filtro avanzado, dependiendo los parametros enviados en el Endpoint
+        if(clave !== ""){
+            let regexForClave = new RegExp(clave, 'g');
+            filtro.clave = {$regex: regexForClave};
+        }
+
+        if(lote !== ""){
+            let regexForLote = new RegExp(lote, 'g');
+            filtro.lote = {$regex: regexForLote};
+        }
+
+        if(semana !== ""){
+            let regexForSemana = new RegExp(semana, 'g');
+            filtro.lote = {$regex: regexForSemana};
+        }
+
+        if(pasillo !== ""){
+           filtro["posiciones.pasillo"] = pasillo;
+        }
+
+        if(posicion !== ""){
+            filtro["posiciones.posicion"] = posicion;
+        }
+
+        if(nivel !== ""){
+            filtro["posiciones.nivel"] = Helper.getLevelNameFromNumber(nivel)
+        }
+
+
+            filtro["fromEntradas.clienteFiscal_id"] = mongoose.Types.ObjectId(idClienteFiscal)
+
+            partidas = await Partida.aggregate([
+
+                {$lookup: {"from":"Entradas", "localField": "entrada_id", "foreignField": "_id", "as":"fromEntradas"}},
+        
+                {$match: filtro},
+        
+                        {$project: {
+                            _id: 1,
+                            valor: 1,
+                            isEmpty: 1,
+                            origen: 1,
+                            tipo: 1,
+                            status: 1,
+                            isExtraordinaria: 1,
+                            clave: 1,
+                            descripcion: 1,
+                            embalajesEntrada: 1,
+                            embalajesxSalir: 1,
+                            fechaProduccion: 1,
+                            fechaCaducidad: 1,
+                            lote: 1,
+                            InfoPedidos: 1,
+                            posiciones: 1,
+                            __v: 1,
+                            "fromEntradas.stringFolio": 1,
+                            "fromEntradas.clienteFiscal_id": 1
+                         }},
+        
+            ])
+            
+        let partidasPorCliente = [];
+        partidas.forEach(partida =>{
+            let posiciones = partida.posiciones;
+            
+            for(let i = 0; i < posiciones.length; i++){
+                if(posiciones[i].isEmpty === false){
+                let infoPartida = getInfoPartida(partida);
+                
+                    infoPartida["embalajesxSalir"] = posiciones[i].embalajesxSalir;
+                    infoPartida["embalajesEntradas"] = posiciones[i].embalajesEntrada;
+                    infoPartida["posiciones"] = [];
+                    infoPartida["posiciones"].push(posiciones[i]);
+                    infoPartida["posIndex"]=i;
+                    //console.log( infoPartida["posiciones"]);
+                    partidasPorCliente.push(infoPartida);
+                }
+            }
+        })
+
+
+            
+    //EXCELL HEADERS-----
+    var excel = require('excel4node');
+    var dateFormat = require('dateformat');
+    var workbook = new excel.Workbook();
+    var worksheet = workbook.addWorksheet('Partidas');
+    var tituloStyle = workbook.createStyle({
+      font: {
+        bold: true,
+      },
+      alignment: {
+        wrapText: true,
+        horizontal: 'center',
+      },
+    });
+    var headersStyle = workbook.createStyle({
+      font: {
+        bold: true,
+      },
+      alignment: {
+        wrapText: true,
+        horizontal: 'left',
+      },
+    });
+ 
+    worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
+    worksheet.cell(2, 1).string('Lote').style(headersStyle);
+    worksheet.cell(2, 2).string('Clave').style(headersStyle);
+    worksheet.cell(2, 3).string('Descripcion').style(headersStyle);
+    worksheet.cell(2, 4).string('Fecha Caducidad').style(headersStyle);
+    worksheet.cell(2, 5).string('Tarimas').style(headersStyle);
+    worksheet.cell(2, 6).string("Corrugados").style(headersStyle);
+    worksheet.cell(2, 7).string("Pasillo").style(headersStyle);
+    worksheet.cell(2, 8).string("Posición").style(headersStyle);
+    worksheet.cell(2, 9).string("Nivel").style(headersStyle);
+    worksheet.cell(2, 10).string("Ubicaciones").style(headersStyle);
+
+    let row = 3;
+    partidasPorCliente.forEach((partida, index) =>{
+
+        const { lote, clave, descripcion, fechaCaducidad, embalajesxSalir, posiciones  } = partida;
+
+        let nivel = "0"+Helper.getLevelNumberFromName(posiciones[0].nivel);
+
+        let ubicacion = `${posiciones[0].pasillo}-${posiciones[0].posicion}-${nivel}`;
+
+        try {
+            
+        worksheet.cell(row, 1).string(lote === undefined || null ? "" : lote);
+        worksheet.cell(row, 2).string(clave === undefined || null ? "" : clave);
+        worksheet.cell(row, 3).string(descripcion === undefined || null ? "" : descripcion);
+        worksheet.cell(row, 4).string(fechaCaducidad === undefined || null ? "" : dateFormat(fechaCaducidad, "dd/mm/yyyy"));
+        worksheet.cell(row, 5).number(1);
+        worksheet.cell(row, 6).number(embalajesxSalir.cajas === undefined || null ? 0 : embalajesxSalir.cajas);
+        worksheet.cell(row, 7).string(posiciones[0].pasillo === undefined || null ? "" : posiciones[0].pasillo);
+        worksheet.cell(row, 8).string(posiciones[0].posicion === undefined || null ? "" : posiciones[0].posicion);
+        worksheet.cell(row, 9).string(posiciones[0].nivel === undefined || null ?  "" : nivel);
+        worksheet.cell(row, 10).string(ubicacion);
+        } catch (error) {
+
+            console.log(error);
+        }
+
+        
+        row++;
+
+    });
+
+    workbook.write('ReporteModificaciones'+dateFormat(Date.now(), "dd/mm/yyyy")+'.xlsx',res);
+
+        
+
+    } catch (e) {
+        console.log(e);
+        res.status(500).send(e);
+    }
+
+    
+}
+
 function getInfoPartida(partida){
 
     let infoPartida = { };
@@ -2619,6 +2806,7 @@ module.exports = {
     posicionarPartidas,
     ModificaPartidas,
     getPartidaMod,
-    LimpiaPosicion
+    LimpiaPosicion,
+    getPartidaModExcel
     //getExcelInventory
 }
