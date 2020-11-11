@@ -2452,7 +2452,7 @@ async function getExcelInventory(req, res){
                     const { clave } = producto;
                     const embalaje = producto.embalajes
                     let clienteEmbalaje = producto.clienteFiscal_id.arrEmbalajes
-                    let cantidadProductoPartidas = await getInventoarioPorPartidas(clave, clienteEmbalaje);
+                    let cantidadProductoPartidas = await getInventarioPorPartidas(clave, clienteEmbalaje);
 
                     if(cantidadProductoPartidas.length !== 0){
                         producto.embalajes.cajas = cantidadProductoPartidas[0].cantidadProducto;
@@ -2612,7 +2612,7 @@ async function getExcelInventory(req, res){
         })   
  }
 
- async function getInventoarioPorPartidas(clave, clienteEmbalaje = "cajas"){
+ async function getInventarioPorPartidas(clave, clienteEmbalaje = "cajas"){
 
     let embalaje = clienteEmbalaje.split(",")[1];
 
