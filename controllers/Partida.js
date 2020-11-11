@@ -1548,7 +1548,7 @@ async function posicionarPartidas(req, res)
         console.log(pasillo);
         console.log("---------------");
         console.log("nivel"+nivelIndex);*/
-        if(productos.isDobleEstiba!=undefined && productos.isDobleEstiba == true && posicion.niveles[nivelIndex].length<=1){//productoes stiba
+        if(productos.isEstiba!=undefined && productos.isEstiba == true && posicion.niveles[nivelIndex].length<=1){//productoes stiba
             posicion.niveles[nivelIndex].isCandadoDisponibilidad = false; 
             posicion.niveles[nivelIndex].apartado = false;
         }
@@ -2189,30 +2189,35 @@ async function ModificaPartidas(req, res)
         let nivel=req.body.ubicacion.nivel;
         let nivelIndex=parseInt(nivel)-1;
         let posIndex=req.body.posIndex;
-        let posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
-        let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
-        let oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id});
-        let productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
+        var posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
+        var pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
+        var oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id}).exec();
+        var productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
 
         console.log(nivel_id+"!="+partida.posiciones[posIndex].nivel_id.toString())
         if(nivel_id!=partida.posiciones[posIndex].nivel_id.toString())
         {
-             console.log("testmove")
-           // console.log(partida.posiciones[posIndex].nivel_id);
-
-            let indexniveles=oldpos.niveles.findIndex(obj=> (obj._id == partida.posiciones[posIndex].nivel_id.toString()));console.log(indexniveles);
-            if(indexniveles<0){
-                let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id == partida.producto_id.toString()));
-                if(indexprod<0){
+            console.log("testmove")
+            // console.log(partida.posiciones[posIndex].nivel_id);
+            console.log("niv:"+oldpos.niveles);
+            let indexniveles=oldpos.niveles.findIndex(obj=> (obj._id.toString() == partida.posiciones[posIndex].nivel_id.toString()));console.log(indexniveles);
+            if(indexniveles>=0){
+                console.log(partida.producto_id.toString());
+                let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id.toString()  == partida.producto_id.toString()));console.log("prod:"+indexprod);
+                if(indexprod>=0){
                     oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]=oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"];
+                    console.log("cajas:"+oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]);
                     let item = {
                         niveles: oldpos.niveles
                     }
-                    await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
+                    //await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
                     if(oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]<1)
                     {
+                        console.log("bnivel:"+oldpos.niveles[indexniveles].productos[indexprod])
                         oldpos.niveles[indexniveles].productos.splice(indexprod, 1);
+                        console.log("nivel:"+oldpos.niveles[indexniveles])
                     }
+                    console.log(oldpos.niveles[indexniveles].productos.length);
                     if(oldpos.niveles[indexniveles].productos.length<1)
                     {
                         oldpos.niveles[indexniveles].productos=[]
@@ -2221,9 +2226,14 @@ async function ModificaPartidas(req, res)
                     }
                     //posicion.niveles[nivelIndex].productos.find(obj=> (obj.factura == req.body.Pedido[i].Factura))
                     //console.log(posicion);
+                    let item3 = {
+                        niveles: oldpos.niveles
+                    }
+                    console.log(await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item3 }));
                     await oldpos.save();
                 }
             }
+            posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
            // partida.posiciones[]=[];
             let jPosicionBahia = {
                 embalajesEntrada: partida.posiciones[posIndex].embalajesxSalir,
@@ -2238,7 +2248,7 @@ async function ModificaPartidas(req, res)
             };
             partida.posiciones[posIndex]=jPosicionBahia;
             //console.log("E"+nivel)
-            let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
+            let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id.toString()  == nivel_id.toString()));
            // console.log(indexnivelesNew)
            if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
                  
@@ -2254,7 +2264,7 @@ async function ModificaPartidas(req, res)
                 let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
                 
                 console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
-                if(productosDia.isDobleEstiba!=undefined && productosDia.isDobleEstiba == true && posicion.niveles[indexnivelesNew].length<=1 ){//productoes stiba
+                if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].length<=1 ){//productoes stiba
                     posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                     posicion.niveles[indexnivelesNew].apartado = false;
                 }
@@ -2293,12 +2303,12 @@ async function ModificaPartidas(req, res)
                 //await productosDia.save();
               //  console.log("test3");
                 partida.posiciones[posIndex].embalajesxSalir= req.body.embalajesEntrada;
-                let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
+                let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id.toString()  == nivel_id.toString()));
                 console.log(indexnivelesNew+nivel_id);
                 console.log(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())+"<0")
                 if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
                     posicion.niveles[indexnivelesNew].productos=[];
-                    if(productosDia.isDobleEstiba!=undefined && productosDia.isDobleEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
+                    if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
                         posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                         posicion.niveles[indexnivelesNew].apartado = false;
                     }
@@ -2316,7 +2326,7 @@ async function ModificaPartidas(req, res)
                     let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
                     
                     console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
-                    if(productosDia.isDobleEstiba!=undefined && productosDia.isDobleEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
+                    if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
                         posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                         posicion.niveles[indexnivelesNew].apartado = false;
                     }
