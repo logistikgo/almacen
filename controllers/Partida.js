@@ -2561,12 +2561,14 @@ async function getExcelInventory(req, res){
                     let tarimas = parseInt(producto.embalajes.tarimas);
                     let corrugados = parseInt(producto.embalajes.cajas);
                     let valor = producto.valor;
+                    
                     let safetyStock =  0;
+                    let saftyStockEmbalajes = 0;
                         if(producto.safetystock !== null && producto.safetystock !== undefined){
                             safetyStock = parseInt(producto.safetystock);
+                            saftyStockEmbalajes = Math.floor(safetyStock / producto.arrEquivalencias[0].cantidadEquivalencia);
                         } 
                     let safetyStockPorcentaje = "0.0%";
-                    
 
                     let ultimaEntrada = dateFormat(producto.fechaUltimaEntrada, "dd/mm/yyyy");
                     let ultimaSalida = dateFormat(producto.fechaUltimaSalida, "dd/mm/yyyy");
@@ -2578,7 +2580,7 @@ async function getExcelInventory(req, res){
                     worksheet.cell(row, 5).number(tarimas === undefined || null ? 0 : tarimas);
                     worksheet.cell(row, 6).number(corrugados === undefined || null ? 0 : corrugados);
                     worksheet.cell(row, 7).number(valor === undefined || null ? 0 : valor);
-                    worksheet.cell(row, 8).number(0);
+                    worksheet.cell(row, 8).number(saftyStockEmbalajes);
                     worksheet.cell(row, 9).number(safetyStock);
 
                     if(safetyStock !== 0 && corrugados !== 0){
