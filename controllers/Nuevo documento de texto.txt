@@ -3007,7 +3007,7 @@ async function saveEntradaCPD(req, res) {
 	        let countEntradas=await Entrada.find({"factura":req.body.Pedido[i].Factura}).exec();
 	        countEntradas= countEntradas.length<1 ? await Entrada.find({"referencia":req.body.Pedido[i].Factura}).exec():countEntradas;
 	        countEntradas= countEntradas.length<1 ? await Entrada.find({"item":req.body.Pedido[i].Factura}).exec():countEntradas;
-	        //console.log("test"+countEntradas.length)
+	        console.log("test"+countEntradas.length)
     		if(countEntradas.length ==0)
     		{
 		        if(arrPO.find(obj=> (obj.factura == req.body.Pedido[i].Factura)))
@@ -3074,8 +3074,8 @@ async function saveEntradaCPD(req, res) {
 	            arrPartidas_id.push(partida._id);
 	        });
 	    });
-	   //console.log(partidas);
-	    //console.log(noOrden.fechasalida.toString());
+	   console.log(partidas);
+	    console.log(noOrden.fechasalida.toString());
 	    
 		let fechaSalidaPlanta=Date.parse(noOrden.fechasalida);
 		let fechaesperada=Date.parse(noOrden.fechasalida)+((60 * 60 * 24 * 1000)*7+1);
@@ -3086,7 +3086,7 @@ async function saveEntradaCPD(req, res) {
 			let idSucursales = req.body.IDSucursal;
 
 			let nEntrada = new Entrada();
-			//console.log(fechaesperada.toString())
+			console.log(fechaesperada.toString())
 			nEntrada.fechaEntrada = new Date(fechaesperada);
 			nEntrada.fechaEsperada = new Date(fechaesperada);
 			nEntrada.fechaReciboRemision = new Date(Date.now()-(5*3600000));
@@ -3129,7 +3129,7 @@ async function saveEntradaCPD(req, res) {
 					await Partida.asignarEntrada( partidas.map(x => x._id.toString()), entrada._id.toString());
 					
 					//console.log(partidas);
-					console.log(entrada.factura);
+					//console.log(entrada);*/
 					console.log("/--------end----------/")
 				}).catch((error) => {
 					console.log(error);

@@ -74,7 +74,7 @@ function getPosiciones(req, res) {
 							posicion_id: posicion._id,
 							nivel: nivel.nombre
 						};
-						if(almacen_id!='5e33437422b5651aecafea70' || (pasillo.familia == "CADUCADO" || pasillo.familia == "frios" ) )
+						if(almacen_id!='5e33437422b5651aecafea70' || (pasillo.familia == "CADUCADO" || pasillo.familia == "STAGING" || pasillo.familia == "frios" || pasillo.familia == "secos" ) )
 						posiciones.push(posicionNomenclatura);
 					}
 				}
@@ -93,6 +93,7 @@ async function getDisponibles(req, res) {
 	let almacen_id = req.query.almacen_id;
 	let producto_id = req.query.prod_id;
 	let pasilloId =req.query.pasilloId
+	var isdoble=false;
 	let query = {
 		almacen_id: new ObjectId(almacen_id),
 		statusReg: "ACTIVO"
@@ -108,6 +109,7 @@ async function getDisponibles(req, res) {
 		if(producto.subclasificacion == "Botana" ){
 			query.familia={$in:["secos","STAGING","CADUCADO"]};
 		}
+		isdoble=producto.isEstiba!=undefined ? producto.isEstiba : false;
 	}
 	//console.log(query);
 	Pasillo.find(query)
@@ -120,7 +122,7 @@ async function getDisponibles(req, res) {
 			for (let pasillo of data) {
 				for (let pos of pasillo.posiciones) {
 					let posicion = pos.posicion_id;
-					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0 || posicion.familia=="CADUCADO") != undefined) {
+					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0 || posicion.familia=="CADUCADO"  || (isdoble==true && x.productos.length<=1)) != undefined) {
 						if (disponibles.find(x => x == pasillo) == undefined)
 							disponibles.push(pasillo);
 						else

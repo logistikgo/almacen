@@ -273,13 +273,15 @@ app.get('/api/getExcelSalidasBarcel', Salida.getExcelSalidasBarcel);
 app.get('/api/reporteDia',Partida.reporteDia);
 app.get('/api/getExcelreporteDia',Partida.getExcelreporteDia);
 app.get('/api/reporteFEFOS',Partida.reporteFEFOS);
-
+app.get('/api/getExcelInventory/:idClienteFiscal', Partida.getExcelInventory);
+app.get('/api/getExcelModificaciones',Partida.getPartidaModExcel);
 //babel
 //entradas
 app.post('/api/saveEntradaBabel', Entrada.saveEntradaBabel);
 app.post('/api/updateEntradasBabel', Entrada.updateEntradasBabel);
 app.post('/api/saveEntradaEDI', Entrada.saveEntradaEDI);
 app.post('/api/saveEntradaCPD', Entrada.saveEntradaCPD);
+app.post('/api/saveEntradaBLO', Entrada.saveEntradaBLO);
 app.post('/api/updateById', Entrada.updateById);
 
 app.post('/api/saveEntradaChevron',Entrada.saveEntradaChevron);

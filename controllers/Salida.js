@@ -1864,9 +1864,10 @@ async function saveSalidaBabel(req, res) {
 					for (let i = 0; i < partidas.length && count<1; i++)
 					{
 						//console.log(i);
-						let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
+			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*2)); 
 			            //console.log(par)
-			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaFrescura.getTime()>hoy.getTime())
+			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaAlerta1.getTime()>hoy.getTime())
 			            {
 			            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
 			            	if(partidaaux.pedido==false)
@@ -1956,17 +1957,11 @@ async function saveSalidaBabel(req, res) {
 
 function updateStatusSalidas(req, res) {
 	let _id = req.body.salida_id;
-	let newStatus = req.body.status;
+	let partida_id = req.body.partida_id;
 	console.log(_id);
-
-	let today = new Date(Date.now()-(5*3600000));
-	let datos ={ tipo: newStatus}
-	if(newStatus=="FORPICKING")
-	{
-		datos.fechaEntrada=today
-	}
-
-	Salida.updateOne({_id: _id}, { $set: datos}).then((data) => {
+	salida= Salida.findOne({ _id: _id }).exec();
+	//salida
+	salida.save().then((data) => {
 		console.log(datos);
 		res.status(200).send(data);
 	})
