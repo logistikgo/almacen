@@ -1933,7 +1933,7 @@ async function saveSalidaBabel(req, res) {
 					}
 					//saveSalida
 
-					nSalida.save();
+					//nSalida.save();
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
@@ -1957,17 +1957,11 @@ async function saveSalidaBabel(req, res) {
 
 function updateStatusSalidas(req, res) {
 	let _id = req.body.salida_id;
-	let newStatus = req.body.status;
+	let partida_id = req.body.partida_id;
 	console.log(_id);
-
-	let today = new Date(Date.now()-(5*3600000));
-	let datos ={ tipo: newStatus}
-	if(newStatus=="FORPICKING")
-	{
-		datos.fechaEntrada=today
-	}
-
-	Salida.updateOne({_id: _id}, { $set: datos}).then((data) => {
+	salida= Salida.findOne({ _id: _id }).exec();
+	//salida
+	salida.save().then((data) => {
 		console.log(datos);
 		res.status(200).send(data);
 	})

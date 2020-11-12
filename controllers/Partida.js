@@ -3033,5 +3033,6 @@ module.exports = {
     ModificaPartidas,
     getPartidaMod,
     LimpiaPosicion,
-    getExcelInventory
+    getExcelInventory,
+    getPartidaModExcel
 }
