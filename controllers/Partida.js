@@ -2396,7 +2396,12 @@ async function getPartidaMod(req, res)
         const lote = req.query.lote !== undefined ? req.query.lote.toUpperCase() : "";
         let clave = req.query.clave !== undefined ? req.query.clave : "";
         let semana= req.query.semana != undefined ? req.query.semana : "";
-        const pasillo = req.query.pasillo !== undefined ? req.query.pasillo.toUpperCase() : "";
+        let pasillo = req.query.pasillo !== undefined ? req.query.pasillo : "";
+
+        if(pasillo !== "Staging"){
+            pasillo = pasillo.toUpperCase();
+        }
+
         const posicion = req.query.posicion !== undefined ? req.query.posicion : "";
         const nivel = req.query.nivel !== undefined ?  req.query.nivel : "";
         
@@ -2418,7 +2423,8 @@ async function getPartidaMod(req, res)
         }
 
         if(pasillo !== ""){
-           filtro["posiciones.pasillo"] = pasillo;
+            //let regexForPasillo = new RegExp(pasillo, "i", "g");
+           filtro["posiciones.pasillo"] = pasillo
         }
 
         if(posicion !== ""){
@@ -2519,7 +2525,14 @@ async function getPartidaModExcel(req, res)
         const lote = req.query.lote !== undefined ? req.query.lote.toUpperCase() : "";
         let clave = req.query.clave !== undefined ? req.query.clave : "";
         let semana= req.query.semana != undefined ? req.query.semana : "";
-        const pasillo = req.query.pasillo !== undefined ? req.query.pasillo.toUpperCase() : "";
+        
+        let pasillo = req.query.pasillo !== undefined ? req.query.pasillo : "";
+
+        if(pasillo !== "Staging"){
+            pasillo = pasillo.toUpperCase();
+        }
+
+
         const posicion = req.query.posicion !== undefined ? req.query.posicion : "";
         const nivel = req.query.nivel !== undefined ?  req.query.nivel : "";
         
@@ -2647,7 +2660,11 @@ async function getPartidaModExcel(req, res)
 
         const { lote, clave, descripcion, fechaCaducidad, embalajesxSalir, posiciones  } = partida;
 
-        let nivel = "0"+Helper.getLevelNumberFromName(posiciones[0].nivel);
+        let nivel = Helper.getLevelNumberFromName(posiciones[0].nivel);
+        
+        if(nivel < 10){
+            nivel = "0"+nivel;
+        }
 
         let ubicacion = `${posiciones[0].pasillo}-${posiciones[0].posicion}-${nivel}`;
 
@@ -2661,7 +2678,7 @@ async function getPartidaModExcel(req, res)
         worksheet.cell(row, 6).number(embalajesxSalir.cajas === undefined || null ? 0 : embalajesxSalir.cajas);
         worksheet.cell(row, 7).string(posiciones[0].pasillo === undefined || null ? "" : posiciones[0].pasillo);
         worksheet.cell(row, 8).string(posiciones[0].posicion === undefined || null ? "" : posiciones[0].posicion);
-        worksheet.cell(row, 9).string(posiciones[0].nivel === undefined || null ?  "" : nivel);
+        worksheet.cell(row, 9).string(posiciones[0].nivel === undefined || null ?  "" : ""+nivel);
         worksheet.cell(row, 10).string(ubicacion);
         } catch (error) {
 
