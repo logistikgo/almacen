@@ -18,7 +18,6 @@ const ClienteFiscal = require('../models/ClienteFiscal');
 const ModificacionesModel = require('../models/Modificaciones');
 var ObjectId = (require('mongoose').Types.ObjectId);
 const Helpers = require('../helpers');
-const helpers = require('../helpers');
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
@@ -2783,6 +2782,216 @@ async function LimpiaPosicion(req, res)
     
 }
 
+async function getExcelInventory(req, res){
+
+    let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
+    let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
+
+	//console.log(req.query.almacen_id);
+    
+    let arrProd=[];
+	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
+		.populate({
+			path: 'presentacion_id',
+			model: 'Presentacion'
+		})
+		.populate({
+            path: 'clasificacion_id',
+			model: 'ClasificacionesProductos'
+        }).populate({
+            path: "clienteFiscal_id",
+            model: "ClienteFiscal"
+        })
+        .sort({clave: 1}).collation({ locale: "af", numericOrdering: true})
+		.then(async (productos) => {
+			//console.log(productos);
+			if (almacen_id != undefined && almacen_id != "") {
+				await Helpers.asyncForEach(productos, async function (producto) {
+					producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
+				});
+			}
+				await Helpers.asyncForEach(productos, async function (producto) {
+                    
+                    const { clave } = producto;
+                    const embalaje = producto.embalajes
+                    let clienteEmbalaje = producto.clienteFiscal_id.arrEmbalajes
+                    let cantidadProductoPartidas = await getInventarioPorPartidas(clave, clienteEmbalaje);
+
+                    if(cantidadProductoPartidas.length !== 0){
+                        producto.embalajes.cajas = cantidadProductoPartidas[0].cantidadProducto;
+                        producto.embalajes.tarimas = cantidadProductoPartidas[0].cantidadTarimas;
+                    }
+
+					if(almacen_id !== "")
+					{
+						if(producto.almacen_id.find(element => element.toString() == almacen_id)){
+							//console.log(producto.almacen_id +"==="+almacen_id);
+							arrProd.push(producto);
+						}
+					}
+					else
+					{
+						arrProd.push(producto);
+					}
+                });
+
+                //EXCELL HEADERS-----
+                var excel = require('excel4node');
+                var dateFormat = require('dateformat');
+                var workbook = new excel.Workbook();
+                var worksheet = workbook.addWorksheet('Inventario');
+                var tituloStyle = workbook.createStyle({
+                font: {
+                    bold: true,
+                },
+                alignment: {
+                    wrapText: true,
+                    horizontal: 'center',
+                },
+                });
+                var headersStyle = workbook.createStyle({
+                font: {
+                    bold: true,
+                },
+                alignment: {
+                    horizontal: 'center',
+                },
+    });
+
+                let alertstyle = workbook.createStyle({
+                    font: {
+                    bold: true,
+                    },
+                    alignment: {
+                    wrapText: true,
+                    horizontal: 'center',
+                    },
+                    fill: {
+                    type: 'pattern',
+                    patternType: 'solid',
+                    bgColor: '#F01B2F',
+                    fgColor: '#F01B2F',
+                    },
+                });
+                let correctStyle = workbook.createStyle({
+                    font: {
+                    bold: true,
+                    },
+                    alignment: {
+                    wrapText: true,
+                    horizontal: 'center',
+                    },
+                    fill: {
+                    type: 'pattern',
+                    patternType: 'solid',
+                    bgColor: '#57D377',
+                    fgColor: '#57D377',
+                    },
+                });
+                worksheet.column(2).setWidth(50);
+                worksheet.column(1).setWidth(15);
+                worksheet.column(3).setWidth(15);
+                worksheet.column(4).setWidth(15);
+                worksheet.column(8).setWidth(15);
+                worksheet.column(9).setWidth(15);
+                worksheet.column(10).setWidth(15);
+                
+
+                worksheet.cell(1, 1, 1, 14, true).string('LogistikGO - Almacén').style(tituloStyle);
+                worksheet.cell(2, 1).string('Clave').style(headersStyle);
+                worksheet.cell(2, 2).string('Descripción').style(headersStyle);
+                worksheet.cell(2, 3).string('Subclasificacion').style(headersStyle);
+                worksheet.cell(2, 4).string('Presentacion').style(headersStyle);
+                worksheet.cell(2, 5).string('Tarimas').style(headersStyle);
+                worksheet.cell(2, 6).string("Corrugados").style(headersStyle);
+                worksheet.cell(2, 7).string("Valor").style(headersStyle);
+                worksheet.cell(2, 8).string("SafetyStock T.").style(headersStyle);
+                worksheet.cell(2, 9).string("Safety Stock C.").style(headersStyle);
+                worksheet.cell(2, 10).string("% SS").style(headersStyle);
+                worksheet.cell(2, 11).string("Ultima Entrada").style(headersStyle);
+                worksheet.cell(2, 12).string("Ultima Salida").style(headersStyle);
+                
+
+                let row = 3;
+                arrProd.forEach((producto, index) =>{
+
+                    try {
+                      
+                    let clave = producto.clave;
+                    let descripcion = producto.descripcion;
+                    let subclasificacion = producto.subclasificacion;
+                    let presentacion = producto.presentacion;
+                    let tarimas = parseInt(producto.embalajes.tarimas);
+                    let corrugados = parseInt(producto.embalajes.cajas);
+                    let valor = producto.valor;
+                    
+                    let safetyStock =  0;
+                    let saftyStockEmbalajes = 0;
+                        if(producto.safetystock !== null && producto.safetystock !== undefined){
+                            safetyStock = parseInt(producto.safetystock);
+                            saftyStockEmbalajes = Math.floor(safetyStock / producto.arrEquivalencias[0].cantidadEquivalencia);
+                        } 
+                    let safetyStockPorcentaje = "0.0%";
+
+                    let ultimaEntrada = dateFormat(producto.fechaUltimaEntrada, "dd/mm/yyyy");
+                    let ultimaSalida = dateFormat(producto.fechaUltimaSalida, "dd/mm/yyyy");
+
+                    worksheet.cell(row, 1).string(clave === undefined || null ? "" : clave);
+                    worksheet.cell(row, 2).string(descripcion === undefined || null ? "" : descripcion);
+                    worksheet.cell(row, 3).string(subclasificacion === undefined || null ? "" : subclasificacion);
+                    worksheet.cell(row, 4).string(presentacion === undefined || null ? "" : presentacion);
+                    worksheet.cell(row, 5).number(tarimas === undefined || null ? 0 : tarimas);
+                    worksheet.cell(row, 6).number(corrugados === undefined || null ? 0 : corrugados);
+                    worksheet.cell(row, 7).number(valor === undefined || null ? 0 : valor);
+                    worksheet.cell(row, 8).number(saftyStockEmbalajes);
+                    worksheet.cell(row, 9).number(safetyStock);
+
+                    if(safetyStock !== 0 && corrugados !== 0){
+                        let porcentaje = (corrugados / safetyStock) * 100;
+                        safetyStockPorcentaje = ((safetyStock || corrugados) === 0) ? `0.0%` : `${porcentaje.toFixed(1)}%`;
+
+                        if(porcentaje >= 100){
+                            worksheet.cell(row, 10).string(safetyStockPorcentaje === undefined || null ? "0.0%" : safetyStockPorcentaje).style(correctStyle);
+                        }else{
+                            worksheet.cell(row, 10).string(safetyStockPorcentaje === undefined || null ? "0.0%" : safetyStockPorcentaje).style(alertstyle);
+                        }
+                    }else{
+                        worksheet.cell(row, 10).string(safetyStockPorcentaje === undefined || null ? "0.0%" : safetyStockPorcentaje).style(alertstyle);
+                    } 
+                    worksheet.cell(row, 11).string(ultimaEntrada === undefined || null ? 0 : ultimaEntrada);
+                    worksheet.cell(row, 12).string(ultimaSalida === undefined || null ? 0 : ultimaSalida);
+                    
+                    row++;
+                    } catch (error) {
+                        res.status(500).send(error);
+                    }
+
+                })
+
+                workbook.write('InventarioPorProducto'+dateFormat(Date.now(), "dd/mm/yyyy")+'.xlsx',res);
+                //res.status(200).send(arrProd);
+
+               
+        })   
+ }
+
+ async function getInventarioPorPartidas(clave, clienteEmbalaje = "cajas"){
+
+    let embalaje = clienteEmbalaje.split(",")[1];
+
+    let matchProducto = {
+        _id: "$clave", cantidadProducto: {$sum:`$embalajesxSalir.${embalaje}`}, cantidadTarimas: {$sum: 1} 
+    }
+
+    let cantidadPartidas = await Partida.aggregate([
+    
+        {$match:{"clave": clave, isEmpty: false, status : "ASIGNADA"}},
+        {$group: matchProducto}
+    ])
+
+    return cantidadPartidas;
+ }
+
 module.exports = {
     get,
     post,
@@ -2814,6 +3023,5 @@ module.exports = {
     ModificaPartidas,
     getPartidaMod,
     LimpiaPosicion,
-    getPartidaModExcel
-    //getExcelInventory
+    getExcelInventory
 }
