@@ -447,6 +447,28 @@ function Compare(obj1, obj2) { //Compare json for 1 level of fields
 	return true;
 }
 
+function getLevelNameFromNumber(nivel = 1){
+
+	const LETTER_INIT = 64;
+
+	const nivelNumber = parseInt(nivel) + LETTER_INIT;
+
+	const nivelName = String.fromCharCode(nivelNumber);
+
+	return nivelName;
+
+}
+
+function getLevelNumberFromName(nivel = "A"){
+
+	const LETTER_INIT = 64;
+
+	const nivelName = nivel.charCodeAt() - LETTER_INIT;
+
+	return nivelName;
+
+}
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -460,5 +482,7 @@ module.exports = {
 	emptyEmbalajes,
 	isEmptyEmbalaje,
 	emptyAllEmbalajes,
-	Compare
+	Compare,
+	getLevelNameFromNumber,
+	getLevelNumberFromName
 }
