@@ -1954,15 +1954,40 @@ async function saveSalidaBabel(req, res) {
 }
 
 
-
 function updateStatusSalidas(req, res) {
+	let _id = req.body.salida_id;
+	let newStatus = req.body.status;
+	console.log(_id);
+
+	let today = new Date(Date.now()-(5*3600000));
+	let datos ={ tipo: newStatus}
+	if(newStatus=="FORPICKING")
+	{
+		datos.fechaEntrada=today
+	}
+
+	Salida.updateOne({_id: _id}, { $set: datos}).then((data) => {
+		console.log(datos);
+		res.status(200).send(data);
+	})
+}
+function removefromSalidaId(req, res) {
 	let _id = req.body.salida_id;
 	let partida_id = req.body.partida_id;
 	console.log(_id);
 	salida= Salida.findOne({ _id: _id }).exec();
-	//salida
+	let indexpartida= findIndex(obj=> (obj.toString() == partida_id)); 
+	salida.partidas.splice(indexpartida);
 	salida.save().then((data) => {
-		console.log(datos);
+
+		console.log(data);
+		var partidaaux= PartidaModel.findOne({_id:partida_id}).exec();
+		partidaaux.CajasPedidas={cajas:0};0
+    	partidaaux.pedido=false;
+    	partidaaux.refpedido="SIN_ASIGNAR";
+    	partidaaux.statusPedido="SIN_ASIGNAR";
+    	partidaaux.save();
+
 		res.status(200).send(data);
 	})
 	.catch((error) => {
@@ -1985,5 +2010,6 @@ module.exports = {
 	importsalidas,
 	getExcelSalidasBarcel,
 	saveSalidaBabel,
-	updateStatusSalidas
+	updateStatusSalidas,
+	removefromSalidaId
 }
