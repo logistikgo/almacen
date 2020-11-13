@@ -2165,8 +2165,8 @@ async function ModificaPartidas(req, res)
             sucursal_id: req.body.sucursal_id,
             almacen_id: req.body.almacen_id,
             clienteFiscal_id: req.body.idClienteFiscal,
-            usuarioAlta_id:req.usuarioAlta_id,
-            nombreUsuario:req.nombreUsuario
+            usuarioAlta_id:req.body.usuarioAlta_id,
+            nombreUsuario:req.body.nombreUsuario
         }
     if(partida.lote!=req.body.lote){
         partida.lote=req.body.lote;
