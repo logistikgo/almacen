@@ -1726,7 +1726,7 @@ function getExcelCaducidades(req, res) {
            		indexbody++;
            	});
            	//console.log(partidas._id.toString());
-           	if(partidas.pedido)
+           	if(partidas.pedido && partidas.CajasPedidas )
            	{
 	           	if(partidas.pedido == false){
 	            	worksheet.cell(i, indexbody).number(partidas.pedido!=undefined ? partidas.pedido == false ? 0: parseInt(partidas.CajasPedidas.cajas):0 );
