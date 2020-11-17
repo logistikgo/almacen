@@ -2811,30 +2811,30 @@ async function getExcelInventory(req, res){
     let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
     let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
 
-	//console.log(req.query.almacen_id);
+    //console.log(req.query.almacen_id);
     
     let arrProd=[];
-	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
-		.populate({
-			path: 'presentacion_id',
-			model: 'Presentacion'
-		})
-		.populate({
+    Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
+        .populate({
+            path: 'presentacion_id',
+            model: 'Presentacion'
+        })
+        .populate({
             path: 'clasificacion_id',
-			model: 'ClasificacionesProductos'
+            model: 'ClasificacionesProductos'
         }).populate({
             path: "clienteFiscal_id",
             model: "ClienteFiscal"
         })
         .sort({clave: 1}).collation({ locale: "af", numericOrdering: true})
-		.then(async (productos) => {
-			//console.log(productos);
-			if (almacen_id != undefined && almacen_id != "") {
-				await Helpers.asyncForEach(productos, async function (producto) {
-					producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
-				});
-			}
-				await Helpers.asyncForEach(productos, async function (producto) {
+        .then(async (productos) => {
+            //console.log(productos);
+            if (almacen_id != undefined && almacen_id != "") {
+                await Helpers.asyncForEach(productos, async function (producto) {
+                    producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
+                });
+            }
+                await Helpers.asyncForEach(productos, async function (producto) {
                     
                     const { clave } = producto;
                     const embalaje = producto.embalajes
@@ -2846,17 +2846,17 @@ async function getExcelInventory(req, res){
                         producto.embalajes.tarimas = cantidadProductoPartidas[0].cantidadTarimas;
                     }
 
-					if(almacen_id !== "")
-					{
-						if(producto.almacen_id.find(element => element.toString() == almacen_id)){
-							//console.log(producto.almacen_id +"==="+almacen_id);
-							arrProd.push(producto);
-						}
-					}
-					else
-					{
-						arrProd.push(producto);
-					}
+                    if(almacen_id !== "")
+                    {
+                        if(producto.almacen_id.find(element => element.toString() == almacen_id)){
+                            //console.log(producto.almacen_id +"==="+almacen_id);
+                            arrProd.push(producto);
+                        }
+                    }
+                    else
+                    {
+                        arrProd.push(producto);
+                    }
                 });
 
                 //EXCELL HEADERS-----
