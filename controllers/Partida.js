@@ -62,8 +62,11 @@ async function getbyid(req, res)
 async function getByEntrada(req, res) {
     let entrada_id = req.params.entrada_id;
 
-
     Partida.find({ entrada_id: entrada_id })
+        .populate({
+            path: 'producto_id',
+            model: 'Producto'
+        })
         .then(async (partidas) => {
             //console.log(partidas.length);
             let arrpartida=[];
@@ -114,7 +117,10 @@ async function getBySalida(req, res) {
     let partidas = [];
 
     await Helper.asyncForEach(partidas_id, async function (partida_id) {
-        let partidaFound = await Partida.findOne({ _id: partida_id }).exec();
+        let partidaFound = await Partida.findOne({ _id: partida_id }).populate({
+            path: "producto_id",
+            model: "Producto"
+        }).exec();
         let partida = JSON.parse(JSON.stringify(partidaFound));
         let salida_idFound = partida.salidas_id.find(x => x.salida_id.toString() == salida_id.toString());
         partida.pesoBrutoEnSalida = salida_idFound?salida_idFound.pesoBruto:0;
@@ -468,6 +474,10 @@ async function getByProductoEmbalaje(req, res) {
                 sucursal_id: sucursal_id,
                 almacen_id: almacen_id
             })
+        .populate({
+            path: 'producto_id',
+            model: 'Producto'
+            })
         .where(embalajesxSalir).gt(0)
         .exec();
         
@@ -553,7 +563,7 @@ async function getByProductoEmbalaje(req, res) {
                         pasillo: posicion.pasillo,
                         nivel_id: posicion.nivel_id,
                         nivel: posicion.nivel,
-                        producto_id: producto_id,
+                        producto_id: partida.producto_id,
                         ubicacion_id: posicion._id,
                         origen:partida.origen, 
                         pedido:partida.pedido,
@@ -637,7 +647,7 @@ async function getByProductoEmbalaje(req, res) {
                             pasillo: posicion.pasillo,
                             nivel_id: posicion.nivel_id,
                             nivel: posicion.nivel,
-                            producto_id: producto_id,
+                            producto_id: partida.producto_id,
                             ubicacion_id: posicion._id,
                             posicionesFull: Helper.Clone(partida.posiciones),
                             origen:partida.origen,
@@ -698,7 +708,7 @@ async function getByProductoEmbalaje(req, res) {
                             pasillo: posicion.pasillo,
                             nivel_id: posicion.nivel_id,
                             nivel: posicion.nivel,
-                            producto_id: producto_id,
+                            producto_id: partida.producto_id,
                             ubicacion_id: posicion._id,
                             posicionesFull: Helper.Clone(partida.posiciones),
                             posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
@@ -2440,6 +2450,7 @@ async function getPartidaMod(req, res)
             let partidasAggregate = Partida.aggregate([
 
                 {$lookup: {"from":"Entradas", "localField": "entrada_id", "foreignField": "_id", "as":"fromEntradas"}},
+                {$lookup: {"from":"Productos", "localField": "producto_id", "foreignField": "_id", "as":"fromProductos"}},
         
                 {$match: filtro},
         
@@ -2461,6 +2472,7 @@ async function getPartidaMod(req, res)
                             InfoPedidos: 1,
                             posiciones: 1,
                             __v: 1,
+                            "producto_id": "$fromProductos",
                             "fromEntradas.stringFolio": 1,
                             "fromEntradas.clienteFiscal_id": 1
                          }},
@@ -2478,9 +2490,9 @@ async function getPartidaMod(req, res)
             for(let i = 0; i < posiciones.length; i++){
                 if(posiciones[i].isEmpty === false){
                 let infoPartida = getInfoPartida(partida);
-                
+                    infoPartida["producto_id"] = partida.producto_id[0];
                     infoPartida["embalajesxSalir"] = posiciones[i].embalajesxSalir;
-                    infoPartida["embalajesEntradas"] = posiciones[i].embalajesEntrada;
+                    infoPartida["embalajesEntrada"] = posiciones[i].embalajesEntrada;
                     infoPartida["posiciones"] = [];
                     infoPartida["posiciones"].push(posiciones[i]);
                     infoPartida["posIndex"]=i;
@@ -3023,5 +3035,6 @@ module.exports = {
     ModificaPartidas,
     getPartidaMod,
     LimpiaPosicion,
-    getExcelInventory
+    getExcelInventory,
+    getPartidaModExcel
 }
