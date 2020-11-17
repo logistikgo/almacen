@@ -1557,7 +1557,21 @@ async function posicionarPartidas(req, res)
         console.log(pasillo);
         console.log("---------------");
         console.log("nivel"+nivelIndex);*/
-        if(productos.isDobleEstiba!=undefined && productos.isDobleEstiba == true && posicion.niveles[nivelIndex].length<=1){//productoes stiba
+        if(partida.posiciones.length>0)
+        {
+            let posOld = await PosicionModelo.findOne({ _id: partida.posiciones[0].posicion});
+            let indexniveles=posOld.niveles.findIndex(obj=> (obj._id.toString() == partida.posiciones[0].nivel_id.toString()));
+            if(indexniveles>=0)
+            {
+                 if(posOld.niveles[indexniveles].productos.length<1)
+                {
+                    posOld.niveles[indexniveles].productos=[]
+                    posOld.niveles[indexniveles].isCandadoDisponibilidad= false;
+                    posOld.niveles[indexniveles].apartado =false;
+                }        
+            }
+        }
+        if(productos.isEstiba!=undefined && productos.isEstiba == true && posicion.niveles[nivelIndex].length<=1){//productoes stiba
             posicion.niveles[nivelIndex].isCandadoDisponibilidad = false; 
             posicion.niveles[nivelIndex].apartado = false;
         }
@@ -2175,8 +2189,8 @@ async function ModificaPartidas(req, res)
             sucursal_id: req.body.sucursal_id,
             almacen_id: req.body.almacen_id,
             clienteFiscal_id: req.body.idClienteFiscal,
-            usuarioAlta_id:req.usuarioAlta_id,
-            nombreUsuario:req.nombreUsuario
+            usuarioAlta_id:req.body.usuarioAlta_id,
+            nombreUsuario:req.body.nombreUsuario
         }
     if(partida.lote!=req.body.lote){
         partida.lote=req.body.lote;
@@ -2198,30 +2212,35 @@ async function ModificaPartidas(req, res)
         let nivel=req.body.ubicacion.nivel;
         let nivelIndex=parseInt(nivel)-1;
         let posIndex=req.body.posIndex;
-        let posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
-        let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
-        let oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id});
-        let productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
+        var posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
+        var pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
+        var oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id}).exec();
+        var productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
 
         console.log(nivel_id+"!="+partida.posiciones[posIndex].nivel_id.toString())
         if(nivel_id!=partida.posiciones[posIndex].nivel_id.toString())
         {
-             console.log("testmove")
-           // console.log(partida.posiciones[posIndex].nivel_id);
-
-            let indexniveles=oldpos.niveles.findIndex(obj=> (obj._id == partida.posiciones[posIndex].nivel_id.toString()));console.log(indexniveles);
-            if(indexniveles<0){
-                let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id == partida.producto_id.toString()));
-                if(indexprod<0){
+            console.log("testmove")
+            // console.log(partida.posiciones[posIndex].nivel_id);
+            console.log("niv:"+oldpos.niveles);
+            let indexniveles=oldpos.niveles.findIndex(obj=> (obj._id.toString() == partida.posiciones[posIndex].nivel_id.toString()));console.log(indexniveles);
+            if(indexniveles>=0){
+                console.log(partida.producto_id.toString());
+                let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id.toString()  == partida.producto_id.toString()));console.log("prod:"+indexprod);
+                if(indexprod>=0){
                     oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]=oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"];
+                    console.log("cajas:"+oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]);
                     let item = {
                         niveles: oldpos.niveles
                     }
-                    await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
+                    //await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
                     if(oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]<1)
                     {
+                        console.log("bnivel:"+oldpos.niveles[indexniveles].productos[indexprod])
                         oldpos.niveles[indexniveles].productos.splice(indexprod, 1);
+                        console.log("nivel:"+oldpos.niveles[indexniveles])
                     }
+                    console.log(oldpos.niveles[indexniveles].productos.length);
                     if(oldpos.niveles[indexniveles].productos.length<1)
                     {
                         oldpos.niveles[indexniveles].productos=[]
@@ -2230,9 +2249,14 @@ async function ModificaPartidas(req, res)
                     }
                     //posicion.niveles[nivelIndex].productos.find(obj=> (obj.factura == req.body.Pedido[i].Factura))
                     //console.log(posicion);
+                    let item3 = {
+                        niveles: oldpos.niveles
+                    }
+                    console.log(await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item3 }));
                     await oldpos.save();
                 }
             }
+            posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
            // partida.posiciones[]=[];
             let jPosicionBahia = {
                 embalajesEntrada: partida.posiciones[posIndex].embalajesxSalir,
@@ -2247,7 +2271,7 @@ async function ModificaPartidas(req, res)
             };
             partida.posiciones[posIndex]=jPosicionBahia;
             //console.log("E"+nivel)
-            let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
+            let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id.toString()  == nivel_id.toString()));
            // console.log(indexnivelesNew)
            if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
                  
@@ -2263,7 +2287,7 @@ async function ModificaPartidas(req, res)
                 let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
                 
                 console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
-                if(productosDia.isDobleEstiba!=undefined && productosDia.isDobleEstiba == true && posicion.niveles[indexnivelesNew].length<=1 ){//productoes stiba
+                if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].length<=1 ){//productoes stiba
                     posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                     posicion.niveles[indexnivelesNew].apartado = false;
                 }
@@ -2302,12 +2326,12 @@ async function ModificaPartidas(req, res)
                 //await productosDia.save();
               //  console.log("test3");
                 partida.posiciones[posIndex].embalajesxSalir= req.body.embalajesEntrada;
-                let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id == nivel_id.toString()));
+                let indexnivelesNew=posicion.niveles.findIndex(obj=> (obj._id.toString()  == nivel_id.toString()));
                 console.log(indexnivelesNew+nivel_id);
                 console.log(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())+"<0")
                 if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
                     posicion.niveles[indexnivelesNew].productos=[];
-                    if(productosDia.isDobleEstiba!=undefined && productosDia.isDobleEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
+                    if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
                         posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                         posicion.niveles[indexnivelesNew].apartado = false;
                     }
@@ -2325,7 +2349,7 @@ async function ModificaPartidas(req, res)
                     let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
                     
                     console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
-                    if(productosDia.isDobleEstiba!=undefined && productosDia.isDobleEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
+                    if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
                         posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                         posicion.niveles[indexnivelesNew].apartado = false;
                     }
@@ -2799,30 +2823,30 @@ async function getExcelInventory(req, res){
     let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
     let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
 
-	//console.log(req.query.almacen_id);
+    //console.log(req.query.almacen_id);
     
     let arrProd=[];
-	Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
-		.populate({
-			path: 'presentacion_id',
-			model: 'Presentacion'
-		})
-		.populate({
+    Producto.find({ arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO" })
+        .populate({
+            path: 'presentacion_id',
+            model: 'Presentacion'
+        })
+        .populate({
             path: 'clasificacion_id',
-			model: 'ClasificacionesProductos'
+            model: 'ClasificacionesProductos'
         }).populate({
             path: "clienteFiscal_id",
             model: "ClienteFiscal"
         })
         .sort({clave: 1}).collation({ locale: "af", numericOrdering: true})
-		.then(async (productos) => {
-			//console.log(productos);
-			if (almacen_id != undefined && almacen_id != "") {
-				await Helpers.asyncForEach(productos, async function (producto) {
-					producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
-				});
-			}
-				await Helpers.asyncForEach(productos, async function (producto) {
+        .then(async (productos) => {
+            //console.log(productos);
+            if (almacen_id != undefined && almacen_id != "") {
+                await Helpers.asyncForEach(productos, async function (producto) {
+                    producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
+                });
+            }
+                await Helpers.asyncForEach(productos, async function (producto) {
                     
                     const { clave } = producto;
                     const embalaje = producto.embalajes
@@ -2834,17 +2858,17 @@ async function getExcelInventory(req, res){
                         producto.embalajes.tarimas = cantidadProductoPartidas[0].cantidadTarimas;
                     }
 
-					if(almacen_id !== "")
-					{
-						if(producto.almacen_id.find(element => element.toString() == almacen_id)){
-							//console.log(producto.almacen_id +"==="+almacen_id);
-							arrProd.push(producto);
-						}
-					}
-					else
-					{
-						arrProd.push(producto);
-					}
+                    if(almacen_id !== "")
+                    {
+                        if(producto.almacen_id.find(element => element.toString() == almacen_id)){
+                            //console.log(producto.almacen_id +"==="+almacen_id);
+                            arrProd.push(producto);
+                        }
+                    }
+                    else
+                    {
+                        arrProd.push(producto);
+                    }
                 });
 
                 //EXCELL HEADERS-----

@@ -109,7 +109,7 @@ async function getDisponibles(req, res) {
 		if(producto.subclasificacion == "Botana" ){
 			query.familia={$in:["secos","STAGING","CADUCADO"]};
 		}
-		isdoble=producto.isDobleEstiba!=undefined ? producto.isDobleEstiba : false;
+		isdoble=producto.isEstiba!=undefined ? producto.isEstiba : false;
 	}
 	//console.log(query);
 	Pasillo.find(query)

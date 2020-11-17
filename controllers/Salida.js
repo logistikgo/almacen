@@ -1933,7 +1933,7 @@ async function saveSalidaBabel(req, res) {
 					}
 					//saveSalida
 
-					nSalida.save();
+					//nSalida.save();
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
@@ -1954,7 +1954,6 @@ async function saveSalidaBabel(req, res) {
 }
 
 
-
 function updateStatusSalidas(req, res) {
 	let _id = req.body.salida_id;
 	let newStatus = req.body.status;
@@ -1969,6 +1968,26 @@ function updateStatusSalidas(req, res) {
 
 	Salida.updateOne({_id: _id}, { $set: datos}).then((data) => {
 		console.log(datos);
+		res.status(200).send(data);
+	})
+}
+function removefromSalidaId(req, res) {
+	let _id = req.body.salida_id;
+	let partida_id = req.body.partida_id;
+	console.log(_id);
+	salida= Salida.findOne({ _id: _id }).exec();
+	let indexpartida= findIndex(obj=> (obj.toString() == partida_id)); 
+	salida.partidas.splice(indexpartida);
+	salida.save().then((data) => {
+
+		console.log(data);
+		var partidaaux= PartidaModel.findOne({_id:partida_id}).exec();
+		partidaaux.CajasPedidas={cajas:0};0
+    	partidaaux.pedido=false;
+    	partidaaux.refpedido="SIN_ASIGNAR";
+    	partidaaux.statusPedido="SIN_ASIGNAR";
+    	partidaaux.save();
+
 		res.status(200).send(data);
 	})
 	.catch((error) => {
@@ -1991,5 +2010,6 @@ module.exports = {
 	importsalidas,
 	getExcelSalidasBarcel,
 	saveSalidaBabel,
-	updateStatusSalidas
+	updateStatusSalidas,
+	removefromSalidaId
 }
