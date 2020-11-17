@@ -1547,6 +1547,20 @@ async function posicionarPartidas(req, res)
         console.log(pasillo);
         console.log("---------------");
         console.log("nivel"+nivelIndex);*/
+        if(partida.posiciones.length>0)
+        {
+            let posOld = await PosicionModelo.findOne({ _id: partida.posiciones[0].posicion});
+            let indexniveles=posOld.niveles.findIndex(obj=> (obj._id.toString() == partida.posiciones[0].nivel_id.toString()));
+            if(indexniveles>=0)
+            {
+                 if(posOld.niveles[indexniveles].productos.length<1)
+                {
+                    posOld.niveles[indexniveles].productos=[]
+                    posOld.niveles[indexniveles].isCandadoDisponibilidad= false;
+                    posOld.niveles[indexniveles].apartado =false;
+                }        
+            }
+        }
         if(productos.isEstiba!=undefined && productos.isEstiba == true && posicion.niveles[nivelIndex].length<=1){//productoes stiba
             posicion.niveles[nivelIndex].isCandadoDisponibilidad = false; 
             posicion.niveles[nivelIndex].apartado = false;
