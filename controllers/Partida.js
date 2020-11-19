@@ -50,9 +50,16 @@ async function getbyid(req, res)
     try{
         let partida_id = req.query.partida_id;
        // console.log(partida_id);
-        var partida =await Partida.findOne({ _id:new ObjectId(partida_id)}).exec();
-           // console.log(partida)
-        res.status(200).send(partida);
+        let partida =await Partida.findOne({ _id:new ObjectId(partida_id)}).exec();
+        let productoaux=await Producto.findOne({ _id: partida.producto_id });
+        let infoPartida = getInfoPartida(partida);
+        infoPartida["productoIsEstiba"]=productoaux.isEstiba;
+        infoPartida["embalajesxSalir"] = partida.embalajesxSalir;
+        infoPartida["embalajesEntradas"] = partida.embalajesEntrada;
+        infoPartida["posiciones"] = partida.posiciones;
+           //console.log(partida['productoIsEstiba'])
+        
+        res.status(200).send(infoPartida);
     }catch (e) {
         console.log(e);
         res.status(500).send(e);

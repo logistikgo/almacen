@@ -89,7 +89,6 @@ function getxRangoFechas(req, res) {
 
 async function save(req, res) {
 	let nSalida = new Salida(req.body);
-
 	nSalida.fechaSalida = new Date(req.body.fechaSalida);
 	nSalida.salida_id = await getNextID();
 	nSalida.folio = await getNextID();
@@ -111,7 +110,7 @@ async function save(req, res) {
 
 			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
 			await Salida.updateOne({ _id: salida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
-				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'refpedido':refpedido}).exec(); 
+				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'refpedido':{$regex: refpedido}}).exec(); 
 				await Helper.asyncForEach(parRes,async function (par) {
 
 					//nSalida.statusPedido="INCOMPLETO";
@@ -1971,18 +1970,49 @@ function updateStatusSalidas(req, res) {
 		res.status(200).send(data);
 	})
 }
-function removefromSalidaId(req, res) {
+async function removefromSalidaId(req, res) {
+	let _id = req.body.Salida_id;
+	let partida_id = req.body.partida_id;
+	console.log(partida_id);
+	let salida= await Salida.findOne({ _id: _id }).exec();
+	console.log(salida)
+	if(salida){
+		let indexpartida= salida.partidas.findIndex(obj=> (obj.toString() == partida_id)); 
+		console.log(indexpartida)
+		salida.partidas.splice(indexpartida, 1);
+
+		console.log(salida.partidas);
+		salida.save().then(async(data) => {
+
+			console.log(data);
+			var partidaaux= await PartidaModel.findOne({_id:partida_id}).exec();
+			partidaaux.CajasPedidas={cajas:0};
+	    	partidaaux.pedido=false;
+	    	partidaaux.refpedido="SIN_ASIGNAR";
+	    	partidaaux.statusPedido="SIN_ASIGNAR";
+	    	partidaaux.save();
+
+			res.status(200).send(data);
+		})
+		.catch((error) => {
+			console.log(error);
+			res.status(500).send(error);
+		});
+	}
+}
+
+function agregarPartidaSalidaId(req, res) {
 	let _id = req.body.salida_id;
 	let partida_id = req.body.partida_id;
 	console.log(_id);
-	salida= Salida.findOne({ _id: _id }).exec();
+	let salida= Salida.findOne({ _id: _id }).exec();
 	let indexpartida= findIndex(obj=> (obj.toString() == partida_id)); 
 	salida.partidas.splice(indexpartida);
 	salida.save().then((data) => {
 
 		console.log(data);
 		var partidaaux= PartidaModel.findOne({_id:partida_id}).exec();
-		partidaaux.CajasPedidas={cajas:0};0
+		partidaaux.CajasPedidas={cajas:0};
     	partidaaux.pedido=false;
     	partidaaux.refpedido="SIN_ASIGNAR";
     	partidaaux.statusPedido="SIN_ASIGNAR";
@@ -1994,6 +2024,52 @@ function removefromSalidaId(req, res) {
 		console.log(error);
 		res.status(500).send(error);
 	});
+}
+
+async function saveDashboard(req, res) {
+	let nSalida = new Salida(req.body);
+	nSalida.fechaSalida = new Date(Date.now()-(5*3600000));
+	nSalida.salida_id = await getNextID();
+	nSalida.folio = await getNextID();
+	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
+	let refpedido=nSalida.referencia;
+	nSalida.save()
+		.then(async (salida) => {
+			//si es pedido, no hace afectacion de existencias
+
+			for (let itemPartida of nSalida.partidas) {
+
+				await MovimientoInventario.saveSalida(itemPartida, salida.id);
+			}
+
+			TiempoCargaDescarga.setStatus(salida.tiempoCarga_id, { salida_id: salida._id, status: "ASIGNADO" });
+
+			let partidas = await Partida.put(req.body.jsonPartidas, salida._id);
+			salida.partidas = partidas;
+			// console.log(partidas);
+
+			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
+			await Salida.updateOne({ _id: salida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
+				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'refpedido':{$regex: refpedido}}).exec(); 
+				await Helper.asyncForEach(parRes,async function (par) {
+
+					//nSalida.statusPedido="INCOMPLETO";
+					var partidaaux=await PartidaModel.findOne({_id:par._id}).exec();
+					partidaaux.CajasPedidas={cajas:0};//talves se cambie a info pedidos
+
+	            	partidaaux.pedido=false;
+	            	partidaaux.refpedido="SIN_ASIGNAR";
+	            	partidaaux.statusPedido="SIN_ASIGNAR";
+	            	//nSalida.statusPedido="INCOMPLETO";
+	            	//respuestacomplete="INCOMPLETO";
+	            	await partidaaux.save();
+				})
+				res.status(200).send(salida);
+			});
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});
 }
 
 module.exports = {
@@ -2011,5 +2087,7 @@ module.exports = {
 	getExcelSalidasBarcel,
 	saveSalidaBabel,
 	updateStatusSalidas,
-	removefromSalidaId
+	removefromSalidaId,
+	agregarPartidaSalidaId,
+	saveDashboard
 }
