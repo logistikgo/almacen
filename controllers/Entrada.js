@@ -1256,7 +1256,7 @@ async function getExcelCaducidades(req, res) {
 		filter.stringFolio=folio;
 	}
 	let reporte = 0;
-	console.log("begin");
+	//console.log("begin");
 	await Entrada.find(filter, {partidas: 1, _id: 0})
 	.populate({
 		path: 'partidas',
@@ -1275,12 +1275,12 @@ async function getExcelCaducidades(req, res) {
 		}
 	})
 	.then(async(entradas) => {
-		console.log("test");
+		//console.log("test");
 		await Helper.asyncForEach(entradas, async function (entrada) {
-			console.log("entradas");
+			//console.log("entradas");
 			var partida = entrada.partidas;
 			await Helper.asyncForEach(partida, async function (elem) {
-				console.log("partidas");
+				//console.log("partidas");
 				let resFecha=true;
 				let resAlerta1=true;
 				let resAlerta2=true;
@@ -1399,7 +1399,7 @@ async function getExcelCaducidades(req, res) {
 				}
 			})		
 		});
-		console.log("beginexcel");
+		//console.log("beginexcel");
 		var excel = require('excel4node');
         
         var workbook = new excel.Workbook();
