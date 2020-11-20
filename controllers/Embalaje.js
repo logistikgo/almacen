@@ -5,7 +5,7 @@ const Embalaje = require('../models/Embalaje');
 function get(req, res) {
 	Embalaje.find({ status: "ACTIVO" })
 		.then((embalajes) => {
-			res.status(200).send(embalajes);
+			res.status(200).send(embalajes).sort({nombre:1});
 		})
 		.catch((error) => {
 			res.status(500).send(error);

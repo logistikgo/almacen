@@ -51,7 +51,7 @@ async function getbyid(req, res)
         let partida_id = req.query.partida_id;
        // console.log(partida_id);
         let partida =await Partida.findOne({ _id:new ObjectId(partida_id)}).exec();
-        let productoaux=await Producto.findOne({ _id: partida.producto_id });
+        let productoaux=await Producto.findOne({ _id: new ObjectId(partida.producto_id) }).exec();
         let infoPartida = getInfoPartida(partida);
         infoPartida["productoIsEstiba"]=productoaux.isEstiba;
         infoPartida["embalajesxSalir"] = partida.embalajesxSalir;
@@ -2247,6 +2247,10 @@ async function ModificaPartidas(req, res)
                         oldpos.niveles[indexniveles].productos.splice(indexprod, 1);
                         console.log("nivel:"+oldpos.niveles[indexniveles])
                     }
+                    if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && oldpos.niveles[indexniveles].productos.length==1 ){//productoes stiba
+                        oldpos.niveles[indexniveles].isCandadoDisponibilidad = false; 
+                        oldpos.niveles[indexniveles].apartado = false;
+                    }
                     console.log(oldpos.niveles[indexniveles].productos.length);
                     if(oldpos.niveles[indexniveles].productos.length<1)
                     {
@@ -2282,8 +2286,14 @@ async function ModificaPartidas(req, res)
            // console.log(indexnivelesNew)
            if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
                  
-                posicion.niveles[indexnivelesNew].isCandadoDisponibilidad= true;
-                posicion.niveles[indexnivelesNew].apartado =true;
+                if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].productos.length<1 ){//productoes stiba
+                    posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
+                    posicion.niveles[indexnivelesNew].apartado = false;
+                }
+                else{
+                    posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = true; 
+                    posicion.niveles[indexnivelesNew].apartado = true;
+                }
                 posicion.niveles[indexnivelesNew].productos.push({
                     producto_id: productosDia._id,
                     embalajes: partida.posiciones[posIndex].embalajesxSalir
@@ -2294,7 +2304,7 @@ async function ModificaPartidas(req, res)
                 let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
                 
                 console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
-                if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].length<=1 ){//productoes stiba
+                if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].productos.length<1 ){//productoes stiba
                     posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                     posicion.niveles[indexnivelesNew].apartado = false;
                 }
@@ -2338,7 +2348,7 @@ async function ModificaPartidas(req, res)
                 console.log(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())+"<0")
                 if(posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString())<0){
                     posicion.niveles[indexnivelesNew].productos=[];
-                    if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
+                    if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].productos.length<1){//productoes stiba
                         posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                         posicion.niveles[indexnivelesNew].apartado = false;
                     }
@@ -2356,7 +2366,7 @@ async function ModificaPartidas(req, res)
                     let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
                     
                     console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
-                    if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].length<=1){//productoes stiba
+                    if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].productos.length<1){//productoes stiba
                         posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                         posicion.niveles[indexnivelesNew].apartado = false;
                     }
