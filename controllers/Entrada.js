@@ -884,7 +884,7 @@ async function getEntradasReporte(req, res) {
 		let cajasPedidas = [];
 		if(isFilter){
 			
-			Entrada.find(filter, {partidas: 1, _id: 0})
+	Entrada.find(filter, {partidas: 1, _id: 0})
 	.populate({
 		path: 'partidas',
 		populate: {
@@ -1200,7 +1200,7 @@ async function getEntradasReporte(req, res) {
 	
 }
 
-function getExcelCaducidades(req, res) {
+async function getExcelCaducidades(req, res) {
 	var arrPartidas = [];
 	var arrPartidasFilter = [];
 	let clasificacion = req.query.clasificacion != undefined ? req.query.clasificacion : "";
@@ -1256,8 +1256,8 @@ function getExcelCaducidades(req, res) {
 		filter.stringFolio=folio;
 	}
 	let reporte = 0;
-
-	Entrada.find(filter, {partidas: 1, _id: 0})
+	console.log("begin");
+	await Entrada.find(filter, {partidas: 1, _id: 0})
 	.populate({
 		path: 'partidas',
 		populate: {
@@ -1275,10 +1275,12 @@ function getExcelCaducidades(req, res) {
 		}
 	})
 	.then(async(entradas) => {
-		entradas.forEach(entrada => {
+		console.log("test");
+		await Helper.asyncForEach(entradas, async function (entrada) {
+			console.log("entradas");
 			var partida = entrada.partidas;
-			partida.forEach(elem => {
-				
+			await Helper.asyncForEach(partida, async function (elem) {
+				console.log("partidas");
 				let resFecha=true;
 				let resAlerta1=true;
 				let resAlerta2=true;
@@ -1397,7 +1399,7 @@ function getExcelCaducidades(req, res) {
 				}
 			})		
 		});
-		
+		console.log("beginexcel");
 		var excel = require('excel4node');
         
         var workbook = new excel.Workbook();
@@ -1513,7 +1515,8 @@ function getExcelCaducidades(req, res) {
 		
         let i=3;
         //console.log(arrPartidas);
-        arrPartidas.forEach(partidas => 
+        console.log("/**excel ciclo**/");
+        await Helper.asyncForEach(arrPartidas, async function (partidas) 
         {
         	//console.log(partidas);
         	fechaEspRecibo="";
@@ -1703,7 +1706,7 @@ function getExcelCaducidades(req, res) {
 	                let band = false;
 	                partidas.producto_id.arrEquivalencias.forEach(function (equivalencia) {
 	                    if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
-	                    	//console.log(partidas._id)
+	                    	
 	                        tarimas = partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia ? Math.round(partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia) : 0;
 	                        band = true;
 	                    }
@@ -1736,7 +1739,7 @@ function getExcelCaducidades(req, res) {
             {
             	worksheet.cell(i, indexbody).number(0);
             }
-            worksheet.cell(i, indexbody+1).number(partidas.pedido!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :0 );
+            worksheet.cell(i, indexbody+1).number(partidas.CajasPedidas!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :0 );
            	worksheet.cell(i, indexbody+2).string(partidas.refpedido ?partidas.refpedido:"SIN_ASIGNAR"); 
            	worksheet.cell(i, indexbody+3).string(partidas.statusPedido ?partidas.statusPedido:"SIN_ASIGNAR");       
            	worksheet.cell(i, indexbody+4).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
@@ -1817,6 +1820,7 @@ function getExcelCaducidades(req, res) {
        		worksheet.cell(i, indexbody+20).string(strleyenda).style(ResultStyle);
            	worksheet.cell(i, indexbody+21).string(fechaAlerta1);
            	worksheet.cell(i, indexbody+22).number(partidas.producto_id.alertaRoja ? partidas.producto_id.alertaRoja:0);
+           	console.log(partidas._id)
            	if(diasAlm<0)
            	{
 	           	if (Math.abs(diasAlm) <= partidas.producto_id.alertaRoja) {
