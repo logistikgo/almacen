@@ -1232,34 +1232,19 @@ async function getExcelCaducidades(req, res) {
 	let hoy=new Date(Date.now()-(5*3600000));
    	let Aging=0;
 	let filter = {
-		clienteFiscal_id: req.query.clienteFiscal_id,
-		status:{$in:["APLICADA","FINALIZADO"]}
-	}
-	if(fechaInicio != "" &&  fechaFinal != ""){
-		if(fecha == "fechaAlta")
-		{
-			filter.fechaAlta={
-		        $gte:fechaInicio,
-		        $lt: fechaFinal
-		    };
-		}
-		if(fecha == "fechaEntrada")
-		{
-			filter.fechaEntrada={
-		        $gte:fechaInicio,
-		        $lt: fechaFinal
-		    };
-		}
+		"entrada_id.clienteFiscal_id": mongoose.Types.ObjectId(req.query.clienteFiscal_id),
+		"entrada_id.status":{$in:["APLICADA","FINALIZADO"]},
+		isEmpty: false
 	}
 	if(folio != "")
 	{
-		filter.stringFolio=folio;
+		filter["entrada_id.stringFolio"]=folio;
 	}
 	let reporte = 0;
-	//console.log("begin");
+	console.log(filter);
 	PartidaModel.aggregate([{$lookup: {from: "Entradas", localField: "entrada_id", foreignField: "_id", as: "entrada_id"}},
         					   {$lookup: {from: "Productos", localField: "producto_id", foreignField: "_id", as: "producto_id"}},
-        						{$match: {"entrada_id.clienteFiscal_id": mongoose.Types.ObjectId(filter.clienteFiscal_id),"entrada_id.status":{$in:["APLICADA","FINALIZADO"]}, isEmpty: false}}
+        						{$match: filter}
 
 		]).then (async (partida)=> {
 		//console.log("test");
@@ -1273,6 +1258,24 @@ async function getExcelCaducidades(req, res) {
 				let resFecha=true;
 				let resAlerta1=true;
 				let resAlerta2=true;
+				if(fecha == "fechaEntrada")
+				{
+					console.log(new Date(elem.producto_id[0].fechaEntrada)+">"+new Date(fechaInicio)+" && "+new Date(elem.producto_id[0].fechaEntrada)+"<"+new Date(fechaFinal))
+					
+					console.log(new Date(elem.producto_id[0].fechaEntrada)>new Date(fechaInicio) && new Date(elem.producto_id[0].fechaEntrada)<new Date(fechaFinal))
+					if(elem.producto_id[0].fechaEntrada)
+						resFecha = new Date(elem.producto_id[0].fechaEntrada)>new Date(fechaInicio) && new Date(elem.producto_id[0].fechaEntrada)<new Date(fechaFinal);
+					else
+						resFecha = false;
+				}
+
+				if(fecha == "fechaAlta")
+				{
+					if(elem.producto_id[0].fechaAlta)
+						resFecha = new Date(elem.producto_id[0].fechaAlta)>new Date(fechaInicio) && new Date(elem.producto_id[0].fechaAlta)<new Date(fechaFinal);
+					else
+						resFecha = false;
+				}
 				if(fecha== "fechaProduccion")
 				{
 					if(elem.fechaProduccion)
