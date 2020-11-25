@@ -200,7 +200,7 @@ si todas las partidas estan vacias */
 async function put(arrPartidas, salida_id) {
     var arrPartidas_id = [];
     let entradas_id = arrPartidas.length > 0 ? arrPartidas.map(x => x.entrada_id) : undefined;
-
+    console.log(arrPartidas);
     await Helper.asyncForEach(arrPartidas, async function (partida) {
         arrPartidas_id.push(partida._id);
         let jsonSalida_id = {
@@ -2766,6 +2766,7 @@ function getInfoPartida(partida){
     infoPartida["pedido"] = partida.pedido;
     infoPartida["refPedido"] = partida.refPedido;
     infoPartida["statusPedido"] = partida.statusPedido;
+    infoPartida["CajasPedidas"]= partida.CajasPedidas
     infoPartida["saneado"] = partida.saneado;
     infoPartida["_id"] = partida._id;
     infoPartida["producto_id"] = partida.producto_id;

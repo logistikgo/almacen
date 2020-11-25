@@ -1731,7 +1731,7 @@ async function getExcelCaducidades(req, res) {
             {
             	worksheet.cell(i, indexbody).number(0);
             }
-            worksheet.cell(i, indexbody+1).number(partidas.CajasPedidas!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :0 );
+            worksheet.cell(i, indexbody+1).number(partidas.CajasPedidas!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :parseInt(partidas.embalajesxSalir.cajas) );
            	worksheet.cell(i, indexbody+2).string(partidas.refpedido ?partidas.refpedido:"SIN_ASIGNAR"); 
            	worksheet.cell(i, indexbody+3).string(partidas.statusPedido ?partidas.statusPedido:"SIN_ASIGNAR");       
            	worksheet.cell(i, indexbody+4).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
