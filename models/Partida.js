@@ -76,6 +76,7 @@ const Partida = Schema(
         pedido:{type:Boolean,default:false},
         refpedido:{type:String, default: "SIN_ASIGNAR"},
         statusPedido:{type:String, default: "SIN_ASIGNAR"},
+        indexpedido: { type: Schema.ObjectId },//no se ocupa
         saneado:{ type: Boolean, default: false },
     },
     {
