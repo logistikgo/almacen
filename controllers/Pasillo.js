@@ -90,6 +90,7 @@ function getPosiciones(req, res) {
 }
 
 async function getDisponibles(req, res) {
+	
 	let almacen_id = req.query.almacen_id;
 	let producto_id = req.query.prod_id;
 	let pasilloId =req.query.pasilloId
@@ -120,14 +121,23 @@ async function getDisponibles(req, res) {
 			let disponibles = [];
 
 			for (let pasillo of data) {
-				for (let pos of pasillo.posiciones) {
-					//let posicion = pos.posicion_id;
-					if (posicion.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0 || posicion.familia=="CADUCADO"  || (isdoble==true && x.productos.length<=1)) != undefined) {
+
+				for (let i = 0; i <= pasillo.posiciones.length; i++){
+					
+					let pos = pasillo.posiciones[i].posicion_id;
+
+					if (pos.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0 || pasillo.familia=="CADUCADO"  || (isdoble==true && x.productos.length<=1)) != undefined) {
 						if (disponibles.find(x => x == pasillo) == undefined)
 							disponibles.push(pasillo);
 						else
 							break;
 					}
+
+				}
+
+				//for (let posicion of pasillo.posiciones.posicion_id) {
+					//let posicion = pos.posicion_id;
+					
 
 					// for (let nivel of posicion.niveles) {
 					// 	if (nivel.isCandadoDisponibilidad == false || nivel.productos.length == 0) {
@@ -137,8 +147,9 @@ async function getDisponibles(req, res) {
 					// 			break;
 					// 	}
 					// }
-				}
+				//}
 			}
+			
 //console.log(disponibles)
 			if(pasilloId)
 			{
