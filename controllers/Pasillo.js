@@ -122,7 +122,7 @@ async function getDisponibles(req, res) {
 
 			for (let pasillo of data) {
 
-				for (let i = 0; i <= pasillo.posiciones.length; i++){
+				for (let i = 0; i < pasillo.posiciones.length; i++){
 					
 					let pos = pasillo.posiciones[i].posicion_id;
 
