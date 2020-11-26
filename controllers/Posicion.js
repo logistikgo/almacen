@@ -4,7 +4,7 @@ const Posicion = require('../models/Posicion');
 const Pasillo = require('../models/Pasillo');
 var ObjectId = (require('mongoose').Types.ObjectId);
 const EmbalajesModel = require('../models/Embalaje');
-
+const Producto = require('../models/Producto');
 function get(req, res) {
 	let almacen_id = req.query.idAlmacen;
 
@@ -43,53 +43,79 @@ function getxPasillo(req, res) {
 		})
 }
 
-function getxPasilloDisponibles(req, res) {
+async function getxPasilloDisponibles(req, res) {
 	let pasillo_id = req.query.pasillo_id;
 	var ismod =req.query.ismod != undefined ? req.query.ismod :false
-	console.log(req.query)
-	Posicion.find({
-		pasillo_id: new ObjectId(pasillo_id),
-		statusReg: "ACTIVO"
-	})
-		.sort({ nombre: 1 })
-		.then((posiciones) => {
-			let disponibles = [];
-			for (let pos of posiciones) {
-				
-				if (pos.niveles.find(x => x.isCandadoDisponibilidad == false && x.productos.length == 0 || pos.familia=="CADUCADO") != undefined) {
-					if (disponibles.find(x => x == pos) == undefined)
-						disponibles.push(pos);
-					else
-						break;
-				}
-				else{
-					
-					if(ismod=="true")
-					{
-						console.log(req.query.posicion_id+"/"+pos._id.toString())
-						if(req.query.posicion_id == pos._id.toString())
-						{
-							console.log(pos);
-							disponibles.push(pos);
+	let producto_id = req.query.prod_id;
+	var isdoble=false;
+	console.log(req.query);
+	try{
+		if(producto_id)
+		{
+			let producto =await Producto.findOne({'_id': producto_id }).exec();
+			
+			isdoble=producto.isEstiba!=undefined ? producto.isEstiba : false;
+		}
+		Posicion.find({
+			pasillo_id: new ObjectId(pasillo_id),
+			statusReg: "ACTIVO"
+		})
+			.sort({ nombre: 1 })
+			.then((posiciones) => {
+				let disponibles = [];
+				for (let pos of posiciones) {
+					for(let niv of pos.niveles) {
+						if (niv.isCandadoDisponibilidad == false && niv.productos.length == 0 || pos.familia=="CADUCADO"|| (isdoble==true && niv.productos.length<=1 )) {
+							if (disponibles.find(x => x == pos) == undefined){
+								
+								if(niv.productos.length==0 && niv.isCandadoDisponibilidad == false){
+									console.log(pos)
+									disponibles.push(pos);}
+								else
+									if(niv.productos.length==1 && isdoble==true && niv.productos[0]._id.toString()==producto_id.toString())
+									{
+										console.log(pos);
+										//disponibles.push(pos);
+									}
+							}
+							else
+								break;
 						}
+						else{
+							
+							if(ismod=="true")
+							{
+								//console.log(req.query.posicion_id+"/"+pos._id.toString())
+								if(req.query.posicion_id == pos._id.toString())
+								{
+								//	console.log(pos);
+									disponibles.push(pos);
+								}
+							}
+						}
+
+						// for (let nivel of pos.niveles) {
+						// 	if (nivel.isCandadoDisponibilidad == false || nivel.productos.length == 0) {
+						// 		if (disponibles.find(x => x == pos) == undefined)
+						// 			disponibles.push(pos);
+						// 		else
+						// 			break;
+						// 	}
+						// }
 					}
 				}
-
-				// for (let nivel of pos.niveles) {
-				// 	if (nivel.isCandadoDisponibilidad == false || nivel.productos.length == 0) {
-				// 		if (disponibles.find(x => x == pos) == undefined)
-				// 			disponibles.push(pos);
-				// 		else
-				// 			break;
-				// 	}
-				// }
-			}
-
-			res.status(200).send(disponibles);
-		})
-		.catch((error) => {
-			res.status(500).send(error);
-		})
+				//console.log(disponibles);
+				res.status(200).send(disponibles);
+			})
+			.catch((error) => {
+				console.log(error);
+				res.status(500).send(error);
+			})
+		}catch (error) {
+		console.log(error);
+        return res.status(500).send(error);
+        
+    }
 }
 
 function getById(req, res) {

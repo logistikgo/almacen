@@ -884,7 +884,7 @@ async function getEntradasReporte(req, res) {
 		let cajasPedidas = [];
 		if(isFilter){
 			
-			Entrada.find(filter, {partidas: 1, _id: 0})
+	Entrada.find(filter, {partidas: 1, _id: 0})
 	.populate({
 		path: 'partidas',
 		populate: {
@@ -1200,7 +1200,7 @@ async function getEntradasReporte(req, res) {
 	
 }
 
-function getExcelCaducidades(req, res) {
+async function getExcelCaducidades(req, res) {
 	var arrPartidas = [];
 	var arrPartidasFilter = [];
 	let clasificacion = req.query.clasificacion != undefined ? req.query.clasificacion : "";
@@ -1232,56 +1232,50 @@ function getExcelCaducidades(req, res) {
 	let hoy=new Date(Date.now()-(5*3600000));
    	let Aging=0;
 	let filter = {
-		clienteFiscal_id: req.query.clienteFiscal_id,
-		status:{$in:["APLICADA","FINALIZADO"]}
-	}
-	if(fechaInicio != "" &&  fechaFinal != ""){
-		if(fecha == "fechaAlta")
-		{
-			filter.fechaAlta={
-		        $gte:fechaInicio,
-		        $lt: fechaFinal
-		    };
-		}
-		if(fecha == "fechaEntrada")
-		{
-			filter.fechaEntrada={
-		        $gte:fechaInicio,
-		        $lt: fechaFinal
-		    };
-		}
+		"entrada_id.clienteFiscal_id": mongoose.Types.ObjectId(req.query.clienteFiscal_id),
+		"entrada_id.status":{$in:["APLICADA","FINALIZADO"]},
+		isEmpty: false
 	}
 	if(folio != "")
 	{
-		filter.stringFolio=folio;
+		filter["entrada_id.stringFolio"]=folio;
 	}
 	let reporte = 0;
+	console.log(filter);
+	PartidaModel.aggregate([{$lookup: {from: "Entradas", localField: "entrada_id", foreignField: "_id", as: "entrada_id"}},
+        					   {$lookup: {from: "Productos", localField: "producto_id", foreignField: "_id", as: "producto_id"}},
+        						{$match: filter}
 
-	Entrada.find(filter, {partidas: 1, _id: 0})
-	.populate({
-		path: 'partidas',
-		populate: {
-			path: 'entrada_id',
-			model: 'Entrada',
-			select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
-		},
-		select: 'stringFolio fechaEntrada DiasTraslado fechaReciboRemision fechaSalidaPlanta tipo fechaAlta'
-	})
-	.populate({
-		path: 'partidas',
-		populate: {
-			path: 'producto_id',
-			model: 'Producto',
-		}
-	})
-	.then(async(entradas) => {
-		entradas.forEach(entrada => {
-			var partida = entrada.partidas;
-			partida.forEach(elem => {
-				
+		]).then (async (partida)=> {
+		//console.log("test");
+			//console.log("entradas");
+			
+			await Helper.asyncForEach(partida, async function (elem) {
+				//console.log("partidas");
+				//console.log(elem);
+				if(elem){
+
 				let resFecha=true;
 				let resAlerta1=true;
 				let resAlerta2=true;
+				if(fecha == "fechaEntrada")
+				{
+					console.log(new Date(elem.producto_id[0].fechaEntrada)+">"+new Date(fechaInicio)+" && "+new Date(elem.producto_id[0].fechaEntrada)+"<"+new Date(fechaFinal))
+					
+					console.log(new Date(elem.producto_id[0].fechaEntrada)>new Date(fechaInicio) && new Date(elem.producto_id[0].fechaEntrada)<new Date(fechaFinal))
+					if(elem.producto_id[0].fechaEntrada)
+						resFecha = new Date(elem.producto_id[0].fechaEntrada)>new Date(fechaInicio) && new Date(elem.producto_id[0].fechaEntrada)<new Date(fechaFinal);
+					else
+						resFecha = false;
+				}
+
+				if(fecha == "fechaAlta")
+				{
+					if(elem.producto_id[0].fechaAlta)
+						resFecha = new Date(elem.producto_id[0].fechaAlta)>new Date(fechaInicio) && new Date(elem.producto_id[0].fechaAlta)<new Date(fechaFinal);
+					else
+						resFecha = false;
+				}
 				if(fecha== "fechaProduccion")
 				{
 					if(elem.fechaProduccion)
@@ -1296,25 +1290,25 @@ function getExcelCaducidades(req, res) {
 					else
 						resFecha = false;
 				}
-				if(elem.entrada_id)
+				if(elem.entrada_id[0])
 				{
-					if(elem.fechaCaducidad !== undefined && elem.fechaCaducidad != null && elem.entrada_id.fechaEntrada !== undefined)
+					if(elem.fechaCaducidad !== undefined && elem.fechaCaducidad != null && elem.entrada_id[0].fechaEntrada !== undefined)
 					{
 
 		        		fCaducidad = elem.fechaCaducidad.getTime();
-		                diff = Math.abs(fCaducidad - elem.entrada_id.fechaEntrada.getTime());
+		                diff = Math.abs(fCaducidad - elem.entrada_id[0].fechaEntrada.getTime());
 		                diasAlm=Math.floor((hoy - fCaducidad)/ 86400000);
 		            	diasEnAlm = Math.floor(diff / 86400000);
-		            	Aging=Math.floor((hoy-elem.entrada_id.fechaEntrada.getTime())/ 86400000);
-		        		let fEntrada = elem.entrada_id.fechaEntrada.getTime();
-		                if(elem.producto_id.garantiaFrescura)
-		                	fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
-		                if(elem.producto_id.alertaAmarilla)
-		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
-		            	if(elem.producto_id.alertaRoja)
-		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
-		            	if(elem.producto_id.vidaAnaquel)
-		            		leyenda = elem.producto_id.vidaAnaquel- diasEnAlm - 1
+		            	Aging=Math.floor((hoy-elem.entrada_id[0].fechaEntrada.getTime())/ 86400000);
+		        		let fEntrada = elem.entrada_id[0].fechaEntrada.getTime();
+		                if(elem.producto_id[0].garantiaFrescura)
+		                	fechaFrescura = new Date(fCaducidad - (elem.producto_id[0].garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+		                if(elem.producto_id[0].alertaAmarilla)
+		                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (elem.producto_id[0].alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+		            	if(elem.producto_id[0].alertaRoja)
+		            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (elem.producto_id[0].alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), "mm/dd/yyyy");
+		            	if(elem.producto_id[0].vidaAnaquel)
+		            		leyenda = elem.producto_id[0].vidaAnaquel- diasEnAlm - 1
 		            	
 		            	
 		        	}
@@ -1356,14 +1350,14 @@ function getExcelCaducidades(req, res) {
 						else
 							resAgeing=false;
 					}
-					if(clave != "" && elem.producto_id.id.toString() != clave.toString())
+					if(clave != "" && elem.producto_id[0].id.toString() != clave.toString())
 					{
 						resClave=false;
 					}
 					if(alerta1 !="" && fechaAlerta1 != "")
 					{
 						if(diasAlm < 0)
-							if(Math.abs(diasAlm) >= elem.producto_id.alertaAmarilla)
+							if(Math.abs(diasAlm) >= elem.producto_id[0].alertaAmarilla)
 								resAlerta1= alerta1 == "ATIEMPO";
 							else
 								resAlerta1= alerta1 == "RECHAZO";
@@ -1374,20 +1368,20 @@ function getExcelCaducidades(req, res) {
 					if(alerta2 !="" && fechaAlerta2 != "")
 					{
 						if(diasAlm < 0)
-							if(Math.abs(diasAlm) >= elem.producto_id.alertaRoja)
+							if(Math.abs(diasAlm) >= elem.producto_id[0].alertaRoja)
 								resAlerta2= alerta1 == "ATIEMPO";
 							else
 								resAlerta2= alerta1 == "RECHAZO";
 						else
 							resAlerta2= alerta1 == "RECHAZO" ;
 					}
-					if(clasificacion != "" && elem.producto_id.statusReg == "ACTIVO")
+					if(clasificacion != "" && elem.producto_id[0].statusReg == "ACTIVO")
 					{
-						resClasificacion=elem.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+						resClasificacion=elem.producto_id[0].clasificacion_id.toString() == clasificacion.toString() ;
 					}
-					if(subclasificacion != "" && elem.producto_id.statusReg == "ACTIVO")
+					if(subclasificacion != "" && elem.producto_id[0].statusReg == "ACTIVO")
 					{
-						resSubclasificacion=elem.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
+						resSubclasificacion=elem.producto_id[0].subclasificacion_id.toString() == subclasificacion.toString();
 					}
 					//console.log(elem.isEmpty +"== false &&"+ resClasificacion+ "== true &&"+ resSubclasificacion +"== true &&"+ resFecha+"==true &&" +resAlerta2+"==true &&"+ resAlerta1+"==true &&"+ resAgeing+" == true && "+resClave+"==true")
 					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true  && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA" || elem.tipo=="OUTMODIFICADA") && elem.status=="ASIGNADA")
@@ -1395,9 +1389,9 @@ function getExcelCaducidades(req, res) {
 						arrPartidas.push(elem);
 					}
 				}
+			}
 			})		
-		});
-		
+		//console.log("beginexcel");
 		var excel = require('excel4node');
         
         var workbook = new excel.Workbook();
@@ -1513,7 +1507,8 @@ function getExcelCaducidades(req, res) {
 		
         let i=3;
         //console.log(arrPartidas);
-        arrPartidas.forEach(partidas => 
+        console.log("/**excel ciclo**/");
+        await Helper.asyncForEach(arrPartidas, async function (partidas) 
         {
         	//console.log(partidas);
         	fechaEspRecibo="";
@@ -1559,28 +1554,28 @@ function getExcelCaducidades(req, res) {
 	          },
 	        });
 
-           	if(partidas.entrada_id)
+           	if(partidas.entrada_id[0])
            	{
-	        	if(partidas.fechaCaducidad !== undefined && partidas.fechaCaducidad != null && partidas.entrada_id.fechaEntrada != undefined)
+	        	if(partidas.fechaCaducidad !== undefined && partidas.fechaCaducidad != null && partidas.entrada_id[0].fechaEntrada != undefined)
 	        	{
 	        		fCaducidad = partidas.fechaCaducidad.getTime();
-	                diff = Math.abs(fCaducidad - partidas.entrada_id.fechaEntrada.getTime());
+	                diff = Math.abs(fCaducidad - partidas.entrada_id[0].fechaEntrada.getTime());
 	                diasAlm=Math.floor((hoy - fCaducidad)/ 86400000);
 	            	diasEnAlm = Math.floor(diff / 86400000);
-	            	Aging=Math.floor((hoy-partidas.entrada_id.fechaEntrada.getTime())/ 86400000);
-	        		let fEntrada = partidas.entrada_id.fechaEntrada.getTime();
-	        		if(partidas.producto_id.garantiaFrescura){
-	                	fechaFrescura = dateFormat(new Date(fCaducidad - (partidas.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
-	                	Diasrestantes = Math.floor((fCaducidad - (partidas.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000);
+	            	Aging=Math.floor((hoy-partidas.entrada_id[0].fechaEntrada.getTime())/ 86400000);
+	        		let fEntrada = partidas.entrada_id[0].fechaEntrada.getTime();
+	        		if(partidas.producto_id[0].garantiaFrescura){
+	                	fechaFrescura = dateFormat(new Date(fCaducidad - (partidas.producto_id[0].garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
+	                	Diasrestantes = Math.floor((fCaducidad - (partidas.producto_id[0].garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000);
 	                }
-	                if(partidas.producto_id.alertaAmarilla)
-	                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
-	            	if(partidas.producto_id.alertaRoja)
-	            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (partidas.producto_id.alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
-	            	if(partidas.producto_id.vidaAnaquel)
-	            		leyenda = partidas.producto_id.vidaAnaquel- diasEnAlm - 1
-	            	if(partidas.entrada_id.fechaSalidaPlanta != undefined && partidas.entrada_id.DiasTraslado !== undefined){
-	            		orginalshippingdays=Math.abs(Math.floor((partidas.entrada_id.fechaEntrada.getTime()-partidas.entrada_id.fechaSalidaPlanta.getTime())/ 86400000))
+	                if(partidas.producto_id[0].alertaAmarilla)
+	                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (partidas.producto_id[0].alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
+	            	if(partidas.producto_id[0].alertaRoja)
+	            		fechaAlerta2 = dateFormat(new Date(fCaducidad - (partidas.producto_id[0].alertaRoja * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
+	            	if(partidas.producto_id[0].vidaAnaquel)
+	            		leyenda = partidas.producto_id[0].vidaAnaquel- diasEnAlm - 1
+	            	if(partidas.entrada_id[0].fechaSalidaPlanta != undefined && partidas.entrada_id[0].DiasTraslado !== undefined){
+	            		orginalshippingdays=Math.abs(Math.floor((partidas.entrada_id[0].fechaEntrada.getTime()-partidas.entrada_id[0].fechaSalidaPlanta.getTime())/ 86400000))
 	            		resshippingdays=partidas.entrada_id.DiasTraslado - orginalshippingdays;
 						if(resshippingdays <0)
 			           	{
@@ -1620,20 +1615,20 @@ function getExcelCaducidades(req, res) {
 			           	}
 	            	}
 	        	}
-	        	if (partidas.fechaCaducidad !== undefined && partidas.entrada_id.DiasTraslado !== undefined && partidas.entrada_id.fechaSalidaPlanta != undefined) {
-	                let tiempoTraslado = partidas.entrada_id.DiasTraslado;
-	                let fechaRecibo = new Date(partidas.entrada_id.fechaSalidaPlanta.getTime() + tiempoTraslado * 86400000);
+	        	if (partidas.fechaCaducidad !== undefined && partidas.entrada_id[0].DiasTraslado !== undefined && partidas.entrada_id[0].fechaSalidaPlanta != undefined) {
+	                let tiempoTraslado = partidas.entrada_id[0].DiasTraslado;
+	                let fechaRecibo = new Date(partidas.entrada_id[0].fechaSalidaPlanta.getTime() + tiempoTraslado * 86400000);
 	                fechaEspRecibo =dateFormat(fechaRecibo, formatofecha);
 	            }
 	        
-            if (partidas.entrada_id.fechaReciboRemision !== undefined) 
+            if (partidas.entrada_id[0].fechaReciboRemision !== undefined) 
             {
-                tempx= new Date(partidas.entrada_id.fechaReciboRemision).getTime() + 2 * 86400000;
+                tempx= new Date(partidas.entrada_id[0].fechaReciboRemision).getTime() + 2 * 86400000;
                 fechacalculada2Dias = dateFormat(tempx, formatofecha);
                     
             }
-			if (partidas.entrada_id.fechaReciboRemision !== undefined && partidas.fechaCaducidad !== undefined) {
-			    tempx = new Date(partidas.entrada_id.fechaReciboRemision.getTime() + 2 * 86400000);
+			if (partidas.entrada_id[0].fechaReciboRemision !== undefined && partidas.fechaCaducidad !== undefined) {
+			    tempx = new Date(partidas.entrada_id[0].fechaReciboRemision.getTime() + 2 * 86400000);
 			    fCaducidad = partidas.fechaCaducidad.getTime();
 			    GarFresFecha = Math.round((Math.floor(fCaducidad - tempx.getTime()))/ 86400000);
 			    if (GarFresFecha <= 0){
@@ -1653,7 +1648,7 @@ function getExcelCaducidades(req, res) {
 					  },
 			        });   
 			    }
-			    else if (GarFresFecha < partidas.producto_id.garantiaFrescura){
+			    else if (GarFresFecha < partidas.producto_id[0].garantiaFrescura){
 			    	GarFresFechaStyle = workbook.createStyle({
 			          font: {
 			            bold: true,
@@ -1670,7 +1665,7 @@ function getExcelCaducidades(req, res) {
 					  },
 			        });
 			    }
-			    else if (GarFresFecha > partidas.producto_id.garantiaFrescura){
+			    else if (GarFresFecha > partidas.producto_id[0].garantiaFrescura){
 			        GarFresFechaStyle = workbook.createStyle({
 			          font: {
 			            bold: true,
@@ -1690,8 +1685,8 @@ function getExcelCaducidades(req, res) {
 				}
 			}
             worksheet.cell(i, 1).string(partidas.lote ? partidas.lote:"");
-            worksheet.cell(i, 2).string(partidas.entrada_id ? partidas.entrada_id.stringFolio  ? partidas.entrada_id.stringFolio :"":"");
-            worksheet.cell(i, 3).string(partidas.entrada_id ? partidas.entrada_id.tipo  ? partidas.entrada_id.tipo :"":"");
+            worksheet.cell(i, 2).string(partidas.entrada_id[0] ? partidas.entrada_id[0].stringFolio  ? partidas.entrada_id[0].stringFolio :"":"");
+            worksheet.cell(i, 3).string(partidas.entrada_id[0] ? partidas.entrada_id[0].tipo  ? partidas.entrada_id[0].tipo :"":"");
            	worksheet.cell(i, 4).string(partidas.clave ? partidas.clave:"");
            	worksheet.cell(i, 5).string(partidas.descripcion ? partidas.descripcion:"");
            	let indexbody=6;
@@ -1699,11 +1694,11 @@ function getExcelCaducidades(req, res) {
            	clienteEmbalaje.forEach(emb=>
            	{	
            		let tarimas =0
-           		if (emb == 'tarimas' && partidas.producto_id !=undefined && partidas.producto_id.arrEquivalencias.length > 0) {
+           		if (emb == 'tarimas' && partidas.producto_id[0] !=undefined && partidas.producto_id[0].arrEquivalencias.length > 0) {
 	                let band = false;
-	                partidas.producto_id.arrEquivalencias.forEach(function (equivalencia) {
+	                partidas.producto_id[0].arrEquivalencias.forEach(function (equivalencia) {
 	                    if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja") {
-	                    	//console.log(partidas._id)
+	                    	
 	                        tarimas = partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia ? Math.round(partidas.embalajesxSalir.cajas / equivalencia.cantidadEquivalencia) : 0;
 	                        band = true;
 	                    }
@@ -1736,30 +1731,30 @@ function getExcelCaducidades(req, res) {
             {
             	worksheet.cell(i, indexbody).number(0);
             }
-            worksheet.cell(i, indexbody+1).number(partidas.pedido!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :0 );
+            worksheet.cell(i, indexbody+1).number(partidas.CajasPedidas!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :parseInt(partidas.embalajesxSalir.cajas) );
            	worksheet.cell(i, indexbody+2).string(partidas.refpedido ?partidas.refpedido:"SIN_ASIGNAR"); 
            	worksheet.cell(i, indexbody+3).string(partidas.statusPedido ?partidas.statusPedido:"SIN_ASIGNAR");       
            	worksheet.cell(i, indexbody+4).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
            	worksheet.cell(i, indexbody+5).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
            	worksheet.cell(i, indexbody+6).string(fechacalculada2Dias);
            	worksheet.cell(i, indexbody+7).number(GarFresFecha).style(GarFresFechaStyle);
-           	worksheet.cell(i, indexbody+8).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
-           	worksheet.cell(i, indexbody+9).number(partidas.producto_id.vidaAnaquel ? partidas.producto_id.vidaAnaquel:0);
-           	worksheet.cell(i, indexbody+10).number(partidas.entrada_id ? partidas.entrada_id.DiasTraslado ? partidas.entrada_id.DiasTraslado:0:0);
-           	worksheet.cell(i, indexbody+11).string(partidas.entrada_id ? partidas.entrada_id.fechaSalidaPlanta  ? dateFormat(new Date(partidas.entrada_id.fechaSalidaPlanta.getTime()), formatofecha) :"":"");
+           	worksheet.cell(i, indexbody+8).number(partidas.producto_id[0].garantiaFrescura ? partidas.producto_id[0].garantiaFrescura:0);
+           	worksheet.cell(i, indexbody+9).number(partidas.producto_id[0].vidaAnaquel ? partidas.producto_id[0].vidaAnaquel:0);
+           	worksheet.cell(i, indexbody+10).number(partidas.entrada_id[0] ? partidas.entrada_id[0].DiasTraslado ? partidas.entrada_id[0].DiasTraslado:0:0);
+           	worksheet.cell(i, indexbody+11).string(partidas.entrada_id[0] ? partidas.entrada_id[0].fechaSalidaPlanta  ? dateFormat(new Date(partidas.entrada_id[0].fechaSalidaPlanta.getTime()), formatofecha) :"":"");
            	worksheet.cell(i, indexbody+12).string(fechaEspRecibo);
            	worksheet.cell(i, indexbody+13).number(1+diasEnAlm);
            	worksheet.cell(i, indexbody+14).number(orginalshippingdays).style(shipingdaysstyle);;
-           	worksheet.cell(i, indexbody+15).string(partidas.entrada_id ? partidas.entrada_id.fechaEntrada ? dateFormat(partidas.entrada_id.fechaEntrada, formatofecha):"":"");
-           	worksheet.cell(i, indexbody+16).string(partidas.entrada_id ? partidas.entrada_id.fechaAlta  ? dateFormat(new Date(partidas.entrada_id.fechaAlta.getTime()), formatofecha) :"":"");
+           	worksheet.cell(i, indexbody+15).string(partidas.entrada_id[0] ? partidas.entrada_id[0].fechaEntrada ? dateFormat(partidas.entrada_id[0].fechaEntrada, formatofecha):"":"");
+           	worksheet.cell(i, indexbody+16).string(partidas.entrada_id[0] ? partidas.entrada_id[0].fechaAlta  ? dateFormat(new Date(partidas.entrada_id[0].fechaAlta.getTime()), formatofecha) :"":"");
            	worksheet.cell(i, indexbody+17).number(Math.abs(Aging));
-           	worksheet.cell(i, indexbody+18).number(partidas.producto_id.garantiaFrescura ? partidas.producto_id.garantiaFrescura:0);
+           	worksheet.cell(i, indexbody+18).number(partidas.producto_id[0].garantiaFrescura ? partidas.producto_id[0].garantiaFrescura:0);
            	
-           	worksheet.cell(i, indexbody+19).number(partidas.producto_id.alertaAmarilla ? partidas.producto_id.alertaAmarilla:0);
+           	worksheet.cell(i, indexbody+19).number(partidas.producto_id[0].alertaAmarilla ? partidas.producto_id[0].alertaAmarilla:0);
            	
            	if(diasAlm<0)
            	{
-	           	if (Math.abs(diasAlm) <= partidas.producto_id.alertaAmarilla) {
+	           	if (Math.abs(diasAlm) <= partidas.producto_id[0].alertaAmarilla) {
 	           		strleyenda = "RETRASO";
 	           		ResultStyle = workbook.createStyle({
 			          font: {
@@ -1816,10 +1811,11 @@ function getExcelCaducidades(req, res) {
        		}
        		worksheet.cell(i, indexbody+20).string(strleyenda).style(ResultStyle);
            	worksheet.cell(i, indexbody+21).string(fechaAlerta1);
-           	worksheet.cell(i, indexbody+22).number(partidas.producto_id.alertaRoja ? partidas.producto_id.alertaRoja:0);
+           	worksheet.cell(i, indexbody+22).number(partidas.producto_id[0].alertaRoja ? partidas.producto_id[0].alertaRoja:0);
+           	console.log(partidas._id)
            	if(diasAlm<0)
            	{
-	           	if (Math.abs(diasAlm) <= partidas.producto_id.alertaRoja) {
+	           	if (Math.abs(diasAlm) <= partidas.producto_id[0].alertaRoja) {
 	           		strleyenda = "RETRASO";
 	           		ResultStyle = workbook.createStyle({
 			          font: {

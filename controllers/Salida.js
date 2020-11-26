@@ -89,7 +89,6 @@ function getxRangoFechas(req, res) {
 
 async function save(req, res) {
 	let nSalida = new Salida(req.body);
-
 	nSalida.fechaSalida = new Date(req.body.fechaSalida);
 	nSalida.salida_id = await getNextID();
 	nSalida.folio = await getNextID();
@@ -99,6 +98,7 @@ async function save(req, res) {
 	nSalida.save()
 		.then(async (salida) => {
 			//si es pedido, no hace afectacion de existencias
+			console.log(req.body.jsonPartidas);
 			for (let itemPartida of req.body.jsonPartidas) {
 				await MovimientoInventario.saveSalida(itemPartida, salida.id);
 			}
@@ -111,7 +111,7 @@ async function save(req, res) {
 
 			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
 			await Salida.updateOne({ _id: salida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
-				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'refpedido':refpedido}).exec(); 
+				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'refpedido':{$regex: refpedido}}).exec(); 
 				await Helper.asyncForEach(parRes,async function (par) {
 
 					//nSalida.statusPedido="INCOMPLETO";
@@ -723,7 +723,7 @@ async function getExcelSalidas(req, res) {
         worksheet.cell(2, 5).string('Clave').style(headersStyle);
 		worksheet.cell(2, 6).string('Descripción').style(headersStyle);
 		worksheet.cell(2, 7).string('Subclasificacion').style(headersStyle);
-		worksheet.cell(2, 8).string('Fecha Entrada en Sistema').style(headersStyle);
+		worksheet.cell(2, 8).string('Fecha Captura en Sistema').style(headersStyle);
 		
 
 		let indexheaders=9;
@@ -740,7 +740,7 @@ async function getExcelSalidas(req, res) {
 		worksheet.cell(2, indexheaders).string(headerCajaspedido).style(headersStyle);
 		worksheet.cell(2, indexheaders+1).string('In Full').style(headersStyle);
 		worksheet.cell(2, indexheaders+2).string('Fecha Carga Programada').style(headersStyle);
-		worksheet.cell(2, indexheaders+3).string('Fecha Salida').style(headersStyle);
+		worksheet.cell(2, indexheaders+3).string('Fecha Salida Fisica').style(headersStyle);
 		worksheet.cell(2, indexheaders+4).string('Fecha/Hora Sello').style(headersStyle);
 		worksheet.cell(2, indexheaders+5).string('Fecha Caducidad').style(headersStyle);
 		worksheet.cell(2, indexheaders+6).string('Retraso').style(headersStyle);
@@ -1762,6 +1762,7 @@ async function saveSalidaBabel(req, res) {
 	var arrPartidas=[];
 	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
+	var bandcompleto=true;
 	try{
 		console.log(req.body.Pedido.length)
 		let index=0;
@@ -1777,7 +1778,8 @@ async function saveSalidaBabel(req, res) {
 				let countEntradas=await Salida.find({"po":req.body.Pedido[1].Pedido}).exec();
 				console.log("total: "+countEntradas.length)
 		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido}).exec():countEntradas;
-				if(countEntradas>0){
+		        console.log("total2: "+countEntradas.length)
+				if(countEntradas.length<0){
 					console.log("Ya existe el pedido "+ req.body.Pedido[1].Pedido)
 					return res.status(400).send("Ya existe el pedido:\n" + req.body.Pedido[1].Pedido+" ");
 				}
@@ -1846,21 +1848,24 @@ async function saveSalidaBabel(req, res) {
 				//console.log(partidas.length)/*
 				
 				let cantidadneeded=par.Cantidad;
-				while(cantidadneeded>0)
+				let cantidadPedida=0;
+				let bandcp=true; //bandera temporal para salir del ciclo en caso de que no se encuentren partidas 
+				while(cantidadneeded>0&&bandcp==true)
 				{
 					console.log("-------------asdasd-------------"+"clave: "+producto.clave+"equivalencia: "+equivalencia)
 					//console.log(cantidadneeded);
 					console.log("cantidadneeded "+cantidadneeded);
-		            let cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
-		            cantidadneeded-=equivalencia;
+		            cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
+		            
 
 		            console.log("buscar: "+cantidadPedida)
 		            console.log("beforeleft: "+cantidadneeded);
 		            let embalajesEntrada={cajas:cantidadPedida};
-		            let partidas=await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesxSalir':embalajesEntrada,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
+		            let partidas=await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesxSalir.cajas':{$gte: embalajesEntrada.cajas},fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
 					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
 					console.log("totalpartidas: "+partidas.length)
 					let count=0;
+					bandcp=false;
 					for (let i = 0; i < partidas.length && count<1; i++)
 					{
 						//console.log(i);
@@ -1869,27 +1874,34 @@ async function saveSalidaBabel(req, res) {
 			            //console.log(par)
 			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaAlerta1.getTime()>hoy.getTime())
 			            {
-			            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
-			            	if(partidaaux.pedido==false)
-			            	{
-				            	partidaaux.CajasPedidas={cajas:cantidadPedida};//talves se cambie a info pedidos
 
-				            	partidaaux.pedido=true;
-				            	partidaaux.refpedido=req.body.Pedido[1].Pedido;
-				            	partidaaux.statusPedido="COMPLETO";
-				            	await partidaaux.save();
-				            	parRes.push(partidas[i]);
-				            	//console.log(partidaaux);
-				            	console.log("--------------");
-				            	count++;
-				            }
+			            	let numpedido=Math.floor(partidas[i].embalajesxSalir.caja/cantidadPedida);
+				            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
+				            	if(partidaaux.pedido==false)
+					            {
+					            	let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
+					            	partidaaux.CajasPedidas={cajas:pedidoTotal};//talves se cambie a info pedidos
+
+					            	partidaaux.pedido=true;
+					            	partidaaux.refpedido=req.body.Pedido[1].Pedido;
+					            	partidaaux.statusPedido="COMPLETO";
+					            	await partidaaux.save();
+					            	parRes.push(partidas[i]);
+					            	//console.log(partidaaux);
+					            	console.log("--------------");
+					            	count++;
+					            	cantidadneeded-=(pedidoTotal);
+					            	bandcp=true;
+					            }
+					        
 			            }
 			        }
 				}
+				bandcompleto=bandcompleto==false?bandcompleto:bandcp;
 			});
 			console.log("********************"+totalpartidas+"=="+parRes.length+"********************");
 			
-			if (parRes && parRes.length > 0  ) {
+			if (parRes && parRes.length  ) {
 				//console.log(parRes);
 				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
 				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
@@ -1921,7 +1933,7 @@ async function saveSalidaBabel(req, res) {
 					console.log(nSalida);
 					console.log("******************************************--------------------**********************")
 					
-					if( parRes.length!=totalpartidas){
+					if( bandcompleto ==false){
 						await Helper.asyncForEach(parRes,async function (par) {
 
 							nSalida.statusPedido="INCOMPLETO";
@@ -1963,7 +1975,7 @@ function updateStatusSalidas(req, res) {
 	let datos ={ tipo: newStatus}
 	if(newStatus=="FORPICKING")
 	{
-		datos.fechaEntrada=today
+		datos.fechaSalida=today
 	}
 
 	Salida.updateOne({_id: _id}, { $set: datos}).then((data) => {
@@ -1971,30 +1983,109 @@ function updateStatusSalidas(req, res) {
 		res.status(200).send(data);
 	})
 }
-function removefromSalidaId(req, res) {
-	let _id = req.body.salida_id;
+async function removefromSalidaId(req, res) {
+	let _id = req.body.Salida_id;
 	let partida_id = req.body.partida_id;
-	console.log(_id);
-	salida= Salida.findOne({ _id: _id }).exec();
-	let indexpartida= findIndex(obj=> (obj.toString() == partida_id)); 
-	salida.partidas.splice(indexpartida);
-	salida.save().then((data) => {
+	let salida= await Salida.findOne({ _id: _id }).exec();
+	if(salida){
+		let indexpartida= salida.partidas.findIndex(obj=> (obj.toString() == partida_id)); 
+		console.log(indexpartida)
+		salida.partidas.splice(indexpartida, 1);
+		salida.save().then(async(data) => {
 
-		console.log(data);
-		var partidaaux= PartidaModel.findOne({_id:partida_id}).exec();
-		partidaaux.CajasPedidas={cajas:0};0
-    	partidaaux.pedido=false;
-    	partidaaux.refpedido="SIN_ASIGNAR";
-    	partidaaux.statusPedido="SIN_ASIGNAR";
-    	partidaaux.save();
+			console.log(data);
+			var partidaaux= await PartidaModel.findOne({_id:partida_id}).exec();
+			partidaaux.CajasPedidas={cajas:0};
+	    	partidaaux.pedido=false;
+	    	partidaaux.refpedido="SIN_ASIGNAR";
+	    	partidaaux.statusPedido="SIN_ASIGNAR";
+	    	partidaaux.save();
 
-		res.status(200).send(data);
-	})
-	.catch((error) => {
-		console.log(error);
-		res.status(500).send(error);
-	});
+			res.status(200).send(data);
+		})
+		.catch((error) => {
+			console.log(error);
+			res.status(500).send(error);
+		});
+	}
 }
+
+async function agregarPartidaSalidaId(req, res) {
+	let _id = req.body.Salida_id;
+	let partida_id = req.body.partida_id;
+	let cajas = req.body.embalajes;
+	//console.log(_id);
+	try{
+		let salida= await Salida.findOne({ _id: _id }).exec();
+		let indexpartida=await PartidaModel.findOne({_id:partida_id}).exec();
+		//console.log(indexpartida);
+		salida.partidas.push(indexpartida._id);
+		if(salida.entrada_id.find(x => x == indexpartida.entrada_id) == undefined)
+			salida.entrada_id.push(indexpartida.entrada_id)
+		salida.save().then(async (data) => {
+
+			//console.log(data);
+			var partidaaux= await PartidaModel.findOne({_id:partida_id}).exec();
+			partidaaux.CajasPedidas={cajas:parseInt(cajas)};
+	    	partidaaux.pedido=true;
+	    	partidaaux.refpedido=salida.referencia;
+	    	partidaaux.statusPedido=salida.statusPedido;
+	    	partidaaux.save();
+
+			res.status(200).send(data);
+		})
+		.catch((error) => {
+			console.log(error);
+			res.status(500).send(error);
+		});
+	}catch(error){
+			console.log(error);
+			res.status(500).send(error);
+			console.log(error);
+	};
+}
+
+async function saveDashboard(req, res) {
+	try{
+	let nSalida = await Salida.findOne({ _id: req.body.id }).exec();
+	
+	//nSalida.fechaSalida = new Date(req.body.fechaSalida);
+	nSalida.tipo="NORMAL"
+	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
+	await nSalida.save().then(async (salida) => {
+			for (let itemPartida of req.body.jsonPartidas) {
+				await MovimientoInventario.saveSalida(itemPartida, salida.id);
+			}
+
+			TiempoCargaDescarga.setStatus(salida.tiempoCarga_id, { salida_id: salida._id, status: "ASIGNADO" });
+
+			let partidas = await Partida.put(req.body.jsonPartidas, salida._id);
+			salida.partidas = partidas;
+
+			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
+			await Salida.updateOne({ _id: salida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
+				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'refpedido':{$regex: refpedido}}).exec(); 
+				await Helper.asyncForEach(parRes,async function (par) {
+	            	partidaaux.pedido=false;
+	            	await partidaaux.save();
+				})
+				res.status(200).send(salida);
+
+			});
+		})
+		.catch((error) => {
+			console.log(error)
+			res.status(500).send(error);
+		});
+	}catch(error){
+			console.log(error);
+			res.status(500).send(error);
+			console.log(error);
+	};
+	console.log("error");
+}
+
+
 
 module.exports = {
 	get,
@@ -2011,5 +2102,7 @@ module.exports = {
 	getExcelSalidasBarcel,
 	saveSalidaBabel,
 	updateStatusSalidas,
-	removefromSalidaId
+	removefromSalidaId,
+	agregarPartidaSalidaId,
+	saveDashboard
 }
