@@ -89,7 +89,8 @@ async function getxPasilloDisponibles(req, res) {
 								if(req.query.posicion_id == pos._id.toString())
 								{
 								//	console.log(pos);
-									disponibles.push(pos);
+									if (disponibles.find(x => x == pos) == undefined)
+										disponibles.push(pos);
 								}
 							}
 						}
