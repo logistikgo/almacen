@@ -265,7 +265,7 @@ async function get(req, res) {
 }
 
 function getById(req, res) {
-
+	
 	let _id = req.query.id;
 	console.log(req.query);
 	Entrada.findOne({ _id: _id })
