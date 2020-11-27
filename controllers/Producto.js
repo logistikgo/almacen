@@ -3,9 +3,11 @@
 const Producto = require('../models/Producto');
 const Entrada = require('../models/Entrada');
 const Partida = require('../models/Partida');
+const PartidaController = require("./Partida");
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario')
+const ClienteFiscal = require('../models/ClienteFiscal');
 
 function get(req, res) {
 	Producto.find({ statusReg: "ACTIVO" })
@@ -242,16 +244,39 @@ function getByIDClienteFiscal(req, res) {
 		.populate({
 			path: 'clasificacion_id',
 			model: 'ClasificacionesProductos'
-		})
+		}).populate({
+            path: "clienteFiscal_id",
+            model: "ClienteFiscal"
+        })
 		.then(async (productos) => {
 			//console.log(productos);
-			if (almacen_id != undefined && almacen_id != "") {
+			/*  if (almacen_id != undefined && almacen_id != "") {
 				await Helpers.asyncForEach(productos, async function (producto) {
 					producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
 				});
-			}
+			}  */
+			console.log(req.params.idClienteFiscal);
 				await Helpers.asyncForEach(productos, async function (producto) {
 					
+					const { clave } = producto;
+					let clienteEmbalaje=""
+					if(producto.clienteFiscal_id!=undefined)
+					{
+	                    clienteEmbalaje = producto.clienteFiscal_id.arrEmbalajes
+	                }
+	                else
+	                {
+	                	let clientefiscal = await ClienteFiscal.findOne({ _id: _idClienteFiscal })
+	                	clienteEmbalaje=clientefiscal.arrEmbalajes;
+	                }
+                    let cantidadProductoPartidas = await PartidaController.getInventarioPorPartidas(clave, clienteEmbalaje);
+
+                    if(cantidadProductoPartidas.length !== 0){
+						clienteEmbalaje.split(",").forEach(clienteEmbalaje =>{
+                            producto.embalajes[clienteEmbalaje] = cantidadProductoPartidas[clienteEmbalaje]
+                        })
+                    }
+
 					if(almacen_id !== "")
 					{
 						if(producto.almacen_id.find(element => element.toString() == almacen_id)){

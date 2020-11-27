@@ -1,5 +1,5 @@
 'use strict'
-
+const mongoose = require('mongoose');
 const Partida = require('../models/Partida');
 const Salida = require('../models/Salida');
 const Entrada = require('../models/Entrada');
@@ -2838,7 +2838,7 @@ async function LimpiaPosicion(req, res)
 
 async function getExcelInventory(req, res){
 
-    let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
+    let _idClienteFiscal = req.query.idClienteFiscal !== undefined ?  req.query.idClienteFiscal :"";
     let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
 
     //console.log(req.query.almacen_id);
@@ -2859,21 +2859,21 @@ async function getExcelInventory(req, res){
         .sort({clave: 1}).collation({ locale: "af", numericOrdering: true})
         .then(async (productos) => {
             //console.log(productos);
-            if (almacen_id != undefined && almacen_id != "") {
+           /*   if (almacen_id != undefined && almacen_id != "") {
                 await Helpers.asyncForEach(productos, async function (producto) {
                     producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
                 });
-            }
+            }  */
                 await Helpers.asyncForEach(productos, async function (producto) {
                     
                     const { clave } = producto;
-                    const embalaje = producto.embalajes
                     let clienteEmbalaje = producto.clienteFiscal_id.arrEmbalajes
                     let cantidadProductoPartidas = await getInventarioPorPartidas(clave, clienteEmbalaje);
 
                     if(cantidadProductoPartidas.length !== 0){
-                        producto.embalajes.cajas = cantidadProductoPartidas[0].cantidadProducto;
-                        producto.embalajes.tarimas = cantidadProductoPartidas[0].cantidadTarimas;
+						clienteEmbalaje.split(",").forEach(clienteEmbalaje =>{
+                            producto.embalajes[clienteEmbalaje] = cantidadProductoPartidas[clienteEmbalaje]
+                        })
                     }
 
                     if(almacen_id !== "")
@@ -3031,19 +3031,38 @@ async function getExcelInventory(req, res){
 
  async function getInventarioPorPartidas(clave, clienteEmbalaje = "cajas"){
 
-    let embalaje = clienteEmbalaje.split(",")[1];
+    //tarimas,tambos,cajas,cubetas,galones,botes,totes
 
-    let matchProducto = {
-        _id: "$clave", cantidadProducto: {$sum:`$embalajesxSalir.${embalaje}`}, cantidadTarimas: {$sum: 1} 
-    }
-
-    let cantidadPartidas = await Partida.aggregate([
+    let embalajes = clienteEmbalaje.split(",");
     
-        {$match:{"clave": clave, isEmpty: false, status : "ASIGNADA"}},
-        {$group: matchProducto}
-    ])
+    let cantidadPartidasEmbalajes = {};
 
-    return cantidadPartidas;
+     await Helpers.asyncForEach(embalajes, async function(embalaje){
+        let matchProducto = {
+            _id: "$clave", cantidadProducto: {$sum:`$embalajesxSalir.${embalaje}`}, cantidadTarimas: {$sum: 1} 
+        }
+    
+        let cantidadPartidas = await Partida.aggregate([
+        
+            {$match:{"clave": clave, isEmpty: false, status : "ASIGNADA"}},
+            {$group: matchProducto}
+        ])
+
+        if(cantidadPartidas.length !== 0){
+
+            if(embalaje === "tarimas"){
+                cantidadPartidasEmbalajes[embalaje] = cantidadPartidas[0].cantidadTarimas;
+            }else{
+                cantidadPartidasEmbalajes[embalaje] = cantidadPartidas[0].cantidadProducto;
+            }
+
+        }else{
+            cantidadPartidasEmbalajes[embalaje] = 0;
+        }
+
+     });
+
+    return cantidadPartidasEmbalajes;
  }
 
 module.exports = {
@@ -3078,5 +3097,6 @@ module.exports = {
     getPartidaMod,
     LimpiaPosicion,
     getExcelInventory,
-    getPartidaModExcel
+    getPartidaModExcel,
+    getInventarioPorPartidas
 }
