@@ -7,6 +7,7 @@ const PartidaController = require("./Partida");
 const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario')
+const ClienteFiscal = require('../models/ClienteFiscal');
 
 function get(req, res) {
 	Producto.find({ statusReg: "ACTIVO" })
@@ -254,10 +255,20 @@ function getByIDClienteFiscal(req, res) {
 					producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
 				});
 			}  */
+			console.log(req.params.idClienteFiscal);
 				await Helpers.asyncForEach(productos, async function (producto) {
 					
 					const { clave } = producto;
-                    let clienteEmbalaje = producto.clienteFiscal_id.arrEmbalajes
+					let clienteEmbalaje=""
+					if(producto.clienteFiscal_id!=undefined)
+					{
+	                    clienteEmbalaje = producto.clienteFiscal_id.arrEmbalajes
+	                }
+	                else
+	                {
+	                	let clientefiscal = await ClienteFiscal.findOne({ _id: _idClienteFiscal })
+	                	clienteEmbalaje=clientefiscal.arrEmbalajes;
+	                }
                     let cantidadProductoPartidas = await PartidaController.getInventarioPorPartidas(clave, clienteEmbalaje);
 
                     if(cantidadProductoPartidas.length !== 0){
