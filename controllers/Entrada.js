@@ -265,7 +265,7 @@ async function get(req, res) {
 }
 
 function getById(req, res) {
-
+	
 	let _id = req.query.id;
 	console.log(req.query);
 	Entrada.findOne({ _id: _id })
@@ -1260,19 +1260,16 @@ async function getExcelCaducidades(req, res) {
 				let resAlerta2=true;
 				if(fecha == "fechaEntrada")
 				{
-					console.log(new Date(elem.producto_id[0].fechaEntrada)+">"+new Date(fechaInicio)+" && "+new Date(elem.producto_id[0].fechaEntrada)+"<"+new Date(fechaFinal))
-					
-					console.log(new Date(elem.producto_id[0].fechaEntrada)>new Date(fechaInicio) && new Date(elem.producto_id[0].fechaEntrada)<new Date(fechaFinal))
-					if(elem.producto_id[0].fechaEntrada)
-						resFecha = new Date(elem.producto_id[0].fechaEntrada)>new Date(fechaInicio) && new Date(elem.producto_id[0].fechaEntrada)<new Date(fechaFinal);
+					if(elem.entrada_id[0].fechaEntrada)
+						resFecha = new Date(elem.entrada_id[0].fechaEntrada)>new Date(fechaInicio) && new Date(elem.entrada_id[0].fechaEntrada)<new Date(fechaFinal);
 					else
 						resFecha = false;
 				}
 
 				if(fecha == "fechaAlta")
 				{
-					if(elem.producto_id[0].fechaAlta)
-						resFecha = new Date(elem.producto_id[0].fechaAlta)>new Date(fechaInicio) && new Date(elem.producto_id[0].fechaAlta)<new Date(fechaFinal);
+					if(elem.entrada_id[0].fechaAlta)
+						resFecha = new Date(elem.entrada_id[0].fechaAlta)>new Date(fechaInicio) && new Date(elem.entrada_id[0].fechaAlta)<new Date(fechaFinal);
 					else
 						resFecha = false;
 				}

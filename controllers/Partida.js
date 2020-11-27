@@ -1109,9 +1109,10 @@ async function getExcelByIDs(req, res) {
         if (tipo == undefined || tipo == "") throw NullParamsException;
 
         let filter = {
-            "entrada_id.clienteFiscal_id":mongoose.Types.ObjectId( arrClientesFiscales_id),
-            "entrada_id.sucursal_id": mongoose.Types.ObjectId(arrSucursales_id),
-            "entrada_id.almacen_id": mongoose.Types.ObjectId(arrAlmacenes_id),
+            clienteFiscal_id: arrClientesFiscales_id ,
+            sucursal_id:  arrSucursales_id ,
+            almacen_id: arrAlmacenes_id
+            
             
         };
         if(fechaInicio != "" &&  fechaFinal != ""){
@@ -1132,131 +1133,150 @@ async function getExcelByIDs(req, res) {
         }
         if(folioEntrada != "")
         {
-            filter["entrada_id.stringFolio"]=folioEntrada;
+            filter.stringFolio=folioEntrada;
         }
         //let entradas = await Entrada.find(filter).exec();
-        console.log(filter);
-
-        await Partida.aggregate([{$lookup: {from: "Entradas", localField: "entrada_id", foreignField: "_id", as: "entrada_id"}},
-                               {$lookup: {from: "Productos", localField: "producto_id", foreignField: "_id", as: "producto_id"}},
-                               {$lookup: {from: "Salidas", localField: "salidas_id.salida_id", foreignField: "_id", as: "salida_id"}},
-                                {$match: filter}
-
-        ]).then (async (partidas)=> {
-            await Helper.asyncForEach(partidas, async function (partida) {
-                console.log(partida)
-                let resFecha=true
-                let resClasificacion=true;
-                let resSubclasificacion=true;
-                let resClave=true;
-                if(fecha == "fechaSalida" && partida.salida_id[0] != undefined && partida.salida_id[0][0] !=undefined)
-                {
-                    resFecha = new Date(partida.salida_id[0].fechaSalida)>=new Date(fechaInicio) && new Date(partida.salida_id[0].fechaSalida)<=new Date(fechaFinal);
-                }
-                else
-                    if(fecha == "fechaSalida")
-                    resFecha = false;
-                if(fecha == "fechaAltaSalida" && partida.salida_id[0] != undefined && partida.salida_id[0][0] !=undefined)
-                {
-                    resFecha = new Date(partida.salida_id[0].fechaAlta)>=new Date(fechaInicio) && new Date(partida.salida_id[0].fechaAlta)<=new Date(fechaFinal);
-                }
-                else
-                    if(fecha == "fechaAltaSalida")
+        //console.log(filter);
+        await Entrada.find(filter)
+        .populate({
+            path: 'partidas',
+            model: 'Partida'
+        })
+        .populate({
+            path: 'partidas',
+            populate: {
+                path: 'producto_id',
+                model: 'Producto',
+            }
+        }).populate({
+            path: 'partidas',
+            populate:{
+                path: 'salidas_id.salida_id',
+                model: 'Salida',
+                select: 'folio stringFolio fechaSalida item'
+            }
+        }).then(async (entradas) => {
+            //await Helper.asyncForEach(arrPartidas, async function (partida) {
+            entradas.forEach(entrada => {
+                //console.log(entrada);
+                let partidas = entrada.partidas;
+               // part
+               // await Helper.asyncForEach(arrPartidas, async function (partida) {
+                partidas.forEach((partida) => { 
+                    //console.log(partida);
+                    let resFecha=true
+                    let resClasificacion=true;
+                    let resSubclasificacion=true;
+                    let resClave=true;
+                    if(fecha == "fechaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
+                    {
+                        resFecha = new Date(partida.salidas_id[0].salida_id.fechaSalida)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaSalida)<=new Date(fechaFinal);
+                    }
+                    else
+                        if(fecha == "fechaSalida")
                         resFecha = false;
-                if(clave != "" && partida.producto_id[0]._id.toString() !== clave)
-                {
-                    resClave=false;
-                }
-                if(clasificacion != "")
-                {
-                    resClasificacion=partida.producto_id[0].clasificacion_id.toString() == clasificacion.toString() ;
-                }
-                if(subclasificacion != "")
-                {
-                    resSubclasificacion=partida.producto_id[0].subclasificacion_id.toString() == subclasificacion.toString();
-                }
-                if(partida.entrada_id[0] != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (partida.entrada_id[0].status=="APLICADA"||partida.entrada_id[0].status=="FINALIZADO") && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA")) 
-                {   
-                    //console.log(entrada.tipo);
-                    let porcentaje = 0;
-                    let totalEntrada = 0;
-                    let totalResto = 0;
-                    let totalSalida = 0;
-                    var max="";
-                    var lapso="";
-                    for (let x in partida.embalajesEntrada) {
-                        totalEntrada += partida.embalajesEntrada[x];
-                        totalResto += partida.embalajesxSalir[x];
+                    if(fecha == "fechaAltaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
+                    {
+                        resFecha = new Date(partida.salidas_id[0].salida_id.fechaAlta)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaAlta)<=new Date(fechaFinal);
                     }
-                    totalSalida = totalEntrada - totalResto;
-                    porcentaje = (totalSalida / totalEntrada);
-                    if(partida.salida_id[0] != undefined)
-                    if (partida.salida_id[0].length > 0 || partida.isEmpty === true){
-                        let salidaInstances = partida.salida_id.map(x => x.salida_id);
-                        if(salidaInstances){
-                            let fechasSalida = partida.salida_id.map(x => x.fechaSalida) ? partida.salida_id.map(x => x.fechaSalida) : "";
-                            if(fechasSalida !== "" &&fechasSalida.length > 0){
-                                max = fechasSalida.reduce(function (a, b) { return a > b ? a : b; });
-                                var diff = Math.abs(max.getTime() - partida.entrada_id[0].fechaEntrada.getTime());
-                                let ms= Math.floor(diff % 1000);
-                                let s= Math.floor(diff / 1000 % 60);
-                                let m= Math.floor(diff / 60000 % 60);
-                                let h= Math.floor(diff / 3600000 % 24);
-                                let d= Math.floor(diff / 86400000);
-                                max =dateFormat(max, formatofecha)
-                                lapso= d.toString() + ' día(s), ' + h.toString() + ' hora(s), ' + m.toString() + ' minuto(s)';
-                            }
-                        }
+                    else
+                        if(fecha == "fechaAltaSalida")
+                            resFecha = false;
+                    if(clave != "" && partida.producto_id._id.toString() !== clave)
+                    {
+                        resClave=false;
                     }
-                    worksheet.cell(i, 1).string(partida.entrada_id[0].stringFolio ? partida.entrada_id[0].stringFolio:"");
-                    worksheet.cell(i, 2).string(partida.salida_id.length > 0  ? partida.salida_id[0].stringFolio: "");
-                    worksheet.cell(i, 3).string(partida.entrada_id[0].tipo ? partida.entrada_id[0].tipo:"");
-                    //console.log(entrada.tipo);
-                    worksheet.cell(i, 4).string(partida.entrada_id[0].item ? partida.entrada_id[0].item:"");
-                    worksheet.cell(i, 5).string(partida.entrada_id[0].referencia ? partida.entrada_id[0].referencia :"");
-                    worksheet.cell(i, 6).string(partida.clave ? partida.clave:"");
-                    worksheet.cell(i, 7).string(partida.entrada_id[0].ordenCompra ? partida.entrada_id[0].ordenCompra:"");
-                    worksheet.cell(i, 8).string(partida.lote ? partida.lote:"");
-                    worksheet.cell(i, 9).string(partida.descripcion ? partida.descripcion:""); 
-                    worksheet.cell(i, 10).string(partida.producto_id[0].subclasificacion ? partida.producto_id[0].subclasificacion:"");
-
-                    let indexbody=11;
-                    clienteEmbalaje.forEach(emb=>
+                    if(clasificacion != "")
+                    {
+                        resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+                    }
+                    if(subclasificacion != "")
+                    {
+                        resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
+                    }
+                    if(entrada != undefined && resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && (entrada.status=="APLICADA"||entrada.status=="FINALIZADO") && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA")) 
                     {   
-                        let tarimas =0
-                        if (emb == 'tarimas' && partida.producto_id[0].arrEquivalencias.length > 0) {
-                            let band = false;
-                            partida.producto_id[0].arrEquivalencias.forEach(function (equivalencia) {
-                               
-                                if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja" && partida.embalajesEntrada.cajas) {
-
-                                    tarimas = partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia ? (partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
-                                    band = true;
+                        //console.log(entrada.tipo);
+                        let porcentaje = 0;
+                        let totalEntrada = 0;
+                        let totalResto = 0;
+                        let totalSalida = 0;
+                        var max="";
+                        var lapso="";
+                        for (let x in partida.embalajesEntrada) {
+                            totalEntrada += partida.embalajesEntrada[x];
+                            totalResto += partida.embalajesxSalir[x];
+                        }
+                        totalSalida = totalEntrada - totalResto;
+                        porcentaje = (totalSalida / totalEntrada);
+                        if(partida.salidas_id != undefined)
+                        if (partida.salidas_id.length > 0 || partida.isEmpty === true){
+                            let salidas_idInstances = partida.salidas_id.map(x => x.salida_id);
+                            if(salidas_idInstances){
+                                let fechasSalida = salidas_idInstances.map(x => x.fechaSalida) ? salidas_idInstances.map(x => x.fechaSalida) : "";
+                                if(fechasSalida !== "" &&fechasSalida.length > 0){
+                                    max = fechasSalida.reduce(function (a, b) { return a > b ? a : b; });
+                                    var diff = Math.abs(max.getTime() - entrada.fechaEntrada.getTime());
+                                    let ms= Math.floor(diff % 1000);
+                                    let s= Math.floor(diff / 1000 % 60);
+                                    let m= Math.floor(diff / 60000 % 60);
+                                    let h= Math.floor(diff / 3600000 % 24);
+                                    let d= Math.floor(diff / 86400000);
+                                    max =dateFormat(max, formatofecha)
+                                    lapso= d.toString() + ' día(s), ' + h.toString() + ' hora(s), ' + m.toString() + ' minuto(s)';
                                 }
-                            });
-                            if (band !== true){
-                                tarimas = partida.embalajesEntrada.tarimas ? partida.embalajesEntrada.tarimas : 0;
                             }
-                            worksheet.cell(i, indexbody).number(parseInt(tarimas));
                         }
-                        else {
-                            worksheet.cell(i, indexbody).number(partida.embalajesEntrada[emb] ? parseInt(partida.embalajesEntrada[emb]):0);
-                        }
-                        indexbody++;
-                    });
-                    worksheet.cell(i, indexbody).string(partida.entrada_id[0].fechaEntrada ? dateFormat(partida.entrada_id[0].fechaEntrada, formatofecha) : "");
-                    worksheet.cell(i, indexbody+1).string(partida.entrada_id[0].fechaAlta ? dateFormat(partida.entrada_id[0].fechaAlta, formatofecha) : "");
-                    worksheet.cell(i, indexbody+2).string(partida.salida_id[0] != undefined ? partida.salida_id[0]!=undefined ? dateFormat(partida.salida_id[0].fechaSalida, formatofecha) : "":"");
-                    worksheet.cell(i, indexbody+3).string(partida.salida_id[0] != undefined ? partida.salida_id[0]!=undefined ? dateFormat(partida.salida_id[0].fechaAlta, formatofecha) : "":"");
-                    worksheet.cell(i, indexbody+4).string(partida.entrada_id[0].tracto ? partida.entrada_id[0].tracto :"SIN_ASIGNAR");
-                    worksheet.cell(i, indexbody+5).string(partida.entrada_id[0].remolque ? partida.entrada_id[0].remolque :"SIN_ASIGNAR");
-                    worksheet.cell(i, indexbody+6).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
-                    worksheet.cell(i, indexbody+7).string(lapso).style(fitcellStyle);
-                    //worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
-                    i++;
-                }
+                        worksheet.cell(i, 1).string(entrada.stringFolio ? entrada.stringFolio:"");
+                        worksheet.cell(i, 2).string(partida.salidas_id.length > 0  ? partida.salidas_id[0].salida_id.stringFolio: "");
+                        worksheet.cell(i, 3).string(entrada.tipo ? entrada.tipo:"");
+                        //console.log(entrada.tipo);
+                        worksheet.cell(i, 4).string(entrada.item ? entrada.item:"");
+                        worksheet.cell(i, 5).string(entrada.referencia ? entrada.referencia :"");
+                        worksheet.cell(i, 6).string(partida.clave ? partida.clave:"");
+                        worksheet.cell(i, 7).string(entrada.ordenCompra ? entrada.ordenCompra:"");
+                        worksheet.cell(i, 8).string(partida.lote ? partida.lote:"");
+                        worksheet.cell(i, 9).string(partida.descripcion ? partida.descripcion:""); 
+                        worksheet.cell(i, 10).string(partida.producto_id.subclasificacion ? partida.producto_id.subclasificacion:"");
+
+                        let indexbody=11;
+                        clienteEmbalaje.forEach(emb=>
+                        {   
+                            let tarimas =0
+                            if (emb == 'tarimas' && partida.producto_id.arrEquivalencias.length > 0) {
+                                let band = false;
+                                partida.producto_id.arrEquivalencias.forEach(function (equivalencia) {
+                                   
+                                    if (equivalencia.embalaje === "Tarima" && equivalencia.embalajeEquivalencia === "Caja" && partida.embalajesEntrada.cajas) {
+
+                                        tarimas = partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia ? (partida.embalajesEntrada.cajas / equivalencia.cantidadEquivalencia).toFixed(1) : 0;
+                                        band = true;
+                                    }
+                                });
+                                if (band !== true){
+                                    tarimas = partida.embalajesEntrada.tarimas ? partida.embalajesEntrada.tarimas : 0;
+                                }
+                                worksheet.cell(i, indexbody).number(parseInt(tarimas));
+                            }
+                            else {
+                                worksheet.cell(i, indexbody).number(partida.embalajesEntrada[emb] ? parseInt(partida.embalajesEntrada[emb]):0);
+                            }
+                            indexbody++;
+                        });
+                        worksheet.cell(i, indexbody).string(entrada.fechaEntrada ? dateFormat(entrada.fechaEntrada, formatofecha) : "");
+                        worksheet.cell(i, indexbody+1).string(entrada.fechaAlta ? dateFormat(entrada.fechaAlta, formatofecha) : "");
+                        worksheet.cell(i, indexbody+2).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaSalida, formatofecha) : "":"");
+                        worksheet.cell(i, indexbody+3).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaAlta, formatofecha) : "":"");
+                        worksheet.cell(i, indexbody+4).string(entrada.tracto ? entrada.tracto :"SIN_ASIGNAR");
+                        worksheet.cell(i, indexbody+5).string(entrada.remolque ? entrada.remolque :"SIN_ASIGNAR");
+                        worksheet.cell(i, indexbody+6).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
+                        worksheet.cell(i, indexbody+7).string(lapso).style(fitcellStyle);
+                        //worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
+                        i++;
+                    }
+                });
             });
-        });
+        })
 
        // console.log("end");
         workbook.write('ReportePartidas'+dateFormat(Date.now(), formatofecha)+'.xlsx',res);
@@ -2818,7 +2838,7 @@ async function LimpiaPosicion(req, res)
 
 async function getExcelInventory(req, res){
 
-    let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
+    let _idClienteFiscal = req.query.idClienteFiscal !== undefined ?  req.query.idClienteFiscal :"";
     let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
 
     //console.log(req.query.almacen_id);
@@ -2839,21 +2859,21 @@ async function getExcelInventory(req, res){
         .sort({clave: 1}).collation({ locale: "af", numericOrdering: true})
         .then(async (productos) => {
             //console.log(productos);
-            if (almacen_id != undefined && almacen_id != "") {
+           /*   if (almacen_id != undefined && almacen_id != "") {
                 await Helpers.asyncForEach(productos, async function (producto) {
                     producto.embalajesAlmacen = await getExistenciasAlmacen(almacen_id, producto);
                 });
-            }
+            }  */
                 await Helpers.asyncForEach(productos, async function (producto) {
                     
                     const { clave } = producto;
-                    const embalaje = producto.embalajes
                     let clienteEmbalaje = producto.clienteFiscal_id.arrEmbalajes
                     let cantidadProductoPartidas = await getInventarioPorPartidas(clave, clienteEmbalaje);
 
                     if(cantidadProductoPartidas.length !== 0){
-                        producto.embalajes.cajas = cantidadProductoPartidas[0].cantidadProducto;
-                        producto.embalajes.tarimas = cantidadProductoPartidas[0].cantidadTarimas;
+						clienteEmbalaje.split(",").forEach(clienteEmbalaje =>{
+                            producto.embalajes[clienteEmbalaje] = cantidadProductoPartidas[clienteEmbalaje]
+                        })
                     }
 
                     if(almacen_id !== "")
@@ -3011,19 +3031,38 @@ async function getExcelInventory(req, res){
 
  async function getInventarioPorPartidas(clave, clienteEmbalaje = "cajas"){
 
-    let embalaje = clienteEmbalaje.split(",")[1];
+    //tarimas,tambos,cajas,cubetas,galones,botes,totes
 
-    let matchProducto = {
-        _id: "$clave", cantidadProducto: {$sum:`$embalajesxSalir.${embalaje}`}, cantidadTarimas: {$sum: 1} 
-    }
-
-    let cantidadPartidas = await Partida.aggregate([
+    let embalajes = clienteEmbalaje.split(",");
     
-        {$match:{"clave": clave, isEmpty: false, status : "ASIGNADA"}},
-        {$group: matchProducto}
-    ])
+    let cantidadPartidasEmbalajes = {};
 
-    return cantidadPartidas;
+     await Helpers.asyncForEach(embalajes, async function(embalaje){
+        let matchProducto = {
+            _id: "$clave", cantidadProducto: {$sum:`$embalajesxSalir.${embalaje}`}, cantidadTarimas: {$sum: 1} 
+        }
+    
+        let cantidadPartidas = await Partida.aggregate([
+        
+            {$match:{"clave": clave, isEmpty: false, status : "ASIGNADA"}},
+            {$group: matchProducto}
+        ])
+
+        if(cantidadPartidas.length !== 0){
+
+            if(embalaje === "tarimas"){
+                cantidadPartidasEmbalajes[embalaje] = cantidadPartidas[0].cantidadTarimas;
+            }else{
+                cantidadPartidasEmbalajes[embalaje] = cantidadPartidas[0].cantidadProducto;
+            }
+
+        }else{
+            cantidadPartidasEmbalajes[embalaje] = 0;
+        }
+
+     });
+
+    return cantidadPartidasEmbalajes;
  }
 
 module.exports = {
@@ -3058,5 +3097,6 @@ module.exports = {
     getPartidaMod,
     LimpiaPosicion,
     getExcelInventory,
-    getPartidaModExcel
+    getPartidaModExcel,
+    getInventarioPorPartidas
 }
