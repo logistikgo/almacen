@@ -274,7 +274,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 			let index = nivel.productos.indexOf(producto);
 			nivel.productos.splice(index, 1);
 			nivel.isCandadoDisponibilidad = false;
-			apartado = false;
+			nivel.apartado = false;
 		}
 	}
 	else if (signo > 0) {
