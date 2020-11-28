@@ -271,7 +271,7 @@ function getByIDClienteFiscal(req, res) {
 	                }
                     let cantidadProductoPartidas = await PartidaController.getInventarioPorPartidas(clave, clienteEmbalaje);
 
-                    if(cantidadProductoPartidas.length !== 0){
+                    if(cantidadProductoPartidas.length !== 0 && clienteEmbalaje!==undefined){
 						clienteEmbalaje.split(",").forEach(clienteEmbalaje =>{
                             producto.embalajes[clienteEmbalaje] = cantidadProductoPartidas[clienteEmbalaje]
                         })
