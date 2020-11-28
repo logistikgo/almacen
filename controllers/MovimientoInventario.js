@@ -239,8 +239,9 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 	/**
 	 * Esta funcion actualiza las existencias en las posiciones dentro del almacen
 	 */
-	//console.log(signo);
-	//console.log(posicionxPartida);
+	console.log("TEST"+signo);
+	console.log(posicionxPartida);
+	let _producto_id= producto_id._id!=undefined? producto_id._id:producto_id
 	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
 	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
 	//console.log(nivel);
@@ -251,9 +252,10 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 
 	//	x.producto_id.toString() == producto_id.toString()
 	//}));
-
-	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == producto_id.toString()) != undefined) {
-		let producto = nivel.productos.find(x => x.producto_id.toString() == producto_id.toString());
+	console.log(_producto_id);
+	console.log("service:"+nivel.productos.length +"> 0 && "+nivel.productos+" == "+_producto_id.toString())
+	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == _producto_id.toString()) != undefined) {
+		let producto = nivel.productos.find(x => x.producto_id.toString() == _producto_id.toString());
 		let flagEmbalajes = 0;
 
 		for (let embalaje in posicionxPartida.embalajes) {
@@ -262,22 +264,23 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 			}
 			// console.log(signo * posicionxPartida.embalajes[embalaje]);
 			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajes[embalaje]);
-			// console.log(producto.embalajes[embalaje]);
+			 console.log("left"+producto.embalajes[embalaje]);
 			flagEmbalajes = producto.embalajes[embalaje] > 0 ? ++flagEmbalajes : flagEmbalajes;
-			// console.log(flagEmbalajes);
+			console.log("flag"+flagEmbalajes);
 		}
 
 		if (flagEmbalajes == 0 && signo < 0) {
-			// console.log("Flag is 0");
+			console.log("Flag is 0");
 			let index = nivel.productos.indexOf(producto);
 			nivel.productos.splice(index, 1);
 			nivel.isCandadoDisponibilidad = false;
+			apartado = false;
 		}
 	}
 	else if (signo > 0) {
-		//console.log("No hay producto igual");
+		console.log("No hay producto igual");
 		nivel.productos.push({
-			producto_id: producto_id,
+			producto_id: _producto_id,
 			embalajes: posicionxPartida.embalajes
 		});
 		nivel.isCandadoDisponibilidad = true;
