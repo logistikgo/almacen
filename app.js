@@ -55,6 +55,7 @@ app.get('/api/productos', Producto.get);
 app.get('/api/producto', Producto.getById);
 app.get('/api/producto/:clave', Producto.getByClave);
 app.get('/api/productos/:idClienteFiscal', Producto.getByIDClienteFiscal);
+app.get('/api/productosInventario/:idClienteFiscal', Producto.getByIDClienteFiscalAggregate);
 app.post('/api/producto', Producto.save);
 app.put('/api/producto/:_id', Producto.update);
 app.delete('/api/productos', Producto._delete);

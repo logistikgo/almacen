@@ -1767,7 +1767,7 @@ async function saveSalidaBabel(req, res) {
 		console.log(req.body.Pedido.length)
 		let index=0;
 		await Helper.asyncForEach(req.body.Pedido,async function (Pedido) {
-			
+			// Preparar pedido para apartar las partidas y crearlas apartir de lo solicitado
 			if(Pedido.NO && index > 13 && Pedido.Clave && Pedido.Cantidad)
 			{
 				console.log(Pedido);
