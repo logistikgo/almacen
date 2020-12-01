@@ -8,6 +8,9 @@ const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const Helpers = require('../helpers');
 const MovimientoInventario = require('../controllers/MovimientoInventario')
 const ClienteFiscal = require('../models/ClienteFiscal');
+const { mongo } = require('mongoose');
+const { Mongoose } = require('mongoose');
+const mongoose = require('mongoose');
 
 function get(req, res) {
 	Producto.find({ statusReg: "ACTIVO" })
@@ -300,6 +303,109 @@ function getByIDClienteFiscal(req, res) {
 
 }
 
+
+async function getByIDClienteFiscalAggregate(req, res) {
+	
+	try {
+		
+	let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
+	let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
+	let clientesEmbalajes;
+
+	let clienteFiscal = await ClienteFiscal.findById(_idClienteFiscal).exec();
+	
+	//Verificar si existe el almacen y en base a eso, crear el almacenQuery, para obtener los productos
+	let almacenQuery = {isEmpty: false, 
+		status: "ASIGNADA", 
+		"Productos.statusReg": "ACTIVO",
+		'Productos.arrClientesFiscales_id': {$in: [mongoose.Types.ObjectId(_idClienteFiscal)]}};
+
+    if(almacen_id !== ""){
+		almacenQuery["Productos.almacen_id"] = {$in: [mongoose.Types.ObjectId(almacen_id)]}
+	}
+
+
+	let cantidadEmbalajes = {
+		"_id": "$clave",
+		"productoDetalle": {$addToSet: "$Productos"},
+		"clientesFiscales": {$addToSet: "$ClientesFiscales"},
+		"tarimas": {$sum: 1}
+	}  
+	
+
+	if(clienteFiscal){
+
+		clientesEmbalajes = clienteFiscal.arrEmbalajes.split(",");
+
+
+		clientesEmbalajes.forEach(embalaje =>{
+
+			if(embalaje !== "tarimas")
+				cantidadEmbalajes[embalaje] = {$sum:`$embalajesxSalir.${embalaje}`};
+
+		})
+
+	//let producto = Producto.find({arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO"})	
+	let arrProductos = [];
+	let productos = Partida.aggregate([
+
+		{$lookup: {"from": "Productos", "localField": "producto_id", "foreignField": "_id", as: "Productos"}},
+		{$lookup: {"from": "ClientesFiscales", "localField": "Productos.arrClientesFiscales_id", "foreignField": "_id", as: "ClientesFiscales"}},
+		
+		{$match: almacenQuery}
+	,   
+		{$group: cantidadEmbalajes}, 
+				   
+	  { $project: { fromProductos: 0 } }  
+	
+	])
+
+	productos.then(async productos =>{
+		//Obtener el inventario, si no tiene partidas activas
+		if(productos.length === 0){
+			productos = await Producto.find({arrClientesFiscales_id: { $in: [_idClienteFiscal]},
+											 almacen_id: {$in: [almacen_id]},
+											 statusReg: "ACTIVO"}).exec()
+			
+			res.status(200).send(productos);								 
+		}else{
+			//Inventario con las partidas activas
+			productos.forEach(producto =>{
+				let productoDetalle = {...producto.productoDetalle[0][0]};
+				let clienteFiscal = {...producto.clientesFiscales[0][0]};
+	
+				let embalajes = clienteFiscal.arrEmbalajes.split(",");
+	
+				embalajes.forEach(embalaje =>{
+					productoDetalle.embalajes[embalaje] = producto[embalaje];
+				})
+	
+				arrProductos.push(productoDetalle);
+	
+			});
+	
+	
+			res.status(200).send(arrProductos);
+			
+		}
+
+
+	}).catch(err =>{
+		res.status(500).send(err);
+	});
+
+	}
+
+	} catch (error) {
+		console.log(error);
+	}
+
+	
+
+	
+
+}
+
 async function save(req, res) {
 	req.body.idProducto = await Helpers.getNextID(Producto, "idProducto");
 	req.body.valor = 0;
@@ -406,5 +512,6 @@ module.exports = {
 	getALM_XD,
 	getExistenciasByAlmacen,
 	getPartidasxProductoenExistencia,
-	getEquivalencias
+	getEquivalencias,
+	getByIDClienteFiscalAggregate
 }
