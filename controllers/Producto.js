@@ -11,6 +11,7 @@ const ClienteFiscal = require('../models/ClienteFiscal');
 const { mongo } = require('mongoose');
 const { Mongoose } = require('mongoose');
 const mongoose = require('mongoose');
+const { isEmptyEmbalaje } = require('../helpers');
 
 function get(req, res) {
 	Producto.find({ statusReg: "ACTIVO" })
@@ -169,6 +170,7 @@ function getByClave(req, res) {
 }
 
 function getByIDsClientesFiscales(req, res) {
+
 	let _arrClienteFiscales = req.query.arrClientesFiscales;
 	//console.log("Yael was here");
 	Producto.find({ arrClientesFiscales_id: { $in: _arrClienteFiscales }, "statusReg": "ACTIVO" })
@@ -320,8 +322,14 @@ async function getByIDClienteFiscalAggregate(req, res) {
 		"Productos.statusReg": "ACTIVO",
 		'Productos.arrClientesFiscales_id': {$in: [mongoose.Types.ObjectId(_idClienteFiscal)]}};
 
+	let productosEnCeroQuery = {arrClientesFiscales_id: { $in: [_idClienteFiscal]},
+							   statusReg: "ACTIVO"
+	};	
+
+
     if(almacen_id !== ""){
 		almacenQuery["Productos.almacen_id"] = {$in: [mongoose.Types.ObjectId(almacen_id)]}
+		productosEnCeroQuery["almacen_id"] = {$in: [almacen_id]};
 	}
 
 
@@ -332,7 +340,6 @@ async function getByIDClienteFiscalAggregate(req, res) {
 		"tarimas": {$sum: 1}
 	}  
 	
-
 	if(clienteFiscal){
 
 		clientesEmbalajes = clienteFiscal.arrEmbalajes.split(",");
@@ -340,13 +347,18 @@ async function getByIDClienteFiscalAggregate(req, res) {
 
 		clientesEmbalajes.forEach(embalaje =>{
 
-			if(embalaje !== "tarimas")
+			if(embalaje !== "tarimas"){
 				cantidadEmbalajes[embalaje] = {$sum:`$embalajesxSalir.${embalaje}`};
+			}
 
 		})
 
-	//let producto = Producto.find({arrClientesFiscales_id: { $in: [_idClienteFiscal] }, statusReg: "ACTIVO"})	
-	let arrProductos = [];
+	let productosInAlmacen = await Producto.find(productosEnCeroQuery).exec();	
+
+	//Obtener todoos los productos del almacen, que todos sus embalajes esten en cero	
+	let productosEnCero = productosInAlmacen.filter(producto => (isEmptyEmbalaje(producto.embalajes)));	
+
+	let arrProductos = productosEnCero;
 	let productos = Partida.aggregate([
 
 		{$lookup: {"from": "Productos", "localField": "producto_id", "foreignField": "_id", as: "Productos"}},
@@ -373,7 +385,7 @@ async function getByIDClienteFiscalAggregate(req, res) {
 			productos.forEach(producto =>{
 				let productoDetalle = {...producto.productoDetalle[0][0]};
 				let clienteFiscal = {...producto.clientesFiscales[0][0]};
-	
+				
 				let embalajes = clienteFiscal.arrEmbalajes.split(",");
 	
 				embalajes.forEach(embalaje =>{
@@ -405,6 +417,7 @@ async function getByIDClienteFiscalAggregate(req, res) {
 	
 
 }
+
 
 async function save(req, res) {
 	req.body.idProducto = await Helpers.getNextID(Producto, "idProducto");

@@ -1751,7 +1751,7 @@ async function importsalidas(req, res) {
 
 
 async function saveSalidaBabel(req, res) {
-	console.log("----------------------------------------------------------------------start------------------------------------------------------")
+	console.log("----------------------------------------------------------------------start-HOLD------------------------------------------------------")
 	var mongoose = require('mongoose');
 	var respuestacomplete="";
 	//let isEntrada = await validaEntradaDuplicado(req.body.Infoplanta[23].InfoPedido); //Valida si ya existe
@@ -1779,7 +1779,7 @@ async function saveSalidaBabel(req, res) {
 				console.log("total: "+countEntradas.length)
 		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido}).exec():countEntradas;
 		        console.log("total2: "+countEntradas.length)
-				if(countEntradas.length<0){
+				if(countEntradas.length>0){
 					console.log("Ya existe el pedido "+ req.body.Pedido[1].Pedido)
 					return res.status(400).send("Ya existe el pedido:\n" + req.body.Pedido[1].Pedido+" ");
 				}
@@ -1945,7 +1945,7 @@ async function saveSalidaBabel(req, res) {
 					}
 					//saveSalida
 
-					//nSalida.save();
+					//nSalida.save(); //salida guarda 
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
@@ -2050,8 +2050,12 @@ async function saveDashboard(req, res) {
 	let nSalida = await Salida.findOne({ _id: req.body.id }).exec();
 	
 	//nSalida.fechaSalida = new Date(req.body.fechaSalida);
+	nSalida.usuarioAlta_id= req.body.usuarioAlta_id;
+    nSalida.nombreUsuario= req.body.nombreUsuario;
+    nSalida.recibio= req.body.recibio;
 	nSalida.tipo="NORMAL"
 	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
+	let refpedido=nSalida.referencia;
 	await nSalida.save().then(async (salida) => {
 			for (let itemPartida of req.body.jsonPartidas) {
 				await MovimientoInventario.saveSalida(itemPartida, salida.id);
