@@ -72,10 +72,10 @@ async function getxPasilloDisponibles(req, res) {
 									console.log(pos)
 									disponibles.push(pos);}
 								else
-									if(niv.productos.length==1 && isdoble==true && niv.productos[0]._id.toString()==producto_id.toString())
+									if(niv.productos.length==1 && isdoble==true && niv.productos[0].producto_id.toString()==producto_id)
 									{
 										console.log(pos);
-										//disponibles.push(pos);
+										disponibles.push(pos);
 									}
 							}
 							else
