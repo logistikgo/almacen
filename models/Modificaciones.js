@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-
+const paguinate = require('mongoose-paginate-v2');
 const Modificaciones = Schema(
     {
         idTicket: Number,
@@ -20,7 +20,7 @@ const Modificaciones = Schema(
         salida_id: {type: Schema.ObjectId, ref: 'Salida'},
         observaciones: String,
         tipo: String,
-        fechaAlta: Date,
+        fechaAlta: { type: Date, default: Date.now },
         usuarioAlta_id: Number,
         nombreUsuario: String,
         status: String,
@@ -30,5 +30,7 @@ const Modificaciones = Schema(
         collection: 'Modificaciones'
     }
 );
+
+Modificaciones.plugin(paguinate);
 
 module.exports = mongoose.model('Modificaciones', Modificaciones);
