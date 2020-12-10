@@ -1869,9 +1869,12 @@ async function saveSalidaBabel(req, res) {
 					for (let i = 0; i < partidas.length && count<1; i++)
 					{
 						//console.log(i);
+						//fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
+						let Diasrestantes = Math.floor((partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000);
 						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
 			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*2)); 
-			            //console.log(par)
+						console.log("Dias Para perder frescura"+ Diasrestantes)
+						//console.log(par)
 			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaAlerta1.getTime()>hoy.getTime())
 			            {
 
@@ -1945,7 +1948,7 @@ async function saveSalidaBabel(req, res) {
 					}
 					//saveSalida
 
-					nSalida.save(); //salida guarda 
+					//nSalida.save(); //salida guarda 
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
