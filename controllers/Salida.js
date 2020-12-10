@@ -1945,7 +1945,7 @@ async function saveSalidaBabel(req, res) {
 					}
 					//saveSalida
 
-					//nSalida.save(); //salida guarda 
+					nSalida.save(); //salida guarda 
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
