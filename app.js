@@ -36,6 +36,8 @@ const CostoFija = require('./controllers/CostoFija');
 const CostoPES = require('./controllers/CostoPES');
 const PlantaProductora = require('./controllers/PlantaProductora');
 const Ticket = require('./controllers/Ticket');
+const Modificaciones = require('./models/Modificaciones');
+const modificacionesController = require('./controllers/Modificaciones');
 /* cors error
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -67,6 +69,10 @@ app.get('/api/getPartidasxProductoenExistencia/:producto_id', Producto.getPartid
 app.get('/api/getEquivalencias', Producto.getEquivalencias);
 
 app.get('/api/getPartidasMod/:idClienteFiscal', Partida.getPartidaMod);
+
+//Bitacora modificaciones
+app.get('/api/modificaciones', modificacionesController.get);
+
 
 app.get('/api/movimientosInventarioByProducto', MovimientosInventario.getByProducto);
 app.get('/api/posicionesxProducto', MovimientosInventario.getPosicionesByProducto);
