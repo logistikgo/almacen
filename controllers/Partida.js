@@ -2189,6 +2189,8 @@ async function ModificaPartidas(req, res)
     console.log(req.body);
     try{
 
+    let embalajes = Object.keys(req.body.embalajesEntrada)[0];
+        
     let partida = await Partida.findOne({ _id: req.body.partida_id });
     let auxMod={
             partida_id: req.body.partida_id,
@@ -2235,13 +2237,13 @@ async function ModificaPartidas(req, res)
                 console.log(partida.producto_id.toString());
                 let indexprod=oldpos.niveles[indexniveles].productos.findIndex(obj=> (obj.producto_id.toString()  == partida.producto_id.toString()));console.log("prod:"+indexprod);
                 if(indexprod>=0){
-                    oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]=oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"];
-                    console.log("cajas:"+oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]);
+                    oldpos.niveles[indexniveles].productos[indexprod].embalajes[embalajes]=oldpos.niveles[indexniveles].productos[indexprod].embalajes[embalajes]-partida.posiciones[posIndex].embalajesxSalir[embalajes];
+                    console.log(embalajes+oldpos.niveles[indexniveles].productos[indexprod].embalajes[embalajes]);
                     let item = {
                         niveles: oldpos.niveles
                     }
                     //await PosicionModelo.updateOne({ _id: oldpos._id }, { $set: item });
-                    if(oldpos.niveles[indexniveles].productos[indexprod].embalajes["cajas"]<1)
+                    if(oldpos.niveles[indexniveles].productos[indexprod].embalajes[embalajes]<1)
                     {
                         console.log("bnivel:"+oldpos.niveles[indexniveles].productos[indexprod])
                         oldpos.niveles[indexniveles].productos.splice(indexprod, 1);
@@ -2296,14 +2298,14 @@ async function ModificaPartidas(req, res)
                 }
                 posicion.niveles[indexnivelesNew].productos.push({
                     producto_id: productosDia._id,
-                    embalajes: partida.posiciones[posIndex].embalajesxSalir
+                    "embalajes": partida.posiciones[posIndex].embalajesxSalir
                 });
             }
             else
             {
                 let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
                 
-                console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
+                console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes[embalajes])
                 if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].productos.length<1 ){//productoes stiba
                     posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                     posicion.niveles[indexnivelesNew].apartado = false;
@@ -2312,7 +2314,7 @@ async function ModificaPartidas(req, res)
                     posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = true; 
                     posicion.niveles[indexnivelesNew].apartado = true;
                 }
-                posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas=(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)+partida.posiciones[posIndex].embalajesxSalir["cajas"];
+                posicion.niveles[indexnivelesNew].productos[productoindex].embalajes[embalajes]=(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes[embalajes])+partida.posiciones[posIndex].embalajesxSalir[embalajes];
             }
             let item2 = {
                 niveles: posicion.niveles
@@ -2325,18 +2327,19 @@ async function ModificaPartidas(req, res)
             auxMod.ubicacion=pasillo.nombre  + posicion.nombre+ nivelname;
         }
         console.log("second");
-        if(partida.posiciones[posIndex].embalajesxSalir.cajas != req.body.embalajesEntrada.cajas){
+        if(partida.posiciones[posIndex].embalajesxSalir[embalajes] != req.body.embalajesEntrada[embalajes]){
             posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
             console.log("testCant");
-           let tempembalajes=partida.posiciones[posIndex].embalajesxSalir["cajas"];
-            partida.embalajesxSalir ={"cajas": (partida.embalajesxSalir["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"])+req.body.embalajesEntrada["cajas"]};
+           let tempembalajes=partida.posiciones[posIndex].embalajesxSalir[embalajes];
+           
+            partida.embalajesxSalir[embalajes] = (partida.embalajesxSalir[embalajes]-partida.posiciones[posIndex].embalajesxSalir[embalajes])+req.body.embalajesEntrada[embalajes]
 
             if(partida.posiciones.length>0){
                // partida.posiciones[posIndex].embalajesEntrada= req.body.embalajesEntrada;
               // console.log("test1");
-                productosDia.embalajes.cajas=(productosDia.embalajes["cajas"]-partida.posiciones[posIndex].embalajesxSalir["cajas"])+req.body.embalajesEntrada["cajas"];
+                productosDia.embalajes[embalajes]=(productosDia.embalajes[embalajes]-partida.posiciones[posIndex].embalajesxSalir[embalajes])+req.body.embalajesEntrada[embalajes];
                 let item = {
-                    embalajes: productosDia.embalajes
+                   "embalajes": productosDia.embalajes
                 }
               //  console.log("test2");
                 await Producto.updateOne({ _id: productosDia._id }, { $set: item });
@@ -2365,7 +2368,7 @@ async function ModificaPartidas(req, res)
                 {
                     let productoindex = posicion.niveles[indexnivelesNew].productos.findIndex(x => x.producto_id.toString() == productosDia._id.toString());
                     
-                    console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas)
+                    console.log(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes[embalajes])
                     if(productosDia.isEstiba!=undefined && productosDia.isEstiba == true && posicion.niveles[indexnivelesNew].productos.length<1){//productoes stiba
                         posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = false; 
                         posicion.niveles[indexnivelesNew].apartado = false;
@@ -2374,7 +2377,7 @@ async function ModificaPartidas(req, res)
                         posicion.niveles[indexnivelesNew].isCandadoDisponibilidad = true; 
                         posicion.niveles[indexnivelesNew].apartado = true;
                     }
-                    posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas=(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes.cajas-tempembalajes)+partida.posiciones[posIndex].embalajesxSalir["cajas"];
+                    posicion.niveles[indexnivelesNew].productos[productoindex].embalajes[embalajes]=(posicion.niveles[indexnivelesNew].productos[productoindex].embalajes[embalajes]-tempembalajes)+partida.posiciones[posIndex].embalajesxSalir[embalajes];
                 }
               //  console.log("test5")
                 let item2 = {
@@ -2412,6 +2415,12 @@ async function ModificaPartidas(req, res)
 
     }
 
+    let embalajesUpdate = {}
+     
+    embalajesUpdate[`embalajesxSalir.${embalajes}`] =  req.body.embalajesEntrada[embalajes]
+    
+
+    await Partida.updateOne({_id: req.body.partida_id }, { $set: embalajesUpdate })
     await partida.save();
     res.status(200).send("ok");
     }
