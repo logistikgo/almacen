@@ -1871,14 +1871,16 @@ async function saveSalidaBabel(req, res) {
 						//console.log(i);
 						//fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
 						let Diasrestantes = Math.floor((partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000);
+						const DIAS_ANTICIPADOS = 2;
 						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
-			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*2)); 
+			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*10)); 
 						console.log("Dias Para perder frescura"+ Diasrestantes)
 						//console.log(par)
-			            if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaAlerta1.getTime()>hoy.getTime())
-			            {
+			            //if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaAlerta1.getTime()>hoy.getTime())
+						if(partidas[i].embalajesxSalir.cajas >= cantidadPedida && partidas[i].fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS)
+						{
 
-			            	let numpedido=Math.floor(partidas[i].embalajesxSalir.caja/cantidadPedida);
+			            	let numpedido=Math.floor(partidas[i].embalajesxSalir.cajas/cantidadPedida);
 				            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
 				            	if(partidaaux.pedido==false)
 					            {
@@ -1948,7 +1950,7 @@ async function saveSalidaBabel(req, res) {
 					}
 					//saveSalida
 
-					//nSalida.save(); //salida guarda 
+					nSalida.save(); //salida guarda 
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
