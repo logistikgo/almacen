@@ -1245,7 +1245,7 @@ async function getExcelCaducidades(req, res) {
 	PartidaModel.aggregate([{$lookup: {from: "Entradas", localField: "entrada_id", foreignField: "_id", as: "entrada_id"}},
         					   {$lookup: {from: "Productos", localField: "producto_id", foreignField: "_id", as: "producto_id"}},
 								{$match: filter},
-								{$limit: 1000}
+								{$limit: 2000}
 
 		]).then (async (partida)=> {
 		//console.log("test");
