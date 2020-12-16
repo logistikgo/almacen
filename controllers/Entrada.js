@@ -1233,7 +1233,10 @@ async function getExcelCaducidades(req, res) {
    	let Aging=0;
 	let filter = {
 		"entrada_id.clienteFiscal_id": mongoose.Types.ObjectId(req.query.clienteFiscal_id),
+		//"producto_id.arrClientesFiscales_id": {$in: [mongoose.Types.ObjectId(req.query.clienteFiscal_id)]},
 		"entrada_id.status":{$in:["APLICADA","FINALIZADO"]},
+		/* "tipo": {$in: ["NORMAL", "AGREGADA", "MODIFICADA"]},
+    	"status": "ASIGNADA", */ 
 		isEmpty: false
 	}
 	if(folio != "")
@@ -1245,8 +1248,8 @@ async function getExcelCaducidades(req, res) {
 	PartidaModel.aggregate([{$lookup: {from: "Entradas", localField: "entrada_id", foreignField: "_id", as: "entrada_id"}},
         					   {$lookup: {from: "Productos", localField: "producto_id", foreignField: "_id", as: "producto_id"}},
 								{$match: filter},
-								{$limit: 1000},
-								{$skip: 3}
+								{$limit: 2500}
+								
 
 		]).then (async (partida)=> {
 		//console.log("test");
