@@ -1070,7 +1070,7 @@ async function getEntradasReporte(req, res) {
 				   }, */
 			{$match: {"fromEntradas.isEmpty": filter.isEmpty, "fromEntradas.status": filter.status, isEmpty: false,
 					"fromEntradas.clienteFiscal_id": mongoose.Types.ObjectId(filter.clienteFiscal_id),
-					tipo: {$in: ["NORMAL", "AGREGADA", "MODIICADA"]},
+					tipo: {$in: ["NORMAL", "AGREGADA", "MODIFICADA"]},
 					status: "ASIGNADA",
 					"fromEntradas.fechaEntrada": {$gte: fechaInicio, $lt: fechaFinal}}},
 			{      
@@ -1245,7 +1245,7 @@ async function getExcelCaducidades(req, res) {
 	PartidaModel.aggregate([{$lookup: {from: "Entradas", localField: "entrada_id", foreignField: "_id", as: "entrada_id"}},
         					   {$lookup: {from: "Productos", localField: "producto_id", foreignField: "_id", as: "producto_id"}},
 								{$match: filter},
-								{$limit: 2000}
+								{$limit: 3000}
 
 		]).then (async (partida)=> {
 		//console.log("test");
@@ -1508,7 +1508,10 @@ async function getExcelCaducidades(req, res) {
         console.log("/**excel ciclo**/");
         await Helper.asyncForEach(arrPartidas, async function (partidas) 
         {
-        	//console.log(partidas);
+			//console.log(partidas);
+			
+			try{
+
         	fechaEspRecibo="";
 			Diasrestantes=0;
         	leyenda=0;
@@ -1956,10 +1959,13 @@ async function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+26).string(hoy ? dateFormat(hoy, formatofecha):"");
            	worksheet.cell(i, indexbody+27).string(fechaFrescura ? fechaFrescura:"");
            	worksheet.cell(i, indexbody+28).number(Diasrestantes ? Diasrestantes:0).style(styledias);
-            i++;
+			i++;
+		}catch(error){
+			console.log(error);
+		}
         });
         workbook.write('ReporteCaducidad'+dateFormat(new Date(Date.now()-(5*3600000)), formatofecha)+'.xlsx',res);
-
+	
 
 	})
 	.catch((error) => {
