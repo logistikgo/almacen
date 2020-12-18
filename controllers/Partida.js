@@ -2190,6 +2190,16 @@ async function ModificaPartidas(req, res)
     try{
 
     let partida = await Partida.findOne({ _id: req.body.partida_id });
+    let posiciones = partida.posiciones;
+
+    let nivelNumber = Helper.getLevelNumberFromName(posiciones[0].nivel)
+
+    if (nivelNumber <= 9)
+        nivelNumber = "0" + nivelNumber;
+
+
+    let ubicacionAnterior = posiciones[0].pasillo + posiciones[0].posicion + nivelNumber;    
+
     let auxMod={
             partida_id: req.body.partida_id,
             producto_id: partida.producto_id,
@@ -2197,19 +2207,25 @@ async function ModificaPartidas(req, res)
             almacen_id: req.body.almacen_id,
             clienteFiscal_id: req.body.idClienteFiscal,
             usuarioAlta_id:req.body.usuarioAlta_id,
-            nombreUsuario:req.body.nombreUsuario
+            nombreUsuario:req.body.nombreUsuario,
+            loteAnterior: partida.lote,
+            fechaCaducidadAnterior: new Date(partida.fechaCaducidad),
+            fechaProduccionAnterior: new Date(partida.fechaProduccion),
+            embalajesAnteriores: partida.embalajesxSalir,
+            ubicacionAnterior: ubicacionAnterior
         }
+    
     if(partida.lote!=req.body.lote){
         partida.lote=req.body.lote;
-        auxMod.lote=req.body.lote;
+        auxMod.loteModificado=req.body.lote;
     }
     if(partida.fechaProduccion!=req.body.fechaProduccion){
         partida.fechaProduccion=new Date(req.body.fechaProduccion);
-        auxMod.fechaProduccion=new Date(req.body.fechaProduccion);
+        auxMod.fechaProduccionModificada=new Date(req.body.fechaProduccion);
     }
     if(partida.fechaCaducidad!=req.body.fechaCaducidad){
         partida.fechaCaducidad=new Date(req.body.fechaCaducidad);
-        auxMod.fechaCaducidad=new Date(req.body.fechaCaducidad);
+        auxMod.fechaCaducidadModificada=new Date(req.body.fechaCaducidad);
     }
     if(req.body.ubicacion)
     {
@@ -2278,7 +2294,7 @@ async function ModificaPartidas(req, res)
                 posicion_id: posicion._id,
                 nivel_id: posicion.niveles[nivelIndex]._id,
                 nivel: posicion.niveles[nivelIndex].nombre,
-                ubicacion: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
+                ubicacionModificada: pasillo.nombre + posicion.niveles[nivelIndex].nombre + posicion.nombre
             };
             partida.posiciones[posIndex]=jPosicionBahia;
             //console.log("E"+nivel)
@@ -2322,7 +2338,7 @@ async function ModificaPartidas(req, res)
             let nivelname = posicion.niveles[indexnivelesNew].nombre.charCodeAt(0) - 64;
             if (nivelname.toString().length < 2)
                 nivelname = "0" + nivelname.toString()
-            auxMod.ubicacion=pasillo.nombre  + posicion.nombre+ nivelname;
+            auxMod.ubicacionModificada=pasillo.nombre  + posicion.nombre+ nivelname;
         }
         console.log("second");
         if(partida.posiciones[posIndex].embalajesxSalir.cajas != req.body.embalajesEntrada.cajas){
@@ -2384,7 +2400,7 @@ async function ModificaPartidas(req, res)
                 //await posicion.save();//console.log("test6")
 
             }
-            auxMod.embalajesEntrada=req.body.embalajesEntrada;
+            auxMod.embalajesModificados=req.body.embalajesEntrada;
         }
         let nModificaciones = new ModificacionesModel(auxMod);
         await nModificaciones.save();
