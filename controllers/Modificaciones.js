@@ -47,8 +47,8 @@ async function get(req, res){
             .populate({
                 path: 'partida_id',
                 model: 'Partida',
-                select: 'clave embalajesxSalir lote descripcion fechaCaducidad posiciones'
-            }).sort({"fechaAlta": -1})
+                select: 'clave embalajesxSalir lote descripcion fechaCaducidad posiciones isEmpty'
+            }).sort({"fechaAlta": -1});
 
             let arrBitacoraMod = [];
 
