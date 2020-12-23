@@ -2190,19 +2190,26 @@ async function ModificaPartidas(req, res)
     try{
 
     let embalajes = Object.keys(req.body.embalajesEntrada)[0];
-        
+    
     let partida = await Partida.findOne({ _id: req.body.partida_id });
-    let posiciones = partida.posiciones;
-
-    let nivelNumber = Helper.getLevelNumberFromName(posiciones[0].nivel)
-
-    if (nivelNumber <= 9)
+    
+        if(req.body.tipo !== undefined && req.body.tipo === "MODIFICAR"){
+            partida.lote = req.body.lote;
+            partida.fechaCaducidad = new Date(req.body.fechaCaducidad);
+        }
+          
+    if(req.body.ubicacion)
+    {
+        let posiciones = partida.posiciones;
+        
+        let nivelNumber = Helper.getLevelNumberFromName(posiciones[0].nivel)
+        
+        if (nivelNumber <= 9)
         nivelNumber = "0" + nivelNumber;
 
+        let ubicacionAnterior = posiciones[0].pasillo + posiciones[0].posicion + nivelNumber;    
 
-    let ubicacionAnterior = posiciones[0].pasillo + posiciones[0].posicion + nivelNumber;    
-
-    let auxMod={
+        let auxMod={
             partida_id: req.body.partida_id,
             producto_id: partida.producto_id,
             sucursal_id: req.body.sucursal_id,
@@ -2216,21 +2223,20 @@ async function ModificaPartidas(req, res)
             embalajesAnteriores: partida.embalajesxSalir,
             ubicacionAnterior: ubicacionAnterior
         }
-    
-    if(partida.lote!=req.body.lote){
-        partida.lote=req.body.lote;
-        auxMod.loteModificado=req.body.lote;
-    }
-    if(partida.fechaProduccion!=req.body.fechaProduccion){
-        partida.fechaProduccion=new Date(req.body.fechaProduccion);
-        auxMod.fechaProduccionModificada=new Date(req.body.fechaProduccion);
-    }
-    if(partida.fechaCaducidad!=req.body.fechaCaducidad){
-        partida.fechaCaducidad=new Date(req.body.fechaCaducidad);
-        auxMod.fechaCaducidadModificada=new Date(req.body.fechaCaducidad);
-    }
-    if(req.body.ubicacion)
-    {
+        
+        if(partida.lote!=req.body.lote){
+            partida.lote=req.body.lote;
+            auxMod.loteModificado=req.body.lote;
+        }
+        if(partida.fechaProduccion!=req.body.fechaProduccion){
+            partida.fechaProduccion=new Date(req.body.fechaProduccion);
+            auxMod.fechaProduccionModificada=new Date(req.body.fechaProduccion);
+        }
+        if(partida.fechaCaducidad!=req.body.fechaCaducidad){
+            partida.fechaCaducidad=new Date(req.body.fechaCaducidad);
+            auxMod.fechaCaducidadModificada=new Date(req.body.fechaCaducidad);
+        }
+
         let id_pasillo=req.body.ubicacion.pasillo_id;
         let id_pocision=req.body.ubicacion.posicion_id;
         let nivel_id=req.body.ubicacion.nivel_id;
