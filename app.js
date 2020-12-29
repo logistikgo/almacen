@@ -100,6 +100,7 @@ app.put('/api/updateRemision', Entrada.updateRemision);
 app.put('/api/updateStatus', Entrada.updateStatus);
 
 app.get('/api/salidas', Salida.get);
+app.get('/api/salidas/contadores', Salida.getContadoresSalidas);
 app.get('/api/salidaByID/:salida_id', Salida.getByID);
 app.get('/api/getSalidasByIDs', Salida.getSalidasByIDs);
 app.get('/api/getSalidasxRangoFechas', Salida.getxRangoFechas);
@@ -108,6 +109,7 @@ app.post('/api/salida', Salida.save);
 app.put('/api/salida', Salida.update);
 app.post('/api/salidaAutomatica', Salida.saveSalidaAutomatica);
 app.put('/api/updateStatusSalidas',Salida.updateStatusSalidas);
+
 
 app.get('/api/getCtesFiscales', CteFiscal.get);
 app.get('/api/getCtesFiscalesXD', Helper.getClientesFiscalesXD);

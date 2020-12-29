@@ -26,6 +26,7 @@ function get(req, res) {
 }
 
 function getSalidasByIDs(req, res) {
+	
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
@@ -2075,8 +2076,8 @@ async function saveDashboard(req, res) {
 			await Salida.updateOne({ _id: salida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
 				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'refpedido':{$regex: refpedido}}).exec(); 
 				await Helper.asyncForEach(parRes,async function (par) {
-	            	partidaaux.pedido=false;
-	            	await partidaaux.save();
+	            	par.pedido=false;
+	            	await par.save();
 				})
 				res.status(200).send(salida);
 
@@ -2094,6 +2095,63 @@ async function saveDashboard(req, res) {
 	console.log("error");
 }
 
+async function getContadoresSalidas(req, res){
+	
+	
+	try {
+		let mongoose = require("mongoose");
+		const clienteFiscal_id = req.query.idClienteFiscal !== undefined ? req.query.idClienteFiscal : undefined;
+		const almacen_id = req.query.idAlmacen !== undefined ? req.query.idAlmacen : undefined;
+		const tiposEstadosSalidas = ["NORMAL", "FORPICKING", "FORSHIPPING", "DEVOLUCION", "RECHAZO"];
+		
+		const contadoresJson = { };
+
+		const contadores = await Salida.aggregate([
+			{$match: {"clienteFiscal_id": mongoose.Types.ObjectId(clienteFiscal_id),
+					"almacen_id": mongoose.Types.ObjectId(almacen_id)}},
+			{$group: {_id: "$tipo", cantidad: {$sum: 1}}}
+		]).exec();
+	
+		if(contadores){
+
+
+			const tipoContadores = contadores.map(contador => contador._id);
+
+			tiposEstadosSalidas.forEach(tipoSalida =>{
+
+				if(!tipoContadores.includes(tipoSalida)){
+					console.log(tipoSalida);
+					const tipoSalidaSinExistencia = {
+						_id: tipoSalida,
+						cantidad: 0
+					}
+					
+				contadores.push(tipoSalidaSinExistencia);
+				}
+
+				
+			})
+
+			contadores.forEach(contador =>{
+				const { _id, cantidad } = contador;
+
+				contadoresJson[_id] = cantidad;
+
+			})
+
+
+
+			res.status(200).send(contadoresJson);
+		}
+		
+	} catch (error) {
+		res.status(404).send(error);
+	}
+
+
+
+
+}
 
 
 module.exports = {
@@ -2113,5 +2171,6 @@ module.exports = {
 	updateStatusSalidas,
 	removefromSalidaId,
 	agregarPartidaSalidaId,
-	saveDashboard
+	saveDashboard,
+	getContadoresSalidas
 }
