@@ -214,6 +214,11 @@ async function put(arrPartidas, salida_id) {
         if (partidaFound) {
             partidaFound.salidas_id.push(jsonSalida_id);
 
+            if(partida.isEmpty){
+                partida.posiciones[0].isEmpty = true;
+                partida.posiciones[0].embalajesxSalir.cajas = 0;
+            }
+
             let changes = {
                 salidas_id: partidaFound.salidas_id,
                 embalajesxSalir: partida.embalajesxSalir,
