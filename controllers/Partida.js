@@ -120,7 +120,7 @@ async function getBySalida(req, res) {
     let salida_id = req.params.salida_id;
     let salida = await Salida.findOne({ _id: salida_id }).exec();
     let partidas_id = salida.partidas;
-
+    let referenciaPedido = salida.item;
     let partidas = [];
 
     await Helper.asyncForEach(partidas_id, async function (partida_id) {
@@ -133,6 +133,7 @@ async function getBySalida(req, res) {
         partida.pesoBrutoEnSalida = salida_idFound?salida_idFound.pesoBruto:0;
         partida.pesoNetoEnSalida = salida_idFound?salida_idFound.pesoNeto:0;
         partida.embalajesEnSalida = salida_idFound?salida_idFound.embalajes:0;
+        partida.referenciaSalida = referenciaPedido;
         partidas.push(partida);
     });
 
