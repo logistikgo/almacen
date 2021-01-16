@@ -1089,6 +1089,7 @@ async function getEntradasReporte(req, res) {
 					embalajesxSalir: 1,
 					embalajesAlmacen: 1,
 					CajasPedidas: 1,
+					referenciaPedidos: 1,
 					InfoPedidos: 1,
 					isEmpty: 1,
 					origen: 1,
@@ -1258,6 +1259,8 @@ async function getExcelCaducidades(req, res) {
 				//console.log("partidas");
 				//console.log(elem);
 				if(elem){
+				
+				
 
 				let resFecha=true;
 				let resAlerta1=true;
@@ -1387,9 +1390,39 @@ async function getExcelCaducidades(req, res) {
 					//console.log(elem.isEmpty +"== false &&"+ resClasificacion+ "== true &&"+ resSubclasificacion +"== true &&"+ resFecha+"==true &&" +resAlerta2+"==true &&"+ resAlerta1+"==true &&"+ resAgeing+" == true && "+resClave+"==true")
 					if(elem.isEmpty == false && resClasificacion == true && resSubclasificacion == true && resFecha==true && resAlerta2==true && resAlerta1==true && resAgeing == true && resClave==true  && (elem.tipo=="NORMAL" || elem.tipo=="AGREGADA" || elem.tipo=="MODIFICADA" || elem.tipo=="OUTMODIFICADA") && elem.status=="ASIGNADA")
 					{	
+
 						arrPartidas.push(elem);
+						
 					}
 				}
+
+				if(elem.referenciaPedidos !== undefined){
+					if(elem.referenciaPedidos.length > 1){
+						//arrPartidas = arrPartidas.filter(partida => partida._id.toString() !== elem._id.toString());
+						let referenciasPedidos = elem.referenciaPedidos;
+						
+						for(let i = 1; i < referenciasPedidos.length; i++){
+							let copyInformacionPartida =  JSON.parse(JSON.stringify(elem))
+							copyInformacionPartida.refpedido = referenciasPedidos[i].referenciaPedido;
+							copyInformacionPartida.CajasPedidas = referenciasPedidos[i].CajasPedidas;
+
+							copyInformacionPartida.embalajesxSalir.cajas -= referenciasPedidos[i - 1].CajasPedidas.cajas;  
+							
+							copyInformacionPartida.fechaCaducidad = new Date(copyInformacionPartida.fechaCaducidad);
+							copyInformacionPartida.fechaProduccion = new Date(copyInformacionPartida.fechaProduccion);
+							copyInformacionPartida.entrada_id[0].fechaAlta = new Date(copyInformacionPartida.entrada_id[0].fechaAlta);
+							copyInformacionPartida.entrada_id[0].fechaEntrada = new Date(copyInformacionPartida.entrada_id[0].fechaEntrada);
+							copyInformacionPartida.entrada_id[0].fechaReciboRemision = new Date(copyInformacionPartida.entrada_id[0].fechaReciboRemision);
+							copyInformacionPartida.entrada_id[0].fechaSalidaPlanta = new Date(copyInformacionPartida.entrada_id[0].fechaSalidaPlanta);
+								
+
+
+							arrPartidas.push(copyInformacionPartida);
+						}
+						
+					}
+				}
+
 			}
 			})		
 		//console.log("beginexcel");
