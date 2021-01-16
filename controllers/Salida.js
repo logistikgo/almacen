@@ -1862,49 +1862,168 @@ async function saveSalidaBabel(req, res) {
 		            console.log("buscar: "+cantidadPedida)
 		            console.log("beforeleft: "+cantidadneeded);
 		            let embalajesEntrada={cajas:cantidadPedida};
-		            let partidas=await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesxSalir.cajas':{$gte: embalajesEntrada.cajas},fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
-					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+		            let partidas=await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,/*'embalajesxSalir.cajas':{$gte: embalajesEntrada.cajas}*/fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
+					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
 					console.log("totalpartidas: "+partidas.length)
 					let count=0;
 					bandcp=false;
 					for (let i = 0; i < partidas.length && count<1; i++)
-					{
+					{	
+						let partidaSeleccionada = partidas[i];
+						let isPartidaPickeada = false;
+						let refPedidoPartida = req.body.Pedido[1].Pedido;
+						let refPedidoDocument = {};
+						let refPedidos =[];
+						let cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
+						let Diasrestantes; 
+
 						//console.log(i);
 						//fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
-						let Diasrestantes = Math.floor((partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000);
 						const DIAS_ANTICIPADOS = 2;
 						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
 			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*10)); 
 						console.log("Dias Para perder frescura"+ Diasrestantes)
 						//console.log(par)
-			            //if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaAlerta1.getTime()>hoy.getTime())
-						if(partidas[i].embalajesxSalir.cajas >= cantidadPedida && partidas[i].fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS)
-						{
+						//if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaAlerta1.getTime()>hoy.getTime())
+						
+						if((cantidadneeded / equivalencia) >= 1){
+							console.log("Completa la equivalencia");
+						}else{
+							console.log("Es picking")
+							let partidaPickeada = partidas.filter(partida => {
+								let diasrestantes = Helper.getDaysForExpire(partida, producto, hoy);
 
-			            	let numpedido=Math.floor(partidas[i].embalajesxSalir.cajas/cantidadPedida);
-				            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
-				            	if(partidaaux.pedido==false)
+								if(partida.fechaCaducidad.getTime() > hoy && diasrestantes >= DIAS_ANTICIPADOS){
+									if(partida.embalajesxSalir.cajas !== equivalencia || partida.embalajesxSalir.cajas !== (equivalencia * 2)){
+										return true;
+									}else{
+										return false;
+									}	
+								}else{
+									return false;
+								}
+
+
+								
+							});
+							
+							if(partidaPickeada.length !== 0){
+							
+							/* let partidasPickeadasOrdenadas = partidaPickeada.sort(function (a, b) {
+															
+								let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);
+								
+								let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+								
+								if (DiasrestantesA < DiasrestantesB ) {
+									return -1;
+								}
+								if (DiasrestantesA > DiasrestantesB) {
+									return 1;
+								}
+								if(DiasrestantesA === DiasrestantesB){
+									return 0;
+								}
+
+								}) */
+								let partidasPickeadasOrdenadas = partidaPickeada.sort(function (a, b) {
+															
+									let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);
+									
+									let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+									
+									return DiasrestantesA - DiasrestantesB;
+	
+									});
+								
+								const arrayDiasRestantes = partidasPickeadasOrdenadas.map(partida => Helper.getDaysForExpire(partida, producto, hoy));
+
+								if(Helper.allElementAreEqualsInArray(arrayDiasRestantes) === true){
+									partidasPickeadasOrdenadas = partidasPickeadasOrdenadas.sort(function(a, b) {
+										if (a.embalajesxSalir.cajas > b.embalajesxSalir.cajas) {
+											return 1;
+										  }
+										  if (a.embalajesxSalir.cajas < b.embalajesxSalir.cajas) {
+											return -1;
+										  } 
+										  // a must be equal to b
+										  return 0;
+								});
+							}
+						    
+							console.table({
+								"partidasPickeadas": partidaPickeada.map(partida => partida.embalajesxSalir.cajas),
+								"diasRestantesPartidas": partidasPickeadasOrdenadas.map(partida => Math.floor((partida.fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000)),
+								"partidasPickeadasOrdenadas": partidasPickeadasOrdenadas.map(partida => partida.embalajesxSalir.cajas)
+							})
+							isPartidaPickeada = true;
+							let isPartidaHold = false;
+							let i = 0;
+							//Buscar una partida pickeada y seleccionar la primera que encuentra
+							const {partidaSeleccionadaPick, cantidadParcialPick} = holdPartidaPick(partidasPickeadasOrdenadas, cantidadPedida);
+							cantidadPedida = cantidadParcialPick;
+							cantidadRestante = cantidadPedida;
+							partidaSeleccionada = partidaSeleccionadaPick;
+							
+						}
+					}
+
+						//Verificar que la partida con picking aun tenga la cantidad que le corresponde
+						if(isPartidaPickeada){
+							
+								console.log("Paso al pedido")
+								refPedidoDocument.referenciaPedido = refPedidoPartida;
+								refPedidoDocument.CajasPedidas = {cajas: cantidadPedida};
+								partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);	
+						}
+
+						Diasrestantes = Helper.getDaysForExpire(partidaSeleccionada, producto, hoy);
+
+						if(cantidadRestante >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS)
+						{	
+							//Prioridad buscar tarimas incompletas (Picking)
+
+							console.log("Embalaje Cajas:",partidaSeleccionada.embalajesxSalir.cajas );
+			            	let numpedido=Math.floor(partidaSeleccionada.embalajesxSalir.cajas/cantidadPedida);
+				            	var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
+								let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
+								
+								if(partidaaux.pedido==false)
 					            {
-					            	let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
-					            	partidaaux.CajasPedidas={cajas:pedidoTotal};//talves se cambie a info pedidos
-
+					            	
+									refPedidoDocument.referenciaPedido = refPedidoPartida;
+									refPedidoDocument.CajasPedidas = {cajas: pedidoTotal}
+									refPedidos.push(refPedidoDocument);
+									
+									partidaaux.referenciaPedidos=refPedidos;//talves se cambie a info pedidos
+									partidaaux.CajasPedidas = {cajas: pedidoTotal};
 					            	partidaaux.pedido=true;
-					            	partidaaux.refpedido=req.body.Pedido[1].Pedido;
-					            	partidaaux.statusPedido="COMPLETO";
-					            	await partidaaux.save();
-					            	parRes.push(partidas[i]);
+					            	partidaaux.refpedido=refPedidoPartida;
+									
+								}
+								else{
+									if(isPartidaPickeada){
+										
+										//partidaaux.referenciaPedidos = partidaSeleccionada.referenciaPedidos//talves se cambie a info pedido
+										partidaaux.referenciaPedidos.push(refPedidoDocument);
+									}
+								}
+								
+								partidaaux.statusPedido="COMPLETO";
+					            await partidaaux.save();
+					            parRes.push(partidaSeleccionada);
 					            	//console.log(partidaaux);
-					            	console.log("--------------");
-					            	count++;
-					            	cantidadneeded-=(pedidoTotal);
-					            	bandcp=true;
-					            }
-					        
+					            console.log("--------------");
+								count++;
+					            cantidadneeded-=(pedidoTotal);
+					            bandcp=true;
+
 			            }
 			        }
 				}
 				bandcompleto=bandcompleto==false?bandcompleto:bandcp;
 			});
+
 			console.log("********************"+totalpartidas+"=="+parRes.length+"********************");
 			
 			if (parRes && parRes.length  ) {
@@ -1971,6 +2090,46 @@ async function saveSalidaBabel(req, res) {
 	return res.status(200).send("MAYBEOK"+respuestacomplete);
 }
 
+
+function holdPartidaPick(partidasOrdenadas, cantidadPedida){
+
+	let cantidadRestante;
+	let isPartidaHold = false;
+	let partidaSeleccionadaPick;
+	let cantidadParcialPick = cantidadPedida;
+	let i = 0;
+
+
+	while(isPartidaHold === false && i < partidasOrdenadas.length){
+		cantidadRestante = partidasOrdenadas[i].embalajesxSalir.cajas;
+	
+			if(partidasOrdenadas[i].referenciaPedidos.length >= 1){
+			let cantidadCajasPedidasArray = partidasOrdenadas[i].referenciaPedidos.map(partida => partida.CajasPedidas.cajas);
+			let cantidadApartada = cantidadCajasPedidasArray.reduce((val, acc) => val += acc);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+			cantidadRestante = (partidasOrdenadas[i].embalajesxSalir.cajas - cantidadApartada);
+		}
+		
+		if(cantidadRestante >= cantidadPedida && cantidadRestante !== 0){
+			isPartidaHold = true;
+			partidaSeleccionadaPick = partidasOrdenadas[i];
+			i = partidasOrdenadas.length;
+
+		}else{
+
+			if(cantidadRestante !== 0){
+
+				isPartidaHold = true;
+				cantidadParcialPick = cantidadRestante; 
+				partidaSeleccionadaPick = partidasOrdenadas[i];
+				i = partidasOrdenadas.length;
+			}
+		}
+		i++;
+	}
+
+	return {partidaSeleccionadaPick, cantidadParcialPick};
+}
+					
 
 function updateStatusSalidas(req, res) {
 	let _id = req.body.salida_id;
