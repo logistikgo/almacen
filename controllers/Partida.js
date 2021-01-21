@@ -2211,7 +2211,7 @@ async function ModificaPartidas(req, res)
 
         let auxMod={
             partida_id: req.body.partida_id,
-            producto_id: partidaSinModificacion.producto_id,
+            producto_id: partida.producto_id,
             sucursal_id: req.body.sucursal_id,
             almacen_id: req.body.almacen_id,
             clienteFiscal_id: req.body.idClienteFiscal,
