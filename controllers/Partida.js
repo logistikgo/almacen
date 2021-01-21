@@ -2198,7 +2198,7 @@ async function ModificaPartidas(req, res)
     let embalajes = Object.keys(req.body.embalajesEntrada)[0];
     
     let partida = await Partida.findOne({ _id: req.body.partida_id });
-    
+    let partidaSinModificacion = JSON.parse(JSON.stringify(partida));
         if(req.body.tipo !== undefined && req.body.tipo === "MODIFICAR"){
             partida.lote = req.body.lote;
             partida.fechaCaducidad = new Date(req.body.fechaCaducidad);
@@ -2217,16 +2217,16 @@ async function ModificaPartidas(req, res)
 
         let auxMod={
             partida_id: req.body.partida_id,
-            producto_id: partida.producto_id,
+            producto_id: partidaSinModificacion.producto_id,
             sucursal_id: req.body.sucursal_id,
             almacen_id: req.body.almacen_id,
             clienteFiscal_id: req.body.idClienteFiscal,
             usuarioAlta_id:req.body.usuarioAlta_id,
             nombreUsuario:req.body.nombreUsuario,
-            loteAnterior: partida.lote,
+            loteAnterior: partidaSinModificacion.lote,
             fechaCaducidadAnterior: new Date(partida.fechaCaducidad),
             fechaProduccionAnterior: new Date(partida.fechaProduccion),
-            embalajesAnteriores: partida.embalajesxSalir,
+            embalajesAnteriores: partidaSinModificacion.embalajesxSalir,
             ubicacionAnterior: ubicacionAnterior
         }
         
@@ -2250,7 +2250,7 @@ async function ModificaPartidas(req, res)
         let nivelIndex=parseInt(nivel)-1;
         let posIndex=req.body.posIndex;
         var posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
-        var pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
+        var pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)}).exec();
         var oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id}).exec();
         var productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
 
