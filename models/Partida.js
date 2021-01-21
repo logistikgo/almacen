@@ -48,7 +48,8 @@ const Partida = Schema(
         embalajesAlmacen: {},
         referenciaPedidos:[{
             referenciaPedido: String,
-            CajasPedidas: {}
+            CajasPedidas: {},
+            pedido: {type: Boolean, default: false}
         }],
         CajasPedidas: {},
         InfoPedidos: [
