@@ -120,7 +120,7 @@ async function getBySalida(req, res) {
     let salida_id = req.params.salida_id;
     let salida = await Salida.findOne({ _id: salida_id }).exec();
     let partidas_id = salida.partidas;
-    let referenciaPedido = salida.item;
+    let referenciaPedido = salida.referencia;
     let partidas = [];
 
     await Helper.asyncForEach(partidas_id, async function (partida_id) {
@@ -874,47 +874,76 @@ async function getPartidasByIDs(req, res) {
             
             })
 
-            partidas.forEach(partida => 
+            partidas.forEach((partida, index) => 
                 {
                     
                     //partida.producto_id = partida.producto_id[0];
                     
                     //partida.salidas_id = partida.salida_id[0];
-                    //partida.salidas_id.salida_id = partida.salidas_id[0];
-                    
-                    let resFecha=true
-                    let resClasificacion=true;
-                    let resSubclasificacion=true;
-                    let resClave=true;
-                    if(fecha == "fechaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
-                    {
-                        resFecha = new Date(partida.salidas_id[0].salida_id.fechaSalida)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaSalida)<=new Date(fechaFinal);
-                    }
-                    else
-                        if(fecha == "fechaSalida")
-                        resFecha = false;
-                    if(fecha == "fechaAltaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
-                    {
-                        resFecha = new Date(partida.salidas_id[0].salida_id.fechaAlta)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaAlta)<=new Date(fechaFinal);
-                    }
-                    else
-                        if(fecha == "fechaAltaSalida")
+                    /* let partidaObj = JSON.parse(JSON.stringify(partida));
+                    let salidas_id = partidaObj.salidas_id;
+
+                    if(salidas_id.length > 0){
+
+                        salidas_id.forEach(salida => {
+                            
+                            if(salida.hasOwnProperty("salida_id") && salida.salida_id !== null){
+                                
+                                console.log("Index_Pos: "+ index);
+                                console.log("Salida_id: "+salida.salida_id._id);
+                                console.log("Partida_id: "+ partida._id.toString());
+                                console.log("--------------------------");
+                            }else{
+                                console.log("Esta salida no tiene referencia: "+ partida._id.toString());
+                            }
+
+                        })
+
+                    } */
+
+                    //console.clear();
+                    try{
+                        //partida.salidas_id[0].salida_id = partida.salidas_id[0];
+                        
+                        let resFecha=true
+                        let resClasificacion=true;
+                        let resSubclasificacion=true;
+                        let resClave=true;
+                        if(fecha == "fechaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
+                        {
+                            resFecha = new Date(partida.salidas_id[0].salida_id.fechaSalida)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaSalida)<=new Date(fechaFinal);
+                        }
+                        else
+                            if(fecha == "fechaSalida")
                             resFecha = false;
-                    if(clave != "" && partida.producto_id._id.toString() !== clave.toString())
-                    {
-                        resClave=false;
+                        if(fecha == "fechaAltaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
+                        {
+                            resFecha = new Date(partida.salidas_id[0].salida_id.fechaAlta)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaAlta)<=new Date(fechaFinal);
+                        }
+                        else
+                            if(fecha == "fechaAltaSalida")
+                                resFecha = false;
+                        if(clave != "" && partida.producto_id._id.toString() !== clave.toString())
+                        {
+                            resClave=false;
+                        }
+                        if(clasificacion != "")
+                        {
+                            resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+                        }
+                        if(subclasificacion != "")
+                        {
+                            resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
+                        }
+                        if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"))
+                            arrPartidas.push(partida);
+                        
+
+                    }catch(error){
+                        console.log(error);
                     }
-                    if(clasificacion != "")
-                    {
-                        resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
-                    }
-                    if(subclasificacion != "")
-                    {
-                        resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
-                    }
-                    if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"))
-                        arrPartidas.push(partida);
-    
+
+
                 });
     
                 res.status(200).send(arrPartidas);
@@ -2815,6 +2844,7 @@ function getInfoPartida(partida){
     infoPartida["salidas_id"] = partida.salidas_id;
     infoPartida["InfoPedidos"] = partida.InfoPedidos;
     infoPartida["entrada_id"] = partida.entrada_id;
+    infoPartida["referenciaPedidos"] = partida.referenciaPedidos;
 
     return infoPartida;
 
