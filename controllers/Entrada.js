@@ -1569,8 +1569,10 @@ async function getExcelCaducidades(req, res) {
 	            	Aging=Math.floor((hoy-partidas.entrada_id[0].fechaEntrada.getTime())/ 86400000);
 	        		let fEntrada = partidas.entrada_id[0].fechaEntrada.getTime();
 	        		if(partidas.producto_id[0].garantiaFrescura){
-	                	fechaFrescura = dateFormat(new Date(fCaducidad - (partidas.producto_id[0].garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
-	                	Diasrestantes = Math.floor((fCaducidad - (partidas.producto_id[0].garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000);
+						fechaFrescura = dateFormat(new Date(fCaducidad - (partidas.producto_id[0].garantiaFrescura * 86400000)), formatofecha);
+						Diasrestantes = Math.round((fCaducidad - (partidas.producto_id[0].garantiaFrescura * 86400000) -hoy)/ 86400000);
+	
+
 	                }
 	                if(partidas.producto_id[0].alertaAmarilla)
 	                	fechaAlerta1 = dateFormat(new Date(fCaducidad - (partidas.producto_id[0].alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000)), formatofecha);
