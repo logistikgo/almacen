@@ -2173,14 +2173,16 @@ async function removefromSalidaId(req, res) {
 			partidaaux.statusPedido="SIN_ASIGNAR";
 		}
 		//Asignar el pedido actual, si el pedido corresponde con la referencia original
-		if(referenciaActual === referenciaPedido){
+		if(referenciaActual === referenciaPedido && referenciaPedidos.length > 1){
 			let referenciaPedidoARemplazar = referenciaPedidos.filter(pedido => pedido.pedido === true);
 			partidaaux.refpedido = referenciaPedidoARemplazar[0].referenciaPedido;
 			partidaaux.CajasPedidas={cajas:referenciaPedidoARemplazar[0].CajasPedidas.cajas};
+		}else{
+			partidaaux.referenciaPedidos.pop();
 		}       
 
 		partidaaux.referenciaPedidos = referenciaPedidos;
-		/* partidaaux.save();
+		partidaaux.save();
 		 salida.save().then(async(data) => {
 
 			res.status(200).send(data);
@@ -2189,36 +2191,69 @@ async function removefromSalidaId(req, res) {
 		.catch((error) => {
 			console.log(error);
 			res.status(500).send(error);
-		}); */ 
+		}); 
 		
 	}
 }
+async function agregarPartidaASalidaId(salida_id, partida_id, embalajes){
 
-async function agregarPartidaSalidaId(req, res) {
-	let _id = req.body.Salida_id;
-	let partida_id = req.body.partida_id;
-	let cajas = req.body.embalajes;
-	//console.log(_id);
+
 	try{
-		let salida= await Salida.findOne({ _id: _id }).exec();
-		let indexpartida=await PartidaModel.findOne({_id:partida_id}).exec();
-		//console.log(indexpartida);
-		salida.partidas.push(indexpartida._id);
-		if(salida.entrada_id.find(x => x == indexpartida.entrada_id) == undefined)
-			salida.entrada_id.push(indexpartida.entrada_id)
-		salida.save().then(async (data) => {
 
-			//console.log(data);
-			var partidaaux= await PartidaModel.findOne({_id:partida_id}).exec();
+		let salida= await Salida.findOne({ _id: salida_id }).exec();
+		let referenciaPedido = salida.referencia;
+		let partidaaux=await PartidaModel.findOne({_id:partida_id}).exec();
+		let cajas = partidaaux.embalajesxSalir[embalajes];
+
+		salida.partidas.push(partidaaux._id);
+		if(salida.entrada_id.find(x => x == partidaaux.entrada_id) == undefined)
+			salida.entrada_id.push(partidaaux.entrada_id)
+			let pedidoHold = {
+				"referenciaPedido": referenciaPedido,
+				"pedido": true,
+				"CajasPedidas": {
+					
+				}
+			}
+
+			pedidoHold["CajasPedidas"][embalajes] = cajas;
+
+			partidaaux.referenciaPedidos.push(pedidoHold)
+
 			partidaaux.CajasPedidas={cajas:parseInt(cajas)};
 	    	partidaaux.pedido=true;
 	    	partidaaux.refpedido=salida.referencia;
-	    	partidaaux.statusPedido=salida.statusPedido;
-	    	partidaaux.save();
+			partidaaux.statusPedido=salida.statusPedido;
+			partidaaux.save();
+
+			const saveSalida = await salida.save();
+
+			return saveSalida;
+
+	}catch(error){
+		console.log(error);
+	}
+
+
+}
+
+
+async function agregarPartidaSalidaId(req, res) {
+	let _id = req.body.Salida_id;
+	let partidas_id = req.body.partidas_id;
+	let embalajes = req.body.embalajes;
+	//console.log(_id);
+	try{
+		let salida= await Salida.findOne({ _id: _id }).exec();
+		await Helper.asyncForEach(partidas_id, async function(partida){
+			await agregarPartidaASalidaId(_id, partida, embalajes);
+		})
+
+		salida.save().then(async (data) => {
 
 			res.status(200).send(data);
-		})
-		.catch((error) => {
+		}) 
+		 .catch((error) => {
 			console.log(error);
 			res.status(500).send(error);
 		});
