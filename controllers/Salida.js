@@ -1749,6 +1749,33 @@ async function importsalidas(req, res) {
 	};
 
 }
+//Elimianar pedido para realizar la modificacion al mismo
+async function ingresarPedidoConModificacion(pedido){
+
+	let partidasABuscar = pedido[0].partidas;
+	let pedidoAEliminar = pedido[0].referencia;
+
+	let partidasPedido = await PartidaModel.find({_id: {$in: partidasABuscar}}).exec();
+	
+
+	await Helper.asyncForEach(partidasPedido, async function(partida){
+
+		let referenciaPedidos = partida.referenciaPedidos.filter(pedido => pedido.referenciaPedido !== pedidoAEliminar);
+
+		partida.referenciaPedidos = referenciaPedidos;
+
+		await partida.save();
+		
+		console.log("Partida Liberada");
+	})
+
+	
+	Salida.deleteOne({"referencia": pedidoAEliminar}, function(err){
+		if(err) return handleError(err);
+	   console.log("El pedido "+pedidoAEliminar+" ha sido eliminado, para remplazarlo")
+	});
+
+}
 
 
 async function saveSalidaBabel(req, res) {
@@ -1764,9 +1791,30 @@ async function saveSalidaBabel(req, res) {
 	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
 	var bandcompleto=true;
+	let pedidoNuevo = true;
 	try{
 		console.log(req.body.Pedido.length)
 		let index=0;
+
+		let pedidoAGuardar = req.body.Pedido[1].Pedido;
+		let validarModificacionDePedido = new RegExp("rev");
+
+		if(validarModificacionDePedido.test(pedidoAGuardar) && pedidoNuevo === true){
+			let pedidoABuscar = pedidoAGuardar.split(" ");
+			let pedidoCadena = "";
+			for(let i = 0; i <= 2; i++){
+				pedidoCadena += pedidoABuscar[i]+" ";	
+			}
+			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim()}).exec();
+
+			if(countEntradas.length > 0){
+				await ingresarPedidoConModificacion(countEntradas);
+				pedidoNuevo = false;
+			}else{
+				pedidoNuevo = false;
+			}
+		}
+
 		await Helper.asyncForEach(req.body.Pedido,async function (Pedido) {
 			// Preparar pedido para apartar las partidas y crearlas apartir de lo solicitado
 			if(Pedido.NO && index > 13 && Pedido.Clave && Pedido.Cantidad)
@@ -1775,8 +1823,12 @@ async function saveSalidaBabel(req, res) {
 				var producto=await Producto.findOne({ 'clave':Pedido.Clave }).exec();
 				if(producto==undefined)
 					return res.status(400).send("no existe item: "+Pedido.Clave);
+				
+				
 
-				let countEntradas=await Salida.find({"po":req.body.Pedido[1].Pedido}).exec();
+				let countEntradas=await Salida.find({"po":pedidoAGuardar}).exec();			
+
+				
 				console.log("total: "+countEntradas.length)
 		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido}).exec():countEntradas;
 		        console.log("total2: "+countEntradas.length)
@@ -1843,7 +1895,6 @@ async function saveSalidaBabel(req, res) {
 				totalpartidas+=needed;
 
 				
-				
 				//console.log(".0.0.0.0.0.0.0.0.");
 				
 				//console.log(partidas.length)/*
@@ -1871,6 +1922,12 @@ async function saveSalidaBabel(req, res) {
 									.exec();
 
 					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+					
+					if((cantidadneeded / equivalencia) >= 1){
+						console.log("Completa la equivalencia");
+						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
+					}
+
 					console.log("totalpartidas: "+partidas.length)
 					let count=0;
 					bandcp=false;
@@ -1889,7 +1946,6 @@ async function saveSalidaBabel(req, res) {
 						const DIAS_ANTICIPADOS = 2;
 						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
 			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*10)); 
-						console.log("Dias Para perder frescura"+ Diasrestantes)
 						
 						if((cantidadneeded / equivalencia) >= 1){
 							console.log("Completa la equivalencia");
@@ -1951,7 +2007,7 @@ async function saveSalidaBabel(req, res) {
 							
 						}
 					}
-
+						
 						//Verificar que la partida con picking aun tenga la cantidad que le corresponde
 						if(isPartidaPickeada){
 							
@@ -1963,6 +2019,7 @@ async function saveSalidaBabel(req, res) {
 						}
 
 						Diasrestantes = Helper.getDaysForExpire(partidaSeleccionada, producto, hoy);
+						console.log("Dias Para perder frescura"+ Diasrestantes);
 
 						if(cantidadRestante >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS)
 						{	
@@ -2081,6 +2138,7 @@ function holdPartidaPick(partidasOrdenadas, cantidadPedida){
 	let isPartidaHold = false;
 	let partidaSeleccionadaPick;
 	let cantidadParcialPick = cantidadPedida;
+	let cantidadApartada;
 	let i = 0;
 
 	while(isPartidaHold === false && i < partidasOrdenadas.length){
@@ -2088,8 +2146,10 @@ function holdPartidaPick(partidasOrdenadas, cantidadPedida){
 	
 			if(partidasOrdenadas[i].referenciaPedidos.length >= 1){
 			let cantidadCajasPedidasArray = partidasOrdenadas[i].referenciaPedidos.filter(pedido => pedido.pedido === true).map(partida => partida.CajasPedidas.cajas);
-			let cantidadApartada = cantidadCajasPedidasArray.reduce((val, acc) => val += acc);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-			cantidadRestante = (partidasOrdenadas[i].embalajesxSalir.cajas - cantidadApartada);
+			if(cantidadCajasPedidasArray.length > 0){
+				cantidadApartada = cantidadCajasPedidasArray.reduce((val, acc) => val += acc);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+				cantidadRestante = (partidasOrdenadas[i].embalajesxSalir.cajas - cantidadApartada);
+			}
 			
 			console.log("Cantidad de cajas Pedidas", cantidadCajasPedidasArray);
 			console.log("Cantidad de cajas apartadas", cantidadApartada);
@@ -2294,11 +2354,10 @@ async function saveDashboard(req, res) {
 
 					for(let i = 0; i < referenciaPedidos.length; i++){
 						if(referenciaPedidos[i].referenciaPedido === refpedido){
-							pedido.pedido = false;
+							referenciaPedidos[i].pedido = false;
 							break;
 						}
 					}
-
 					let pedidos = referenciaPedidos.map(pedido => pedido.pedido);
 					let allElementsAreEquals = false;
 					
