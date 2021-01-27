@@ -30,8 +30,18 @@ async function saveSalida(itemPartida, salida_id) {
 	nMovimiento.idSucursal = salida.idSucursal;
 	nMovimiento.sucursal_id = salida.sucursal_id;
 	nMovimiento.almacen_id = salida.almacen_id;
-	nMovimiento.referencia = salida.referencia ? salida.referencia : "";
-
+	
+	//Verificar cual es el pedido que se va a obtener
+	let referenciaPedidos = itemPartida.referenciaPedidos;
+	let referencia = "";
+	if(referenciaPedidos.length > 0){
+		referencia = referenciaPedidos.filter(pedido => pedido.referenciaPedido === salida.referencia).map(pedido => pedido.referenciaPedido)[0];
+	}else{
+		referencia = salida.referencia ? salida.referencia : "";
+	}
+	
+	nMovimiento.referencia = referencia;
+	
 	Helper.asyncForEach(itemPartida.embalajesEnSalidaxPosicion, async function (posicionxSalida) {
 
 		let jsonFormatPosicion = {
@@ -284,6 +294,7 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 			embalajes: posicionxPartida.embalajes
 		});
 		nivel.isCandadoDisponibilidad = true;
+		nivel.apartado = true;
 	}
 
 	//console.log(posicion.niveles);

@@ -472,7 +472,7 @@ function getLevelNumberFromName(nivel = "A"){
 function getDaysForExpire(partida, producto, hoy){
 
 	
-	let Diasrestantes = Math.floor((partida.fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000);
+	let Diasrestantes = Math.round((partida.fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000) -hoy)/ 86400000);
 
 	return Diasrestantes;
 }
