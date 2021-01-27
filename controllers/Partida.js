@@ -1091,11 +1091,12 @@ async function getExcelByIDs(req, res) {
     worksheet.cell(2, indexheaders).string('Fecha Ingreso').style(headersStyle);
     worksheet.cell(2, indexheaders+1).string('Fecha Alta Ingreso').style(headersStyle);
     worksheet.cell(2, indexheaders+2).string('Fecha Despacho').style(headersStyle);
-    worksheet.cell(2, indexheaders+3).string('Fecha Alta Despacho').style(headersStyle);  
-    worksheet.cell(2, indexheaders+4).string('Tracto').style(headersStyle);  
-    worksheet.cell(2, indexheaders+5).string('Remolque').style(headersStyle);  
-    worksheet.cell(2, indexheaders+6).string('% Salida').style(headersStyle);
-    worksheet.cell(2, indexheaders+7).string('Lapso').style(headersStyle);
+    worksheet.cell(2, indexheaders+3).string('Fecha Alta Despacho').style(headersStyle);
+    worksheet.cell(2, indexheaders+4).string('Fecha Caducidad').style(headersStyle);   
+    worksheet.cell(2, indexheaders+5).string('Tracto').style(headersStyle);  
+    worksheet.cell(2, indexheaders+6).string('Remolque').style(headersStyle);  
+    worksheet.cell(2, indexheaders+7).string('% Salida').style(headersStyle);
+    worksheet.cell(2, indexheaders+8).string('Lapso').style(headersStyle);
     //worksheet.cell(2, indexheaders+6).string('Recibio').style(headersStyle);
     let i=3;
 
@@ -1267,10 +1268,11 @@ async function getExcelByIDs(req, res) {
                         worksheet.cell(i, indexbody+1).string(entrada.fechaAlta ? dateFormat(entrada.fechaAlta, formatofecha) : "");
                         worksheet.cell(i, indexbody+2).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaSalida, formatofecha) : "":"");
                         worksheet.cell(i, indexbody+3).string(partida.salidas_id != undefined ? partida.salidas_id[0]!=undefined ? dateFormat(partida.salidas_id[0].salida_id.fechaAlta, formatofecha) : "":"");
-                        worksheet.cell(i, indexbody+4).string(entrada.tracto ? entrada.tracto :"SIN_ASIGNAR");
-                        worksheet.cell(i, indexbody+5).string(entrada.remolque ? entrada.remolque :"SIN_ASIGNAR");
-                        worksheet.cell(i, indexbody+6).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
-                        worksheet.cell(i, indexbody+7).string(lapso).style(fitcellStyle);
+                        worksheet.cell(i, indexbody+4).string(partida != undefined ? dateFormat(partida.fechaCaducidad, formatofecha) : "");
+                        worksheet.cell(i, indexbody+5).string(entrada.tracto ? entrada.tracto :"SIN_ASIGNAR");
+                        worksheet.cell(i, indexbody+6).string(entrada.remolque ? entrada.remolque :"SIN_ASIGNAR");
+                        worksheet.cell(i, indexbody+7).number(isNaN(porcentaje)? 0 :porcentaje).style(porcentajeStyle);
+                        worksheet.cell(i, indexbody+8).string(lapso).style(fitcellStyle);
                         //worksheet.cell(i, indexbody+6).string(partida.entrada_id.recibio ? partida.entrada_id.recibio:"");
                         i++;
                     }
