@@ -1762,8 +1762,20 @@ async function ingresarPedidoConModificacion(pedido){
 
 		let referenciaPedidos = partida.referenciaPedidos.filter(pedido => pedido.referenciaPedido !== pedidoAEliminar);
 
-		partida.referenciaPedidos = referenciaPedidos;
 
+		if(referenciaPedidos.length > 0){
+			partida.refpedido = referenciaPedidos[0].referenciaPedido;
+			partida.pedido = referenciaPedidos[0].pedido;
+			partida.statusPedido = "COMPLETO";
+			partida.CajasPedidas.cajas = referenciaPedidos[0].CajasPedidas.cajas;
+		}else{
+			partida.refpedido = "SIN_ASIGNAR";
+			parida.pedido = false;
+			partida.statusPedido = "SIN_ASIGNAR";
+			partida.CajasPedidas.cajas = 0;
+		}
+		
+		partida.referenciaPedidos = referenciaPedidos;
 		await partida.save();
 		
 		console.log("Partida Liberada");
@@ -1792,16 +1804,18 @@ async function saveSalidaBabel(req, res) {
 	var arrPO=[];
 	var bandcompleto=true;
 	let pedidoNuevo = true;
+	var pedidoCompleto = true;
 	try{
 		console.log(req.body.Pedido.length)
 		let index=0;
 
 		let pedidoAGuardar = req.body.Pedido[1].Pedido;
+		let pedidoCadena = req.body.Pedido[1].Pedido;
 		let validarModificacionDePedido = new RegExp("rev");
 
 		if(validarModificacionDePedido.test(pedidoAGuardar) && pedidoNuevo === true){
 			let pedidoABuscar = pedidoAGuardar.split(" ");
-			let pedidoCadena = "";
+			pedidoCadena = "";
 			for(let i = 0; i <= 2; i++){
 				pedidoCadena += pedidoABuscar[i]+" ";	
 			}
@@ -1877,9 +1891,9 @@ async function saveSalidaBabel(req, res) {
 			//console.log("----------------------------");
 			//console.log(Pedido.arrPartidas.length)
 			let totalpartidas =0;
-			let refitem=Pedido.pedido;
+			let refitem=pedidoCadena.trim();
 			let refDesti=Pedido.destinatario;
-			console.log(Pedido.pedido);
+			console.log(pedidoCadena);
 			console.log(Pedido.arrPartidas.length);
 			
 			await Helper.asyncForEach(Pedido.arrPartidas,async function (par) {
@@ -1935,7 +1949,7 @@ async function saveSalidaBabel(req, res) {
 					{	
 						let partidaSeleccionada = partidas[i];
 						let isPartidaPickeada = false;
-						let refPedidoPartida = req.body.Pedido[1].Pedido;
+						let refPedidoPartida = pedidoCadena.trim();
 						let refPedidoDocument = {};
 						let refPedidos =[];
 						let cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
@@ -1994,7 +2008,7 @@ async function saveSalidaBabel(req, res) {
 						    
 							console.table({
 								"partidasPickeadas": partidaPickeada.map(partida => partida.embalajesxSalir.cajas),
-								"diasRestantesPartidas": partidasPickeadasOrdenadas.map(partida => Math.floor((partida.fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000)),
+								"diasRestantesPartidas": partidasPickeadasOrdenadas.map(partida => Helper.getDaysForExpire(partida, producto, hoy)),
 								"partidasPickeadasOrdenadas": partidasPickeadasOrdenadas.map(partida => partida.embalajesxSalir.cajas)
 							})
 							isPartidaPickeada = true;
@@ -2009,57 +2023,67 @@ async function saveSalidaBabel(req, res) {
 					}
 						
 						//Verificar que la partida con picking aun tenga la cantidad que le corresponde
-						if(isPartidaPickeada){
+						
+							if(isPartidaPickeada && partidaSeleccionada !== undefined){
+								
+									console.log("Paso al pedido")
+									refPedidoDocument.referenciaPedido = refPedidoPartida;
+									refPedidoDocument.CajasPedidas = {cajas: cantidadPedida};
+									refPedidoDocument.pedido = true;
+									partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);	
+							}
+
+						
+					
+
+						if(partidaSeleccionada !== undefined){
+							Diasrestantes = Helper.getDaysForExpire(partidaSeleccionada, producto, hoy);
+							console.log("Dias Para perder frescura"+ Diasrestantes);
+							if(cantidadRestante >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS && pedidoCompleto === true)
+							{	
+								//Prioridad buscar tarimas incompletas (Picking)
+	
+								console.log("Embalaje Cajas:",partidaSeleccionada.embalajesxSalir.cajas );
+								let numpedido=Math.floor(partidaSeleccionada.embalajesxSalir.cajas/cantidadPedida);
+									var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
+									let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
+									
+									if(partidaaux.pedido==false)
+									{
+										
+										refPedidoDocument.referenciaPedido = refPedidoPartida;
+										refPedidoDocument.CajasPedidas = {cajas: pedidoTotal}
+										refPedidoDocument.pedido = true;
+										refPedidos.push(refPedidoDocument);
+										
+										partidaaux.referenciaPedidos=refPedidos;//talves se cambie a info pedidos
+										partidaaux.CajasPedidas = {cajas: pedidoTotal};
+										partidaaux.pedido=true;
+										partidaaux.refpedido=refPedidoPartida;	
+									}
+									else{
+										if(isPartidaPickeada){
+											partidaaux.referenciaPedidos.push(refPedidoDocument);
+										}
+									}
 							
-								console.log("Paso al pedido")
-								refPedidoDocument.referenciaPedido = refPedidoPartida;
-								refPedidoDocument.CajasPedidas = {cajas: cantidadPedida};
-								refPedidoDocument.pedido = true;
-								partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);	
+									partidaaux.statusPedido="COMPLETO";
+									await partidaaux.save();
+									parRes.push(partidaaux);
+									
+										//console.log(partidaaux);
+									console.log("--------------");
+									count++;
+									cantidadneeded-=(pedidoTotal);
+									bandcp=true;
+	
+							}
+
+						}else{
+							console.log("Se trata de generar una salida sin partidas suficientes");
+							pedidoCompleto = false;
 						}
 
-						Diasrestantes = Helper.getDaysForExpire(partidaSeleccionada, producto, hoy);
-						console.log("Dias Para perder frescura"+ Diasrestantes);
-
-						if(cantidadRestante >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS)
-						{	
-							//Prioridad buscar tarimas incompletas (Picking)
-
-							console.log("Embalaje Cajas:",partidaSeleccionada.embalajesxSalir.cajas );
-			            	let numpedido=Math.floor(partidaSeleccionada.embalajesxSalir.cajas/cantidadPedida);
-				            	var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
-								let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
-								
-								if(partidaaux.pedido==false)
-					            {
-					            	
-									refPedidoDocument.referenciaPedido = refPedidoPartida;
-									refPedidoDocument.CajasPedidas = {cajas: pedidoTotal}
-									refPedidoDocument.pedido = true;
-									refPedidos.push(refPedidoDocument);
-									
-									partidaaux.referenciaPedidos=refPedidos;//talves se cambie a info pedidos
-									partidaaux.CajasPedidas = {cajas: pedidoTotal};
-					            	partidaaux.pedido=true;
-					            	partidaaux.refpedido=refPedidoPartida;	
-								}
-								else{
-									if(isPartidaPickeada){
-										partidaaux.referenciaPedidos.push(refPedidoDocument);
-									}
-								}
-						
-								partidaaux.statusPedido="COMPLETO";
-								await partidaaux.save();
-								parRes.push(partidaaux);
-								
-					            	//console.log(partidaaux);
-					            console.log("--------------");
-								count++;
-					            cantidadneeded-=(pedidoTotal);
-					            bandcp=true;
-
-			            }
 			        }
 				}
 				bandcompleto=bandcompleto==false?bandcompleto:bandcp;
@@ -2067,7 +2091,7 @@ async function saveSalidaBabel(req, res) {
 
 			console.log("********************"+totalpartidas+"=="+parRes.length+"********************");
 			
-			if (parRes && parRes.length  ) {
+			if (parRes && parRes.length && pedidoCompleto === true ) {
 				//console.log(parRes);
 				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
 				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
@@ -2118,7 +2142,10 @@ async function saveSalidaBabel(req, res) {
 				
 			} else {
 				console.log("Se trata de generar una salida sin partidas suficientes");
-				return res.status(400).send("Se trata de generar una salida sin partidas suficientes");
+				//Enviar correo a sistemas, Barcel, Inventarios
+
+				return res.status(400).send({statusCode: 400, body: "Se trata de generar una salida sin partidas suficientes en el pedido "+ refitem});
+				//return res.status(400).send("Se trata de generar una salida sin partidas suficientes");
 			}
 			console.log(parRes)
 		});
@@ -2278,7 +2305,7 @@ async function agregarPartidaASalidaId(salida_id, partida_id, embalajes){
 
 			pedidoHold["CajasPedidas"][embalajes] = cajas;
 
-			partidaaux.referenciaPedidos.push(pedidoHold)
+			partidaaux.referenciaPedidos.push(pedidoHold);
 
 			partidaaux.CajasPedidas={cajas:parseInt(cajas)};
 	    	partidaaux.pedido=true;
