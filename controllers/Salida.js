@@ -13,6 +13,7 @@ const Interfaz_ALM_XD = require('../controllers/Interfaz_ALM_XD');
 const TiempoCargaDescarga = require("../controllers/TiempoCargaDescarga");
 const EmbalajesController = require('../controllers/Embalaje');
 const ClienteFiscal = require('../models/ClienteFiscal');
+const mailer = require('../mailer');
 function getNextID() {
 	return Helper.getNextID(Salida, "salida_id");
 }
@@ -2143,6 +2144,14 @@ async function saveSalidaBabel(req, res) {
 			} else {
 				console.log("Se trata de generar una salida sin partidas suficientes");
 				//Enviar correo a sistemas, Barcel, Inventarios
+
+				mailer.sendEmail({body: `Se ha intentado 
+										generar una salida sin 
+										partidas suficientes
+										para el pedido: ${refitem}`})
+										.then(response =>{
+											console.log("Se ha enviado el mensaje con exito");
+										});
 
 				return res.status(400).send({statusCode: 400, body: "Se trata de generar una salida sin partidas suficientes en el pedido "+ refitem});
 				//return res.status(400).send("Se trata de generar una salida sin partidas suficientes");
