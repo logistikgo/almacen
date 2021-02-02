@@ -488,6 +488,15 @@ function allElementAreEqualsInArray(elementsArray = []){
 	return false;
 }
 
+function sortPartidasByLevel(a, b){
+	return getLevelNumberFromName(a.posiciones[0].nivel) - getLevelNumberFromName(b.posiciones[0].nivel);
+}
+
+function sortPartidasByEmbalajesxSalir(a, b){
+	return a.embalajesxSalir.cajas - b.embalajesxSalir.cajas;
+}
+
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -505,5 +514,7 @@ module.exports = {
 	getLevelNameFromNumber,
 	getLevelNumberFromName,
 	getDaysForExpire,
-	allElementAreEqualsInArray
+	allElementAreEqualsInArray,
+	sortPartidasByLevel,
+	sortPartidasByEmbalajesxSalir,
 }
