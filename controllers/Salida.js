@@ -1932,14 +1932,15 @@ async function saveSalidaBabel(req, res) {
 										origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,
 										'clave':par.Clave,
 										'isEmpty':false,
-										fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 })
+										fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1})
 									.exec();
 
 					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
 					
 					if((cantidadneeded / equivalencia) >= 1){
 						console.log("Completa la equivalencia");
-						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
+						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
+						partidas = partidas.sort(Helper.sortPartidasByLevel);
 					}
 
 					console.log("totalpartidas: "+partidas.length)
@@ -1980,30 +1981,32 @@ async function saveSalidaBabel(req, res) {
 							});
 							
 							if(partidaPickeada.length !== 0){
-						
-								let partidasPickeadasOrdenadas = partidaPickeada.sort(function (a, b) {
-															
+								
+								const sortPartidasByDaysForExpire = (a, b) => {
+									
 									let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);
 									
 									let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
 									
-									return DiasrestantesA - DiasrestantesB;
-	
-									});
+									let embalajesxSalirA = a.embalajesxSalir.cajas
+									let embalajesxSalirB = b.embalajesxSalir.cajas;
+									
+									if(DiasrestantesA >= DiasrestantesB && embalajesxSalirA >= embalajesxSalirB){
+										return 1;
+									}	
+
+									if(DiasrestantesA <= DiasrestantesB && embalajesxSalirA <= embalajesxSalirB){
+										return -1;
+									}
+								};
+
+
+								let partidasPickeadasOrdenadas = partidaPickeada.sort(sortPartidasByDaysForExpire)
 								
 								const arrayDiasRestantes = partidasPickeadasOrdenadas.map(partida => Helper.getDaysForExpire(partida, producto, hoy));
 
 								if(Helper.allElementAreEqualsInArray(arrayDiasRestantes) === true){
-									partidasPickeadasOrdenadas = partidasPickeadasOrdenadas.sort(function(a, b) {
-										if (a.embalajesxSalir.cajas > b.embalajesxSalir.cajas) {
-											return 1;
-										  }
-										  if (a.embalajesxSalir.cajas < b.embalajesxSalir.cajas) {
-											return -1;
-										  } 
-										  // a must be equal to b
-										  return 0;
-								});
+									partidasPickeadasOrdenadas = partidasPickeadasOrdenadas.sort(Helper.sortPartidasByEmbalajesxSalir);
 							}
 						    
 							console.table({
@@ -2032,9 +2035,6 @@ async function saveSalidaBabel(req, res) {
 									refPedidoDocument.pedido = true;
 									partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);	
 							}
-
-						
-					
 
 						if(partidaSeleccionada !== undefined){
 							Diasrestantes = Helper.getDaysForExpire(partidaSeleccionada, producto, hoy);
