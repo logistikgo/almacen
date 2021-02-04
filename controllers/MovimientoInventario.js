@@ -252,58 +252,63 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 	console.log("TEST"+signo);
 	console.log(posicionxPartida);
 	let _producto_id= producto_id._id!=undefined? producto_id._id:producto_id
-	let posicion = await Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec();
-	let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
-	//console.log(nivel);
-	//console.log(nivel.productos.find((x) => {
-	//	console.log(x.producto_id.toString());
-	//	console.log(producto_id.toString());
-	//	console.log(x.producto_id.toString() == producto_id.toString());
-
-	//	x.producto_id.toString() == producto_id.toString()
-	//}));
-	console.log(_producto_id);
-	console.log("service:"+nivel.productos.length +"> 0 && "+nivel.productos+" == "+_producto_id.toString())
-	if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == _producto_id.toString()) != undefined) {
-		let producto = nivel.productos.find(x => x.producto_id.toString() == _producto_id.toString());
-		let flagEmbalajes = 0;
-
-		for (let embalaje in posicionxPartida.embalajes) {
-			if (producto.embalajes[embalaje] == undefined) {
-				producto.embalajes[embalaje] = 0;
-			}
-			// console.log(signo * posicionxPartida.embalajes[embalaje]);
-			producto.embalajes[embalaje] += (signo * posicionxPartida.embalajes[embalaje]);
-			 console.log("left"+producto.embalajes[embalaje]);
-			flagEmbalajes = producto.embalajes[embalaje] > 0 ? ++flagEmbalajes : flagEmbalajes;
-			console.log("flag"+flagEmbalajes);
-		}
-
-		if (flagEmbalajes == 0 && signo < 0) {
-			console.log("Flag is 0");
-			let index = nivel.productos.indexOf(producto);
-			nivel.productos.splice(index, 1);
-			nivel.isCandadoDisponibilidad = false;
-			nivel.apartado = false;
-		}
-	}
-	else if (signo > 0) {
-		console.log("No hay producto igual");
-		nivel.productos.push({
-			producto_id: _producto_id,
-			embalajes: posicionxPartida.embalajes
-		});
-		nivel.isCandadoDisponibilidad = true;
-		nivel.apartado = true;
-	}
-
-	//console.log(posicion.niveles);
-
-	let item = {
-		niveles: posicion.niveles
-	};
-
-	await Posicion.updateOne({ _id: posicionxPartida.posicion_id }, { $set: item });
+	Posicion.findOne({ _id: posicionxPartida.posicion_id }).exec()
+			.then(posicion => {
+				let nivel = posicion.niveles.find(x => x.nombre == posicionxPartida.nivel);
+				//console.log(nivel);
+				//console.log(nivel.productos.find((x) => {
+				//	console.log(x.producto_id.toString());
+				//	console.log(producto_id.toString());
+				//	console.log(x.producto_id.toString() == producto_id.toString());
+			
+				//	x.producto_id.toString() == producto_id.toString()
+				//}));
+				console.log(_producto_id);
+				console.log("service:"+nivel.productos.length +"> 0 && "+nivel.productos+" == "+_producto_id.toString())
+				if (nivel.productos.length > 0 && nivel.productos.find(x => x.producto_id.toString() == _producto_id.toString()) != undefined) {
+					let producto = nivel.productos.find(x => x.producto_id.toString() == _producto_id.toString());
+					let flagEmbalajes = 0;
+			
+					for (let embalaje in posicionxPartida.embalajes) {
+						if (producto.embalajes[embalaje] == undefined) {
+							producto.embalajes[embalaje] = 0;
+						}
+						// console.log(signo * posicionxPartida.embalajes[embalaje]);
+						producto.embalajes[embalaje] += (signo * posicionxPartida.embalajes[embalaje]);
+						 console.log("left"+producto.embalajes[embalaje]);
+						flagEmbalajes = producto.embalajes[embalaje] > 0 ? ++flagEmbalajes : flagEmbalajes;
+						console.log("flag"+flagEmbalajes);
+					}
+			
+					if (flagEmbalajes == 0 && signo < 0) {
+						console.log("Flag is 0");
+						let index = nivel.productos.indexOf(producto);
+						nivel.productos.splice(index, 1);
+						nivel.isCandadoDisponibilidad = false;
+						nivel.apartado = false;
+					}
+				}
+				else if (signo > 0) {
+					console.log("No hay producto igual");
+					nivel.productos.push({
+						producto_id: _producto_id,
+						embalajes: posicionxPartida.embalajes
+					});
+					nivel.isCandadoDisponibilidad = true;
+					nivel.apartado = true;
+				}
+			
+				//console.log(posicion.niveles);
+			
+				let item = {
+					niveles: posicion.niveles
+				};
+			
+				Posicion.updateOne({ _id: posicionxPartida.posicion_id }, { $set: item }, function(err){
+					if(err) return handleError(err);
+				   console.log("la posicion ha sido liberada correctamente: "+ item);
+				});
+			});
 }
 
 async function updateExistenciaRechazo(signo, itemPartida, fechaMovimiento) {
