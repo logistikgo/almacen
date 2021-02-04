@@ -235,6 +235,8 @@ async function put(arrPartidas, salida_id) {
                 changes['embalajesAlmacen'] = partidaFound.embalajesAlmacen;
             }
 
+            changes.posiciones[0].embalajesxSalir.cajas = partida.embalajesxSalir.cajas;
+            
             await Partida.updateOne({ _id: partidaFound._id }, { $set: changes }).exec();
         }
 
