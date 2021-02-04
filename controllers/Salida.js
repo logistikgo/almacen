@@ -2400,12 +2400,17 @@ async function saveDashboard(req, res) {
 					
 					if(allElementsAreEquals === true){
 						par.pedido=false;
-						par.refPedido = "SIN_ASIGNAR",
+						par.refpedido = "SIN_ASIGNAR",
 						par.statusPedido = "SIN_ASIGNAR";
 						par.CajasPedidas.cajas = 0;
 					}
 
-	            	await par.save();
+					par.save(function (err) {
+						if (err) return handleError(err);
+						// saved!
+						console.log("La partida ha sido editada correctamente ", par)
+					  });
+
 				})
 				res.status(200).send(salida);
 
