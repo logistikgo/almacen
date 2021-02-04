@@ -1770,7 +1770,7 @@ async function ingresarPedidoConModificacion(pedido){
 			partida.CajasPedidas.cajas = referenciaPedidos[0].CajasPedidas.cajas;
 		}else{
 			partida.refpedido = "SIN_ASIGNAR";
-			parida.pedido = false;
+			partida.pedido = false;
 			partida.statusPedido = "SIN_ASIGNAR";
 			partida.CajasPedidas.cajas = 0;
 		}
@@ -1932,7 +1932,7 @@ async function saveSalidaBabel(req, res) {
 										origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,
 										'clave':par.Clave,
 										'isEmpty':false,
-										fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1})
+										fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1, "posiciones.pasillo": 1})
 									.exec();
 
 					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
@@ -1941,6 +1941,7 @@ async function saveSalidaBabel(req, res) {
 						console.log("Completa la equivalencia");
 						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
 						partidas = partidas.sort(Helper.sortPartidasByLevel);
+						partidas = partidas.sort((a, b) => b.posiciones[0].pasillo.length - a.posiciones[0].pasillo.length);
 					}
 
 					console.log("totalpartidas: "+partidas.length)
