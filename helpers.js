@@ -497,6 +497,57 @@ function sortPartidasByEmbalajesxSalir(a, b){
 }
 
 
+function sortPartidasByAlternatePosition(partidas = []){
+
+	const ordenPosiciones = partidas.sort((a, b) =>{
+
+		let nivelNumberA = getLevelNumberFromName(a.posiciones[0].nivel);
+		let nivelNumberB = getLevelNumberFromName(b.posiciones[0].nivel);
+
+		return (parseInt(a.posiciones[0].posicion) + parseInt(nivelNumberA)) - (parseInt(b.posiciones[0].posicion) + parseInt(nivelNumberB));
+
+	});
+
+	const posicionesFrente = ordenPosiciones.filter(partida => {
+		return !partida.posiciones[0].pasillo.includes(".")
+	}).sort((a, b) => a.posiciones[0].pasillo.charCodeAt() - b.posiciones[0].pasillo.charCodeAt());
+		
+	const posicionesFondo = ordenPosiciones.filter(partida => {
+		return partida.posiciones[0].pasillo.includes(".")
+	}).sort((a, b) => a.posiciones[0].pasillo.charCodeAt() - b.posiciones[0].pasillo.charCodeAt());
+	
+	const posicionesOrdenadas = posicionesFrente.concat(posicionesFondo);
+	let posicionesAcomodadas = [];
+
+
+	let index = 0;
+
+	while(posicionesAcomodadas.length !== partidas.length){
+		
+		posicionesAcomodadas.push(posicionesOrdenadas[index])
+		let slicePos = posicionesOrdenadas[index].posiciones[0].pasillo;
+		posicionesOrdenadas.shift();
+		let indexPos = findPosition(slicePos+".", posicionesOrdenadas);
+		
+		if(indexPos !== -1){
+			posicionesAcomodadas.push(posicionesOrdenadas[indexPos]);
+			posicionesOrdenadas.splice(indexPos, 1);
+		}
+		
+	}  
+
+	const posicionesTrasbordo = posicionesAcomodadas.slice(findPosition("TRASBORDO", posicionesAcomodadas));
+	posicionesAcomodadas.splice(findPosition("TRASBORDO", posicionesAcomodadas));
+	const posicionesAlternadasPrioridadTrasbordo = posicionesTrasbordo.concat(posicionesAcomodadas);
+
+	return posicionesAlternadasPrioridadTrasbordo;
+
+}
+
+function findPosition(pasillo,  partidas ){
+    return partidas.findIndex(partida => partida.posiciones[0].pasillo === pasillo);
+}
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -517,4 +568,5 @@ module.exports = {
 	allElementAreEqualsInArray,
 	sortPartidasByLevel,
 	sortPartidasByEmbalajesxSalir,
+	sortPartidasByAlternatePosition
 }
