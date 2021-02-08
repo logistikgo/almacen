@@ -1941,13 +1941,40 @@ async function saveSalidaBabel(req, res) {
 						console.log("Completa la equivalencia");
 						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
 						partidas = partidas.sort(Helper.sortPartidasByLevel);
-						partidas = partidas.sort((a, b) => b.posiciones[0].pasillo.length - a.posiciones[0].pasillo.length);
+						partidas = Helper.sortPartidasByAlternatePosition(partidas).sort((a, b) =>{
+
+							let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);		
+							let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+									
+							return DiasrestantesA - DiasrestantesB;
+
+						});
+						
+						/* partidas = partidas.sort((a, b) =>{
+
+							let nivelNumberA = Helper.getLevelNumberFromName(a.posiciones[0].nivel);
+							let nivelNumberB = Helper.getLevelNumberFromName(b.posiciones[0].nivel);
+							let posicionA = parseInt(a.posiciones[0].posicion);
+							let posicionB = parseInt(b.posiciones[0].posicion);
+							let ordenPasilloA = a.posiciones[0].pasillo.length;
+							let ordenPasilloB = b.posiciones[0].pasillo.length;
+							let ordenPasilloAlfaticoA = a.posiciones[0].pasillo.charCodeAt();
+							let ordenPasilloAlfaticoB = b.posiciones[0].pasillo.charCodeAt();
+							let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);
+							let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+
+							return (nivelNumberA + posicionA + ordenPasilloA + ordenPasilloAlfaticoA)- //+ DiasrestantesA) - 
+									(nivelNumberB + posicionB + ordenPasilloB + ordenPasilloAlfaticoB);// + DiasrestantesB);
+					
+						});
+ */						
+						//partidas = partidas.sort((a, b) => b.posiciones[0].pasillo.length - a.posiciones[0].pasillo.length);
 					}
 
 					console.log("totalpartidas: "+partidas.length)
 					let count=0;
 					bandcp=false;
-					for (let i = 0; i < partidas.length && count<1; i++)
+					for (let i = 0; i < partidas.length; i++) //&& count<1
 					{	
 						let partidaSeleccionada = partidas[i];
 						let isPartidaPickeada = false;
@@ -1957,9 +1984,14 @@ async function saveSalidaBabel(req, res) {
 						let cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
 						let Diasrestantes; 
 
+
+						if(cantidadneeded <= 0){
+							break;
+						}
+
 						//console.log(i);
 						//fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
-						const DIAS_ANTICIPADOS = 2;
+						const DIAS_ANTICIPADOS = 0;
 						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
 			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*10)); 
 						
@@ -2085,6 +2117,7 @@ async function saveSalidaBabel(req, res) {
 							pedidoCompleto = false;
 						}
 
+						
 			        }
 				}
 				bandcompleto=bandcompleto==false?bandcompleto:bandcp;
