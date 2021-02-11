@@ -120,7 +120,7 @@ async function getBySalida(req, res) {
     let salida_id = req.params.salida_id;
     let salida = await Salida.findOne({ _id: salida_id }).exec();
     let partidas_id = salida.partidas;
-
+    let referenciaPedido = salida.referencia;
     let partidas = [];
 
     await Helper.asyncForEach(partidas_id, async function (partida_id) {
@@ -133,6 +133,7 @@ async function getBySalida(req, res) {
         partida.pesoBrutoEnSalida = salida_idFound?salida_idFound.pesoBruto:0;
         partida.pesoNetoEnSalida = salida_idFound?salida_idFound.pesoNeto:0;
         partida.embalajesEnSalida = salida_idFound?salida_idFound.embalajes:0;
+        partida.referenciaSalida = referenciaPedido;
         partidas.push(partida);
     });
 
@@ -214,6 +215,11 @@ async function put(arrPartidas, salida_id) {
         if (partidaFound) {
             partidaFound.salidas_id.push(jsonSalida_id);
 
+            if(partida.isEmpty){
+                partida.posiciones[0].isEmpty = true;
+                partida.posiciones[0].embalajesxSalir.cajas = 0;
+            }
+
             let changes = {
                 salidas_id: partidaFound.salidas_id,
                 embalajesxSalir: partida.embalajesxSalir,
@@ -229,6 +235,8 @@ async function put(arrPartidas, salida_id) {
                 changes['embalajesAlmacen'] = partidaFound.embalajesAlmacen;
             }
 
+            changes.posiciones[0].embalajesxSalir.cajas = partida.embalajesxSalir.cajas;
+            
             await Partida.updateOne({ _id: partidaFound._id }, { $set: changes }).exec();
         }
 
@@ -868,47 +876,76 @@ async function getPartidasByIDs(req, res) {
             
             })
 
-            partidas.forEach(partida => 
+            partidas.forEach((partida, index) => 
                 {
                     
                     //partida.producto_id = partida.producto_id[0];
                     
                     //partida.salidas_id = partida.salida_id[0];
-                    //partida.salidas_id.salida_id = partida.salidas_id[0];
-                    
-                    let resFecha=true
-                    let resClasificacion=true;
-                    let resSubclasificacion=true;
-                    let resClave=true;
-                    if(fecha == "fechaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
-                    {
-                        resFecha = new Date(partida.salidas_id[0].salida_id.fechaSalida)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaSalida)<=new Date(fechaFinal);
-                    }
-                    else
-                        if(fecha == "fechaSalida")
-                        resFecha = false;
-                    if(fecha == "fechaAltaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
-                    {
-                        resFecha = new Date(partida.salidas_id[0].salida_id.fechaAlta)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaAlta)<=new Date(fechaFinal);
-                    }
-                    else
-                        if(fecha == "fechaAltaSalida")
+                    /* let partidaObj = JSON.parse(JSON.stringify(partida));
+                    let salidas_id = partidaObj.salidas_id;
+
+                    if(salidas_id.length > 0){
+
+                        salidas_id.forEach(salida => {
+                            
+                            if(salida.hasOwnProperty("salida_id") && salida.salida_id !== null){
+                                
+                                console.log("Index_Pos: "+ index);
+                                console.log("Salida_id: "+salida.salida_id._id);
+                                console.log("Partida_id: "+ partida._id.toString());
+                                console.log("--------------------------");
+                            }else{
+                                console.log("Esta salida no tiene referencia: "+ partida._id.toString());
+                            }
+
+                        })
+
+                    } */
+
+                    //console.clear();
+                    try{
+                        //partida.salidas_id[0].salida_id = partida.salidas_id[0];
+                        
+                        let resFecha=true
+                        let resClasificacion=true;
+                        let resSubclasificacion=true;
+                        let resClave=true;
+                        if(fecha == "fechaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
+                        {
+                            resFecha = new Date(partida.salidas_id[0].salida_id.fechaSalida)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaSalida)<=new Date(fechaFinal);
+                        }
+                        else
+                            if(fecha == "fechaSalida")
                             resFecha = false;
-                    if(clave != "" && partida.producto_id._id.toString() !== clave.toString())
-                    {
-                        resClave=false;
+                        if(fecha == "fechaAltaSalida" && partida.salidas_id != undefined && partida.salidas_id[0] !=undefined)
+                        {
+                            resFecha = new Date(partida.salidas_id[0].salida_id.fechaAlta)>=new Date(fechaInicio) && new Date(partida.salidas_id[0].salida_id.fechaAlta)<=new Date(fechaFinal);
+                        }
+                        else
+                            if(fecha == "fechaAltaSalida")
+                                resFecha = false;
+                        if(clave != "" && partida.producto_id._id.toString() !== clave.toString())
+                        {
+                            resClave=false;
+                        }
+                        if(clasificacion != "")
+                        {
+                            resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
+                        }
+                        if(subclasificacion != "")
+                        {
+                            resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
+                        }
+                        if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"))
+                            arrPartidas.push(partida);
+                        
+
+                    }catch(error){
+                        console.log(error);
                     }
-                    if(clasificacion != "")
-                    {
-                        resClasificacion=partida.producto_id.clasificacion_id.toString() == clasificacion.toString() ;
-                    }
-                    if(subclasificacion != "")
-                    {
-                        resSubclasificacion=partida.producto_id.subclasificacion_id.toString() == subclasificacion.toString();
-                    }
-                    if(resFecha==true && resClasificacion==true && resSubclasificacion ==true && resClave==true && partida.status=="ASIGNADA" && (partida.tipo=="NORMAL" || partida.tipo=="AGREGADA" || partida.tipo=="MODIFICADA" || partida.tipo=="OUTMODIFICADA"))
-                        arrPartidas.push(partida);
-    
+
+
                 });
     
                 res.status(200).send(arrPartidas);
@@ -1091,8 +1128,8 @@ async function getExcelByIDs(req, res) {
     worksheet.cell(2, indexheaders).string('Fecha Ingreso').style(headersStyle);
     worksheet.cell(2, indexheaders+1).string('Fecha Alta Ingreso').style(headersStyle);
     worksheet.cell(2, indexheaders+2).string('Fecha Despacho').style(headersStyle);
-    worksheet.cell(2, indexheaders+3).string('Fecha Alta Despacho').style(headersStyle);
-    worksheet.cell(2, indexheaders+4).string('Fecha Caducidad').style(headersStyle);   
+    worksheet.cell(2, indexheaders+3).string('Fecha Alta Despacho').style(headersStyle); 
+    worksheet.cell(2, indexheaders+4).string('Fecha Caducidad').style(headersStyle);  
     worksheet.cell(2, indexheaders+5).string('Tracto').style(headersStyle);  
     worksheet.cell(2, indexheaders+6).string('Remolque').style(headersStyle);  
     worksheet.cell(2, indexheaders+7).string('% Salida').style(headersStyle);
@@ -2213,7 +2250,7 @@ async function ModificaPartidas(req, res)
 
         let auxMod={
             partida_id: req.body.partida_id,
-            producto_id: partida.producto_id,
+            producto_id: partidaSinModificacion.producto_id,
             sucursal_id: req.body.sucursal_id,
             almacen_id: req.body.almacen_id,
             clienteFiscal_id: req.body.idClienteFiscal,
@@ -2246,7 +2283,7 @@ async function ModificaPartidas(req, res)
         let nivelIndex=parseInt(nivel)-1;
         let posIndex=req.body.posIndex;
         var posicion = await PosicionModelo.findOne({ _id: new ObjectId(id_pocision)}).exec();
-        var pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
+        var pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)}).exec();
         var oldpos = await PosicionModelo.findOne({ _id: partida.posiciones[posIndex].posicion_id}).exec();
         var productosDia=await Producto.findOne({_id:partida.producto_id}).exec();
 
@@ -2811,6 +2848,7 @@ function getInfoPartida(partida){
     infoPartida["salidas_id"] = partida.salidas_id;
     infoPartida["InfoPedidos"] = partida.InfoPedidos;
     infoPartida["entrada_id"] = partida.entrada_id;
+    infoPartida["referenciaPedidos"] = partida.referenciaPedidos;
 
     return infoPartida;
 

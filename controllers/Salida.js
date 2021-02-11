@@ -26,6 +26,7 @@ function get(req, res) {
 }
 
 function getSalidasByIDs(req, res) {
+	
 	let _idClienteFiscal = req.query.idClienteFiscal;
 	let _idSucursal = req.query.idSucursal;
 	let _idAlmacen = req.query.idAlmacen;
@@ -1748,6 +1749,45 @@ async function importsalidas(req, res) {
 	};
 
 }
+//Elimianar pedido para realizar la modificacion al mismo
+async function ingresarPedidoConModificacion(pedido){
+
+	let partidasABuscar = pedido[0].partidas;
+	let pedidoAEliminar = pedido[0].referencia;
+
+	let partidasPedido = await PartidaModel.find({_id: {$in: partidasABuscar}}).exec();
+	
+
+	await Helper.asyncForEach(partidasPedido, async function(partida){
+
+		let referenciaPedidos = partida.referenciaPedidos.filter(pedido => pedido.referenciaPedido !== pedidoAEliminar);
+
+
+		if(referenciaPedidos.length > 0){
+			partida.refpedido = referenciaPedidos[0].referenciaPedido;
+			partida.pedido = referenciaPedidos[0].pedido;
+			partida.statusPedido = "COMPLETO";
+			partida.CajasPedidas.cajas = referenciaPedidos[0].CajasPedidas.cajas;
+		}else{
+			partida.refpedido = "SIN_ASIGNAR";
+			partida.pedido = false;
+			partida.statusPedido = "SIN_ASIGNAR";
+			partida.CajasPedidas.cajas = 0;
+		}
+		
+		partida.referenciaPedidos = referenciaPedidos;
+		await partida.save();
+		
+		console.log("Partida Liberada");
+	})
+
+	
+	Salida.deleteOne({"referencia": pedidoAEliminar}, function(err){
+		if(err) return handleError(err);
+	   console.log("El pedido "+pedidoAEliminar+" ha sido eliminado, para remplazarlo")
+	});
+
+}
 
 
 async function saveSalidaBabel(req, res) {
@@ -1763,9 +1803,32 @@ async function saveSalidaBabel(req, res) {
 	var resORDENES="";//ORDENES YA EXISTENTES
 	var arrPO=[];
 	var bandcompleto=true;
+	let pedidoNuevo = true;
+	var pedidoCompleto = true;
 	try{
 		console.log(req.body.Pedido.length)
 		let index=0;
+
+		let pedidoAGuardar = req.body.Pedido[1].Pedido;
+		let pedidoCadena = req.body.Pedido[1].Pedido;
+		let validarModificacionDePedido = new RegExp("rev");
+
+		if(validarModificacionDePedido.test(pedidoAGuardar) && pedidoNuevo === true){
+			let pedidoABuscar = pedidoAGuardar.split(" ");
+			pedidoCadena = "";
+			for(let i = 0; i <= 2; i++){
+				pedidoCadena += pedidoABuscar[i]+" ";	
+			}
+			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim()}).exec();
+
+			if(countEntradas.length > 0){
+				await ingresarPedidoConModificacion(countEntradas);
+				pedidoNuevo = false;
+			}else{
+				pedidoNuevo = false;
+			}
+		}
+
 		await Helper.asyncForEach(req.body.Pedido,async function (Pedido) {
 			// Preparar pedido para apartar las partidas y crearlas apartir de lo solicitado
 			if(Pedido.NO && index > 13 && Pedido.Clave && Pedido.Cantidad)
@@ -1774,8 +1837,12 @@ async function saveSalidaBabel(req, res) {
 				var producto=await Producto.findOne({ 'clave':Pedido.Clave }).exec();
 				if(producto==undefined)
 					return res.status(400).send("no existe item: "+Pedido.Clave);
+				
+				
 
-				let countEntradas=await Salida.find({"po":req.body.Pedido[1].Pedido}).exec();
+				let countEntradas=await Salida.find({"po":pedidoAGuardar}).exec();			
+
+				
 				console.log("total: "+countEntradas.length)
 		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido}).exec():countEntradas;
 		        console.log("total2: "+countEntradas.length)
@@ -1824,9 +1891,9 @@ async function saveSalidaBabel(req, res) {
 			//console.log("----------------------------");
 			//console.log(Pedido.arrPartidas.length)
 			let totalpartidas =0;
-			let refitem=Pedido.pedido;
+			let refitem=pedidoCadena.trim();
 			let refDesti=Pedido.destinatario;
-			console.log(Pedido.pedido);
+			console.log(pedidoCadena);
 			console.log(Pedido.arrPartidas.length);
 			
 			await Helper.asyncForEach(Pedido.arrPartidas,async function (par) {
@@ -1841,7 +1908,6 @@ async function saveSalidaBabel(req, res) {
 				console.log("test: "+needed);
 				totalpartidas+=needed;
 
-				
 				
 				//console.log(".0.0.0.0.0.0.0.0.");
 				
@@ -1861,52 +1927,205 @@ async function saveSalidaBabel(req, res) {
 		            console.log("buscar: "+cantidadPedida)
 		            console.log("beforeleft: "+cantidadneeded);
 		            let embalajesEntrada={cajas:cantidadPedida};
-		            let partidas=await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,'embalajesxSalir.cajas':{$gte: embalajesEntrada.cajas},fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
-					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'pedido':false,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+		            //let partidas=await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,/*'embalajesxSalir.cajas':{$gte: embalajesEntrada.cajas}*/fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec();
+					let partidas = await PartidaModel.find({'status':'ASIGNADA', 
+										origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,
+										'clave':par.Clave,
+										'isEmpty':false,
+										fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1, "posiciones.pasillo": 1})
+									.exec();
+
+					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+					
+					if((cantidadneeded / equivalencia) >= 1){
+						console.log("Completa la equivalencia");
+						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
+						partidas = partidas.sort(Helper.sortPartidasByLevel);
+						partidas = Helper.sortPartidasByAlternatePosition(partidas).sort((a, b) =>{
+
+							let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);		
+							let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+									
+							return DiasrestantesA - DiasrestantesB;
+
+						});
+						
+						/* partidas = partidas.sort((a, b) =>{
+
+							let nivelNumberA = Helper.getLevelNumberFromName(a.posiciones[0].nivel);
+							let nivelNumberB = Helper.getLevelNumberFromName(b.posiciones[0].nivel);
+							let posicionA = parseInt(a.posiciones[0].posicion);
+							let posicionB = parseInt(b.posiciones[0].posicion);
+							let ordenPasilloA = a.posiciones[0].pasillo.length;
+							let ordenPasilloB = b.posiciones[0].pasillo.length;
+							let ordenPasilloAlfaticoA = a.posiciones[0].pasillo.charCodeAt();
+							let ordenPasilloAlfaticoB = b.posiciones[0].pasillo.charCodeAt();
+							let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);
+							let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+
+							return (nivelNumberA + posicionA + ordenPasilloA + ordenPasilloAlfaticoA)- //+ DiasrestantesA) - 
+									(nivelNumberB + posicionB + ordenPasilloB + ordenPasilloAlfaticoB);// + DiasrestantesB);
+					
+						});
+ */						
+						//partidas = partidas.sort((a, b) => b.posiciones[0].pasillo.length - a.posiciones[0].pasillo.length);
+					}
+
 					console.log("totalpartidas: "+partidas.length)
 					let count=0;
 					bandcp=false;
-					for (let i = 0; i < partidas.length && count<1; i++)
-					{
+					for (let i = 0; i < partidas.length; i++) //&& count<1
+					{	
+						let partidaSeleccionada = partidas[i];
+						let isPartidaPickeada = false;
+						let refPedidoPartida = pedidoCadena.trim();
+						let refPedidoDocument = {};
+						let refPedidos =[];
+						let cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
+						let Diasrestantes; 
+
+
+						if(cantidadneeded <= 0){
+							break;
+						}
+
 						//console.log(i);
 						//fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
-						let Diasrestantes = Math.floor((partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)-hoy)/ 86400000);
-						const DIAS_ANTICIPADOS = 2;
+						const DIAS_ANTICIPADOS = 0;
 						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
 			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*10)); 
-						console.log("Dias Para perder frescura"+ Diasrestantes)
-						//console.log(par)
-			            //if(partidas[i].embalajesxSalir.cajas>=cantidadPedida && fechaAlerta1.getTime()>hoy.getTime())
-						if(partidas[i].embalajesxSalir.cajas >= cantidadPedida && partidas[i].fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS)
-						{
+						
+						if((cantidadneeded / equivalencia) >= 1){
+							console.log("Completa la equivalencia");
+						}else{
+							console.log("Es picking")
+							let partidaPickeada = partidas.filter(partida => {
+								let diasrestantes = Helper.getDaysForExpire(partida, producto, hoy);
 
-			            	let numpedido=Math.floor(partidas[i].embalajesxSalir.cajas/cantidadPedida);
-				            	var partidaaux=await PartidaModel.findOne({_id:partidas[i]._id}).exec();
-				            	if(partidaaux.pedido==false)
-					            {
-					            	let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
-					            	partidaaux.CajasPedidas={cajas:pedidoTotal};//talves se cambie a info pedidos
+								if(partida.fechaCaducidad.getTime() > hoy && diasrestantes >= DIAS_ANTICIPADOS){
+									if(partida.embalajesxSalir.cajas !== equivalencia || partida.embalajesxSalir.cajas !== (equivalencia * 2)){
+										return true;
+									}else{
+										return false;
+									}	
+								}else{
+									return false;
+								}	
+							});
+							
+							if(partidaPickeada.length !== 0){
+								
+								const sortPartidasByDaysForExpire = (a, b) => {
+									
+									let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);
+									
+									let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+									
+									let embalajesxSalirA = a.embalajesxSalir.cajas
+									let embalajesxSalirB = b.embalajesxSalir.cajas;
+									
+									if(DiasrestantesA >= DiasrestantesB && embalajesxSalirA >= embalajesxSalirB){
+										return 1;
+									}	
 
-					            	partidaaux.pedido=true;
-					            	partidaaux.refpedido=req.body.Pedido[1].Pedido;
-					            	partidaaux.statusPedido="COMPLETO";
-					            	await partidaaux.save();
-					            	parRes.push(partidas[i]);
-					            	//console.log(partidaaux);
-					            	console.log("--------------");
-					            	count++;
-					            	cantidadneeded-=(pedidoTotal);
-					            	bandcp=true;
-					            }
-					        
-			            }
+									if(DiasrestantesA <= DiasrestantesB && embalajesxSalirA <= embalajesxSalirB){
+										return -1;
+									}
+								};
+
+
+								let partidasPickeadasOrdenadas = partidaPickeada.sort(sortPartidasByDaysForExpire)
+								
+								const arrayDiasRestantes = partidasPickeadasOrdenadas.map(partida => Helper.getDaysForExpire(partida, producto, hoy));
+
+								if(Helper.allElementAreEqualsInArray(arrayDiasRestantes) === true){
+									partidasPickeadasOrdenadas = partidasPickeadasOrdenadas.sort(Helper.sortPartidasByEmbalajesxSalir);
+							}
+						    
+							console.table({
+								"partidasPickeadas": partidaPickeada.map(partida => partida.embalajesxSalir.cajas),
+								"diasRestantesPartidas": partidasPickeadasOrdenadas.map(partida => Helper.getDaysForExpire(partida, producto, hoy)),
+								"partidasPickeadasOrdenadas": partidasPickeadasOrdenadas.map(partida => partida.embalajesxSalir.cajas)
+							})
+							isPartidaPickeada = true;
+						
+							//Buscar una partida pickeada y seleccionar la primera que encuentra
+							const {partidaSeleccionadaPick, cantidadParcialPick} = holdPartidaPick(partidasPickeadasOrdenadas, cantidadPedida);
+							cantidadPedida = cantidadParcialPick;
+							cantidadRestante = cantidadPedida;
+							partidaSeleccionada = partidaSeleccionadaPick;
+							
+						}
+					}
+						
+						//Verificar que la partida con picking aun tenga la cantidad que le corresponde
+						
+							if(isPartidaPickeada && partidaSeleccionada !== undefined){
+								
+									console.log("Paso al pedido")
+									refPedidoDocument.referenciaPedido = refPedidoPartida;
+									refPedidoDocument.CajasPedidas = {cajas: cantidadPedida};
+									refPedidoDocument.pedido = true;
+									partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);	
+							}
+
+						if(partidaSeleccionada !== undefined){
+							Diasrestantes = Helper.getDaysForExpire(partidaSeleccionada, producto, hoy);
+							console.log("Dias Para perder frescura"+ Diasrestantes);
+							if(cantidadRestante >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS && pedidoCompleto === true)
+							{	
+								//Prioridad buscar tarimas incompletas (Picking)
+	
+								console.log("Embalaje Cajas:",partidaSeleccionada.embalajesxSalir.cajas );
+								let numpedido=Math.floor(partidaSeleccionada.embalajesxSalir.cajas/cantidadPedida);
+									var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
+									let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
+									
+									if(partidaaux.pedido==false)
+									{
+										
+										refPedidoDocument.referenciaPedido = refPedidoPartida;
+										refPedidoDocument.CajasPedidas = {cajas: pedidoTotal}
+										refPedidoDocument.pedido = true;
+										refPedidos.push(refPedidoDocument);
+										
+										partidaaux.referenciaPedidos=refPedidos;//talves se cambie a info pedidos
+										partidaaux.CajasPedidas = {cajas: pedidoTotal};
+										partidaaux.pedido=true;
+										partidaaux.refpedido=refPedidoPartida;	
+									}
+									else{
+										if(isPartidaPickeada){
+											partidaaux.referenciaPedidos.push(refPedidoDocument);
+										}
+									}
+							
+									partidaaux.statusPedido="COMPLETO";
+									await partidaaux.save();
+									parRes.push(partidaaux);
+									
+										//console.log(partidaaux);
+									console.log("--------------");
+									count++;
+									cantidadneeded-=(pedidoTotal);
+									bandcp=true;
+	
+							}
+
+						}else{
+							console.log("Se trata de generar una salida sin partidas suficientes");
+							pedidoCompleto = false;
+						}
+
+						
 			        }
 				}
 				bandcompleto=bandcompleto==false?bandcompleto:bandcp;
 			});
+
 			console.log("********************"+totalpartidas+"=="+parRes.length+"********************");
 			
-			if (parRes && parRes.length  ) {
+			if (parRes && parRes.length && pedidoCompleto === true ) {
 				//console.log(parRes);
 				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
 				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
@@ -1957,7 +2176,10 @@ async function saveSalidaBabel(req, res) {
 				
 			} else {
 				console.log("Se trata de generar una salida sin partidas suficientes");
-				return res.status(400).send("Se trata de generar una salida sin partidas suficientes");
+				//Enviar correo a sistemas, Barcel, Inventarios
+
+				return res.status(400).send({statusCode: 400, body: "Se trata de generar una salida sin partidas suficientes en el pedido "+ refitem});
+				//return res.status(400).send("Se trata de generar una salida sin partidas suficientes");
 			}
 			console.log(parRes)
 		});
@@ -1970,6 +2192,53 @@ async function saveSalidaBabel(req, res) {
 	return res.status(200).send("MAYBEOK"+respuestacomplete);
 }
 
+
+function holdPartidaPick(partidasOrdenadas, cantidadPedida){
+
+	let cantidadRestante;
+	let isPartidaHold = false;
+	let partidaSeleccionadaPick;
+	let cantidadParcialPick = cantidadPedida;
+	let cantidadApartada;
+	let i = 0;
+
+	while(isPartidaHold === false && i < partidasOrdenadas.length){
+		cantidadRestante = partidasOrdenadas[i].embalajesxSalir.cajas;
+	
+			if(partidasOrdenadas[i].referenciaPedidos.length >= 1){
+			let cantidadCajasPedidasArray = partidasOrdenadas[i].referenciaPedidos.filter(pedido => pedido.pedido === true).map(partida => partida.CajasPedidas.cajas);
+			if(cantidadCajasPedidasArray.length > 0){
+				cantidadApartada = cantidadCajasPedidasArray.reduce((val, acc) => val += acc);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+				cantidadRestante = (partidasOrdenadas[i].embalajesxSalir.cajas - cantidadApartada);
+			}
+			
+			console.log("Cantidad de cajas Pedidas", cantidadCajasPedidasArray);
+			console.log("Cantidad de cajas apartadas", cantidadApartada);
+		}
+		
+		console.log("Cantidad restantes", cantidadRestante);
+		
+		if(cantidadRestante >= cantidadPedida && cantidadRestante !== 0){
+			isPartidaHold = true;
+			partidaSeleccionadaPick = partidasOrdenadas[i];
+			i = partidasOrdenadas.length;
+
+		}else{
+
+			if(cantidadRestante !== 0){
+
+				isPartidaHold = true;
+				cantidadParcialPick = cantidadRestante; 
+				partidaSeleccionadaPick = partidasOrdenadas[i];
+				i = partidasOrdenadas.length;
+			}
+		}
+		i++;
+	}
+
+	return {partidaSeleccionadaPick, cantidadParcialPick};
+}
+					
 
 function updateStatusSalidas(req, res) {
 	let _id = req.body.salida_id;
@@ -1989,57 +2258,123 @@ function updateStatusSalidas(req, res) {
 	})
 }
 async function removefromSalidaId(req, res) {
+
 	let _id = req.body.Salida_id;
 	let partida_id = req.body.partida_id;
 	let salida= await Salida.findOne({ _id: _id }).exec();
+	let referenciaPedido = salida.referencia;
 	if(salida){
 		let indexpartida= salida.partidas.findIndex(obj=> (obj.toString() == partida_id)); 
 		console.log(indexpartida)
 		salida.partidas.splice(indexpartida, 1);
-		salida.save().then(async(data) => {
+		  
+	//	console.log(data);
+		var partidaaux= await PartidaModel.findOne({_id:partida_id}).exec();
+		let referenciaActual = partidaaux.refpedido;
+		//let salida = await Salida.find({partidas: {$in: [partidaaux._id]}});
+		
+		let referenciaPedidos = partidaaux.referenciaPedidos.filter(pedido => pedido.referenciaPedido !== referenciaPedido);
 
-			console.log(data);
-			var partidaaux= await PartidaModel.findOne({_id:partida_id}).exec();
+		let pedidos = referenciaPedidos.map(pedido => pedido.pedido);
+		let allElementsAreEquals = false;
+		
+		for(let i = 0; i < pedidos.length; i++){
+			if(pedidos[i] === false){
+				break;
+			}
+			else{
+				allElementsAreEquals = true;
+			}
+		}
+		
+		if(allElementsAreEquals === true){
 			partidaaux.CajasPedidas={cajas:0};
-	    	partidaaux.pedido=false;
-	    	partidaaux.refpedido="SIN_ASIGNAR";
-	    	partidaaux.statusPedido="SIN_ASIGNAR";
-	    	partidaaux.save();
+			partidaaux.pedido=false;
+			partidaaux.refpedido="SIN_ASIGNAR";
+			partidaaux.statusPedido="SIN_ASIGNAR";
+		}
+		//Asignar el pedido actual, si el pedido corresponde con la referencia original
+		if(referenciaActual === referenciaPedido && referenciaPedidos.length > 1){
+			let referenciaPedidoARemplazar = referenciaPedidos.filter(pedido => pedido.pedido === true);
+			partidaaux.refpedido = referenciaPedidoARemplazar[0].referenciaPedido;
+			partidaaux.CajasPedidas={cajas:referenciaPedidoARemplazar[0].CajasPedidas.cajas};
+		}else{
+			partidaaux.referenciaPedidos.pop();
+		}       
+
+		partidaaux.referenciaPedidos = referenciaPedidos;
+		partidaaux.save();
+		 salida.save().then(async(data) => {
 
 			res.status(200).send(data);
+			
 		})
 		.catch((error) => {
 			console.log(error);
 			res.status(500).send(error);
-		});
+		}); 
+		
 	}
 }
+async function agregarPartidaASalidaId(salida_id, partida_id, embalajes){
 
-async function agregarPartidaSalidaId(req, res) {
-	let _id = req.body.Salida_id;
-	let partida_id = req.body.partida_id;
-	let cajas = req.body.embalajes;
-	//console.log(_id);
+
 	try{
-		let salida= await Salida.findOne({ _id: _id }).exec();
-		let indexpartida=await PartidaModel.findOne({_id:partida_id}).exec();
-		//console.log(indexpartida);
-		salida.partidas.push(indexpartida._id);
-		if(salida.entrada_id.find(x => x == indexpartida.entrada_id) == undefined)
-			salida.entrada_id.push(indexpartida.entrada_id)
-		salida.save().then(async (data) => {
 
-			//console.log(data);
-			var partidaaux= await PartidaModel.findOne({_id:partida_id}).exec();
+		let salida= await Salida.findOne({ _id: salida_id }).exec();
+		let referenciaPedido = salida.referencia;
+		let partidaaux=await PartidaModel.findOne({_id:partida_id}).exec();
+		let cajas = partidaaux.embalajesxSalir[embalajes];
+
+		salida.partidas.push(partidaaux._id);
+		if(salida.entrada_id.find(x => x == partidaaux.entrada_id) == undefined)
+			salida.entrada_id.push(partidaaux.entrada_id)
+			let pedidoHold = {
+				"referenciaPedido": referenciaPedido,
+				"pedido": true,
+				"CajasPedidas": {
+					
+				}
+			}
+
+			pedidoHold["CajasPedidas"][embalajes] = cajas;
+
+			partidaaux.referenciaPedidos.push(pedidoHold);
+
 			partidaaux.CajasPedidas={cajas:parseInt(cajas)};
 	    	partidaaux.pedido=true;
 	    	partidaaux.refpedido=salida.referencia;
-	    	partidaaux.statusPedido=salida.statusPedido;
-	    	partidaaux.save();
+			partidaaux.statusPedido=salida.statusPedido;
+			partidaaux.save();
+
+			const saveSalida = await salida.save();
+
+			return saveSalida;
+
+	}catch(error){
+		console.log(error);
+	}
+
+
+}
+
+
+async function agregarPartidaSalidaId(req, res) {
+	let _id = req.body.Salida_id;
+	let partidas_id = req.body.partidas_id;
+	let embalajes = req.body.embalajes;
+	//console.log(_id);
+	try{
+		let salida= await Salida.findOne({ _id: _id }).exec();
+		await Helper.asyncForEach(partidas_id, async function(partida){
+			await agregarPartidaASalidaId(_id, partida, embalajes);
+		})
+
+		salida.save().then(async (data) => {
 
 			res.status(200).send(data);
-		})
-		.catch((error) => {
+		}) 
+		 .catch((error) => {
 			console.log(error);
 			res.status(500).send(error);
 		});
@@ -2073,10 +2408,42 @@ async function saveDashboard(req, res) {
 
 			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
 			await Salida.updateOne({ _id: salida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
-				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'refpedido':{$regex: refpedido}}).exec(); 
+				let parRes = await PartidaModel.find({'status':'ASIGNADA', 'pedido':true,'referenciaPedidos.referenciaPedido':{$regex: refpedido}}).exec(); 
 				await Helper.asyncForEach(parRes,async function (par) {
-	            	partidaaux.pedido=false;
-	            	await partidaaux.save();
+					
+					let referenciaPedidos = par.referenciaPedidos;
+
+					for(let i = 0; i < referenciaPedidos.length; i++){
+						if(referenciaPedidos[i].referenciaPedido === refpedido){
+							referenciaPedidos[i].pedido = false;
+							break;
+						}
+					}
+					let pedidos = referenciaPedidos.map(pedido => pedido.pedido);
+					let allElementsAreEquals = false;
+					
+					for(let i = 0; i < pedidos.length; i++){
+						if(pedidos[i].pedido === false){
+							break;
+						}
+						else{
+							allElementsAreEquals = true;
+						}
+					}
+					
+					if(allElementsAreEquals === true){
+						par.pedido=false;
+						par.refpedido = "SIN_ASIGNAR",
+						par.statusPedido = "SIN_ASIGNAR";
+						par.CajasPedidas.cajas = 0;
+					}
+
+					par.save(function (err) {
+						if (err) return handleError(err);
+						// saved!
+						console.log("La partida ha sido editada correctamente ", par)
+					  });
+
 				})
 				res.status(200).send(salida);
 
@@ -2094,6 +2461,57 @@ async function saveDashboard(req, res) {
 	console.log("error");
 }
 
+async function getContadoresSalidas(req, res){
+	
+	
+	try {
+		let mongoose = require("mongoose");
+		const clienteFiscal_id = req.query.idClienteFiscal !== undefined ? req.query.idClienteFiscal : undefined;
+		const almacen_id = req.query.idAlmacen !== undefined ? req.query.idAlmacen : undefined;
+		const tiposEstadosSalidas = ["NORMAL", "FORPICKING", "FORSHIPPING", "DEVOLUCION", "RECHAZO"];
+		
+		const contadoresJson = { };
+
+		const contadores = await Salida.aggregate([
+			{$match: {"clienteFiscal_id": mongoose.Types.ObjectId(clienteFiscal_id),
+					"almacen_id": mongoose.Types.ObjectId(almacen_id)}},
+			{$group: {_id: "$tipo", cantidad: {$sum: 1}}}
+		]).exec();
+	
+		if(contadores){
+
+
+			const tipoContadores = contadores.map(contador => contador._id);
+
+			tiposEstadosSalidas.forEach(tipoSalida =>{
+
+				if(!tipoContadores.includes(tipoSalida)){
+					console.log(tipoSalida);
+					const tipoSalidaSinExistencia = {
+						_id: tipoSalida,
+						cantidad: 0
+					}
+					
+				contadores.push(tipoSalidaSinExistencia);
+				}
+
+				
+			})
+
+			contadores.forEach(contador =>{
+				const { _id, cantidad } = contador;
+
+				contadoresJson[_id] = cantidad;
+
+			})
+			res.status(200).send(contadoresJson);
+		}
+		
+	} catch (error) {
+		res.status(404).send(error);
+	}
+
+}
 
 
 module.exports = {
@@ -2113,5 +2531,6 @@ module.exports = {
 	updateStatusSalidas,
 	removefromSalidaId,
 	agregarPartidaSalidaId,
-	saveDashboard
+	saveDashboard,
+	getContadoresSalidas
 }
