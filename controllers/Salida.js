@@ -1921,7 +1921,6 @@ async function saveSalidaBabel(req, res) {
 					console.log("-------------asdasd-------------"+"clave: "+producto.clave+"equivalencia: "+equivalencia)
 					//console.log(cantidadneeded);
 					console.log("cantidadneeded "+cantidadneeded);
-		            cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
 		            
 
 		            console.log("buscar: "+cantidadPedida)
@@ -1976,6 +1975,8 @@ async function saveSalidaBabel(req, res) {
 					bandcp=false;
 					for (let i = 0; i < partidas.length; i++) //&& count<1
 					{	
+						cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
+		            
 						let partidaSeleccionada = partidas[i];
 						let isPartidaPickeada = false;
 						let refPedidoPartida = pedidoCadena.trim();
@@ -2079,18 +2080,18 @@ async function saveSalidaBabel(req, res) {
 								console.log("Embalaje Cajas:",partidaSeleccionada.embalajesxSalir.cajas );
 								let numpedido=Math.floor(partidaSeleccionada.embalajesxSalir.cajas/cantidadPedida);
 									var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
-									let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
+									//let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
 									
 									if(partidaaux.pedido==false)
 									{
 										
 										refPedidoDocument.referenciaPedido = refPedidoPartida;
-										refPedidoDocument.CajasPedidas = {cajas: pedidoTotal}
+										refPedidoDocument.CajasPedidas = {cajas: cantidadPedida}
 										refPedidoDocument.pedido = true;
 										refPedidos.push(refPedidoDocument);
 										
 										partidaaux.referenciaPedidos=refPedidos;//talves se cambie a info pedidos
-										partidaaux.CajasPedidas = {cajas: pedidoTotal};
+										partidaaux.CajasPedidas = {cajas: cantidadPedida};
 										partidaaux.pedido=true;
 										partidaaux.refpedido=refPedidoPartida;	
 									}
@@ -2107,7 +2108,7 @@ async function saveSalidaBabel(req, res) {
 										//console.log(partidaaux);
 									console.log("--------------");
 									count++;
-									cantidadneeded-=(pedidoTotal);
+									cantidadneeded-=(cantidadPedida);
 									bandcp=true;
 	
 							}
