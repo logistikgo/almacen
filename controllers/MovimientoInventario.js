@@ -33,13 +33,17 @@ async function saveSalida(itemPartida, salida_id) {
 	
 	//Verificar cual es el pedido que se va a obtener
 	let referenciaPedidos = itemPartida.referenciaPedidos;
-	let referencia = "";
-	if(referenciaPedidos.length > 0){
-		referencia = referenciaPedidos.filter(pedido => pedido.referenciaPedido === salida.referencia).map(pedido => pedido.referenciaPedido)[0];
-	}else{
-		referencia = salida.referencia ? salida.referencia : "";
-	}
 	
+	let referencia = salida.referencia ? salida.referencia : "";
+
+
+	if(referenciaPedidos !== undefined){
+		if(referenciaPedidos.length > 0){
+			referencia = referenciaPedidos.filter(pedido => pedido.referenciaPedido === salida.referencia).map(pedido => pedido.referenciaPedido)[0];
+		}
+	}
+
+
 	nMovimiento.referencia = referencia;
 	
 	Helper.asyncForEach(itemPartida.embalajesEnSalidaxPosicion, async function (posicionxSalida) {
