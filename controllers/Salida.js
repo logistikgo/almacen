@@ -1905,6 +1905,7 @@ async function saveSalidaBabel(req, res) {
 				let equivalencia =producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia;
 				
 				let needed=Math.round(par.Cantidad/equivalencia);
+				let isEstiba = producto.isEstiba;
 				console.log("test: "+needed);
 				totalpartidas+=needed;
 
@@ -1940,14 +1941,36 @@ async function saveSalidaBabel(req, res) {
 						console.log("Completa la equivalencia");
 						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
 						partidas = partidas.sort(Helper.sortPartidasByLevel);
-						partidas = Helper.sortPartidasByAlternatePosition(partidas).sort((a, b) =>{
+						
+						if(isEstiba !== true){
+							partidas = Helper.sortPartidasByAlternatePosition(partidas).sort((a, b) =>{
+								let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);		
+								let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+										
+								return DiasrestantesA - DiasrestantesB;
+		
+							});
 
-							let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);		
-							let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
-									
-							return DiasrestantesA - DiasrestantesB;
+						}else{
+							partidas = await PartidaModel.find({'status':'ASIGNADA',origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
+							partidas = partidas.sort((a, b) =>{
 
-						});
+								let nivelNumberA = Helper.getLevelNumberFromName(a.posiciones[0].nivel);
+								let nivelNumberB = Helper.getLevelNumberFromName(b.posiciones[0].nivel);
+								
+
+								return (parseInt(a.posiciones[0].posicion) + parseInt(nivelNumberA) + a.posiciones[0].pasillo.length) - 
+									(parseInt(b.posiciones[0].posicion) + parseInt(nivelNumberB) + b.posiciones[0].pasillo.length);
+							}).sort((a, b) => {
+								let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);		
+								let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+										
+								return DiasrestantesA - DiasrestantesB;
+							});
+
+						}
+						
+
 						
 						/* partidas = partidas.sort((a, b) =>{
 
@@ -1976,7 +1999,11 @@ async function saveSalidaBabel(req, res) {
 					for (let i = 0; i < partidas.length; i++) //&& count<1
 					{	
 						cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
-		            
+						
+						if(partidas[i].embalajesxSalir.cajas === cantidadPedida * 2 && isEstiba === true){
+							cantidadPedida = equivalencia * 2;
+						}
+
 						let partidaSeleccionada = partidas[i];
 						let isPartidaPickeada = false;
 						let refPedidoPartida = pedidoCadena.trim();
