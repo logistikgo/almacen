@@ -2344,7 +2344,7 @@ async function removefromSalidaId(req, res) {
 		
 	}
 }
-async function agregarPartidaASalidaId(salida_id, partida_id, embalajes){
+async function agregarPartidaASalidaId(salida_id, partida_id, embalajes, isPicking = false){
 
 
 	try{
@@ -2352,7 +2352,8 @@ async function agregarPartidaASalidaId(salida_id, partida_id, embalajes){
 		let salida= await Salida.findOne({ _id: salida_id }).exec();
 		let referenciaPedido = salida.referencia;
 		let partidaaux=await PartidaModel.findOne({_id:partida_id}).exec();
-		let cajas = embalajes
+		let cajas = embalajes;
+		let embalajesCajas = partidaaux.embalajesxSalir.cajas;
 
 		salida.partidas.push(partidaaux._id);
 		if(salida.entrada_id.find(x => x == partidaaux.entrada_id) == undefined)
@@ -2365,11 +2366,16 @@ async function agregarPartidaASalidaId(salida_id, partida_id, embalajes){
 				}
 			}
 
-			pedidoHold["CajasPedidas"].cajas = cajas;
+			if(isPicking === false){
+				pedidoHold["CajasPedidas"][embalajes] = embalajesCajas;
+			}else{
+				pedidoHold["CajasPedidas"].cajas = embalajes;
+			}
+
 
 			partidaaux.referenciaPedidos.push(pedidoHold);
 
-			partidaaux.CajasPedidas={cajas:parseInt(cajas)};
+			partidaaux.CajasPedidas={cajas:parseInt(embalajesCajas)};
 	    	partidaaux.pedido=true;
 	    	partidaaux.refpedido=salida.referencia;
 			partidaaux.statusPedido=salida.statusPedido;
@@ -2391,18 +2397,20 @@ async function agregarPartidaSalidaId(req, res) {
 	let _id = req.body.Salida_id;
 	let partidas_id = req.body.partidas_id;
 	let embalajes = req.body.embalajes;
+	let isPicking = req.body.isPicking !== undefined ? req.body.isPicking : false;
+
 	//console.log(_id);
 	try{
 		let salida= await Salida.findOne({ _id: _id }).exec();
 		
 
-		if(typeof partidas_id!== "object"){
+		if(isPicking === false){
 			await Helper.asyncForEach(partidas_id, async function(partida){
 				await agregarPartidaASalidaId(_id, partida, embalajes);
 			})
+		}else{
+			await agregarPartidaASalidaId(_id, partidas_id, req.body.embalajes, isPicking);
 		}
-
-		await agregarPartidaASalidaId(_id, partidas_id, embalajes);
 
 		salida.save().then(async (data) => {
 
