@@ -2579,6 +2579,8 @@ async function getPartidaMod(req, res)
                             embalajesxSalir: 1,
                             fechaProduccion: 1,
                             fechaCaducidad: 1,
+                            referenciaPedidos: 1,
+                            refpedido: 1,
                             lote: 1,
                             InfoPedidos: 1,
                             posiciones: 1,
@@ -2834,7 +2836,7 @@ function getInfoPartida(partida){
     infoPartida["tipo"] = partida.tipo;
     infoPartida["isExtraordinaria"] = partida.isExtraordinaria;
     infoPartida["pedido"] = partida.pedido;
-    infoPartida["refPedido"] = partida.refPedido;
+    infoPartida["refpedido"] = partida.refpedido;
     infoPartida["statusPedido"] = partida.statusPedido;
     infoPartida["CajasPedidas"]= partida.CajasPedidas
     infoPartida["saneado"] = partida.saneado;
