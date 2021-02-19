@@ -2352,7 +2352,7 @@ async function agregarPartidaASalidaId(salida_id, partida_id, embalajes){
 		let salida= await Salida.findOne({ _id: salida_id }).exec();
 		let referenciaPedido = salida.referencia;
 		let partidaaux=await PartidaModel.findOne({_id:partida_id}).exec();
-		let cajas = partidaaux.embalajesxSalir[embalajes];
+		let cajas = embalajes
 
 		salida.partidas.push(partidaaux._id);
 		if(salida.entrada_id.find(x => x == partidaaux.entrada_id) == undefined)
@@ -2365,7 +2365,7 @@ async function agregarPartidaASalidaId(salida_id, partida_id, embalajes){
 				}
 			}
 
-			pedidoHold["CajasPedidas"][embalajes] = cajas;
+			pedidoHold["CajasPedidas"].cajas = cajas;
 
 			partidaaux.referenciaPedidos.push(pedidoHold);
 
@@ -2394,9 +2394,15 @@ async function agregarPartidaSalidaId(req, res) {
 	//console.log(_id);
 	try{
 		let salida= await Salida.findOne({ _id: _id }).exec();
-		await Helper.asyncForEach(partidas_id, async function(partida){
-			await agregarPartidaASalidaId(_id, partida, embalajes);
-		})
+		
+
+		if(typeof partidas_id!== "object"){
+			await Helper.asyncForEach(partidas_id, async function(partida){
+				await agregarPartidaASalidaId(_id, partida, embalajes);
+			})
+		}
+
+		await agregarPartidaASalidaId(_id, partidas_id, embalajes);
 
 		salida.save().then(async (data) => {
 
