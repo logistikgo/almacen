@@ -2315,7 +2315,7 @@ async function removefromSalidaId(req, res) {
 			}
 		}
 		
-		if(allElementsAreEquals === true){
+		if(allElementsAreEquals === true || referenciaPedidos.length === 0){
 			partidaaux.CajasPedidas={cajas:0};
 			partidaaux.pedido=false;
 			partidaaux.refpedido="SIN_ASIGNAR";
@@ -2344,6 +2344,7 @@ async function removefromSalidaId(req, res) {
 		
 	}
 }
+
 async function agregarPartidaASalidaId(salida_id, partida_id, embalajes, isPicking = false){
 
 
@@ -2368,14 +2369,28 @@ async function agregarPartidaASalidaId(salida_id, partida_id, embalajes, isPicki
 
 			if(isPicking === false){
 				pedidoHold["CajasPedidas"][embalajes] = embalajesCajas;
+				partidaaux.CajasPedidas={cajas:parseInt(embalajesCajas)};
 			}else{
 				pedidoHold["CajasPedidas"].cajas = embalajes;
+				partidaaux.CajasPedidas={cajas:parseInt(embalajes)};
 			}
 
+			if(partidaaux.referenciaPedidos.length > 0 && isPicking === false){
+				let referencia_pedido_a_cambiar = partidaaux.referenciaPedidos[0].referenciaPedido;
+				let salida_referencia = await Salida.findOne({referencia:  referencia_pedido_a_cambiar}).exec();
+				
+				if(salida_referencia){
+					
+					let indexpartida= salida_referencia.partidas.findIndex(obj=> (obj.toString() == partida_id)); 
+					console.log(indexpartida)
+					salida_referencia.partidas.splice(indexpartida, 1);
+					partidaaux.referenciaPedidos.pop();
+					await salida_referencia.save();
+				}
+
+			}
 
 			partidaaux.referenciaPedidos.push(pedidoHold);
-
-			partidaaux.CajasPedidas={cajas:parseInt(embalajesCajas)};
 	    	partidaaux.pedido=true;
 	    	partidaaux.refpedido=salida.referencia;
 			partidaaux.statusPedido=salida.statusPedido;
