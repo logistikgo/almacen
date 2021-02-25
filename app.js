@@ -300,6 +300,7 @@ app.post('/api/saveSalidaBabel', Salida.saveSalidaBabel);
 app.post('/api/removefromSalidaId', Salida.removefromSalidaId);
 app.post('/api/agregarPartidaSalidaId', Salida.agregarPartidaSalidaId);
 app.post('/api/SalidaAuto', Salida.saveDashboard);
+app.get('/api/verificarPartidasSalidas/:salida_id', Partida.verificarPartidasSalidas);
 
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
