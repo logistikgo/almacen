@@ -116,18 +116,30 @@ async function getByEntradaSalida(req, res) {
         });
 }
 
+async function verificarPartidasSalidas(req, res) {
+    let salida_id = req.params.salida_id;
+    let salida = await Salida.findOne({ _id: salida_id }).exec();
+    let partidas_id = salida.partidas;
+    let partidasEmpty = await Partida.find({_id: {$in: partidas_id}, isEmpty: true}).exec();
+    let partidasAElminar = partidasEmpty.map(partida => partida._id.toString());
+
+    res.status(200).send({body:partidasAElminar, statusCode: 200});
+}
+
 async function getBySalida(req, res) {
     let salida_id = req.params.salida_id;
     let salida = await Salida.findOne({ _id: salida_id }).exec();
     let partidas_id = salida.partidas;
     let referenciaPedido = salida.referencia;
     let partidas = [];
-
+    let partidasAEliminar = [];
+    
     await Helper.asyncForEach(partidas_id, async function (partida_id) {
         let partidaFound = await Partida.findOne({ _id: partida_id }).populate({
             path: "producto_id",
             model: "Producto"
         }).exec();
+        
         let partida = JSON.parse(JSON.stringify(partidaFound));
         let salida_idFound = partida.salidas_id.find(x => x.salida_id.toString() == salida_id.toString());
         partida.pesoBrutoEnSalida = salida_idFound?salida_idFound.pesoBruto:0;
@@ -136,6 +148,7 @@ async function getBySalida(req, res) {
         partida.referenciaSalida = referenciaPedido;
         partidas.push(partida);
     });
+
 
     res.status(200).send(partidas);
 }
@@ -469,6 +482,7 @@ async function getByProductoEmbalaje(req, res) {
     let cantidad = req.query.cantidad;
     let cantidadRestante = parseFloat(cantidad);
     let algoritmoSalida = req.query.algoritmoSalida;
+    
 
     //console.log("test");
 
@@ -583,6 +597,7 @@ async function getByProductoEmbalaje(req, res) {
                         origen:partida.origen, 
                         pedido:partida.pedido,
                         refpedido:partida.refpedido,
+                        referenciaPedidos: partida.referenciaPedidos,
                         saneado:partida.saneado,
                         posicionesFull: Helper.Clone(partida.posiciones),
                         posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
@@ -668,6 +683,7 @@ async function getByProductoEmbalaje(req, res) {
                             origen:partida.origen,
                             pedido:partida.pedido,
                             refpedido:partida.refpedido,
+                            referenciaPedidos: partida.referenciaPedidos,
                             saneado:partida.saneado,
                             posiciones: [partida.posiciones.find(x => x._id.toString() === posicion._id.toString())],
                             subConsecutivo: subConsecutivo,
@@ -731,6 +747,7 @@ async function getByProductoEmbalaje(req, res) {
                             origen:partida.origen, 
                             pedido:partida.pedido,
                             refpedido:partida.refpedido,
+                            referenciaPedidos: partida.referenciaPedidos,
                             saneado:partida.saneado,
                             fechaEntrada: partida.entrada_id != undefined ? partida.entrada_id.fechaEntrada : "",
                             fechaCaducidad: partida.fechaCaducidad ? partida.fechaCaducidad : "",
@@ -3171,5 +3188,6 @@ module.exports = {
     LimpiaPosicion,
     getExcelInventory,
     getPartidaModExcel,
-    getInventarioPorPartidas
+    getInventarioPorPartidas,
+    verificarPartidasSalidas
 }
