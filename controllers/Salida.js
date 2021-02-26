@@ -1999,9 +1999,11 @@ async function saveSalidaBabel(req, res) {
 					for (let i = 0; i < partidas.length; i++) //&& count<1
 					{	
 						cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
-						
-						if(partidas[i].embalajesxSalir.cajas === cantidadPedida * 2 && isEstiba === true){
+						let cantidadRestante = cantidadneeded;
+
+						if(partidas[i].embalajesxSalir.cajas === cantidadPedida * 2 && isEstiba === true && cantidadPedida === equivalencia){
 							cantidadPedida = equivalencia * 2;
+							cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
 						}
 
 						let partidaSeleccionada = partidas[i];
@@ -2009,7 +2011,7 @@ async function saveSalidaBabel(req, res) {
 						let refPedidoPartida = pedidoCadena.trim();
 						let refPedidoDocument = {};
 						let refPedidos =[];
-						let cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
+						//let cantidadRestante = cantidadneeded;
 						let Diasrestantes; 
 
 
@@ -2078,7 +2080,7 @@ async function saveSalidaBabel(req, res) {
 							isPartidaPickeada = true;
 						
 							//Buscar una partida pickeada y seleccionar la primera que encuentra
-							const {partidaSeleccionadaPick, cantidadParcialPick} = holdPartidaPick(partidasPickeadasOrdenadas, cantidadPedida);
+							const {partidaSeleccionadaPick, cantidadParcialPick} = holdPartidaPick(partidasPickeadasOrdenadas, cantidadPedida, parRes);
 							cantidadPedida = cantidadParcialPick;
 							cantidadRestante = cantidadPedida;
 							partidaSeleccionada = partidaSeleccionadaPick;
@@ -2221,7 +2223,7 @@ async function saveSalidaBabel(req, res) {
 }
 
 
-function holdPartidaPick(partidasOrdenadas, cantidadPedida){
+function holdPartidaPick(partidasOrdenadas, cantidadPedida, partidasParciales){
 
 	let cantidadRestante;
 	let isPartidaHold = false;
@@ -2229,10 +2231,20 @@ function holdPartidaPick(partidasOrdenadas, cantidadPedida){
 	let cantidadParcialPick = cantidadPedida;
 	let cantidadApartada;
 	let i = 0;
+	let partidasParcialesCopy = partidasParciales.slice();
 
+	
 	while(isPartidaHold === false && i < partidasOrdenadas.length){
 		cantidadRestante = partidasOrdenadas[i].embalajesxSalir.cajas;
-	
+			
+			let index = partidasParcialesCopy.findIndex(partida => partida._id.toString() === partidasOrdenadas[i]._id.toString());
+
+			if(index !== -1){
+				let indexParcial = partidasOrdenadas.findIndex(partida => partida._id.toString() === partidasParcialesCopy[index]._id.toString());
+				partidasOrdenadas.splice(indexParcial, 1);
+				partidasOrdenadas.unshift(partidasParcialesCopy[index]);
+				partidasParcialesCopy.splice(index, 1);
+			}
 			if(partidasOrdenadas[i].referenciaPedidos.length >= 1){
 			let cantidadCajasPedidasArray = partidasOrdenadas[i].referenciaPedidos.filter(pedido => pedido.pedido === true).map(partida => partida.CajasPedidas.cajas);
 			if(cantidadCajasPedidasArray.length > 0){
