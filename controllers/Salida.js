@@ -2102,7 +2102,7 @@ async function saveSalidaBabel(req, res) {
 						if(partidaSeleccionada !== undefined){
 							Diasrestantes = Helper.getDaysForExpire(partidaSeleccionada, producto, hoy);
 							console.log("Dias Para perder frescura"+ Diasrestantes);
-							if(cantidadRestante >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS && pedidoCompleto === true)
+							if(cantidadRestante >= cantidadPedida && partidaSeleccionada.embalajesxSalir.cajas >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS && pedidoCompleto === true)
 							{	
 								//Prioridad buscar tarimas incompletas (Picking)
 	
