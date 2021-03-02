@@ -312,7 +312,10 @@ async function getByIDClienteFiscalAggregate(req, res) {
 		
 	let _idClienteFiscal = req.params.idClienteFiscal !== undefined ?  req.params.idClienteFiscal :"";
 	let almacen_id =  req.query.almacen_id !== undefined ? req.query.almacen_id : "";
+	let filter = req.query.filter !== undefined ? true : false;
 	let clientesEmbalajes;
+	
+
 
 	let clienteFiscal = await ClienteFiscal.findById(_idClienteFiscal).exec();
 	
@@ -359,18 +362,48 @@ async function getByIDClienteFiscalAggregate(req, res) {
 	let productosEnCero = productosInAlmacen.filter(producto => (isEmptyEmbalaje(producto.embalajes)));	
 
 	let arrProductos = productosEnCero;
-	let productos = Partida.aggregate([
+		let productos;
 
-		{$lookup: {"from": "Productos", "localField": "producto_id", "foreignField": "_id", as: "Productos"}},
-		{$lookup: {"from": "ClientesFiscales", "localField": "Productos.arrClientesFiscales_id", "foreignField": "_id", as: "ClientesFiscales"}},
+	if(filter){
 		
-		{$match: almacenQuery}
-	,   
-		{$group: cantidadEmbalajes}, 
-				   
-	  { $project: { fromProductos: 0 } }  
-	
-	])
+		let fechaInicio = new Date(req.query.fechaInicio);
+		let fechaFinal = new Date(req.query.fechaFinal);
+		almacenQuery["Entrada.fechaAlta"] = {$lte: fechaInicio};
+
+		productos = Partida.aggregate([
+
+			{$lookup: {"from": "Productos", "localField": "producto_id", "foreignField": "_id", as: "Productos"}},
+			{$lookup: {"from": "Entradas", "localField": "entrada_id", "foreignField": "_id", "as": "Entrada"}},
+			{$lookup: {"from": "ClientesFiscales", "localField": "Productos.arrClientesFiscales_id", "foreignField": "_id", as: "ClientesFiscales"}},
+			
+			{$match: almacenQuery}
+		,   
+			{$group: cantidadEmbalajes}, 
+					   
+		  { $project: { fromProductos: 0 } }  
+		
+		])
+
+
+	}else{
+
+		productos = Partida.aggregate([
+
+			{$lookup: {"from": "Productos", "localField": "producto_id", "foreignField": "_id", as: "Productos"}},
+			{$lookup: {"from": "ClientesFiscales", "localField": "Productos.arrClientesFiscales_id", "foreignField": "_id", as: "ClientesFiscales"}},
+			
+			{$match: almacenQuery}
+		,   
+			{$group: cantidadEmbalajes}, 
+					   
+		  { $project: { fromProductos: 0 } }  
+		
+		])
+
+
+	}
+
+
 
 	productos.then(async productos =>{
 		//Obtener el inventario, si no tiene partidas activas
