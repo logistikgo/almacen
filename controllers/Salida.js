@@ -1952,7 +1952,7 @@ async function saveSalidaBabel(req, res) {
 							});
 
 						}else{
-							partidas = await PartidaModel.find({'status':'ASIGNADA',origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
+							partidas = await PartidaModel.find({'status':'ASIGNADA',origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']}, pedido: false, 'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
 							partidas = partidas.sort((a, b) =>{
 
 								let nivelNumberA = Helper.getLevelNumberFromName(a.posiciones[0].nivel);
