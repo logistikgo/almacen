@@ -366,9 +366,9 @@ async function getByIDClienteFiscalAggregate(req, res) {
 
 	if(filter){
 		
-		let fechaInicio = new Date(req.query.fechaInicio);
+		let fechaInicio = new Date(req.query.fechaInicio).addDays(1);
 		let fechaFinal = new Date(req.query.fechaFinal);
-		almacenQuery["Entrada.fechaAlta"] = {$lte: fechaInicio};
+		almacenQuery["Entrada.fechaAlta"] = {$lt: fechaInicio};
 
 		productos = Partida.aggregate([
 
@@ -400,10 +400,7 @@ async function getByIDClienteFiscalAggregate(req, res) {
 		
 		])
 
-
 	}
-
-
 
 	productos.then(async productos =>{
 		//Obtener el inventario, si no tiene partidas activas
@@ -444,8 +441,6 @@ async function getByIDClienteFiscalAggregate(req, res) {
 	} catch (error) {
 		console.log(error);
 	}
-
-	
 
 	
 
