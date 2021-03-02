@@ -1772,7 +1772,13 @@ async function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+2).string(partidas.refpedido ?partidas.refpedido:"SIN_ASIGNAR"); 
            	worksheet.cell(i, indexbody+3).string(partidas.statusPedido ?partidas.statusPedido:"SIN_ASIGNAR");       
            	worksheet.cell(i, indexbody+4).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");
-           	worksheet.cell(i, indexbody+5).string(partidas.fechaCaducidad ? dateFormat(new Date(partidas.fechaCaducidad.getTime()), formatofecha):"");
+           	let fechaCaducidad = new Date(partidas.fechaCaducidad);
+			const IDENTIFICADOR_HORAS = 19;
+			
+			if(fechaCaducidad.getHours() === IDENTIFICADOR_HORAS)
+				fechaCaducidad = new Date(fechaCaducidad).addDays(1);
+			
+			worksheet.cell(i, indexbody+5).string(fechaCaducidad ? dateFormat( fechaCaducidad, formatofecha):"");
            	worksheet.cell(i, indexbody+6).string(fechacalculada2Dias);
            	worksheet.cell(i, indexbody+7).number(GarFresFecha).style(GarFresFechaStyle);
            	worksheet.cell(i, indexbody+8).number(partidas.producto_id[0].garantiaFrescura ? partidas.producto_id[0].garantiaFrescura:0);
@@ -1781,7 +1787,7 @@ async function getExcelCaducidades(req, res) {
            	worksheet.cell(i, indexbody+11).string(partidas.entrada_id[0] ? partidas.entrada_id[0].fechaSalidaPlanta  ? dateFormat(new Date(partidas.entrada_id[0].fechaSalidaPlanta.getTime()), formatofecha) :"":"");
            	worksheet.cell(i, indexbody+12).string(fechaEspRecibo);
            	worksheet.cell(i, indexbody+13).number(1+diasEnAlm);
-           	worksheet.cell(i, indexbody+14).number(orginalshippingdays).style(shipingdaysstyle);;
+           	worksheet.cell(i, indexbody+14).number(orginalshippingdays).style(shipingdaysstyle);
            	worksheet.cell(i, indexbody+15).string(partidas.entrada_id[0] ? partidas.entrada_id[0].fechaEntrada ? dateFormat(partidas.entrada_id[0].fechaEntrada, formatofecha):"":"");
            	worksheet.cell(i, indexbody+16).string(partidas.entrada_id[0] ? partidas.entrada_id[0].fechaAlta  ? dateFormat(new Date(partidas.entrada_id[0].fechaAlta.getTime()), formatofecha) :"":"");
            	worksheet.cell(i, indexbody+17).number(Math.abs(Aging));
