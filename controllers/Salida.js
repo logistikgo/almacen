@@ -2000,13 +2000,14 @@ async function saveSalidaBabel(req, res) {
 					{	
 						cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
 						let cantidadRestante = cantidadneeded;
+						let partidaSeleccionada = partidas[i];
 
 						if(partidas[i].embalajesxSalir.cajas === cantidadPedida * 2 && isEstiba === true && cantidadPedida === equivalencia){
 							cantidadPedida = equivalencia * 2;
 							cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
 						}
 
-						let partidaSeleccionada = partidas[i];
+						
 						let isPartidaPickeada = false;
 						let refPedidoPartida = pedidoCadena.trim();
 						let refPedidoDocument = {};
