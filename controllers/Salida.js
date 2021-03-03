@@ -1952,7 +1952,7 @@ async function saveSalidaBabel(req, res) {
 							});
 
 						}else{
-							partidas = await PartidaModel.find({'status':'ASIGNADA',origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
+							partidas = await PartidaModel.find({'status':'ASIGNADA',origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']}, pedido: false, 'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
 							partidas = partidas.sort((a, b) =>{
 
 								let nivelNumberA = Helper.getLevelNumberFromName(a.posiciones[0].nivel);
@@ -2000,13 +2000,14 @@ async function saveSalidaBabel(req, res) {
 					{	
 						cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
 						let cantidadRestante = cantidadneeded;
+						let partidaSeleccionada = partidas[i];
 
 						if(partidas[i].embalajesxSalir.cajas === cantidadPedida * 2 && isEstiba === true && cantidadPedida === equivalencia){
 							cantidadPedida = equivalencia * 2;
 							cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
 						}
 
-						let partidaSeleccionada = partidas[i];
+						
 						let isPartidaPickeada = false;
 						let refPedidoPartida = pedidoCadena.trim();
 						let refPedidoDocument = {};
