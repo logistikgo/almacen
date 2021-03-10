@@ -1932,67 +1932,55 @@ async function saveSalidaBabel(req, res) {
 										origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,
 										'clave':par.Clave,
 										'isEmpty':false,
+										 'embalajesxSalir.cajas': {$nin: [0]},
 										fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1, "posiciones.pasillo": 1})
 									.exec();
 
-					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
 					
+
+					const sortPartidasWithPositionAndDaysForExpire = ((a, b) =>{
+						let pasilloA = a.posiciones[0].pasillo.replace(".", "");
+								let pasilloB = b.posiciones[0].pasillo.replace(".", "");
+								let posicionA = (parseInt(a.posiciones[0].posicion));
+								let posicionB = (parseInt(b.posiciones[0].posicion));
+								let nivelA = a.posiciones[0].nivel;
+								let nivelB = b.posiciones[0].nivel;
+								let posicionCompletaA = pasilloA + posicionA + nivelA;
+								let posicionCompletaB = pasilloB + posicionB + nivelB;
+
+								let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);								
+								let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
+									
+									
+									if(DiasrestantesA >= DiasrestantesB && posicionCompletaA >= posicionCompletaB){
+										return 1;
+									}	
+
+									if(DiasrestantesA <= DiasrestantesB && posicionCompletaA <= posicionCompletaB){
+										return -1;
+									}
+					});
+
 					if((cantidadneeded / equivalencia) >= 1){
 						console.log("Completa la equivalencia");
-						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
-						partidas = partidas.sort(Helper.sortPartidasByLevel);
+						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
+						
 						
 						if(isEstiba !== true){
-							partidas = Helper.sortPartidasByAlternatePosition(partidas).sort((a, b) =>{
-								let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);		
-								let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
-										
-								return DiasrestantesA - DiasrestantesB;
-		
-							});
+						
+							partidas = partidas.sort(sortPartidasWithPositionAndDaysForExpire);
 
+							//partidas = partidas.sort(Helper.sortPartidasByLevel);
+							
 						}else{
-							partidas = await PartidaModel.find({'status':'ASIGNADA',origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']}, pedido: false, 'clave':par.Clave,'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
-							partidas = partidas.sort((a, b) =>{
-
-								let nivelNumberA = Helper.getLevelNumberFromName(a.posiciones[0].nivel);
-								let nivelNumberB = Helper.getLevelNumberFromName(b.posiciones[0].nivel);
-								
-
-								return (parseInt(a.posiciones[0].posicion) + parseInt(nivelNumberA) + a.posiciones[0].pasillo.length) - 
-									(parseInt(b.posiciones[0].posicion) + parseInt(nivelNumberB) + b.posiciones[0].pasillo.length);
-							}).sort((a, b) => {
-								let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);		
-								let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
-										
-								return DiasrestantesA - DiasrestantesB;
-							});
+							partidas = await PartidaModel.find({'status':'ASIGNADA',origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']}, pedido: false, 'clave':par.Clave, 'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
+							partidas = partidas.sort(sortPartidasWithPositionAndDaysForExpire);
 
 						}
-						
-
-						
-						/* partidas = partidas.sort((a, b) =>{
-
-							let nivelNumberA = Helper.getLevelNumberFromName(a.posiciones[0].nivel);
-							let nivelNumberB = Helper.getLevelNumberFromName(b.posiciones[0].nivel);
-							let posicionA = parseInt(a.posiciones[0].posicion);
-							let posicionB = parseInt(b.posiciones[0].posicion);
-							let ordenPasilloA = a.posiciones[0].pasillo.length;
-							let ordenPasilloB = b.posiciones[0].pasillo.length;
-							let ordenPasilloAlfaticoA = a.posiciones[0].pasillo.charCodeAt();
-							let ordenPasilloAlfaticoB = b.posiciones[0].pasillo.charCodeAt();
-							let DiasrestantesA = Helper.getDaysForExpire(a, producto, hoy);
-							let DiasrestantesB = Helper.getDaysForExpire(b, producto, hoy);
-
-							return (nivelNumberA + posicionA + ordenPasilloA + ordenPasilloAlfaticoA)- //+ DiasrestantesA) - 
-									(nivelNumberB + posicionB + ordenPasilloB + ordenPasilloAlfaticoB);// + DiasrestantesB);
-					
-						});
- */						
-						//partidas = partidas.sort((a, b) => b.posiciones[0].pasillo.length - a.posiciones[0].pasillo.length);
 					}
-
+					partidas = Helper.deletePartidasWithNegativeExpireDays(partidas, producto, hoy);
+					
 					console.log("totalpartidas: "+partidas.length)
 					let count=0;
 					bandcp=false;

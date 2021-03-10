@@ -489,7 +489,7 @@ function allElementAreEqualsInArray(elementsArray = []){
 }
 
 function sortPartidasByLevel(a, b){
-	return getLevelNumberFromName(a.posiciones[0].nivel) - getLevelNumberFromName(b.posiciones[0].nivel);
+	return getLevelNumberFromName(b.posiciones[0].nivel) - getLevelNumberFromName(a.posiciones[0].nivel);
 }
 
 function sortPartidasByEmbalajesxSalir(a, b){
@@ -548,6 +548,13 @@ function findPosition(pasillo,  partidas ){
     return partidas.findIndex(partida => partida.posiciones[0].pasillo === pasillo);
 }
 
+function deletePartidasWithNegativeExpireDays(partidas, producto, hoy){
+
+	return partidas.filter(partida => getDaysForExpire(partida, producto, hoy) >= 0);
+	
+}
+
+
 module.exports = {
 	getNextID,
 	getPartidasByIDs,
@@ -568,5 +575,6 @@ module.exports = {
 	allElementAreEqualsInArray,
 	sortPartidasByLevel,
 	sortPartidasByEmbalajesxSalir,
-	sortPartidasByAlternatePosition
+	sortPartidasByAlternatePosition,
+	deletePartidasWithNegativeExpireDays
 }
