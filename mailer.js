@@ -3,7 +3,7 @@ const dotenv = require('dotenv'); //Used for environment variables
 dotenv.config();
 
 
-async function sendEmail(body){
+async function sendEmail(body, subject){
 
     const transporter = nodemailer.createTransport({
         service: "Gmail",
@@ -17,8 +17,8 @@ async function sendEmail(body){
 
     const options = {
         from: process.env.USER_EMAIL,
-        to: "elopez@logisti-k.com.mx, eliazardev@gmail.com",
-        subject: "Prueba de envio de correo",
+        to: "elopez@logisti-k.com.mx",
+        subject: subject,
         text: body.body
     }
 
