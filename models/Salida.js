@@ -19,6 +19,10 @@ const Salida = Schema(
 			type: Schema.ObjectId,
 			ref: 'ClienteFiscal'
 		},
+		salidaBabel_id: {
+			type: Schema.ObjectId,
+			ref: 'SalidasBabel'
+		},
 		folio: String,
 		stringFolio: String,
 		item: String,
@@ -74,6 +78,8 @@ const Salida = Schema(
 	{
 		collection: 'Salidas'
 	}
-);
+, {
+    versionKey: false // You should be aware of the outcome after set to false
+});
 Salida.plugin(aggregatePaginate);
 module.exports = mongoose.model('Salida', Salida);
