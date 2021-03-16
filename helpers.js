@@ -559,17 +559,15 @@ function createPedidoJSONForHold(pedidoJson = {}){
 const pedidoDetalle = pedidoJson.Pedido;
 const informacionPedido = {
     "almacen_id": pedidoJson.IdAlmacen,
-    "sucursal_id": pedidoJson.IDClienteFiscal,
-    "clienteFiscal_id": pedidoJson.IDSucursal,
+    "clienteFiscal_id": pedidoJson.IDClienteFiscal,
+    "sucursal_id": pedidoJson.IDSucursal,
 	"referencia": pedidoDetalle[1].Pedido
 }
 const productosArray = [];
 
-
 for(let i = 14; i < pedidoDetalle.length; i++){
 
     if(Object.keys(pedidoDetalle[i]).includes("Clave")){
-        
         
         const pedidoObject = {
             "No": pedidoDetalle[i].NO,
