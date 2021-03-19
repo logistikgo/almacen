@@ -15,7 +15,7 @@ const EmbalajesController = require('../controllers/Embalaje');
 const ClienteFiscal = require('../models/ClienteFiscal');
 const SalidaBabelModel = require('../models/SalidasBabel');
 const ReenvioPedidosBitacora = require('../models/RenvioPedidosBitacora');
-
+const bodyMailTemplate = require('../templateCreator');
 const mailer = require('../mailer');
 function getNextID() {
 	return Helper.getNextID(Salida, "salida_id");
@@ -1859,47 +1859,96 @@ async function reloadPedidosBabel(req, res){
 
 	//let salidasActuales = await Salida.find({referencia: "BM 10866769 B", }).exec();
 	
-
+	let referencias = [];
+	let detallePedidoTeplate = "";
+	let detallesPedidosArray = [];
 	await Helper.asyncForEach(salidasActuales, async function(salidaActual){
+			
+			detallePedidoTeplate = "";
+			let salidaAReenviar = await eliminarPedidoParaRenviar(salidaActual.referencia);
+	
+			referencias.push(salidaActual.referencia);
+	
+			let salidaBabel = await SalidaBabelModel.findById({_id: salidaAReenviar[0].salidaBabel_id}).exec();
 
-		let salidaAReenviar = await eliminarPedidoParaRenviar(salidaActual.referencia);
+			salidaBabel.productosDetalle.forEach(productoDetalle => {
 
-		let salidaBabel = await SalidaBabelModel.findById({_id: salidaAReenviar[0].salidaBabel_id}).exec();
+				const {No, producto, Clave, Cantidad} = productoDetalle;
+				
+				detallePedidoTeplate += `<tr>
+												<td>${No}</td>
+												<td>${Clave}</td>
+												<td>${producto}</td>
+												<td>${Cantidad}</td>
+											</tr>
+				`
 
-		let {partidas_id, entradas_id} = await reasignarPartidasDisponiblesEnPedidos(salidaBabel);
+			})
+			
+			detallesPedidosArray.push({
+				template: detallePedidoTeplate,
+				pedido: salidaActual.referencia
+			});
 
-		salidaActual.partidas = partidas_id.map(partida => partida._id);
-		partidas_id = partidas_id.map(partida => partida._id);
-		
-		await Salida.updateOne({_id: salidaActual._id}, 
-								{ $set: { partidas: partidas_id, 
-										entrada_id: entradas_id,
-										tipo: "FORSHIPPING" } });
-		
-		const reenvioPedidosBitacoraJson = {
-			sucursal_id: salidaActual.sucursal_id,
-			almacen_id: salidaActual.almacen_id,
-			clienteFiscal_id: salidaActual.almacen_id,
-			salida_id: salidaActual._id,
-			descripcion: "Se ha reenviado el pedido con exito",
-			tipo: "SALIDA",
-			nombreUsuario: "BABEL",
-			status: "ACTIVO",
-		}
-
-		const reenvioPedidosBitacora = new ReenvioPedidosBitacora(reenvioPedidosBitacoraJson);
-
-		await reenvioPedidosBitacora.save()								
-
-
+			let {partidas_id, entradas_id} = await reasignarPartidasDisponiblesEnPedidos(salidaBabel);
+	
+			salidaActual.partidas = partidas_id.map(partida => partida._id);
+			partidas_id = partidas_id.map(partida => partida._id);
+			
+			await Salida.updateOne({_id: salidaActual._id}, 
+									{ $set: { partidas: partidas_id, 
+											entrada_id: entradas_id,
+											tipo: "FORSHIPPING" } });
+			
+			const reenvioPedidosBitacoraJson = {
+				sucursal_id: salidaActual.sucursal_id,
+				almacen_id: salidaActual.almacen_id,
+				clienteFiscal_id: salidaActual.almacen_id,
+				salida_id: salidaActual._id,
+				descripcion: "Se ha reenviado el pedido con exito",
+				tipo: "SALIDA",
+				nombreUsuario: "BABEL",
+				status: "ACTIVO",
+			}
+	
+			const reenvioPedidosBitacora = new ReenvioPedidosBitacora(reenvioPedidosBitacoraJson);
+	
+			await reenvioPedidosBitacora.save()								
 
 	})
 
 
 	//Crear bitacora para controlar las veces que se resuben los pedidos
 	//adicional a eso, crear funcionalidad para enviar un correo para verificar que se subio el pedido	
+	let detallesPedidosTemplates = generateTablePedidosTempate(detallesPedidosArray);
+
+	let bodyHtmlMail = bodyMailTemplate.bodyHtml(detallesPedidosTemplates);
+
+	mailer.sendEmail({body: bodyHtmlMail}, "[LGKGO] Notificacion Reenvio Pedidos")
+	.then(response =>{
+		console.log("Se ha enviado el mensaje con exito");
+	});
 
 	res.status(200).send({"statusCode": 200, "response": "Se han resubido los pedidos"});
+
+}
+
+
+function generateTablePedidosTempate(detallesPedidosArray) {
+	let detallePedidoTemplates = "";
+	detallesPedidosArray.forEach(detallePedido => {
+		const {template, pedido } = detallePedido
+		detallePedidoTemplates += 
+		`<h4>Pedido: ${pedido}</h4>
+		<table>
+			<th>Numero</th>
+			<th>Item</th>
+			<th style="width: 70%;">Descripcion</th>
+			<th>Cantidad</th>
+			${template}
+		</table>`;		
+	})
+	return detallePedidoTemplates
 
 }
 
