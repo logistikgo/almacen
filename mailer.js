@@ -16,10 +16,10 @@ async function sendEmail(body, subject){
     });
 
     const options = {
-        from: process.env.USER_EMAIL,
-        to: "elopez@logisti-k.com.mx",
+        from: "Logistik GO",
+        to: process.env.TO_USERS,
         subject: subject,
-        text: body.body
+        html: body.body
     }
 
     transporter.sendMail(options, function(err, information) {
