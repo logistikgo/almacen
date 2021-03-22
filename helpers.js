@@ -554,6 +554,40 @@ function deletePartidasWithNegativeExpireDays(partidas, producto, hoy){
 	
 }
 
+function createPedidoJSONForHold(pedidoJson = {}){
+	
+const pedidoDetalle = pedidoJson.Pedido;
+const informacionPedido = {
+    "almacen_id": pedidoJson.IdAlmacen,
+    "clienteFiscal_id": pedidoJson.IDClienteFiscal,
+    "sucursal_id": pedidoJson.IDSucursal,
+	"referencia": pedidoDetalle[1].Pedido
+}
+const productosArray = [];
+
+for(let i = 14; i < pedidoDetalle.length; i++){
+
+    if(Object.keys(pedidoDetalle[i]).includes("Clave")){
+        
+        const pedidoObject = {
+            "No": pedidoDetalle[i].NO,
+            "producto": pedidoDetalle[i].producto,
+            "Clave": pedidoDetalle[i].Clave,
+            "Cantidad": pedidoDetalle[i].Cantidad
+        }
+        
+        productosArray.push(pedidoObject)
+    }
+
+    informacionPedido.productosDetalle = productosArray;
+
+
+}
+    return informacionPedido;
+
+
+}
+
 
 module.exports = {
 	getNextID,
@@ -576,5 +610,6 @@ module.exports = {
 	sortPartidasByLevel,
 	sortPartidasByEmbalajesxSalir,
 	sortPartidasByAlternatePosition,
-	deletePartidasWithNegativeExpireDays
+	deletePartidasWithNegativeExpireDays,
+	createPedidoJSONForHold
 }

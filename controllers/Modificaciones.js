@@ -54,14 +54,14 @@ async function get(req, res){
 
             if(modificaciones){
 
-                await Helper.asyncForEach(modificaciones, function(bitacoraMod){
+                await Helper.asyncForEach(modificaciones, function(bitacoraMod, index){
 
-                    bitacoraMod.clave = bitacoraMod.partida_id.clave;
-                    bitacoraMod.descripcion = bitacoraMod.partida_id.descripcion;
-                    bitacoraMod.embalajesxSalir = bitacoraMod.partida_id.embalajesxSalir;
-
-                    arrBitacoraMod.push(bitacoraMod);
-
+    
+                        bitacoraMod.clave = bitacoraMod?.partida_id.clave;
+                        bitacoraMod.descripcion = bitacoraMod?.partida_id.descripcion;
+                        bitacoraMod.embalajesxSalir = bitacoraMod?.partida_id.embalajesxSalir;
+    
+                        arrBitacoraMod.push(bitacoraMod);
 
                 })
 
