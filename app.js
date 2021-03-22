@@ -38,6 +38,7 @@ const PlantaProductora = require('./controllers/PlantaProductora');
 const Ticket = require('./controllers/Ticket');
 const Modificaciones = require('./models/Modificaciones');
 const modificacionesController = require('./controllers/Modificaciones');
+const reenvioPedidosBitacora = require('./controllers/ReenvioPedidosBitacora');
 /* cors error
 app.use(bodyParser.urlencoded({
 	extended: false
@@ -302,8 +303,7 @@ app.post('/api/agregarPartidaSalidaId', Salida.agregarPartidaSalidaId);
 app.post('/api/SalidaAuto', Salida.saveDashboard);
 app.post('/api/ReloadPedidosBabel', Salida.reloadPedidosBabel);
 app.get('/api/verificarPartidasSalidas/:salida_id', Partida.verificarPartidasSalidas);
-
-
+app.get('/api/bitacoraReenvioPedidos', reenvioPedidosBitacora.get)
 
 //PosicionamentoAuto
 app.post('/api/posicionarPrioridades', Entrada.posicionarPrioridades);
