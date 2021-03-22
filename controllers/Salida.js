@@ -2586,14 +2586,15 @@ async function saveSalidaBabel(req, res) {
 				if ((entradas && entradas.length > 0)) {
 					//Obtener referencia del detalle de la slaida de babel
 					const salidaBabelModel = new SalidaBabelModel(pedidoDetalle);
-					
-					salidaBabelModel.save(function (err) {
+					let salidaBabel;
+					let salidaBabel_id;
+					salidaBabelModel.save(async function (err) {
 						if (err) return handleError(err);
 						// saved!
+						salidaBabel = await SalidaBabelModel.find({referencia: refitem}).exec();
+						salidaBabel_id = salidaBabel[0]._id.toString();
 					  });
 
-					let salidaBabel = await SalidaBabelModel.find({referencia: refitem}).exec();
-					let salidaBabel_id = salidaBabel[0]._id.toString();
 
 					let nSalida = new Salida();
 					nSalida.salida_id = await getNextID();
