@@ -1255,7 +1255,7 @@ async function getExcelCaducidades(req, res) {
 		//console.log("test");
 			//console.log("entradas");
 			
-			await Helper.asyncForEach(partida, async function (elem) {
+			await Helper.asyncForEach(partida, async function (elem, index) {
 				//console.log("partidas");
 				//console.log(elem);
 				if(elem){
@@ -1398,30 +1398,54 @@ async function getExcelCaducidades(req, res) {
 
 				if(elem.referenciaPedidos !== undefined){
 					if(elem.referenciaPedidos.length > 1){
-						//arrPartidas = arrPartidas.filter(partida => partida._id.toString() !== elem._id.toString());
-						let referenciasPedidos = elem.referenciaPedidos;
+						let partidaPickeada = arrPartidas.find(partida => partida === elem)
+						arrPartidas.splice(partidaPickeada, 0);
+						partidaPickeada.isPicking = true;
 						
-						for(let i = 1; i < referenciasPedidos.length; i++){
+						let referenciasPedidos = elem.referenciaPedidos;
+						let embalajeTemporal = 0;
+						for(let i = 0; i < referenciasPedidos.length; i++){
 							let copyInformacionPartida =  JSON.parse(JSON.stringify(elem))
 							copyInformacionPartida.refpedido = referenciasPedidos[i].referenciaPedido;
 							copyInformacionPartida.CajasPedidas = referenciasPedidos[i].CajasPedidas;
-
-							copyInformacionPartida.embalajesxSalir.cajas -= referenciasPedidos[i - 1].CajasPedidas.cajas;  
-							
+						 
+							copyInformacionPartida.isPicking = referenciasPedidos.length >= 1 ? false : true;
+							copyInformacionPartida.isPicking = true;
 							copyInformacionPartida.fechaCaducidad = new Date(copyInformacionPartida.fechaCaducidad);
 							copyInformacionPartida.fechaProduccion = new Date(copyInformacionPartida.fechaProduccion);
 							copyInformacionPartida.entrada_id[0].fechaAlta = new Date(copyInformacionPartida.entrada_id[0].fechaAlta);
 							copyInformacionPartida.entrada_id[0].fechaEntrada = new Date(copyInformacionPartida.entrada_id[0].fechaEntrada);
 							copyInformacionPartida.entrada_id[0].fechaReciboRemision = new Date(copyInformacionPartida.entrada_id[0].fechaReciboRemision);
 							copyInformacionPartida.entrada_id[0].fechaSalidaPlanta = new Date(copyInformacionPartida.entrada_id[0].fechaSalidaPlanta);
-								
+							
+							if(i > 0){
 
+								if(embalajeTemporal === 0){
+									copyInformacionPartida.embalajesxSalir.cajas -= referenciasPedidos[i].CajasPedidas.cajas;
+									embalajeTemporal = copyInformacionPartida.embalajesxSalir.cajas;
+								}else{
+	
+									copyInformacionPartida.embalajesxSalir.cajas = embalajeTemporal;
+									
+									embalajeTemporal -= referenciasPedidos[i].CajasPedidas.cajas;
+								}
 
-							arrPartidas.push(copyInformacionPartida);
+								arrPartidas.push(copyInformacionPartida);
+							}else{
+								embalajeTemporal = copyInformacionPartida.embalajesxSalir.cajas - referenciasPedidos[i].CajasPedidas.cajas;
+							}
+
+							if(i === referenciasPedidos.length - 1){
+								copyInformacionPartida.isPicking = false;
+							}
+
 						}
 						
 					}
 				}
+
+
+
 
 			}
 			})		
@@ -1444,6 +1468,22 @@ async function getExcelCaducidades(req, res) {
 								    fgColor: '#FFA500',
 								  },
 						        });
+		var bookedStyle = workbook.createStyle({
+				font: {
+					bold: true,
+				},
+				alignment: {
+					wrapText: true,
+					horizontal: 'center',
+				},
+				fill: {
+					type: 'pattern',
+					patternType: 'solid',
+					bgColor: '#FFFE33',
+					fgColor: '#FFFE33',
+				},
+				});						
+
         var tituloStyle = workbook.createStyle({
           font: {
             bold: true,
@@ -1768,7 +1808,15 @@ async function getExcelCaducidades(req, res) {
             {
             	worksheet.cell(i, indexbody).number(0);
             }
-            worksheet.cell(i, indexbody+1).number(partidas.CajasPedidas!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :parseInt(partidas.embalajesxSalir.cajas) );
+			let disponible = partidas.embalajesxSalir?.cajas-partidas?.CajasPedidas?.cajas;
+
+			if(partidas.isPicking === true){
+				worksheet.cell(i, indexbody+1).string("").style(bookedStyle);
+			}else{
+				worksheet.cell(i, indexbody+1).number(partidas.CajasPedidas!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :parseInt(partidas.embalajesxSalir.cajas) );
+			}
+
+			//worksheet.cell(i, indexbody+1).string(partidas.CajasPedidas!=undefined ? partidas.pedido == false ?  parseInt(partidas.embalajesxSalir.cajas) : partidas.embalajesxSalir.cajas-partidas.CajasPedidas.cajas :parseInt(partidas.embalajesxSalir.cajas) );
            	worksheet.cell(i, indexbody+2).string(partidas.refpedido ?partidas.refpedido:"SIN_ASIGNAR"); 
            	worksheet.cell(i, indexbody+3).string(partidas.statusPedido ?partidas.statusPedido:"SIN_ASIGNAR");       
            	worksheet.cell(i, indexbody+4).string(partidas.fechaProduccion ? dateFormat(new Date(partidas.fechaProduccion.getTime()), formatofecha):"");

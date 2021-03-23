@@ -1903,7 +1903,7 @@ async function reloadPedidosBabel(req, res){
 			const reenvioPedidosBitacoraJson = {
 				sucursal_id: salidaActual.sucursal_id,
 				almacen_id: salidaActual.almacen_id,
-				clienteFiscal_id: salidaActual.almacen_id,
+				clienteFiscal_id: salidaActual.clienteFiscal_id,
 				salida_id: salidaActual._id,
 				descripcion: "Se ha reenviado el pedido con exito",
 				tipo: "SALIDA",
