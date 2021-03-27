@@ -108,6 +108,17 @@ async function save(req, res) {
 				await MovimientoInventario.saveSalida(itemPartida, salida.id);
 			}
 
+
+			//Esconder salida que se encuentra en FORSHIPPING y reiniciar sus partidas
+			let salidaEnForShipping = await Salida.find({referencia: refpedido, tipo: "FORSHIPPING"}).exec();
+
+			if(salidaEnForShipping.length >= 1){
+				await eliminarPedidoParaRenviar(refpedido);
+				salidaEnForShipping[0].tipo = "PENDINGFORSHIPPING"
+				await salidaEnForShipping[0].save();
+			}
+
+
 			TiempoCargaDescarga.setStatus(salida.tiempoCarga_id, { salida_id: salida._id, status: "ASIGNADO" });
 
 			let partidas = await Partida.put(req.body.jsonPartidas, salida._id);
@@ -1797,7 +1808,7 @@ async function ingresarPedidoConModificacion(pedido){
 async function eliminarPedidoParaRenviar(referencia){
 
 	
-	let salida = await Salida.find({"referencia": referencia}).exec();
+	let salida = await Salida.find({"referencia": referencia, tipo: "FORSHIPPING"}).exec();
 
 	const partidas_id = salida[0].partidas;
 	let partidasPedido;
@@ -1857,7 +1868,7 @@ async function reloadPedidosBabel(req, res){
 
 	let salidasActuales = await Salida.find({tipo: "FORSHIPPING" }).exec();
 
-	//let salidasActuales = await Salida.find({referencia: "BM 10866769 B", }).exec();
+	//let salidasActuales = await Salida.find({referencia: "BM 1099341 C", tipo: "FORSHIPPING" }).exec();
 	
 	let referencias = [];
 	let detallePedidoTeplate = "";
@@ -1880,6 +1891,7 @@ async function reloadPedidosBabel(req, res){
 												<td>${Clave}</td>
 												<td>${producto}</td>
 												<td>${Cantidad}</td>
+												<td>${salidaActual.referencia}</td>
 											</tr>
 				`
 
@@ -1933,18 +1945,19 @@ async function reloadPedidosBabel(req, res){
 
 }
 
-
+//`<h4>Pedido: ${pedido}</h4>
 function generateTablePedidosTempate(detallesPedidosArray) {
 	let detallePedidoTemplates = "";
 	detallesPedidosArray.forEach(detallePedido => {
 		const {template, pedido } = detallePedido
 		detallePedidoTemplates += 
-		`<h4>Pedido: ${pedido}</h4>
-		<table>
+		
+		`<table>
 			<th>Numero</th>
 			<th>Item</th>
 			<th style="width: 70%;">Descripcion</th>
 			<th>Cantidad</th>
+			<th>Pedido</th>
 			${template}
 		</table>`;		
 	})
@@ -2059,7 +2072,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 				let cantidadRestante = cantidadneeded;
 				let partidaSeleccionada = partidas[i];
 
-				if(partidas[i].embalajesxSalir.cajas === cantidadPedida * 2 && isEstiba === true && cantidadPedida === equivalencia){
+				if(partidas[i].embalajesxSalir.cajas === cantidadPedida * 2 && isEstiba === true && cantidadPedida === equivalencia && equivalencia !== cantidadneeded){
 					cantidadPedida = equivalencia * 2;
 					cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
 				}
@@ -2424,7 +2437,7 @@ async function saveSalidaBabel(req, res) {
 						let cantidadRestante = cantidadneeded;
 						let partidaSeleccionada = partidas[i];
 
-						if(partidas[i].embalajesxSalir.cajas === cantidadPedida * 2 && isEstiba === true && cantidadPedida === equivalencia){
+						if(partidas[i].embalajesxSalir.cajas === cantidadPedida * 2 && isEstiba === true && cantidadPedida === equivalencia && equivalencia !== cantidadneeded){
 							cantidadPedida = equivalencia * 2;
 							cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
 						}
