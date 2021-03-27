@@ -1613,7 +1613,7 @@ async function posicionarPartidas(req, res)
         console.log(partida)
         let posicion = await PosicionModelo.findOne({ _id: id_pocision});
         let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
-        let productos= await Producto.findOne({_id: new  ObjectId(partida.producto_id)});
+        let productos= await Producto.findOne({_id: new ObjectId(partida.producto_id)});
         /*console.log("Posicion---------------");
         console.log(posicion);
         console.log("Pasillo---------------");
