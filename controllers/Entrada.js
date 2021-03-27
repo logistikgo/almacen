@@ -1399,7 +1399,6 @@ async function getExcelCaducidades(req, res) {
 				if(elem.referenciaPedidos !== undefined){
 					if(elem.referenciaPedidos.length > 1){
 						let partidaPickeada = arrPartidas.find(partida => partida === elem)
-						arrPartidas.splice(partidaPickeada, 0);
 						partidaPickeada.isPicking = true;
 						
 						let referenciasPedidos = elem.referenciaPedidos;
@@ -1409,7 +1408,6 @@ async function getExcelCaducidades(req, res) {
 							copyInformacionPartida.refpedido = referenciasPedidos[i].referenciaPedido;
 							copyInformacionPartida.CajasPedidas = referenciasPedidos[i].CajasPedidas;
 						 
-							copyInformacionPartida.isPicking = referenciasPedidos.length >= 1 ? false : true;
 							copyInformacionPartida.isPicking = true;
 							copyInformacionPartida.fechaCaducidad = new Date(copyInformacionPartida.fechaCaducidad);
 							copyInformacionPartida.fechaProduccion = new Date(copyInformacionPartida.fechaProduccion);
