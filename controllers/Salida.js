@@ -1868,7 +1868,7 @@ async function reloadPedidosBabel(req, res){
 
 	let salidasActuales = await Salida.find({tipo: "FORSHIPPING" }).exec();
 
-	//let salidasActuales = await Salida.find({referencia: "BM 1099341 C", tipo: "FORSHIPPING" }).exec();
+	//let salidasActuales = await Salida.find({referencia: "BM 1095842 C", tipo: "FORSHIPPING" }).exec();
 	
 	let referencias = [];
 	let detallePedidoTeplate = "";
@@ -2043,7 +2043,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 							}
 			});
 
-			if((cantidadneeded / equivalencia) >= 1){
+			if(Helper.isPicking(equivalencia, cantidadneeded)){
 				console.log("Completa la equivalencia");
 				partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
 				
@@ -2077,6 +2077,10 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 					cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
 				}
 
+				if(isEstiba === true && partidas[i].embalajesxSalir.cajas === (equivalencia / 2)){
+					cantidadPedida = partidas[i].embalajesxSalir.cajas;
+				}
+
 				
 				let isPartidaPickeada = false;
 				let refPedidoPartida = refitem.trim();
@@ -2096,7 +2100,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 				//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
 				//let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*10)); 
 				
-				if((cantidadneeded / equivalencia) >= 1){
+				if(Helper.isPicking(equivalencia, cantidadneeded)){
 					console.log("Completa la equivalencia");
 				}else{
 					console.log("Es picking")
@@ -2151,7 +2155,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 					isPartidaPickeada = true;
 				
 					//Buscar una partida pickeada y seleccionar la primera que encuentra
-					const {partidaSeleccionadaPick, cantidadParcialPick} = holdPartidaPick(partidasPickeadasOrdenadas, cantidadPedida, parRes);
+					const {partidaSeleccionadaPick, cantidadParcialPick} = holdPartidaPick(partidasPickeadasOrdenadas, cantidadneeded, parRes);
 					cantidadPedida = cantidadParcialPick;
 					cantidadRestante = cantidadPedida;
 					partidaSeleccionada = partidaSeleccionadaPick;
@@ -2408,7 +2412,7 @@ async function saveSalidaBabel(req, res) {
 									}
 					});
 
-					if((cantidadneeded / equivalencia) >= 1){
+					if(Helper.isPicking(equivalencia, cantidadneeded)){
 						console.log("Completa la equivalencia");
 						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
 						
@@ -2442,7 +2446,10 @@ async function saveSalidaBabel(req, res) {
 							cantidadRestante = partidaSeleccionada.embalajesxSalir.cajas;
 						}
 
-						
+						if(isEstiba === true && partidas[i].embalajesxSalir.cajas === (equivalencia / 2)){
+							cantidadPedida = partidas[i].embalajesxSalir.cajas;
+						}
+
 						let isPartidaPickeada = false;
 						let refPedidoPartida = pedidoCadena.trim();
 						let refPedidoDocument = {};
@@ -2461,7 +2468,7 @@ async function saveSalidaBabel(req, res) {
 						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
 			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*10)); 
 						
-						if((cantidadneeded / equivalencia) >= 1){
+						if(Helper.isPicking(equivalencia, cantidadneeded)){
 							console.log("Completa la equivalencia");
 						}else{
 							console.log("Es picking")
@@ -2516,7 +2523,7 @@ async function saveSalidaBabel(req, res) {
 							isPartidaPickeada = true;
 						
 							//Buscar una partida pickeada y seleccionar la primera que encuentra
-							const {partidaSeleccionadaPick, cantidadParcialPick} = holdPartidaPick(partidasPickeadasOrdenadas, cantidadPedida, parRes);
+							const {partidaSeleccionadaPick, cantidadParcialPick} = holdPartidaPick(partidasPickeadasOrdenadas, cantidadneeded, parRes);
 							cantidadPedida = cantidadParcialPick;
 							cantidadRestante = cantidadPedida;
 							partidaSeleccionada = partidaSeleccionadaPick;

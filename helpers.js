@@ -588,6 +588,14 @@ for(let i = 14; i < pedidoDetalle.length; i++){
 
 }
 
+function isPicking(equivalencia, cantidad){
+
+
+	return (cantidad === equivalencia || cantidad === equivalencia * 2)
+
+
+}
+
 
 module.exports = {
 	getNextID,
@@ -611,5 +619,6 @@ module.exports = {
 	sortPartidasByEmbalajesxSalir,
 	sortPartidasByAlternatePosition,
 	deletePartidasWithNegativeExpireDays,
-	createPedidoJSONForHold
+	createPedidoJSONForHold,
+	isPicking
 }
