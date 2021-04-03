@@ -1868,7 +1868,7 @@ async function reloadPedidosBabel(req, res){
 
 	let salidasActuales = await Salida.find({tipo: "FORSHIPPING" }).exec();
 
-	//let salidasActuales = await Salida.find({referencia: "BM 1095842 C", tipo: "FORSHIPPING" }).exec();
+	//let salidasActuales = await Salida.find({referencia: "BM 1101297 B", tipo: "FORSHIPPING" }).exec();
 	
 	let referencias = [];
 	let detallePedidoTeplate = "";
@@ -1935,12 +1935,11 @@ async function reloadPedidosBabel(req, res){
 	let detallesPedidosTemplates = generateTablePedidosTempate(detallesPedidosArray);
 
 	let bodyHtmlMail = bodyMailTemplate.bodyHtml(detallesPedidosTemplates);
-
+	
 	mailer.sendEmail({body: bodyHtmlMail}, "[LGKGO] Notificacion Reenvio Pedidos")
 	.then(response =>{
 		console.log("Se ha enviado el mensaje con exito");
 	});
-
 	res.status(200).send({"statusCode": 200, "response": "Se han resubido los pedidos"});
 
 }
@@ -2013,6 +2012,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 								origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,
 								'clave':par.Clave,
 								'isEmpty':false,
+								pedido: false,
 								 'embalajesxSalir.cajas': {$nin: [0]},
 								fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1, "posiciones.pasillo": 1})
 							.exec();
@@ -2043,7 +2043,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 							}
 			});
 
-			if(Helper.isPicking(equivalencia, cantidadneeded)){
+			if(cantidadneeded % equivalencia === 0){
 				console.log("Completa la equivalencia");
 				partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
 				
@@ -2100,11 +2100,20 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 				//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
 				//let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*10)); 
 				
-				if(Helper.isPicking(equivalencia, cantidadneeded)){
+				if(Helper.isPicking(equivalencia, cantidadPedida, isEstiba)){
 					console.log("Completa la equivalencia");
 				}else{
 					console.log("Es picking")
-					let partidaPickeada = partidas.filter(partida => {
+
+					let partidasPick = await PartidaModel.find({'status':'ASIGNADA', 
+								origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,
+								'clave':par.Clave,
+								'isEmpty':false,
+								 'embalajesxSalir.cajas': {$nin: [0]},
+								fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1, "posiciones.pasillo": 1})
+							.exec();
+
+					let partidaPickeada = partidasPick.filter(partida => {
 						let diasrestantes = Helper.getDaysForExpire(partida, producto, hoy);
 
 						if(partida.fechaCaducidad.getTime() > hoy && diasrestantes >= DIAS_ANTICIPADOS){
@@ -2412,7 +2421,7 @@ async function saveSalidaBabel(req, res) {
 									}
 					});
 
-					if(Helper.isPicking(equivalencia, cantidadneeded)){
+					if(cantidadneeded % equivalencia === 0){
 						console.log("Completa la equivalencia");
 						partidas = await PartidaModel.find({'status':'ASIGNADA', pedido: false, origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1}).exec();
 						
@@ -2435,6 +2444,7 @@ async function saveSalidaBabel(req, res) {
 					console.log("totalpartidas: "+partidas.length)
 					let count=0;
 					bandcp=false;
+
 					for (let i = 0; i < partidas.length; i++) //&& count<1
 					{	
 						cantidadPedida=cantidadneeded >= equivalencia ? equivalencia : cantidadneeded;
@@ -2468,11 +2478,20 @@ async function saveSalidaBabel(req, res) {
 						//let fechaFrescura = new Date(partidas[i].fechaCaducidad.getTime() - (producto.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000)); ///se cambio por fecha de alerta amarilla
 			            let fechaAlerta1 = new Date(partidas[i].fechaCaducidad.getTime() - (producto.alertaAmarilla * 86400000)- (60 * 60 * 24 * 1000*10)); 
 						
-						if(Helper.isPicking(equivalencia, cantidadneeded)){
+						if(Helper.isPicking(equivalencia, cantidadPedida, isEstiba)){
 							console.log("Completa la equivalencia");
 						}else{
 							console.log("Es picking")
-							let partidaPickeada = partidas.filter(partida => {
+
+							let partidasPick = await PartidaModel.find({'status':'ASIGNADA', 
+								origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,
+								'clave':par.Clave,
+								'isEmpty':false,
+								 'embalajesxSalir.cajas': {$nin: [0]},
+								fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1, "posiciones.pasillo": 1})
+							.exec();
+
+							let partidaPickeada = partidasPick.filter(partida => {
 								let diasrestantes = Helper.getDaysForExpire(partida, producto, hoy);
 
 								if(partida.fechaCaducidad.getTime() > hoy && diasrestantes >= DIAS_ANTICIPADOS){

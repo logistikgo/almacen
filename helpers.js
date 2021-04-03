@@ -588,10 +588,14 @@ for(let i = 14; i < pedidoDetalle.length; i++){
 
 }
 
-function isPicking(equivalencia, cantidad){
+function isPicking(equivalencia, cantidadPedida, isEstiba = false){
 
+	if(isEstiba === true){
+		return (cantidadPedida === equivalencia || cantidadPedida === equivalencia * 2 || cantidadPedida === (equivalencia / 2))
+	}else{
+		return (cantidadPedida === equivalencia || cantidadPedida === equivalencia * 2)
+	}
 
-	return (cantidad === equivalencia || cantidad === equivalencia * 2)
 
 
 }
