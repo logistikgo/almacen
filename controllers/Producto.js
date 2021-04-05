@@ -11,6 +11,7 @@ const ClienteFiscal = require('../models/ClienteFiscal');
 const { mongo } = require('mongoose');
 const { Mongoose } = require('mongoose');
 const mongoose = require('mongoose');
+var ObjectId = (require('mongoose').Types.ObjectId);
 const { isEmptyEmbalaje } = require('../helpers');
 
 function get(req, res) {
@@ -540,6 +541,55 @@ function getEquivalencias(req, res) {
 		});
 }
 
+async function getTotalInventory(req, res){
+
+	try {
+		const clienteFiscal_id = req.query?.clienteFiscal_id;
+        const almacen_id = req.query?.almacen_id;
+		
+		 const totalInventory = await Partida.aggregate([
+			{$lookup: {"from": "Entradas", "localField": "entrada_id", "foreignField": "_id", "as": "fromEntradas"}},
+			{$match:{"isEmpty": false, 
+					 "status" : "ASIGNADA", 
+					 "fromEntradas.clienteFiscal_id": ObjectId(clienteFiscal_id),
+					 "fromEntradas.almacen_id": ObjectId(almacen_id)}},
+			{$group: {_id: ObjectId(), cantidadProducto: {$sum: "$embalajesxSalir.cajas"}, cantidadTarimas: {$sum: 1}}}
+			]).exec();
+
+			return res.status(200).send({statusCode: 200, response: totalInventory});
+
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+async function getTotalInventorySubclasificacion(req, res){
+
+	try {
+		const clienteFiscal_id = req.query?.clienteFiscal_id;
+        const almacen_id = req.query?.almacen_id;
+		const subclasificacion = req.params?.subclasificacion;
+
+		 const totalInventory = await Partida.aggregate([
+				{$lookup: {"from": "Entradas", "localField": "entrada_id", "foreignField": "_id", "as": "fromEntradas"}},
+				{$lookup: {"from": "Productos", "localField": "producto_id", "foreignField": "_id", "as": "fromProductos"}},
+				{$match:{isEmpty: false, 
+						 status : "ASIGNADA", 
+						 "fromEntradas.clienteFiscal_id": ObjectId(clienteFiscal_id),
+						 "fromEntradas.almacen_id": ObjectId(almacen_id),
+						 "fromProductos.subclasificacion": subclasificacion}},
+				{$group: {_id: "$fromProductos.subclasificacion", cantidadProducto: {$sum: "$embalajesxSalir.cajas"}, cantidadTarimas: {$sum: 1}}}
+			]).exec();
+
+
+			return res.status(200).send({statusCode: 200, response: totalInventory});
+
+	} catch (error) {
+		console.error(error);
+	}
+}
+
+
 module.exports = {
 	get,
 	getById,
@@ -554,5 +604,7 @@ module.exports = {
 	getExistenciasByAlmacen,
 	getPartidasxProductoenExistencia,
 	getEquivalencias,
-	getByIDClienteFiscalAggregate
+	getByIDClienteFiscalAggregate,
+	getTotalInventory,
+	getTotalInventorySubclasificacion
 }
