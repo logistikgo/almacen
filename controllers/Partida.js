@@ -3155,6 +3155,72 @@ async function getExcelInventory(req, res){
     return cantidadPartidasEmbalajes;
  }
 
+
+ async function removePartidasWithZeroQuantity(req, res){
+
+    
+    try {
+        const clienteFiscal_id = req.query?.clienteFiscal_id;
+        const almacen_id = req.query?.almacen_id;
+
+        const Partidas = await Partida.aggregate([
+        {$lookup: {"from": "Entradas", "localField": "entrada_id", "foreignField": "_id", "as": "fromEntradas"}}
+        ,
+        {$match: {"fromEntradas.clienteFiscal_id": ObjectId(clienteFiscal_id), 
+                  "fromEntradas.almacen_id": ObjectId(almacen_id),
+                  "isEmpty": false, 
+                  "embalajesxSalir.cajas": 0}}
+    ]).exec();
+
+        if(Partidas.length > 0){
+            await removePartidaPosicion(Partidas);
+            return res.status(200).send({statusCode: 200, response: `Se han depurado ${Partidas.length} partidas en cero`});
+        }else{
+            return res.status(200).send({statusCode: 200, response: `No existen partidas en cero en este momento`});
+        }
+
+    } catch (error) {
+        return res.status(500).send({statusCode: 500}, "error");
+    }
+
+
+    
+ }
+
+
+async function removePartidaPosicion(partidas){
+
+    await Helpers.asyncForEach(partidas, async function(partida){
+        
+        try {
+            let partidaaux = await Partida.findOne({_id:partida._id}).exec();
+            partidaaux.isEmpty = true;
+            partidaaux.origen = partida.origen+"-REMOVE";
+            partidaaux.posiciones[0].isEmpty = true;
+            let nivel_id = partidaaux.posiciones[0].nivel_id;
+            let posicion_id = partidaaux.posiciones[0].posicion_id;
+            let producto_id = partidaaux.producto_id;
+    
+            let PosicionActual = await PosicionModelo.find({"_id": mongoose.Types.ObjectId(posicion_id)}).exec();
+    
+            let niveles = PosicionActual[0].niveles;
+    
+            let nivelActual = niveles.find(nivel => nivel._id.toString() === nivel_id.toString());
+            nivelActual.isCandadoDisponibilidad = false;
+            nivelActual.apartado = false;
+            nivelActual.productos = nivelActual.productos.filter(producto => producto.producto_id.toString() !== producto_id.toString());
+            
+            await partidaaux.save();
+            await PosicionActual[0].save();
+        } catch (error) {
+            console.error(error)
+                    
+        }    
+
+    });
+
+}
+
 module.exports = {
     get,
     post,
@@ -3189,5 +3255,6 @@ module.exports = {
     getExcelInventory,
     getPartidaModExcel,
     getInventarioPorPartidas,
-    verificarPartidasSalidas
+    verificarPartidasSalidas,
+    removePartidasWithZeroQuantity
 }
