@@ -68,6 +68,8 @@ app.get('/api/getProductosALMXD', Producto.getALM_XD);
 app.get('/api/getExistenciasByAlmacen/:almacen_id/:producto_id', Producto.getExistenciasByAlmacen);
 app.get('/api/getPartidasxProductoenExistencia/:producto_id', Producto.getPartidasxProductoenExistencia);
 app.get('/api/getEquivalencias', Producto.getEquivalencias);
+app.get('/api/totalInventario', Producto.getTotalInventory);
+app.get('/api/totalInventario/:subclasificacion', Producto.getTotalInventorySubclasificacion);
 
 app.get('/api/getPartidasMod/:idClienteFiscal', Partida.getPartidaMod);
 
