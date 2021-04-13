@@ -1866,9 +1866,15 @@ function desasiganarPedidoEnPartida(partida, referencia){
 
 async function reloadPedidosBabel(req, res){
 
-	let salidasActuales = await Salida.find({tipo: "FORSHIPPING" }).exec();
+	let salidasActuales;
 
-	//let salidasActuales = await Salida.find({referencia: "BM 1101297 B", tipo: "FORSHIPPING" }).exec();
+	const referencia = req.query?.referencia ? req.query.referencia : null;
+
+	if(referencia !== null){
+		salidasActuales = await Salida.find({"referencia": referencia, tipo: "FORSHIPPING" }).exec();
+	}else{
+		salidasActuales = await Salida.find({tipo: "FORSHIPPING" }).sort({fechaAlta: 1}).exec();
+	}
 	
 	let referencias = [];
 	let detallePedidoTeplate = "";
@@ -2062,6 +2068,8 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 			}
 			partidas = Helper.deletePartidasWithNegativeExpireDays(partidas, producto, hoy);
 
+			partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+			
 
 			console.log("totalpartidas: "+partidas.length)
 			let count=0;
@@ -2081,6 +2089,9 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 					cantidadPedida = partidas[i].embalajesxSalir.cajas;
 				}
 
+				if(cantidadneeded < cantidadRestante){
+					cantidadPedida = cantidadneeded;
+				}
 				
 				let isPartidaPickeada = false;
 				let refPedidoPartida = refitem.trim();
@@ -2093,6 +2104,11 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 				if(cantidadneeded <= 0){
 					break;
 				}
+
+				//let referenciaPedidos = partidaSeleccionada.referenciaPedidos.map(ref => ref.CajasPedidas.cajas);
+				//let cantidadApartada = referenciaPedidos.reduce((val, acc) => val += acc);
+
+
 
 				//console.log(i);
 				//fechaFrescura = new Date(fCaducidad - (elem.producto_id.garantiaFrescura * 86400000)- (60 * 60 * 24 * 1000));
@@ -2112,6 +2128,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 								 'embalajesxSalir.cajas': {$nin: [0]},
 								fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1, "posiciones.pasillo": 1})
 							.exec();
+						partidasPick = Helper.deletePartidasWithNegativeExpireDays(partidasPick, producto, hoy);
 
 					let partidaPickeada = partidasPick.filter(partida => {
 						let diasrestantes = Helper.getDaysForExpire(partida, producto, hoy);
@@ -2186,7 +2203,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 				if(partidaSeleccionada !== undefined){
 					Diasrestantes = Helper.getDaysForExpire(partidaSeleccionada, producto, hoy);
 					console.log("Dias Para perder frescura"+ Diasrestantes);
-					if(cantidadRestante >= cantidadPedida && partidaSeleccionada.embalajesxSalir.cajas >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS && pedidoCompleto === true)
+					if(cantidadRestante >= cantidadPedida && partidaSeleccionada.embalajesxSalir.cajas >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS)
 					{	
 						//Prioridad buscar tarimas incompletas (Picking)
 
@@ -2195,7 +2212,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 							var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
 							//let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
 							
-							if(partidaaux.pedido==false)
+							if(partidaaux.pedido==false && partidaaux.referenciaPedidos.length === 0)
 							{
 								
 								refPedidoDocument.referenciaPedido = refPedidoPartida;
@@ -2213,7 +2230,10 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 									partidaaux.referenciaPedidos.push(refPedidoDocument);
 								}
 							}
-					
+							
+							partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+
+
 							partidaaux.statusPedido="COMPLETO";
 							await partidaaux.save();
 							parRes.push(partidaaux);
@@ -2441,6 +2461,9 @@ async function saveSalidaBabel(req, res) {
 					partidas = Helper.deletePartidasWithNegativeExpireDays(partidas, producto, hoy);
 
 
+					partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+					
+
 					console.log("totalpartidas: "+partidas.length)
 					let count=0;
 					bandcp=false;
@@ -2564,7 +2587,7 @@ async function saveSalidaBabel(req, res) {
 						if(partidaSeleccionada !== undefined){
 							Diasrestantes = Helper.getDaysForExpire(partidaSeleccionada, producto, hoy);
 							console.log("Dias Para perder frescura"+ Diasrestantes);
-							if(cantidadRestante >= cantidadPedida && partidaSeleccionada.embalajesxSalir.cajas >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS && pedidoCompleto === true)
+							if((cantidadRestante >= cantidadPedida && partidaSeleccionada.embalajesxSalir.cajas >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS) || partidas.length === 1)
 							{	
 								//Prioridad buscar tarimas incompletas (Picking)
 	
@@ -2591,6 +2614,9 @@ async function saveSalidaBabel(req, res) {
 											partidaaux.referenciaPedidos.push(refPedidoDocument);
 										}
 									}
+
+									partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+
 							
 									partidaaux.statusPedido="COMPLETO";
 									await partidaaux.save();
@@ -2617,13 +2643,14 @@ async function saveSalidaBabel(req, res) {
 
 			console.log("********************"+totalpartidas+"=="+parRes.length+"********************");
 			
-			if (parRes && parRes.length && pedidoCompleto === true ) {
+			if (parRes && parRes.length) {
 				//console.log(parRes);
 				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
 				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
 
 				if ((entradas && entradas.length > 0)) {
 					//Obtener referencia del detalle de la slaida de babel
+					pedidoDetalle.referencia.split("rev")[0].trim();
 					const salidaBabelModel = new SalidaBabelModel(pedidoDetalle);
 					let salidaBabel;
 					let salidaBabel_id;
