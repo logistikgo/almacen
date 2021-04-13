@@ -2654,8 +2654,13 @@ async function getPartidaModExcel(req, res)
     try {
         let partidas = [];
 
+        //Obtener embalaje dependiendo el cliente
         const idClienteFiscal = req.query.idClienteFiscal;
-        
+        const clienteFiscal = await ClienteFiscal.findById(idClienteFiscal).exec();
+        const arrEmbalajes = clienteFiscal.arrEmbalajes;
+        const embalaje = arrEmbalajes.split(",")[1];
+
+
         const filtro = {
             "isEmpty": false,
             "tipo": {$in: ["NORMAL", "AGREGADA", "MODIFICADA"]},
@@ -2816,7 +2821,7 @@ async function getPartidaModExcel(req, res)
         worksheet.cell(row, 3).string(descripcion === undefined || null ? "" : descripcion);
         worksheet.cell(row, 4).string(fechaCaducidad === undefined || null ? "" : dateFormat(fechaCaducidad, "dd/mm/yyyy"));
         worksheet.cell(row, 5).number(1);
-        worksheet.cell(row, 6).number(embalajesxSalir.cajas === undefined || null ? 0 : embalajesxSalir.cajas);
+        worksheet.cell(row, 6).number(embalajesxSalir[embalaje] === undefined || null ? 0 : embalajesxSalir[embalaje]);
         worksheet.cell(row, 7).string(posiciones[0].pasillo === undefined || null ? "" : posiciones[0].pasillo);
         worksheet.cell(row, 8).string(posiciones[0].posicion === undefined || null ? "" : posiciones[0].posicion);
         worksheet.cell(row, 9).string(posiciones[0].nivel === undefined || null ?  "" : ""+nivel);
