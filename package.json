@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "set NODE_ENV=production&& nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "set NODE_ENV=development&& nodemon index.js",
+    "demo": "set NODE_ENV=demo&& nodemon index.js"
   },
   "author": "Ivan Morales",
   "license": "MIT",
