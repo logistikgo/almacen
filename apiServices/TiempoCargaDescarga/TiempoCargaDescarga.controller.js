@@ -1,7 +1,7 @@
 'use strict'
 
 const TiempoCargaDescarga = require('./TiempoCargaDescarga.model');
-const Helpers = require('../../helpers');
+const Helpers = require('../../services/utils/helpers');
 
 async function getNextID() {
     return await Helpers.getNextID(TiempoCargaDescarga, "consecutivo");

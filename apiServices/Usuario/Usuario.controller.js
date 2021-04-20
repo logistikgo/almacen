@@ -1,6 +1,6 @@
 'use strict'
 const Usuario = require('./Usuario.model');
-const Helper = require('../../helpers');
+const Helper = require('../../services/utils/helpers');
 
 async function getNextID(){
 	

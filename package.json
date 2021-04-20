@@ -13,6 +13,7 @@
   "license": "MIT",
   "dependencies": {
     "blob-stream": "^0.1.3",
+    "cors": "^2.8.5",
     "dateformat": "^3.0.3",
     "dotenv": "^6.2.0",
     "event-stream": "^4.0.0",

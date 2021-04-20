@@ -2,7 +2,7 @@
 
 const PrePartida = require('./PrePartida.model');
 const Entrada = require('../Entrada/Entrada.model');
-const Helper = require('../../helpers');
+const Helper = require('../../services/utils/helpers');
 const Producto = require('../Producto/Producto.model');
 const MovimientoInventario = require('../MovimientosInventario/MovimientoInventario.controller');
 const Interfaz_ALM_XD = require('../Interfaz_ALM_XD/Interfaz_ALM_XD.controller');

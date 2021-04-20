@@ -1,7 +1,7 @@
 'use strict'
 
 const Almacen = require('./Almacen.model');
-const Helpers = require('../../helpers');
+const Helpers = require('../../services/utils/helpers');
 const MovimientoInventario = require('../MovimientosInventario/MovimientoInventario.model');
 
 const Posicion = require('../Posicion/Posicion.controller');

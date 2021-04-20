@@ -35,18 +35,13 @@ const ReenvioPedidosBitacoraRouter = require('../apiServices/ReenvioPedidosBitac
 const Interfaz_ALM_XDRouter = require('../apiServices/Interfaz_ALM_XD/Interfaz_ALM_XD.routes');
 const HelperRouter = require('../apiServices/Helper/Helper.routes');
 
+const middleware = require('../middlewares/middleware');
+
 
 module.exports = (app, express) => {
 
     //Middlewares
-    app.use(express.json());
-    app.use(express.urlencoded({extended: true, limit: '10mb'}));
-    app.use(function (req, res, next) {
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-	res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-	next();
-});
+    middleware(app, express);
     //Use routes in router
     app.use(ProductoRouter);
     app.use(UsuarioRouter);

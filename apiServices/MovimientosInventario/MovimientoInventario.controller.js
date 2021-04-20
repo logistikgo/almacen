@@ -5,7 +5,7 @@ const Posicion = require('../Posicion/Posicion.model');
 const Producto = require('../Producto/Producto.model');
 const Entrada = require('../Entradas/Entrada.model');
 const Salida = require('../Salidas/Salida.model');
-const Helper = require('../../helpers');
+const Helper = require('../../services/utils/helpers');
 
 async function saveSalida(itemPartida, salida_id) {
 	let nMovimiento = new MovimientoInventario();

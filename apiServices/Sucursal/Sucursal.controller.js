@@ -1,7 +1,7 @@
 'use strict'
 
 const Sucursal = require('../Sucursal/Sucursal.model');
-const Helpers = require('../../helpers');
+const Helpers = require('../../services/utils/helpers');
 const Interfaz_ALM_XD = require('../Interfaz_ALM_XD/Interfaz_ALM_XD.model');
 
 async function get(req, res) {

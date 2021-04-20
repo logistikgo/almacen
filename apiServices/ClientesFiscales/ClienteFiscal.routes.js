@@ -2,7 +2,7 @@ const { Router } = require('express');
 const router = new Router();
 
 const ClienteFiscal = require('./ClienteFiscal.controller');
-const Helper = require('../../helpers');
+const Helper = require('../../services/utils/helpers');
 
 router.get('/api/getCtesFiscales', ClienteFiscal.get);
 router.get('/api/getCtesFiscalesXD', Helper.getClientesFiscalesXD);

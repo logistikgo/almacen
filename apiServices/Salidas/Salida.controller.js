@@ -7,7 +7,7 @@ const Producto = require('../Producto/Producto.model');
 const reporteModel = require('../BackupReporteSalidas/backupRepoteSalidas.model');
 const Entrada = require('../Entradas/Entrada.model');
 const MovimientoInventario = require('../MovimientosInventario/MovimientoInventario.controller');
-const Helper = require('../../helpers');
+const Helper = require('../../services/utils/helpers');
 const PrePartidaM = require("../PrePartida/PrePartida.model");
 const Interfaz_ALM_XD = require('../Interfaz_ALM_XD/Interfaz_ALM_XD.controller');
 const TiempoCargaDescarga = require("../TiempoCargaDescarga/TiempoCargaDescarga.controller");
@@ -15,8 +15,8 @@ const EmbalajesController = require('../Embalaje/Embalaje.controller');
 const ClienteFiscal = require('../ClientesFiscales/ClienteFiscal.model');
 const SalidaBabelModel = require('../SalidasBabel/SalidasBabel.model');
 const ReenvioPedidosBitacora = require('../ReenvioPedidosBitacora/RenvioPedidosBitacora.model');
-const bodyMailTemplate = require('../../templateCreator');
-const mailer = require('../../mailer');
+const bodyMailTemplate = require('../../services/email/templateCreator');
+const mailer = require('../../services/email/mailer');
 function getNextID() {
 	return Helper.getNextID(Salida, "salida_id");
 }

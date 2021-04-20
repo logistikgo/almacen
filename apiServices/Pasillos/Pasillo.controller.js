@@ -4,7 +4,7 @@ const Pasillo = require('../Pasillos/Pasillo.model');
 const Posicion = require('../Posicion/Posicion.controller');
 const PosicionModel = require('../Posicion/Posicion.model');
 const Producto = require('../Producto/Producto.model');
-const Helper = require('../../helpers');
+const Helper = require('../../services/utils/helpers');
 var ObjectId = (require('mongoose').Types.ObjectId);
 
 function get(req, res) {

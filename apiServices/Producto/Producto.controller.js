@@ -5,14 +5,14 @@ const Entrada = require('../Entradas/Entrada.model');
 const Partida = require('../Partida/Partida.model');
 const PartidaController = require("../Partida/Partida.controller");
 const Interfaz_ALM_XD = require('../Interfaz_ALM_XD/Interfaz_ALM_XD.controller');
-const Helpers = require('../../helpers');
+const Helpers = require('../../services/utils/helpers');
 const MovimientoInventario = require('../MovimientosInventario/MovimientoInventario.controller')
 const ClienteFiscal = require('../ClientesFiscales/ClienteFiscal.model');
 const { mongo } = require('mongoose');
 const { Mongoose } = require('mongoose');
 const mongoose = require('mongoose');
 var ObjectId = (require('mongoose').Types.ObjectId);
-const { isEmptyEmbalaje } = require('../../helpers');
+const { isEmptyEmbalaje } = require('../../services/utils/helpers');
 
 function get(req, res) {
 	Producto.find({ statusReg: "ACTIVO" })

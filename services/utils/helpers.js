@@ -1,16 +1,18 @@
 //const PDF = require('pdfkit');
-const Entrada = require('./apiServices/Entradas/Entrada.model');
-const Partida = require('./apiServices/Partida/Partida.model');
-const Salida = require('./apiServices/Salidas/Salida.model');
-const Embalaje = require('./apiServices/Embalaje/Embalaje.model');
-const MovimientoInventario = require('./apiServices/MovimientosInventario/MovimientoInventario.model');
-const Interfaz_ALM_XD = require('./apiServices/Interfaz_ALM_XD/Interfaz_ALM_XD.model');
-const ClienteFiscal = require('./apiServices/ClientesFiscales/ClienteFiscal.model');
+const Entrada = require('../../apiServices/Entradas/Entrada.model');
+const Partida = require('../../apiServices/Partida/Partida.model');
+const Salida = require('../../apiServices/Salidas/Salida.model');
+const Embalaje = require('../../apiServices/Embalaje/Embalaje.model');
+const MovimientoInventario = require('../../apiServices/MovimientosInventario/MovimientoInventario.model');
+const Interfaz_ALM_XD = require('../../apiServices/Interfaz_ALM_XD/Interfaz_ALM_XD.model');
+const ClienteFiscal = require('../../apiServices/ClientesFiscales/ClienteFiscal.model');
 const fs = require('fs');
 const moment = require('moment');
 const blobstream = require('blob-stream');
 
-const configSQL = (require('./configSQL'));
+//const configSQL = (require('../../configSQL'));
+const configSQL = require('../../config/env/index')
+
 const sql = require('mssql');
 
 const distinct = (value, index, self) => {

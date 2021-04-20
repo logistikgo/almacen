@@ -2,7 +2,7 @@
 
 const Ticket = require('./Ticket.model');
 const Partida = require('../Partida/Partida.model');
-const Helper = require('../../helpers');
+const Helper = require('../../services/utils/helpers');
 const Entrada = require('../Entradas/Entrada.model');
 const Posicion = require('../Posicion/Posicion.model');
 const MovimientoInventario = require('../MovimientosInventario/MovimientoInventario.model');

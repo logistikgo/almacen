@@ -1,7 +1,7 @@
 'use strict'
 
 const ModificacionesModel = require('./Modificaciones.model');
-const Helper = require("../../helpers");
+const Helper = require("../../services/utils/helpers");
 async function get(req, res){
 
     try {

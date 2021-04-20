@@ -9,7 +9,7 @@ const Posicion = require('../Posicion/Posicion.controller');
 const Embalaje = require('../Embalaje/Embalaje.model');
 const PosicionModelo = require('../Posicion/Posicion.model');
 const MovimientoInventarioController = require('../MovimientosInventario/MovimientoInventario.controller');
-const Helper = require('../../helpers');
+const Helper = require('../../services/utils/helpers');
 const NullParamsException = { error: "NullParamsException" };
 const BreakException = { info: "Break" };
 const dateFormat = require('dateformat');
@@ -17,7 +17,7 @@ const EmbalajesController = require('../Embalaje/Embalaje.controller');
 const ClienteFiscal = require('../ClientesFiscales/ClienteFiscal.controller');
 const ModificacionesModel = require('../Modificaciones/Modificaciones.model');
 var ObjectId = (require('mongoose').Types.ObjectId);
-const Helpers = require('../../helpers');
+const Helpers = require('../../services/utils/helpers');
 
 function get(req, res) {
     let encoded_filter = req.params.filtro;
