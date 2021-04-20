@@ -1,13 +1,19 @@
 
 const dotenv = require('dotenv'); //Used for environment variables
-dotenv.config();
 
-module.exports = {
-	port: process.env.PORT || 8080,
-	//TEST
-	//db: process.env.MONGODB || process.env.DB_TEST_URL_ACCESS,//TEST 3
-	//DEMO
-	db: process.env.MONGODB || process.env.DB_DEMO_URL_ACCESS,//DEMO 
-	//PRODUCCION
-    //db: process.env.MONGODB || process.env.DB_PRODUCTION_URL_ACCESS,//PRODUCCION
+//Identificar archivo de variable de entorno
+if(process.env.NODE_ENV){
+	dotenv.config({
+		path: `${__dirname}/.env.${process.env.NODE_ENV}`
+	});
+}else{
+	dotenv.config();
 }
+
+let db_config = {
+	port: process.env.PORT || 8080,
+	database: process.env.DB_URL_ACCESS,
+	currentEnv: process.env.NODE_ENV
+};
+
+module.exports = db_config
