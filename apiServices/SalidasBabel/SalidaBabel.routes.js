@@ -1,13 +1,12 @@
 const { Router } = require('express');
 const router = new Router();
 
-const Salida = require('../Salidas/Salida.controller');
-
+const SalidaBabel = require('./SalidaBabel.controller')
  //salidas
- router.post('/api/saveSalidaBabel', Salida.saveSalidaBabel);
- router.post('/api/removefromSalidaId', Salida.removefromSalidaId);
- router.post('/api/agregarPartidaSalidaId', Salida.agregarPartidaSalidaId);
- router.post('/api/SalidaAuto', Salida.saveDashboard);
- router.post('/api/ReloadPedidosBabel', Salida.reloadPedidosBabel);
+ router.post('/api/saveSalidaBabel', SalidaBabel.saveSalidaBabel);
+ router.post('/api/removefromSalidaId', SalidaBabel.removefromSalidaId);
+ router.post('/api/agregarPartidaSalidaId', SalidaBabel.agregarPartidaSalidaId);
+ router.post('/api/SalidaAuto', SalidaBabel.saveDashboard);
+ router.post('/api/ReloadPedidosBabel', SalidaBabel.reloadPedidosBabel);
 
  module.exports = router;
