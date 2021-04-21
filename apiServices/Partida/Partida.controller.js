@@ -1644,7 +1644,7 @@ async function posicionarPartidas(req, res)
         }
         //console.log(posicion);
         await posicion.save();
-        partida.posiciones=[];
+        //partida.posiciones=[];
         let jPosicionBahia = {
             embalajesEntrada: partida.embalajesEntrada,
             embalajesxSalir: partida.embalajesxSalir,
@@ -1658,8 +1658,11 @@ async function posicionarPartidas(req, res)
         };
         partida.posiciones.push(jPosicionBahia);
 
-        await partida.save();
+        //await partida.save();
+        await Partida.updateOne({_id: id_partidas}, {$set: {posiciones: partida.posiciones}}).exec();
+        
         console.log(partida);
+        
         res.status(200).send("ok");
     }
     catch (e) {
