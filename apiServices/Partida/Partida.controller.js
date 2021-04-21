@@ -1614,12 +1614,7 @@ async function posicionarPartidas(req, res)
         let posicion = await PosicionModelo.findOne({ _id: id_pocision});
         let pasillo = await Pasillo.findOne({ _id: new ObjectId(id_pasillo)});
         let productos= await Producto.findOne({_id: new ObjectId(partida.producto_id)});
-        /*console.log("Posicion---------------");
-        console.log(posicion);
-        console.log("Pasillo---------------");
-        console.log(pasillo);
-        console.log("---------------");
-        console.log("nivel"+nivelIndex);*/
+       
         if(partida.posiciones.length>0)
         {
             let posOld = await PosicionModelo.findOne({ _id: partida.posiciones[0].posicion});
@@ -1662,7 +1657,7 @@ async function posicionarPartidas(req, res)
         await Partida.updateOne({_id: id_partidas}, {$set: {posiciones: partida.posiciones}}).exec();
         
         console.log(partida);
-        
+
         res.status(200).send("ok");
     }
     catch (e) {
