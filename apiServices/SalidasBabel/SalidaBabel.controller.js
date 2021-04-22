@@ -1210,6 +1210,28 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 
 }
 
+function desasiganarPedidoEnPartida(partida, referencia){
+
+
+	let referenciaPedidos = partida.referenciaPedidos.filter(pedido => pedido.referenciaPedido !== referencia);
+
+
+		if(referenciaPedidos.length > 0){
+			partida.refpedido = referenciaPedidos[0].referenciaPedido;
+			partida.pedido = referenciaPedidos[0].pedido;
+			partida.statusPedido = "COMPLETO";
+			partida.CajasPedidas.cajas = referenciaPedidos[0].CajasPedidas.cajas;
+		}else{
+			partida.refpedido = "SIN_ASIGNAR";
+			partida.pedido = false;
+			partida.statusPedido = "SIN_ASIGNAR";
+			partida.CajasPedidas.cajas = 0;
+		}
+
+		partida.referenciaPedidos = referenciaPedidos;
+
+		return partida;
+}
 
 function holdPartidaPick(partidasOrdenadas, cantidadPedida, partidasParciales){
 
