@@ -35,6 +35,7 @@ const ReenvioPedidosBitacoraRouter = require('../apiServices/ReenvioPedidosBitac
 const Interfaz_ALM_XDRouter = require('../apiServices/Interfaz_ALM_XD/Interfaz_ALM_XD.routes');
 const HelperRouter = require('../apiServices/Helper/Helper.routes');
 const EntradaMirageHandHeldRouter = require('../apiServices/MirageHandHeld/Entradas/EntradaMirageHandHeld.routes');
+const SalidaMirageHandHeldRouter = require('../apiServices/MirageHandHeld/Salidas/SalidaMirageHandHeld.routes');
 const middleware = require('../middlewares/middleware');
 
 
@@ -78,6 +79,8 @@ module.exports = (app, express) => {
     app.use(ReenvioPedidosBitacoraRouter);
     app.use(Interfaz_ALM_XDRouter);
     app.use(HelperRouter);
+    //Rutas para dar de alta entradas y salidas en Mirage con HandHeld
     app.use(EntradaMirageHandHeldRouter);
+    app.use(SalidaMirageHandHeldRouter);
 
 }
