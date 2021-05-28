@@ -469,6 +469,20 @@ async function save(req, res) {
 		});
 }
 
+async function createProductIfNotExists(product){
+
+	let nProducto = new Producto(product);
+
+	let productStoraged = await nProducto.save();
+
+	if(productStoraged !== null){
+		const { _id, embalajes, exitenciaPesoBruto, existenciaPesoNeto, clienteFiscal_id, sucursal_id, almacen_id } = productStoraged;
+			MovimientoInventario.saveExistenciaInicial(_id, embalajes, exitenciaPesoBruto, existenciaPesoNeto, clienteFiscal_id, sucursal_id, almacen_id);
+			return productStoraged;
+	}
+
+}
+
 function update(req, res) {
 	let _id = req.params._id;
 	req.body.fechaEdita = new Date();
@@ -606,5 +620,6 @@ module.exports = {
 	getEquivalencias,
 	getByIDClienteFiscalAggregate,
 	getTotalInventory,
-	getTotalInventorySubclasificacion
+	getTotalInventorySubclasificacion,
+	createProductIfNotExists
 }
