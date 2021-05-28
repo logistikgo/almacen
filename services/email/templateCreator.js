@@ -20,6 +20,28 @@ function bodyHtml(detallesPedidosTemplates){
         `
     }
 
+    function bodyHtmlPartidas(detallesEntradasPartidas){
+
+        return `<!DOCTYPE html>
+        <html lang="en">
+        
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        
+        ${templateStyle()}
+        
+        <body>
+            <h1 class="title">El sistema Logistik-GO ha dado de Alta la siguiente Entrada</h1>
+            ${detallesEntradasPartidas}	
+        </body>
+        
+        </html>
+        `
+    }
+
     function templateStyle(){
 
         return `<style>
@@ -67,5 +89,7 @@ function bodyHtml(detallesPedidosTemplates){
     }
 
     module.exports = {
-        bodyHtml
+        bodyHtml,
+        bodyHtmlPartidas,
+        templateStyle
     }
