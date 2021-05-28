@@ -34,7 +34,7 @@ const ModificacionesRouter = require('../apiServices/Modificaciones/Modificacion
 const ReenvioPedidosBitacoraRouter = require('../apiServices/ReenvioPedidosBitacora/ReenvioPedidosBitacora.routes');
 const Interfaz_ALM_XDRouter = require('../apiServices/Interfaz_ALM_XD/Interfaz_ALM_XD.routes');
 const HelperRouter = require('../apiServices/Helper/Helper.routes');
-const EntradaMirageHandHeldRouter = require('../apiServices/EntradaMirageHandHeld/EntradaMirageHandHeld.routes');
+const EntradaMirageHandHeldRouter = require('../apiServices/MirageHandHeld/Entradas/EntradaMirageHandHeld.routes');
 const middleware = require('../middlewares/middleware');
 
 
