@@ -52,7 +52,12 @@ async function movimientosEntradasMirage(){
     return entradasMirage;
 }
 
-  
+async function movimientosSalidasMirage(){
+    const salidasMirage = await apiMirageOP1("SALIDA");
+    return salidasMirage;
+}
+
 module.exports = {
-    movimientosEntradasMirage
+    movimientosEntradasMirage,
+    movimientosSalidasMirage
 }
