@@ -15,6 +15,7 @@ const Interfaz_ALM_XD = require('../Interfaz_ALM_XD/Interfaz_ALM_XD.controller')
 const TiempoCargaDescarga = require('../TiempoCargaDescarga/TiempoCargaDescarga.controller');
 const PlantaProductora = require('../PlantaProductora/PlantaProductora.model'); 
 const dateFormat = require('dateformat');
+
 const Ticket = require('../Ticket/Ticket.model');
 function getNextID() {
 	return Helper.getNextID(Entrada, "idEntrada");
@@ -223,7 +224,7 @@ async function get(req, res) {
 			{ $sort: { fechaEntrada: -1 } }
 		])
 
-		Entrada.aggregatePaginate(entradaAggregate, pagination).
+		Entrada.aggregatePaginate(entradaAggregate, pagination)
 	
 		then(entradas =>{
 		
@@ -1232,6 +1233,7 @@ async function getExcelCaducidades(req, res) {
 	var diff=0;
 	let hoy=new Date(Date.now()-(5*3600000));
    	let Aging=0;
+	let isFilter = req.query.filter === "true" ? true : false;
 	let filter = {
 		"entrada_id.clienteFiscal_id": mongoose.Types.ObjectId(req.query.clienteFiscal_id),
 		//"producto_id.arrClientesFiscales_id": {$in: [mongoose.Types.ObjectId(req.query.clienteFiscal_id)]},
@@ -1396,50 +1398,57 @@ async function getExcelCaducidades(req, res) {
 					}
 				}
 
-				if(elem.referenciaPedidos !== undefined){
-					if(elem.referenciaPedidos.length > 1){
-						let partidaPickeada = arrPartidas.find(partida => partida === elem)
-						partidaPickeada.isPicking = true;
-						
-						let referenciasPedidos = elem.referenciaPedidos;
-						let embalajeTemporal = 0;
-						for(let i = 0; i < referenciasPedidos.length; i++){
-							let copyInformacionPartida =  JSON.parse(JSON.stringify(elem))
-							copyInformacionPartida.refpedido = referenciasPedidos[i].referenciaPedido;
-							copyInformacionPartida.CajasPedidas = referenciasPedidos[i].CajasPedidas;
-						 
-							copyInformacionPartida.isPicking = true;
-							copyInformacionPartida.fechaCaducidad = new Date(copyInformacionPartida.fechaCaducidad);
-							copyInformacionPartida.fechaProduccion = new Date(copyInformacionPartida.fechaProduccion);
-							copyInformacionPartida.entrada_id[0].fechaAlta = new Date(copyInformacionPartida.entrada_id[0].fechaAlta);
-							copyInformacionPartida.entrada_id[0].fechaEntrada = new Date(copyInformacionPartida.entrada_id[0].fechaEntrada);
-							copyInformacionPartida.entrada_id[0].fechaReciboRemision = new Date(copyInformacionPartida.entrada_id[0].fechaReciboRemision);
-							copyInformacionPartida.entrada_id[0].fechaSalidaPlanta = new Date(copyInformacionPartida.entrada_id[0].fechaSalidaPlanta);
+				if(!isFilter){
+					if(elem.referenciaPedidos !== undefined && elem.referenciaPedidos.length !== 0){
+						if(elem.referenciaPedidos.length > 1){
+							let partidaPickeada = arrPartidas.find(partida => partida === elem)
 							
-							if(i > 0){
-
-								if(embalajeTemporal === 0){
-									copyInformacionPartida.embalajesxSalir.cajas -= referenciasPedidos[i].CajasPedidas.cajas;
-									embalajeTemporal = copyInformacionPartida.embalajesxSalir.cajas;
-								}else{
+							if(partidaPickeada !== undefined){
+								partidaPickeada.isPicking = true;
 	
-									copyInformacionPartida.embalajesxSalir.cajas = embalajeTemporal;
+								let referenciasPedidos = elem.referenciaPedidos;
+								let embalajeTemporal = 0;
+								for(let i = 0; i < referenciasPedidos.length; i++){
+									let copyInformacionPartida =  JSON.parse(JSON.stringify(elem))
+									copyInformacionPartida.refpedido = referenciasPedidos[i].referenciaPedido;
+									copyInformacionPartida.CajasPedidas = referenciasPedidos[i].CajasPedidas;
+								 
+									copyInformacionPartida.isPicking = true;
+									copyInformacionPartida.fechaCaducidad = new Date(copyInformacionPartida.fechaCaducidad);
+									copyInformacionPartida.fechaProduccion = new Date(copyInformacionPartida.fechaProduccion);
+									copyInformacionPartida.entrada_id[0].fechaAlta = new Date(copyInformacionPartida.entrada_id[0].fechaAlta);
+									copyInformacionPartida.entrada_id[0].fechaEntrada = new Date(copyInformacionPartida.entrada_id[0].fechaEntrada);
+									copyInformacionPartida.entrada_id[0].fechaReciboRemision = new Date(copyInformacionPartida.entrada_id[0].fechaReciboRemision);
+									copyInformacionPartida.entrada_id[0].fechaSalidaPlanta = new Date(copyInformacionPartida.entrada_id[0].fechaSalidaPlanta);
 									
-									embalajeTemporal -= referenciasPedidos[i].CajasPedidas.cajas;
+									if(i > 0){
+		
+										if(embalajeTemporal === 0){
+											copyInformacionPartida.embalajesxSalir.cajas -= referenciasPedidos[i].CajasPedidas.cajas;
+											embalajeTemporal = copyInformacionPartida.embalajesxSalir.cajas;
+										}else{
+			
+											copyInformacionPartida.embalajesxSalir.cajas = embalajeTemporal;
+											
+											embalajeTemporal -= referenciasPedidos[i].CajasPedidas.cajas;
+										}
+		
+										arrPartidas.push(copyInformacionPartida);
+									}else{
+										embalajeTemporal = copyInformacionPartida.embalajesxSalir.cajas - referenciasPedidos[i].CajasPedidas.cajas;
+									}
+		
+									if(i === referenciasPedidos.length - 1){
+										copyInformacionPartida.isPicking = false;
+									}
+		
 								}
-
-								arrPartidas.push(copyInformacionPartida);
-							}else{
-								embalajeTemporal = copyInformacionPartida.embalajesxSalir.cajas - referenciasPedidos[i].CajasPedidas.cajas;
+	
 							}
-
-							if(i === referenciasPedidos.length - 1){
-								copyInformacionPartida.isPicking = false;
-							}
-
+							
+							
 						}
-						
-					}
+				}
 				}
 
 
