@@ -4,12 +4,13 @@ const Pasillo = require('../../Pasillos/Pasillo.model');
 const Posicion = require('../../Posicion/Posicion.model');
 const Helper = require('../../../services/utils/helpers');
 const EntradaModel = require('../../Entradas/Entrada.model');
+const SalidaModel = require('../../Salidas/Salida.model');
 
-async function formatPosicion(locacion, almacen_id){
+async function formatPosicion(locacion, almacen_id, embalajes = null){
     
 
     try {
-        const pos = "X0101"
+        const pos = "X0102"
         const pasillo = pos.substr(0, 1);
         const posicion = pos.substr(1, 2)
         const posicionNumber = parseInt(posicion);
@@ -23,15 +24,30 @@ async function formatPosicion(locacion, almacen_id){
 
         const nivelDocument = posicionDocument.niveles.find(nivel => nivel.nombre === nivelLetter);
 
-        return {
+        if(embalajes !== null){
+            return {
                 "isEmpty" : false,
                 "pasillo" : pasilloDocument.nombre,
                 "pasillo_id" : pasilloDocument._id,
                 "posicion" : posicionDocument.nombre,
                 "posicion_id" : posicionDocument._id,
                 "nivel_id" : nivelDocument._id,
-                "nivel" : nivelDocument.nombre
+                "nivel" : nivelDocument.nombre,
+                "embalajes": embalajes
             }
+        }else{
+    
+            return {
+                    "isEmpty" : false,
+                    "pasillo" : pasilloDocument.nombre,
+                    "pasillo_id" : pasilloDocument._id,
+                    "posicion" : posicionDocument.nombre,
+                    "posicion_id" : posicionDocument._id,
+                    "nivel_id" : nivelDocument._id,
+                    "nivel" : nivelDocument.nombre
+                }
+
+        }
     
     } catch (error) {
         console.log("No existe el pasillo")
@@ -129,10 +145,43 @@ async function isEntradaAlreadyCreated(remision){
 
 }
 
+async function isSalidaAlreadyCreated(referencia){
+    
+    try {
+        const salidaActual = await SalidaModel.find({"referencia": referencia}).exec();
+        
+        return salidaActual.length !== 0 ? true : false;
+        
+    } catch (error) {
+        console.error(error);
+    }
+
+}
+
+function createPosition(posicionAUnir){
+
+    try {
+        const pasillo = posicionAUnir.pasillo;
+        const posicion = posicionAUnir.posicion;
+        const nivel = "0" + Helper.getLevelNumberFromName(posicionAUnir.nivel);
+        const posicionCompleta = `${pasillo}-${posicion}-${nivel}`;
+    
+        return posicionCompleta;
+    } catch (error) {
+        
+    }
+
+   
+
+}
+
+
 module.exports = {
     formatPosicion,
     createDateFormatForRequest,
     createDateForForPartida,
     separarResponsePorLicencia,
-    isEntradaAlreadyCreated
+    isEntradaAlreadyCreated,
+    isSalidaAlreadyCreated,
+    createPosition
 }
