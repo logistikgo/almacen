@@ -15,6 +15,46 @@ const mailer = require('../../services/email/mailer');
 function getNextID() {
 	return Helper.getNextID(Salida, "salida_id");
 }
+
+//Elimianar pedido para realizar la modificacion al mismo
+async function ingresarPedidoConModificacion(pedido){
+
+	let partidasABuscar = pedido[0].partidas;
+	let pedidoAEliminar = pedido[0].referencia;
+
+	let partidasPedido = await PartidaModel.find({_id: {$in: partidasABuscar}}).exec();
+	
+
+	await Helper.asyncForEach(partidasPedido, async function(partida){
+
+		let referenciaPedidos = partida.referenciaPedidos.filter(pedido => pedido.referenciaPedido !== pedidoAEliminar);
+
+		if(referenciaPedidos.length > 0){
+			partida.refpedido = referenciaPedidos[0].referenciaPedido;
+			partida.pedido = referenciaPedidos[0].pedido;
+			partida.statusPedido = "COMPLETO";
+			partida.CajasPedidas.cajas = referenciaPedidos[0].CajasPedidas.cajas;
+		}else{
+			partida.refpedido = "SIN_ASIGNAR";
+			partida.pedido = false;
+			partida.statusPedido = "SIN_ASIGNAR";
+			partida.CajasPedidas.cajas = 0;
+		}
+		
+		partida.referenciaPedidos = referenciaPedidos;
+		await partida.save();
+		
+		console.log("Partida Liberada");
+	})
+
+	
+	Salida.deleteOne({"referencia": pedidoAEliminar}, function(err){
+		if(err) return handleError(err);
+	   console.log("El pedido "+pedidoAEliminar+" ha sido eliminado, para remplazarlo")
+	});
+
+}
+
 async function saveSalidaBabel(req, res) {
 	console.log("----------------------------------------------------------------------start-HOLD------------------------------------------------------")
 	var mongoose = require('mongoose');
@@ -1138,10 +1178,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 					if(isPartidaPickeada && partidaSeleccionada !== undefined){
 						
 							console.log("Paso al pedido")
-							refPedidoDocument.referenciaPedido = refPedidoPartida;
-							refPedidoDocument.CajasPedidas = {cajas: cantidadPedida};
-							refPedidoDocument.pedido = true;
-							partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);	
+								
 					}
 
 				if(partidaSeleccionada !== undefined){
@@ -1156,13 +1193,13 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 							var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
 							//let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
 							
+						
+							const referenciaPedidoDocument = crearReferenciaPedido(refPedidoPartida, cantidadPedida);
+							//partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);
+
 							if(partidaaux.pedido==false && partidaaux.referenciaPedidos.length === 0)
 							{
-								
-								refPedidoDocument.referenciaPedido = refPedidoPartida;
-								refPedidoDocument.CajasPedidas = {cajas: cantidadPedida}
-								refPedidoDocument.pedido = true;
-								refPedidos.push(refPedidoDocument);
+								refPedidos.push(referenciaPedidoDocument);
 								
 								partidaaux.referenciaPedidos=refPedidos;//talves se cambie a info pedidos
 								partidaaux.CajasPedidas = {cajas: cantidadPedida};
@@ -1170,13 +1207,10 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 								partidaaux.refpedido=refPedidoPartida;	
 							}
 							else{
-								if(isPartidaPickeada){
-									partidaaux.referenciaPedidos.push(refPedidoDocument);
-								}
+									partidaaux.referenciaPedidos.push(referenciaPedidoDocument);
 							}
 							
 							partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
-
 
 							partidaaux.statusPedido="COMPLETO";
 							await partidaaux.save();
@@ -1209,6 +1243,17 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 
 
 }
+
+function crearReferenciaPedido(referenciaPedidoPartida, cantidadPedida){
+
+	return {
+		"referenciaPedido": referenciaPedidoPartida,
+		"CajasPedidas": { cajas: cantidadPedida },
+		"pedido": true
+	}
+
+}
+
 
 function desasiganarPedidoEnPartida(partida, referencia){
 
@@ -1252,7 +1297,7 @@ function holdPartidaPick(partidasOrdenadas, cantidadPedida, partidasParciales){
 			if(index !== -1){
 				let indexParcial = partidasOrdenadas.findIndex(partida => partida._id.toString() === partidasParcialesCopy[index]._id.toString());
 				partidasOrdenadas.splice(indexParcial, 1);
-				partidasOrdenadas.unshift(partidasParcialesCopy[index]);
+				partidasOrdenadas.splice(indexParcial, 0, partidasParcialesCopy[index]);
 				partidasParcialesCopy.splice(index, 1);
 			}
 			if(partidasOrdenadas[i].referenciaPedidos.length >= 1){
