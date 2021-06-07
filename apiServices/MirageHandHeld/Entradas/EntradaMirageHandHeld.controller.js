@@ -13,7 +13,6 @@ const Posicion = require('../../Posicion/Posicion.model');
 
 const { formatPosicion, createDateForForPartida, separarResponsePorLicencia, isEntradaAlreadyCreated } = require('../utils/helpers')
 const { movimientosEntradasMirage } = require('../utils/MirageRequest.repository');
-const EntradaModel = require('../../Entradas/Entrada.model');
 const ProductoModel = require('../../Producto/Producto.model');
 const mailer = require('../../../services/email/mailer');
 const bodyMailTemplate = require('../../../services/email/templateCreator');
@@ -175,7 +174,7 @@ async function createEntrada(entradaInformation){
             //nEntrada.ordenCompra=noOrden.po;
             nEntrada.fechaAlta = new Date();
 
-            const cantidadEntradas = await EntradaModel.countDocuments({clienteFiscal_id: clienteFiscal_id}).exec() + 1;
+            const cantidadEntradas = await Entrada.countDocuments({clienteFiscal_id: clienteFiscal_id}).exec() + 1;
 
             nEntrada.idEntrada = cantidadEntradas;
             nEntrada.folio = cantidadEntradas;
@@ -301,7 +300,6 @@ async function positionPartida(partida, almacen_id){
 }
 
 
-
 async function crearMovimientos(entrada, signo, tipo){
     
     const partidas = entrada.partidas;
@@ -348,14 +346,6 @@ async function crearMovimientos(entrada, signo, tipo){
             "embalajes.unidades": currentProducto.embalajes.unidades,
             "fechaUltimaEntrada": currentProducto.fechaUltimaEntrada}})
     }
-
-
-
-   
-   
-
-   
-
 
 }
 
