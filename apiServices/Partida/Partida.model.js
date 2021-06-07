@@ -52,6 +52,7 @@ const Partida = Schema(
             pedido: {type: Boolean, default: false}
         }],
         CajasPedidas: {},
+        UnidadesPedidas: {},
         InfoPedidos: [
             {
                 IDAlmacen: String,
