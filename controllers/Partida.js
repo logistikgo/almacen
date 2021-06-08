@@ -262,6 +262,60 @@ async function put(arrPartidas, salida_id) {
     return arrPartidas_id;
 }
 
+async function putSalida(arrPartidas, salida_id) {
+    var arrPartidas_id = [];
+    let entradas_id = arrPartidas.length > 0 ? arrPartidas.map(x => x.entrada_id) : undefined;
+   
+    for(let partida of arrPartidas){
+
+        arrPartidas_id.push(partida._id);
+        let jsonSalida_id = {
+            salida_id: salida_id,
+            embalajes: partida.embalajesEnSalida,
+            salidaxPosiciones: partida.embalajesEnSalidaxPosicion
+        };
+
+        let partidaFound = await Partida.findOne({ _id: partida._id });
+
+        if (partidaFound) {
+            partidaFound.salidas_id.push(jsonSalida_id);
+            
+            const embalaje = Object.keys(partida.embalajesEnSalida);
+            const embalajesASalir = partida.embalajesEnSalida[embalaje];
+            partidaFound.embalajesxSalir[embalaje] -= embalajesASalir;
+            partidaFound.posiciones[0].embalajesxSalir[embalaje] -= embalajesASalir;
+            
+            if(partidaFound.embalajesxSalir[embalaje] === 0){
+                partidaFound.isEmpty = true;
+                partidaFound.posiciones[0].isEmpty = true;
+            }
+
+
+            let changes = {
+                salidas_id: partidaFound.salidas_id,
+                embalajesxSalir: partidaFound.embalajesxSalir,
+                posiciones: partidaFound.posiciones,
+                isEmpty: partidaFound.isEmpty
+            };
+
+            if (partidaFound.embalajesAlmacen != undefined) {
+                for (let x in partidaFound.embalajesAlmacen) {
+                    //console.log(partidaFound.embalajesAlmacen +" - "+partida.embalajesEnSalida[x] );
+                    partidaFound.embalajesAlmacen[x] -= partida.embalajesEnSalida[x];
+                }
+                changes['embalajesAlmacen'] = partidaFound.embalajesAlmacen;
+            }
+            await Partida.updateOne({ _id: partidaFound._id }, { $set: changes }).exec();
+        }
+    }
+
+    Helper.asyncForEach(entradas_id, async function (entrada_id) {
+        await setIsEmptyEntrada(entrada_id);
+    });
+
+    return arrPartidas_id;
+}
+
 async function post(arrPartidas, entrada_id) {
     var arrPartidas_id = [];
     //console.log("adssssssssssssssssssssssssssssssssssssssssssssssss");
@@ -3262,5 +3316,6 @@ module.exports = {
     getPartidaModExcel,
     getInventarioPorPartidas,
     verificarPartidasSalidas,
-    removePartidasWithZeroQuantity
+    removePartidasWithZeroQuantity,
+    putSalida
 }
