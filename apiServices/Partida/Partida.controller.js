@@ -1030,7 +1030,7 @@ async function getPartidasByIDs(req, res) {
             }},
             { $sort: { "Entradas[0].fechaEntrada": -1 } }
                    
-            ])
+            ]).allowDiskUse(true);
     
             partidas = await Partida.aggregatePaginate(partidasAggregate, pagination);
             
@@ -1653,7 +1653,6 @@ async function posicionarPartidas(req, res)
         };
         partida.posiciones.push(jPosicionBahia);
 
-        //await partida.save();
         await Partida.updateOne({_id: id_partidas}, {$set: {posiciones: partida.posiciones}}).exec();
         
         console.log(partida);
