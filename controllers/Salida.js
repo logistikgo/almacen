@@ -21,6 +21,19 @@ function getNextID() {
 	return Helper.getNextID(Salida, "salida_id");
 }
 
+async function createNextId() {
+
+	 //const salidas = await Salida.find().sort({salida_id: -1}).exec();
+	 
+	const ultimaSalidaQuery = await Salida.aggregate([
+		{$group: {_id: "$_v", ultimaSalida: {$max: "$salida_id"}}}     
+	])
+
+	const ultimaSalida = ultimaSalidaQuery[0].ultimaSalida + 1
+	
+	return ultimaSalida
+}
+
 function get(req, res) {
 	Salida.find({})
 		.then((salidas) => {
@@ -3093,6 +3106,69 @@ async function getContadoresSalidas(req, res){
 
 }
 
+async function createSalidaToSave(req, res){
+
+	const salidaData = req.body;
+	const fechaSalida =  new Date(req.body.fechaSalida);
+	const ultimaSalida_id =  await createNextId(); 
+
+	let nSalida = new Salida(salidaData);
+	nSalida.fechaSalida = fechaSalida;
+	nSalida.salida_id = ultimaSalida_id;
+	nSalida.folio = ultimaSalida_id;
+	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
+	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
+	
+	let referenciaPedido = nSalida.referencia;
+
+	nSalida.save()
+		   .then(async(salida) => {
+			const partidasDocument = req.body.partidas_id;   
+			//Guardar movimientos de las salidas, por partidas
+			for(let partida of partidasDocument){
+				await MovimientoInventario.saveSalidaMovimiento(partida, salida.id);
+			}
+			
+			//Esconder salida que se encuentra en FORSHIPPING y reiniciar sus partidas
+			let salidaEnForShipping = await Salida.findOne({referencia: referenciaPedido, tipo: "FORSHIPPING"}).exec();
+
+			if(salidaEnForShipping !== null){
+				if(salidaEnForShipping.length >= 1){
+					await eliminarPedidoParaRenviar(refpedido);
+					salidaEnForShipping.tipo = "PENDINGFORSHIPPING"
+					await salidaEnForShipping.save();
+				}
+			}
+
+
+			TiempoCargaDescarga.setStatus(salida.tiempoCarga_id, { salida_id: salida._id, status: "ASIGNADO" });
+			
+			let partidas = await Partida.putSalida(partidasDocument, salida._id);
+			salida.partidas = partidas;
+			
+			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
+
+			console.log(partidas);
+			await Salida.updateOne({ _id: nSalida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
+				let partidasActualizadas = req.body.partidas_id.map(partida => partida._id)
+				let parRes = await PartidaModel.find({_id: {$in: partidasActualizadas}}).exec(); 
+				
+				for(let partidaaux of parRes){
+					partidaaux.CajasPedidas={cajas:0};//talves se cambie a info pedidos
+					partidaaux.pedido=false;
+					partidaaux.refpedido="SIN_ASIGNAR";
+					partidaaux.statusPedido="SIN_ASIGNAR";
+					await partidaaux.save();
+				}
+				res.status(200).send(salida);
+		})
+		.catch((error) => {
+			res.status(500).send(error);
+		});	
+});
+
+}
+
 
 module.exports = {
 	get,
@@ -3113,5 +3189,6 @@ module.exports = {
 	agregarPartidaSalidaId,
 	saveDashboard,
 	getContadoresSalidas,
-	reloadPedidosBabel
+	reloadPedidosBabel,
+	createSalidaToSave
 }
