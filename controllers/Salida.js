@@ -23,8 +23,6 @@ function getNextID() {
 
 async function createNextId() {
 
-	 //const salidas = await Salida.find().sort({salida_id: -1}).exec();
-	 
 	const ultimaSalidaQuery = await Salida.aggregate([
 		{$group: {_id: "$_v", ultimaSalida: {$max: "$salida_id"}}}     
 	])
@@ -3139,8 +3137,6 @@ async function createSalidaToSave(req, res){
 					await salidaEnForShipping.save();
 				}
 			}
-
-
 			TiempoCargaDescarga.setStatus(salida.tiempoCarga_id, { salida_id: salida._id, status: "ASIGNADO" });
 			
 			let partidas = await Partida.putSalida(partidasDocument, salida._id);
@@ -3148,18 +3144,17 @@ async function createSalidaToSave(req, res){
 			
 			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
 
-			console.log(partidas);
 			await Salida.updateOne({ _id: nSalida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
 				let partidasActualizadas = req.body.partidas_id.map(partida => partida._id)
-				let parRes = await PartidaModel.find({_id: {$in: partidasActualizadas}}).exec(); 
 				
-				for(let partidaaux of parRes){
-					partidaaux.CajasPedidas={cajas:0};//talves se cambie a info pedidos
-					partidaaux.pedido=false;
-					partidaaux.refpedido="SIN_ASIGNAR";
-					partidaaux.statusPedido="SIN_ASIGNAR";
-					await partidaaux.save();
+				let changesPartidaSave = {
+					CajasPedidas: { cajas: 0 },
+					pedido: false,
+					refpedido: "SIN_ASIGNAR",
+					statusPedido: "SIN_ASIGNAR"
 				}
+
+				await PartidaModel.updateMany({_id: {$in: partidasActualizadas}}, {$set: changesPartidaSave}).exec();
 				res.status(200).send(salida);
 		})
 		.catch((error) => {
