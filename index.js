@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 const app = require('./app');
 const config = require('./config');
-
+mongoose.set('useFindAndModify', false);
 mongoose.connect(config.db, { useNewUrlParser: true ,useUnifiedTopology: true})
 .then((res) => {
 	console.log("Mongo connected!");
