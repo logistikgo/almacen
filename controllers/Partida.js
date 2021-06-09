@@ -263,57 +263,58 @@ async function put(arrPartidas, salida_id) {
 }
 
 async function putSalida(arrPartidas, salida_id) {
-    var arrPartidas_id = [];
-    let entradas_id = arrPartidas.length > 0 ? arrPartidas.map(x => x.entrada_id) : undefined;
-   
-    for(let partida of arrPartidas){
-
-        arrPartidas_id.push(partida._id);
-        let jsonSalida_id = {
-            salida_id: salida_id,
-            embalajes: partida.embalajesEnSalida,
-            salidaxPosiciones: partida.embalajesEnSalidaxPosicion
-        };
-
-        let partidaFound = await Partida.findOne({ _id: partida._id });
-
-        if (partidaFound) {
-            partidaFound.salidas_id.push(jsonSalida_id);
+    
+    try {
+        var arrPartidas_id = [];
+        let entradas_id = arrPartidas.length > 0 ? arrPartidas.map(x => x.entrada_id) : undefined;
+       
+        for(let partida of arrPartidas){
             
-            const embalaje = Object.keys(partida.embalajesEnSalida);
-            const embalajesASalir = partida.embalajesEnSalida[embalaje];
-            partidaFound.embalajesxSalir[embalaje] -= embalajesASalir;
-            partidaFound.posiciones[0].embalajesxSalir[embalaje] -= embalajesASalir;
-            
-            if(partidaFound.embalajesxSalir[embalaje] === 0){
-                partidaFound.isEmpty = true;
-                partidaFound.posiciones[0].isEmpty = true;
-            }
+            const { _id: partida_id, embalajesEnSalida, embalajesEnSalidaxPosicion  } = partida;    
+            arrPartidas_id.push(partida_id);
 
-
-            let changes = {
-                salidas_id: partidaFound.salidas_id,
-                embalajesxSalir: partidaFound.embalajesxSalir,
-                posiciones: partidaFound.posiciones,
-                isEmpty: partidaFound.isEmpty
+            //Creacion del documento que idica la informacion que debe de tener una partida, para identificar que salio de almacen
+            let jsonSalida_id = {
+                salida_id: salida_id,
+                embalajes: embalajesEnSalida,
+                salidaxPosiciones: embalajesEnSalidaxPosicion
             };
+    
+                const embalaje = Object.keys(partida.embalajesEnSalida);
+                const embalajesASalir = partida.embalajesEnSalida[embalaje];
+                
+                const partidaUpdated = await Partida.findOneAndUpdate({"_id": partida_id}, 
+                            {$inc: {"embalajesxSalir.cajas": -embalajesASalir, 
+                            "posiciones.0.embalajesxSalir.cajas": -embalajesASalir}}, { new: true }).exec();
 
-            if (partidaFound.embalajesAlmacen != undefined) {
-                for (let x in partidaFound.embalajesAlmacen) {
-                    //console.log(partidaFound.embalajesAlmacen +" - "+partida.embalajesEnSalida[x] );
-                    partidaFound.embalajesAlmacen[x] -= partida.embalajesEnSalida[x];
+                if(partidaUpdated.embalajesxSalir[embalaje] === 0){
+                    await Partida.updateOne({"_id": partida_id},
+                        { $set: { "isEmpty": true, 
+                                  "posiciones.0.isEmpty": true } }
+                       ).exec();
                 }
-                changes['embalajesAlmacen'] = partidaFound.embalajesAlmacen;
+                
+                await Partida.updateOne({"_id": partida_id}, 
+                    { $push: { salidas_id: { $each: [ jsonSalida_id ] } } }).exec();                
+
+                //Paso extra si la partida tiene embalajes en el almacen
+                if (partidaUpdated.embalajesAlmacen != undefined) {
+                    for (let x in partidaUpdated.embalajesAlmacen) 
+                        partidaUpdated.embalajesAlmacen[x] -= embalajesEnSalida[x];
+                    await Partida.updateOne({ _id: partidaFound._id }, { $set: {embalajesAlmacen: partidaFound.embalajesAlmacen} }).exec();
+                }
             }
-            await Partida.updateOne({ _id: partidaFound._id }, { $set: changes }).exec();
-        }
+    
+            for(let entrada_id of entradas_id){
+                await setIsEmptyEntrada(entrada_id);
+            }
+    
+            return arrPartidas_id;
+    } catch (error) {
+        console.log(error);
     }
-
-    Helper.asyncForEach(entradas_id, async function (entrada_id) {
-        await setIsEmptyEntrada(entrada_id);
-    });
-
-    return arrPartidas_id;
+    
+   
 }
 
 async function post(arrPartidas, entrada_id) {
