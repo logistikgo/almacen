@@ -77,15 +77,15 @@ async function saveSalida(itemPartida, salida_id) {
 		})
 }
 
-async function saveSalidaMovimiento(partida, salida_id) {
+async function saveSalidaMovimiento(partida, salida) {
 	let nMovimiento = new MovimientoInventario();
 
-	let salida = await Salida.findOne({ _id: salida_id }).exec();
+	//let salida = await Salida.findOne({ _id: salida_id }).exec();
 
 	let partidaFound = await Partida.findOne({_id: partida._id}).exec();
 
 	nMovimiento.producto_id = partidaFound.producto_id;
-	nMovimiento.salida_id = salida_id;
+	nMovimiento.salida_id = salida._id;
 	nMovimiento.fechaMovimiento = new Date();
 	nMovimiento.embalajes = partida.embalajesEnSalida;
 	nMovimiento.signo = -1;
@@ -394,10 +394,11 @@ async function updateExistenciaPosicionSalida(signo, posicionxPartida, producto_
 
 	try {
 		let _producto_id= producto_id._id!=undefined ? producto_id._id:producto_id
-	let posicion_id = posicionxPartida.posicion_id;
+		let posicion_id = posicionxPartida.posicion_id;
 
-	let PosicionDocument = await Posicion.findOne({_id: posicion_id}).exec();
-	
+		let PosicionDocument = await Posicion.findOne({_id: posicion_id}).exec();
+		let cantidadAModificar = posicionxPartida.embalajes.cajas;
+		
 	if(PosicionDocument !== null){
 
 		let nivel = PosicionDocument.niveles.find(nivel => nivel.nombre === posicionxPartida.nivel);
@@ -434,7 +435,7 @@ async function updateExistenciaPosicionSalida(signo, posicionxPartida, producto_
 				};
 			
 				await Posicion.updateOne({ _id: posicionxPartida.posicion_id }, { $set: item }, function(err){
-				   console.log("la posicion ha sido liberada correctamente: "+ item);
+				   console.log("la posicion ha sido liberada correctamente: "+ posicionxPartida);
 				});
 	}
 	} catch (error) {

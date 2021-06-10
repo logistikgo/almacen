@@ -3110,42 +3110,44 @@ async function createSalidaToSave(req, res){
 	const fechaSalida =  new Date(req.body.fechaSalida);
 	const ultimaSalida_id =  await createNextId(); 
 
-	let nSalida = new Salida(salidaData);
-	nSalida.fechaSalida = fechaSalida;
-	nSalida.salida_id = ultimaSalida_id;
-	nSalida.folio = ultimaSalida_id;
-	nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
-	nSalida.stringFolio = await Helper.getStringFolio(nSalida.folio, nSalida.clienteFiscal_id, 'O', false);
+	let salida = new Salida(salidaData);
+	salida.fechaSalida = fechaSalida;
+	salida.salida_id = ultimaSalida_id;
+	salida.folio = ultimaSalida_id;
+	salida.fechaAlta = new Date(Date.now()-(5*3600000));
+	salida.stringFolio = await Helper.getStringFolio(salida.folio, salida.clienteFiscal_id, 'O', false);
 	
-	let referenciaPedido = nSalida.referencia;
+	let referenciaPedido = salida.referencia;
 
-	nSalida.save()
-		   .then(async(salida) => {
-			const partidasDocument = req.body.partidas_id;   
+	const partidasDocument = req.body.partidas_id;   
 			//Guardar movimientos de las salidas, por partidas
-			for(let partida of partidasDocument){
-				await MovimientoInventario.saveSalidaMovimiento(partida, salida.id);
-			}
-			
-			//Esconder salida que se encuentra en FORSHIPPING y reiniciar sus partidas
-			let salidaEnForShipping = await Salida.findOne({referencia: referenciaPedido, tipo: "FORSHIPPING"}).exec();
+	for(let partida of partidasDocument){
+		await MovimientoInventario.saveSalidaMovimiento(partida, salida);
+	}
+	
+	//Esconder salida que se encuentra en FORSHIPPING y reiniciar sus partidas
+	let salidaEnForShipping = await Salida.findOne({referencia: referenciaPedido, tipo: "FORSHIPPING"}).exec();
 
-			if(salidaEnForShipping !== null){
-				if(salidaEnForShipping.length >= 1){
-					await eliminarPedidoParaRenviar(refpedido);
-					salidaEnForShipping.tipo = "PENDINGFORSHIPPING"
-					await salidaEnForShipping.save();
-				}
-			}
-			TiempoCargaDescarga.setStatus(salida.tiempoCarga_id, { salida_id: salida._id, status: "ASIGNADO" });
-			
-			let partidas = await Partida.putSalida(partidasDocument, salida._id);
-			salida.partidas = partidas;
-			
-			await saveSalidasEnEntrada(salida.entrada_id, salida._id);
+	if(salidaEnForShipping !== null){
+		if(salidaEnForShipping.length >= 1){
+			await eliminarPedidoParaRenviar(refpedido);
+			salidaEnForShipping.tipo = "PENDINGFORSHIPPING"
+			await salidaEnForShipping.save();
+		}
+	}
+	
+	TiempoCargaDescarga.setStatus(salida.tiempoCarga_id, { salida_id: salida._id, status: "ASIGNADO" });
+	
+	//let partidas = await Partida.putSalida(partidasDocument, salida._id);
+	salida.partidas = partidas;
+	
+	await saveSalidasEnEntrada(salida.entrada_id, salida._id);
 
-			await Salida.updateOne({ _id: nSalida._id }, { $set: { partidas: partidas } }).then(async(updated) => {
-				let partidasActualizadas = req.body.partidas_id.map(partida => partida._id)
+
+	salida.save()
+		   .then(async(salida) => {
+			
+				let partidasActualizadas = salida.partidas;
 				
 				let changesPartidaSave = {
 					CajasPedidas: { cajas: 0 },
@@ -3155,13 +3157,13 @@ async function createSalidaToSave(req, res){
 				}
 
 				await PartidaModel.updateMany({_id: {$in: partidasActualizadas}}, {$set: changesPartidaSave}).exec();
-				res.status(200).send(salida);
+				
 		})
 		.catch((error) => {
 			res.status(500).send(error);
 		});	
-});
 
+		res.status(200).send(salida);	
 }
 
 
