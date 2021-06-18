@@ -2,9 +2,10 @@
 
 const mongoose = require('mongoose');
 const app = require('./app');
-const config = require('./config');
-mongoose.set('useFindAndModify', false);
-mongoose.connect(config.db, { useNewUrlParser: true ,useUnifiedTopology: true})
+const { initServer } = require('./server');
+const {mongoDb, port, currentEnv} = require('./config/env/');
+
+mongoose.connect(mongoDb.createUri(), { useNewUrlParser: true ,useUnifiedTopology: true})
 .then((res) => {
 	console.log("Mongo connected!");
 
@@ -12,9 +13,8 @@ mongoose.connect(config.db, { useNewUrlParser: true ,useUnifiedTopology: true})
 		res.send(`API ALMACEN VERSIÓN:${process.env.npm_package_version}`);
 	});
 
-	app.listen(config.port, () => {
-		console.log(`API ALMACEN JALANDO EN:${config.port}`);
-	});
+	initServer({port, currentEnv});
+
 })
 .catch((err) => {
 	console.log(err)
