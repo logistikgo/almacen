@@ -3138,11 +3138,10 @@ async function createSalidaToSave(req, res){
 	
 	TiempoCargaDescarga.setStatus(salida.tiempoCarga_id, { salida_id: salida._id, status: "ASIGNADO" });
 	
-	//let partidas = await Partida.putSalida(partidasDocument, salida._id);
+	let partidas = await Partida.putSalida(partidasDocument, salida._id);
 	salida.partidas = partidas;
 	
 	await saveSalidasEnEntrada(salida.entrada_id, salida._id);
-
 
 	salida.save()
 		   .then(async(salida) => {
