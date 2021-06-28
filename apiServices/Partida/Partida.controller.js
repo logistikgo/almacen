@@ -14,7 +14,8 @@ const NullParamsException = { error: "NullParamsException" };
 const BreakException = { info: "Break" };
 const dateFormat = require('dateformat');
 const EmbalajesController = require('../Embalaje/Embalaje.controller');
-const ClienteFiscal = require('../ClientesFiscales/ClienteFiscal.controller');
+const ClienteFiscalModel = require('../ClientesFiscales/ClienteFiscal.model');
+const ClienteFiscal= require('../ClientesFiscales/ClienteFiscal.controller');
 const ModificacionesModel = require('../Modificaciones/Modificaciones.model');
 var ObjectId = (require('mongoose').Types.ObjectId);
 const Helpers = require('../../services/utils/helpers');
@@ -2708,7 +2709,7 @@ async function getPartidaModExcel(req, res)
 
         //Obtener embalaje dependiendo el cliente
         const idClienteFiscal = req.query.idClienteFiscal;
-        const clienteFiscal = await ClienteFiscal.findById(idClienteFiscal).exec();
+        const clienteFiscal = await ClienteFiscalModel.findById(idClienteFiscal).exec();
         const arrEmbalajes = clienteFiscal.arrEmbalajes;
         const embalaje = arrEmbalajes.split(",")[1];
 
