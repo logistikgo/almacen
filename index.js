@@ -5,7 +5,9 @@ const app = require('./app');
 const { initServer } = require('./server');
 const {mongoDb, port, currentEnv} = require('./config/env/');
 
-mongoose.connect(mongoDb.createUri(), { useNewUrlParser: true ,useUnifiedTopology: true, useFindAndModify: true})
+mongoose.set('useFindAndModify', false);
+
+mongoose.connect(mongoDb.createUri(), { useNewUrlParser: true ,useUnifiedTopology: true})
 .then((res) => {
 	console.log("Mongo connected!");
 
