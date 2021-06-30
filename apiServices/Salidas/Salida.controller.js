@@ -3129,11 +3129,9 @@ async function createSalidaToSave(req, res){
 	let salidaEnForShipping = await Salida.findOne({referencia: referenciaPedido, tipo: "FORSHIPPING"}).exec();
 
 	if(salidaEnForShipping !== null){
-		if(salidaEnForShipping.length >= 1){
-			await eliminarPedidoParaRenviar(refpedido);
+			await eliminarPedidoParaRenviar(referenciaPedido);
 			salidaEnForShipping.tipo = "PENDINGFORSHIPPING"
 			await salidaEnForShipping.save();
-		}
 	}
 	
 	TiempoCargaDescarga.setStatus(salida.tiempoCarga_id, { salida_id: salida._id, status: "ASIGNADO" });

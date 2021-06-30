@@ -294,7 +294,6 @@ async function putSalida(arrPartidas, salida_id) {
                                   "posiciones.0.isEmpty": true } }
                        ).exec();
                 }
-                
                 await Partida.updateOne({"_id": partida_id}, 
                     { $push: { salidas_id: { $each: [ jsonSalida_id ] } } }).exec();                
 
@@ -1164,7 +1163,7 @@ async function getExcelByIDs(req, res) {
             wrapText: true,
         },
     });
-    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    let clientefiscal = await ClienteFiscalModel.findOne({ _id: req.query.clienteFiscal_id })
     let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
     //console.log(tipoUsuario);
     let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
@@ -1769,7 +1768,7 @@ async function reporteDia(req, res)
     let outbyProd=[];
     var salidas_id=[];
     //console.log(entradasDia.length);
-    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    let clientefiscal = await ClienteFiscalModel.findOne({ _id: req.query.clienteFiscal_id })
     //console.log(tipoUsuario);
     let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
     var embalajesjson={};
@@ -1969,7 +1968,7 @@ async function getExcelreporteDia(req, res)
     let outbyProd=[];
     var salidas_id=[];
     //console.log(entradasDia.length);
-    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    let clientefiscal = await ClienteFiscalModel.findOne({ _id: req.query.clienteFiscal_id })
     //console.log(tipoUsuario);
     let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
     var embalajesjson={};
@@ -2125,7 +2124,7 @@ async function reporteFEFOS(req, res)
         let outbyProd=[];
         var salidas_id=[];
         //console.log(entradasDia.length);
-        let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+        let clientefiscal = await ClienteFiscalModel.findOne({ _id: req.query.clienteFiscal_id })
         //console.log(req.query.clienteFiscal_id);
         let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         var embalajesjson={};
