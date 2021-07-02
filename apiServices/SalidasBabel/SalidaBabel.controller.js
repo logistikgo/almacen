@@ -6,11 +6,13 @@ const Producto = require('../Producto/Producto.model');
 const Entrada = require('../Entradas/Entrada.model');
 const MovimientoInventario = require('../MovimientosInventario/MovimientoInventario.controller');
 const Helper = require('../../services/utils/helpers');
+const { createNextId } = require('../../services/utils/helpers');
 const TiempoCargaDescarga = require("../TiempoCargaDescarga/TiempoCargaDescarga.controller");
 const SalidaBabelModel = require('../SalidasBabel/SalidasBabel.model');
 const ReenvioPedidosBitacora = require('../ReenvioPedidosBitacora/RenvioPedidosBitacora.model');
 const bodyMailTemplate = require('../../services/email/templateCreator');
 const mailer = require('../../services/email/mailer');
+
 
 function getNextID() {
 	return Helper.getNextID(Salida, "salida_id");
@@ -79,15 +81,13 @@ async function saveSalidaBabel(req, res) {
 
 		let pedidoAGuardar = req.body.Pedido[1].Pedido;
 		let pedidoCadena = req.body.Pedido[1].Pedido;
-		let validarModificacionDePedido = new RegExp("rev");
+		let validarModificacionDePedido = new RegExp("rev", "i");
 
 		if(validarModificacionDePedido.test(pedidoAGuardar) && pedidoNuevo === true){
-			let pedidoABuscar = pedidoAGuardar.split(" ");
-			pedidoCadena = "";
-			for(let i = 0; i <= 2; i++){
-				pedidoCadena += pedidoABuscar[i]+" ";	
-			}
-			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim()}).exec();
+			let pedidoABuscar = pedidoAGuardar.split(" ", 3);
+			pedidoCadena = pedidoABuscar.join(" ");
+		
+			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim(), "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec();
 
 			if(countEntradas.length > 0){
 				await ingresarPedidoConModificacion(countEntradas);
@@ -108,11 +108,10 @@ async function saveSalidaBabel(req, res) {
 				
 				
 
-				let countEntradas=await Salida.find({"po":pedidoAGuardar}).exec();			
+				let countEntradas=await Salida.find({"po":pedidoAGuardar, "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec();			
 
-				
 				console.log("total: "+countEntradas.length)
-		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido}).exec():countEntradas;
+		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido, "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec():countEntradas;
 		        console.log("total2: "+countEntradas.length)
 				if(countEntradas.length>0){
 					console.log("Ya existe el pedido "+ req.body.Pedido[1].Pedido)
@@ -436,27 +435,36 @@ async function saveSalidaBabel(req, res) {
 				//console.log(parRes);
 				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
 				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
+				let pedidoCadena = pedidoAGuardar.split(" ", 3).join(" ");
+				let idSalida = await createNextId()
 
 				if ((entradas && entradas.length > 0)) {
 					//Obtener referencia del detalle de la slaida de babel
-					pedidoDetalle.referencia.split("rev")[0].trim();
+					pedidoDetalle.referencia = pedidoCadena;
+
+					const salidaBabelDeleted = await SalidaBabelModel.findOneAndDelete({ referencia: pedidoCadena }).exec();
+
 					const salidaBabelModel = new SalidaBabelModel(pedidoDetalle);
 					let salidaBabel;
 					let salidaBabel_id;
-					salidaBabelModel.save(async function (err) {
-						if (err) return handleError(err);
-						// saved!
-						salidaBabel = await SalidaBabelModel.find({referencia: refitem}).exec();
-						salidaBabel_id = salidaBabel[0]._id.toString();
-					  });
+					await salidaBabelModel.save();
+					salidaBabel = await SalidaBabelModel.findOne({referencia: refitem}).exec();
+					salidaBabel_id = salidaBabel._id.toString();
 
+					let validarSalidaSinFechaProgramada = new RegExp("fr", "i");
+					
+					if(validarSalidaSinFechaProgramada.test(pedidoCadena)){
+						nSalida.isSinSalidaProgramada = true;
+					}
 
 					let nSalida = new Salida();
-					nSalida.salida_id = await getNextID();
+				
+					
+					nSalida.salida_id = idSalida;
 					nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
 					nSalida.fechaSalida = new Date(Date.now()-(5*3600000));
 					nSalida.nombreUsuario = "BABELSALIDA";
-					nSalida.folio = await getNextID();
+					nSalida.folio = idSalida;
 					//console.log(nSalida.folio);
 					nSalida.partidas = parRes.map(x => x._id);
 					nSalida.entrada_id = entradas_id;
@@ -466,8 +474,8 @@ async function saveSalidaBabel(req, res) {
 					nSalida.sucursal_id = IDSucursal;
 					//console.log(nSalida.clienteFiscal_id);
 					nSalida.destinatario=refDesti;
-					nSalida.referencia = refitem;
-					nSalida.item = refitem;
+					nSalida.referencia = pedidoCadena;
+					nSalida.item = pedidoCadena;
 					nSalida.tipo = "FORSHIPPING";//NORMAL
 					//console.log(nSalida);
 					nSalida.statusPedido="COMPLETO";
@@ -488,10 +496,8 @@ async function saveSalidaBabel(req, res) {
 						})
 					}
 					//saveSalida
-					
-					
 
-					nSalida.save(); //salida guarda 
+					await nSalida.save(); //salida guarda 
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
@@ -519,7 +525,7 @@ async function saveSalidaBabel(req, res) {
 			console.log(error);
 	};
 
-	return res.status(200).send({statusCode: 200, response: {message: `Se ha dado de alta el pedido en sistema`}});
+	return res.status(200).send({statusCode: 200, response: {message: `Se ha dado de alta el pedido ${pedidoDetalle.referencia} en sistema`}});
 }
 
 async function removefromSalidaId(req, res) {
@@ -958,7 +964,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 
 	let totalpartidas =0;
 	let refitem=salidaBabel.referencia.trim();
-	
+	console.log(refitem);
 	let hoy=new Date(Date.now()-(5*3600000));
 	let parRes=[];
 	var pedidoCompleto = true;
@@ -968,11 +974,17 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 
 	await Helper.asyncForEach(salidaBabel.productosDetalle,async function (par) {
 		//console.log("----partida: "+par.Clave+ "----");
-		let producto =await Producto.findOne({'clave': par.Clave }).exec();
-		//console.log(producto.clave);
-		//console.log(par.Cantidad);
-		//console.log(producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia);
-		let equivalencia =producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia;
+		let producto;
+		let equivalencia;
+
+		try {
+			producto =await Producto.findOne({'clave': par.Clave }).exec();
+			equivalencia =producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia;
+		
+		} catch (error) {
+			console.log(error);
+		}
+
 		
 		let needed=Math.round(par.Cantidad/equivalencia);
 		let isEstiba = producto.isEstiba;
