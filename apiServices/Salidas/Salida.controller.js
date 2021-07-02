@@ -8,6 +8,7 @@ const reporteModel = require('../BackupReporteSalidas/backupRepoteSalidas.model'
 const Entrada = require('../Entradas/Entrada.model');
 const MovimientoInventario = require('../MovimientosInventario/MovimientoInventario.controller');
 const Helper = require('../../services/utils/helpers');
+const { createNextId } = require('../../services/utils/helpers');
 const PrePartidaM = require("../PrePartida/PrePartida.model");
 const Interfaz_ALM_XD = require('../Interfaz_ALM_XD/Interfaz_ALM_XD.controller');
 const TiempoCargaDescarga = require("../TiempoCargaDescarga/TiempoCargaDescarga.controller");
@@ -19,17 +20,6 @@ const bodyMailTemplate = require('../../services/email/templateCreator');
 const mailer = require('../../services/email/mailer');
 function getNextID() {
 	return Helper.getNextID(Salida, "salida_id");
-}
-
-async function createNextId() {
-
-	const ultimaSalidaQuery = await Salida.aggregate([
-		{$group: {_id: "$_v", ultimaSalida: {$max: "$salida_id"}}}     
-	])
-
-	const ultimaSalida = ultimaSalidaQuery[0].ultimaSalida + 1
-	
-	return ultimaSalida
 }
 
 function get(req, res) {
