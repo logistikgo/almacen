@@ -448,18 +448,16 @@ async function saveSalidaBabel(req, res) {
 					let salidaBabel;
 					let salidaBabel_id;
 					await salidaBabelModel.save();
-					salidaBabel = await SalidaBabelModel.findOne({referencia: refitem}).exec();
+					salidaBabel = await SalidaBabelModel.findOne({referencia: pedidoCadena}).exec();
 					salidaBabel_id = salidaBabel._id.toString();
 
 					let validarSalidaSinFechaProgramada = new RegExp("fr", "i");
 					
-					if(validarSalidaSinFechaProgramada.test(pedidoCadena)){
+					let nSalida = new Salida();
+					//Verificar que el pedido este sin fecha prgramada para apartarlo en sistema, con un nuevo status
+					if(validarSalidaSinFechaProgramada.test(refitem)){
 						nSalida.isSinSalidaProgramada = true;
 					}
-
-					let nSalida = new Salida();
-				
-					
 					nSalida.salida_id = idSalida;
 					nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
 					nSalida.fechaSalida = new Date(Date.now()-(5*3600000));
