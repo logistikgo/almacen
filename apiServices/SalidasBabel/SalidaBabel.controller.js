@@ -811,13 +811,41 @@ async function saveDashboard(req, res) {
 async function reloadPedidosBabel(req, res){
 
 	let salidasActuales;
-
+	//let salidaAReenviar;
 	const referencia = req.query?.referencia ? req.query.referencia : null;
 
 	if(referencia !== null){
 		salidasActuales = await Salida.find({"referencia": referencia, tipo: "FORSHIPPING" }).exec();
+		
+		await PartidaModel.updateMany({"referenciaPedidos.pedido": true,
+		"referenciaPedidos.referenciaPedido": referencia},
+		{$set: {
+			"refpedido": "SIN_ASIGNAR", 
+			"statusPedido": "SIN_ASIGNAR",
+			"pedido": false, 
+			"referenciaPedidos": [],
+			"CajasPedidas.cajas": 0
+		}})
+
 	}else{
-		salidasActuales = await Salida.find({tipo: "FORSHIPPING" }).sort({fechaAlta: 1}).exec();
+		salidasActuales = await Salida.find({tipo: "FORSHIPPING" }).sort({fechaAlta: 1, isSinSalidaProgramada: 1}).exec();
+		//Dar prioridad a los pedidos que ya tienen pedidos programados
+		salidasActuales = salidasActuales.sort((a, b) => {
+			return a.isSinSalidaProgramada - b.isSinSalidaProgramada;
+		})
+		let referencias = salidasActuales.map(salida => salida.referencia);
+		
+		 await PartidaModel.updateMany({"referenciaPedidos.pedido": true,
+		"referenciaPedidos.referenciaPedido": {$in: referencias}},
+		{$set: {
+			"refpedido": "SIN_ASIGNAR", 
+			"statusPedido": "SIN_ASIGNAR",
+			"pedido": false, 
+			"referenciaPedidos": [],
+			"CajasPedidas.cajas": 0
+		}}) 
+
+
 	}
 
 	if(salidasActuales.length === 0){
@@ -831,11 +859,14 @@ async function reloadPedidosBabel(req, res){
 	await Helper.asyncForEach(salidasActuales, async function(salidaActual){
 			
 			detallePedidoTeplate = "";
-			let salidaAReenviar = await eliminarPedidoParaRenviar(salidaActual.referencia);
-	
+			//let salidaAReenviar = await eliminarPedidoParaRenviar(salidaActual.referencia);
+			let salidaAReenviar = await Salida.findOneAndUpdate({"referencia": salidaActual.referencia },
+															   {$set: {"partidas": [], "entrada_id": []}},
+															   { new: true }).exec();
+ 
 			referencias.push(salidaActual.referencia);
 	
-			let salidaBabel = await SalidaBabelModel.findById({_id: salidaAReenviar[0].salidaBabel_id}).exec();
+			let salidaBabel = await SalidaBabelModel.findById({_id: salidaAReenviar.salidaBabel_id}).exec();
 
 			salidaBabel.productosDetalle.forEach(productoDetalle => {
 
@@ -1062,7 +1093,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 			}
 			partidas = Helper.deletePartidasWithNegativeExpireDays(partidas, producto, hoy);
 
-			partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+			partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']},pedido: false,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
 			
 
 			console.log("totalpartidas: "+partidas.length)
@@ -1197,13 +1228,17 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 					if(cantidadRestante >= cantidadPedida && partidaSeleccionada.embalajesxSalir.cajas >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS)
 					{	
 						//Prioridad buscar tarimas incompletas (Picking)
-
+						let cantidadApartada;
 						console.log("Embalaje Cajas:",partidaSeleccionada.embalajesxSalir.cajas );
 						let numpedido=Math.floor(partidaSeleccionada.embalajesxSalir.cajas/cantidadPedida);
 							var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
 							//let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
-							
-						
+								
+							if(partidaaux.referenciaPedidos.length > 0){
+								cantidadApartada = partidaaux.referenciaPedidos.map(pedido => pedido.CajasPedidas.cajas)
+																			   .reduce((val, acc) => val += acc)
+								
+							}
 							const referenciaPedidoDocument = crearReferenciaPedido(refPedidoPartida, cantidadPedida);
 							//partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);
 
@@ -1215,17 +1250,26 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 								partidaaux.CajasPedidas = {cajas: cantidadPedida};
 								partidaaux.pedido=true;
 								partidaaux.refpedido=refPedidoPartida;	
+
+								partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+								partidaaux.statusPedido="COMPLETO";
+								await partidaaux.save();
+								parRes.push(partidaaux);
 							}
 							else{
+								if((partidaaux.embalajesxSalir.cajas - cantidadApartada) > 0){
 									partidaaux.referenciaPedidos.push(referenciaPedidoDocument);
+									partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+									partidaaux.statusPedido="COMPLETO";
+									await partidaaux.save();
+									parRes.push(partidaaux);
+									
+								}
+									
 							}
 							
-							partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
-
-							partidaaux.statusPedido="COMPLETO";
-							await partidaaux.save();
-							parRes.push(partidaaux);
 							
+
 								//console.log(partidaaux);
 							console.log("--------------");
 							count++;
@@ -1269,7 +1313,13 @@ function desasiganarPedidoEnPartida(partida, referencia){
 
 
 	let referenciaPedidos = partida.referenciaPedidos.filter(pedido => pedido.referenciaPedido !== referencia);
-
+/* 
+	db.Partidas.updateMany({"referenciaPedidos.pedido": true, 
+                         "referenciaPedidos.referenciaPedido": {$in: pedido}},
+                         {$set: {"refpedido": "SIN_ASIGNAR", 
+                                 "statusPedido": "SIN_ASIGNAR", 
+                                  "referenciaPedidos": []}})
+                       */
 
 		if(referenciaPedidos.length > 0){
 			partida.refpedido = referenciaPedidos[0].referenciaPedido;
