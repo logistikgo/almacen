@@ -2579,10 +2579,7 @@ async function saveSalidaBabel(req, res) {
 							if(isPartidaPickeada && partidaSeleccionada !== undefined){
 								
 									console.log("Paso al pedido")
-									refPedidoDocument.referenciaPedido = refPedidoPartida;
-									refPedidoDocument.CajasPedidas = {cajas: cantidadPedida};
-									refPedidoDocument.pedido = true;
-									partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);	
+										
 							}
 
 						if(partidaSeleccionada !== undefined){
@@ -2591,37 +2588,44 @@ async function saveSalidaBabel(req, res) {
 							if((cantidadRestante >= cantidadPedida && partidaSeleccionada.embalajesxSalir.cajas >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS))
 							{	
 								//Prioridad buscar tarimas incompletas (Picking)
-	
+								let cantidadApartada;
 								console.log("Embalaje Cajas:",partidaSeleccionada.embalajesxSalir.cajas );
 								let numpedido=Math.floor(partidaSeleccionada.embalajesxSalir.cajas/cantidadPedida);
 									var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
 									//let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
 									
+									if(partidaaux.referenciaPedidos.length > 0){
+										cantidadApartada = partidaaux.referenciaPedidos.map(pedido => pedido.CajasPedidas.cajas)
+																					   .reduce((val, acc) => val += acc)
+									}
+
+									const referenciaPedidoDocument = crearReferenciaPedido(refPedidoPartida, cantidadPedida);
+
 									if(partidaaux.pedido==false)
 									{
 										
-										refPedidoDocument.referenciaPedido = refPedidoPartida;
-										refPedidoDocument.CajasPedidas = {cajas: cantidadPedida}
-										refPedidoDocument.pedido = true;
 										refPedidos.push(refPedidoDocument);
 										
-										partidaaux.referenciaPedidos=refPedidos;//talves se cambie a info pedidos
-										partidaaux.CajasPedidas = {cajas: cantidadPedida};
-										partidaaux.pedido=true;
+										referenciaPedidoDocument.referenciaPedidos=refPedidos;//talves se cambie a info pedidos
+										referenciaPedidoDocument.CajasPedidas = {cajas: cantidadPedida};
+										referenciaPedidoDocument.pedido=true;
 										partidaaux.refpedido=refPedidoPartida;	
+
+										partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+										partidaaux.statusPedido="COMPLETO";
+										await partidaaux.save();
+										parRes.push(partidaaux);
 									}
 									else{
-										if(isPartidaPickeada){
-											partidaaux.referenciaPedidos.push(refPedidoDocument);
+										if((partidaaux.embalajesxSalir.cajas - cantidadApartada) > 0){
+											partidaaux.referenciaPedidos.push(referenciaPedidoDocument);
+											partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+											partidaaux.statusPedido="COMPLETO";
+											await partidaaux.save();
+											parRes.push(partidaaux);
+											
 										}
 									}
-
-									partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
-
-							
-									partidaaux.statusPedido="COMPLETO";
-									await partidaaux.save();
-									parRes.push(partidaaux);
 									
 										//console.log(partidaaux);
 									console.log("--------------");
@@ -2733,7 +2737,6 @@ async function saveSalidaBabel(req, res) {
 
 	return res.status(200).send("MAYBEOK"+respuestacomplete);
 }
-
 
 function holdPartidaPick(partidasOrdenadas, cantidadPedida, partidasParciales){
 
