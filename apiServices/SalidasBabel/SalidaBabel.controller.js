@@ -50,12 +50,13 @@ async function ingresarPedidoConModificacion(pedido){
 	})
 
 	
-	Salida.deleteOne({"referencia": pedidoAEliminar}, function(err){
+	await Salida.deleteOne({"referencia": pedidoAEliminar}, function(err){
 		if(err) return handleError(err);
 	   console.log("El pedido "+pedidoAEliminar+" ha sido eliminado, para remplazarlo")
 	});
 
 }
+
 
 async function saveSalidaBabel(req, res) {
 	console.log("----------------------------------------------------------------------start-HOLD------------------------------------------------------")
@@ -82,13 +83,23 @@ async function saveSalidaBabel(req, res) {
 		let pedidoAGuardar = req.body.Pedido[1].Pedido;
 		let pedidoCadena = req.body.Pedido[1].Pedido;
 		let validarModificacionDePedido = new RegExp("rev", "i");
-
-		if(validarModificacionDePedido.test(pedidoAGuardar) && pedidoNuevo === true){
-			let pedidoABuscar = pedidoAGuardar.split(" ", 3);
+		let validarEliminarPedido = new RegExp("can", "i");
+		let pedidoABuscar = pedidoAGuardar.split(" ", 3);
 			pedidoCadena = pedidoABuscar.join(" ");
-		
-			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim(), "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec();
 
+		//Validar si el pedido tiene la nomenclatura, Numero pedido + CAN. El sistema da de baja el pedido del sistema Logistik GO	
+		if(validarEliminarPedido.test(pedidoAGuardar) && pedidoNuevo === true){
+			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim(), "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec();
+			if(countEntradas.length > 0){
+				await ingresarPedidoConModificacion(countEntradas);
+				pedidoNuevo = false;
+				return res.status(200).send({statusCode: 200, response: {message: `Se ha cancelado el pedido ${pedidoCadena} en sistema Logistik GO`}});
+			}
+		}
+
+		//Validar si el pedido tiene la nomenclatura, Numero pedido + REV* El sistema elimina el pedido, para dar de alta la modificacion en el sistema Logistik GO
+		if(validarModificacionDePedido.test(pedidoAGuardar) && pedidoNuevo === true){
+			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim(), "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec();
 			if(countEntradas.length > 0){
 				await ingresarPedidoConModificacion(countEntradas);
 				pedidoNuevo = false;
