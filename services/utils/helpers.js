@@ -592,16 +592,26 @@ for(let i = 14; i < pedidoDetalle.length; i++){
 
 function isPicking(equivalencia, cantidadPedida, isEstiba = false){
 
+	// || cantidadPedida === (equivalencia / 2)
+
 	if(isEstiba === true){
-		return (cantidadPedida === equivalencia || cantidadPedida === equivalencia * 2 || cantidadPedida === (equivalencia / 2))
+		return (cantidadPedida === equivalencia || cantidadPedida === equivalencia * 2)
 	}else{
 		return (cantidadPedida === equivalencia || cantidadPedida === equivalencia * 2)
 	}
 
-
-
 }
 
+async function createNextId() {
+	
+	const ultimaSalidaQuery = await Salida.aggregate([
+		{$group: {_id: "$_v", ultimaSalida: {$max: "$salida_id"}}}     
+	])
+
+	const ultimaSalida = ultimaSalidaQuery[0].ultimaSalida + 1
+	
+	return ultimaSalida
+}
 
 module.exports = {
 	getNextID,
@@ -626,5 +636,6 @@ module.exports = {
 	sortPartidasByAlternatePosition,
 	deletePartidasWithNegativeExpireDays,
 	createPedidoJSONForHold,
-	isPicking
+	isPicking,
+	createNextId
 }

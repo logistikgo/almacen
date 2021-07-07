@@ -11,6 +11,7 @@ router.get('/api/getSalidasByIDs', Salida.getSalidasByIDs);
 router.get('/api/getSalidasxRangoFechas', Salida.getxRangoFechas);
 router.get('/api/getSalidasReporte', Salida.getReportePartidas);
 router.post('/api/salida', Salida.save);
+router.post('/api/salidas', Salida.createSalidaToSave);
 router.put('/api/salida', Salida.update);
 router.post('/api/salidaAutomatica', Salida.saveSalidaAutomatica);
 router.put('/api/updateStatusSalidas',Salida.updateStatusSalidas);

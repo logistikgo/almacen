@@ -6,6 +6,7 @@ const Producto = require('../Producto/Producto.model');
 const Entrada = require('../Entradas/Entrada.model');
 const Salida = require('../Salidas/Salida.model');
 const Helper = require('../../services/utils/helpers');
+const Partida = require('../Partida/Partida.model');
 
 async function saveSalida(itemPartida, salida_id) {
 	let nMovimiento = new MovimientoInventario();
@@ -67,6 +68,76 @@ async function saveSalida(itemPartida, salida_id) {
 			};
 			if (salida.tipo != "RECHAZO") {
 				await updateExistencia(-1, jsonFormatPartida, salida.fechaSalida);
+			} else {
+				await updateExistenciaRechazo(-1, jsonFormatPartida, salida.fechaSalida);
+			}
+		})
+		.catch((err) => {
+			console.log(err);
+		})
+}
+
+async function saveSalidaMovimiento(partida, salida) {
+	let nMovimiento = new MovimientoInventario();
+
+	//let salida = await Salida.findOne({ _id: salida_id }).exec();
+
+	let partidaFound = await Partida.findOne({_id: partida._id}).exec();
+
+	nMovimiento.producto_id = partidaFound.producto_id;
+	nMovimiento.salida_id = salida._id;
+	nMovimiento.fechaMovimiento = new Date();
+	nMovimiento.embalajes = partida.embalajesEnSalida;
+	nMovimiento.signo = -1;
+	if (salida.tipo != "RECHAZO") {
+		nMovimiento.tipo = "SALIDA";
+	} else {
+		nMovimiento.tipo = "SALIDA_RECHAZO"
+	}
+
+	//DEPURACION DE CODIGO
+	//nMovimiento.idClienteFiscal = salida.idClienteFiscal;
+
+	nMovimiento.clienteFiscal_id = salida.clienteFiscal_id;
+	nMovimiento.idSucursal = salida.idSucursal;
+	nMovimiento.sucursal_id = salida.sucursal_id;
+	nMovimiento.almacen_id = salida.almacen_id;
+	
+	//Verificar cual es el pedido que se va a obtener
+	let referenciaPedidos = partidaFound.referenciaPedidos;
+	
+	let referencia = salida.referencia ? salida.referencia : "";
+
+	if(referenciaPedidos !== undefined){
+		if(referenciaPedidos.length > 0){
+			referencia = referenciaPedidos.filter(pedido => pedido.referenciaPedido === salida.referencia).map(pedido => pedido.referenciaPedido)[0];
+		}
+	}
+
+
+	nMovimiento.referencia = referencia;
+	
+	
+	for(let posicionxSalida of partida.embalajesEnSalidaxPosicion){
+		
+		let jsonFormatPosicion = {
+			posicion_id: posicionxSalida.posicion_id,
+			nivel: posicionxSalida.nivel,
+			embalajes: posicionxSalida.embalajes
+		};
+		//console.log(itemPartida.producto_id._id);
+
+		await updateExistenciaPosicionSalida(-1, jsonFormatPosicion, partidaFound.producto_id);
+	}
+
+	await nMovimiento.save()
+		.then(async (movimiento) => {
+			let jsonFormatPartida = {
+				embalajes: partida.embalajesEnSalida,
+				producto_id: partidaFound.producto_id,
+			};
+			if (salida.tipo != "RECHAZO") {
+				await updateExistencia(-1, jsonFormatPartida, salida.fechaSalida,partidaFound.producto_id );
 			} else {
 				await updateExistenciaRechazo(-1, jsonFormatPartida, salida.fechaSalida);
 			}
@@ -202,11 +273,14 @@ function saveExistenciaInicial(producto_id, embalajes, pesoBruto, pesoNeto, clie
 	nMovimiento.save();
 }
 
-async function updateExistencia(signo, itemPartida, fechaMovimiento) {
+async function updateExistencia(signo, itemPartida, fechaMovimiento, producto_id = null) {
 	/**
 	 * Esta funcion afecta la existencia de los embalajes del producto recibido
 	 * como parametro dentro del objeto itemPartida
 	 */
+
+	if(producto_id !== null)
+		itemPartida.producto_id = producto_id;
 
 	let producto = await Producto.findOne({ _id: itemPartida.producto_id }).exec();
 
@@ -313,6 +387,61 @@ async function updateExistenciaPosicion(signo, posicionxPartida, producto_id) {
 				   console.log("la posicion ha sido liberada correctamente: "+ item);
 				});
 			});
+}
+
+async function updateExistenciaPosicionSalida(signo, posicionxPartida, producto_id){
+
+
+	try {
+		let _producto_id= producto_id._id!=undefined ? producto_id._id:producto_id
+		let posicion_id = posicionxPartida.posicion_id;
+
+		let PosicionDocument = await Posicion.findOne({_id: posicion_id}).exec();
+		let cantidadAModificar = posicionxPartida.embalajes.cajas;
+		
+	if(PosicionDocument !== null){
+
+		let nivel = PosicionDocument.niveles.find(nivel => nivel.nombre === posicionxPartida.nivel);
+
+				if(nivel.productos.length > 0){
+					let productoIndex = nivel.productos.findIndex(producto => producto.producto_id.toString() === _producto_id.toString());
+					let productoActual = nivel.productos[productoIndex];
+					
+					let embalajes = productoActual.embalajes;
+
+					for (let embalaje in embalajes){
+
+						if(embalaje !== undefined){
+							let embalajesParaModificar = posicionxPartida.embalajes[embalaje];
+							productoActual.embalajes[embalaje] += (signo * embalajesParaModificar);
+
+							if(productoActual.embalajes[embalaje] === 0){
+								nivel.productos.splice(productoIndex, 1);
+								console.log(nivel.productos);
+							}
+						}
+						
+					}
+
+				}
+				//Cambiar candados de la posicion, para poder liberarla
+				if(nivel.productos.length === 0){
+					nivel.apartado = false;
+					nivel.isCandadoDisponibilidad = false;
+				}
+
+				let item = {
+					niveles: PosicionDocument.niveles
+				};
+			
+				await Posicion.updateOne({ _id: posicionxPartida.posicion_id }, { $set: item }, function(err){
+				   console.log("la posicion ha sido liberada correctamente: "+ posicionxPartida);
+				});
+	}
+	} catch (error) {
+		console.log(error);
+	}
+
 }
 
 async function updateExistenciaRechazo(signo, itemPartida, fechaMovimiento) {
@@ -544,5 +673,7 @@ module.exports = {
 	saveExistenciaInicial,
 	updateExistenciaPosicion,
 	updateExistencia,
-	updateMovimientos
+	updateMovimientos,
+	saveSalidaMovimiento,
+	updateExistenciaPosicionSalida
 }

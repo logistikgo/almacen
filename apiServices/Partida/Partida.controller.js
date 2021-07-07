@@ -14,7 +14,8 @@ const NullParamsException = { error: "NullParamsException" };
 const BreakException = { info: "Break" };
 const dateFormat = require('dateformat');
 const EmbalajesController = require('../Embalaje/Embalaje.controller');
-const ClienteFiscal = require('../ClientesFiscales/ClienteFiscal.controller');
+const ClienteFiscalModel = require('../ClientesFiscales/ClienteFiscal.model');
+const ClienteFiscal= require('../ClientesFiscales/ClienteFiscal.controller');
 const ModificacionesModel = require('../Modificaciones/Modificaciones.model');
 var ObjectId = (require('mongoose').Types.ObjectId);
 const Helpers = require('../../services/utils/helpers');
@@ -260,6 +261,60 @@ async function put(arrPartidas, salida_id) {
     });
 
     return arrPartidas_id;
+}
+
+async function putSalida(arrPartidas, salida_id) {
+    
+    try {
+        var arrPartidas_id = [];
+        let entradas_id = arrPartidas.length > 0 ? arrPartidas.map(x => x.entrada_id) : undefined;
+       
+        for(let partida of arrPartidas){
+            
+            const { _id: partida_id, embalajesEnSalida, embalajesEnSalidaxPosicion  } = partida;    
+            arrPartidas_id.push(partida_id);
+
+            //Creacion del documento que idica la informacion que debe de tener una partida, para identificar que salio de almacen
+            let jsonSalida_id = {
+                salida_id: salida_id,
+                embalajes: embalajesEnSalida,
+                salidaxPosiciones: embalajesEnSalidaxPosicion
+            };
+    
+                const embalaje = Object.keys(partida.embalajesEnSalida);
+                const embalajesASalir = partida.embalajesEnSalida[embalaje];
+                
+                const partidaUpdated = await Partida.findOneAndUpdate({"_id": partida_id}, 
+                            {$inc: {"embalajesxSalir.cajas": -embalajesASalir, 
+                            "posiciones.0.embalajesxSalir.cajas": -embalajesASalir}}, { new: true }).exec();
+
+                if(partidaUpdated.embalajesxSalir[embalaje] === 0){
+                    await Partida.updateOne({"_id": partida_id},
+                        { $set: { "isEmpty": true, 
+                                  "posiciones.0.isEmpty": true } }
+                       ).exec();
+                }
+                await Partida.updateOne({"_id": partida_id}, 
+                    { $push: { salidas_id: { $each: [ jsonSalida_id ] } } }).exec();                
+
+                //Paso extra si la partida tiene embalajes en el almacen
+                if (partidaUpdated.embalajesAlmacen != undefined) {
+                    for (let x in partidaUpdated.embalajesAlmacen) 
+                        partidaUpdated.embalajesAlmacen[x] -= embalajesEnSalida[x];
+                    await Partida.updateOne({ _id: partidaFound._id }, { $set: {embalajesAlmacen: partidaFound.embalajesAlmacen} }).exec();
+                }
+            }
+    
+            for(let entrada_id of entradas_id){
+                await setIsEmptyEntrada(entrada_id);
+            }
+    
+            return arrPartidas_id;
+    } catch (error) {
+        console.log(error);
+    }
+    
+   
 }
 
 async function post(arrPartidas, entrada_id) {
@@ -1108,7 +1163,7 @@ async function getExcelByIDs(req, res) {
             wrapText: true,
         },
     });
-    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    let clientefiscal = await ClienteFiscalModel.findOne({ _id: req.query.clienteFiscal_id })
     let formatofecha=(clientefiscal._id == "5e33420d22b5651aecafe934" && tipoUsuario == "CLIENTE ADMINISTRADOR USA") ? "mm/dd/yyyy" : "dd/mm/yyyy";
     //console.log(tipoUsuario);
     let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
@@ -1713,7 +1768,7 @@ async function reporteDia(req, res)
     let outbyProd=[];
     var salidas_id=[];
     //console.log(entradasDia.length);
-    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    let clientefiscal = await ClienteFiscalModel.findOne({ _id: req.query.clienteFiscal_id })
     //console.log(tipoUsuario);
     let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
     var embalajesjson={};
@@ -1913,7 +1968,7 @@ async function getExcelreporteDia(req, res)
     let outbyProd=[];
     var salidas_id=[];
     //console.log(entradasDia.length);
-    let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+    let clientefiscal = await ClienteFiscalModel.findOne({ _id: req.query.clienteFiscal_id })
     //console.log(tipoUsuario);
     let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
     var embalajesjson={};
@@ -2069,7 +2124,7 @@ async function reporteFEFOS(req, res)
         let outbyProd=[];
         var salidas_id=[];
         //console.log(entradasDia.length);
-        let clientefiscal = await ClienteFiscal.findOne({ _id: req.query.clienteFiscal_id })
+        let clientefiscal = await ClienteFiscalModel.findOne({ _id: req.query.clienteFiscal_id })
         //console.log(req.query.clienteFiscal_id);
         let clienteEmbalaje = clientefiscal.arrEmbalajes ? clientefiscal.arrEmbalajes.split(',') :[""];
         var embalajesjson={};
@@ -2653,7 +2708,7 @@ async function getPartidaModExcel(req, res)
 
         //Obtener embalaje dependiendo el cliente
         const idClienteFiscal = req.query.idClienteFiscal;
-        const clienteFiscal = await ClienteFiscal.findById(idClienteFiscal).exec();
+        const clienteFiscal = await ClienteFiscalModel.findById(idClienteFiscal).exec();
         const arrEmbalajes = clienteFiscal.arrEmbalajes;
         const embalaje = arrEmbalajes.split(",")[1];
 
@@ -3258,5 +3313,6 @@ module.exports = {
     getPartidaModExcel,
     getInventarioPorPartidas,
     verificarPartidasSalidas,
-    removePartidasWithZeroQuantity
+    removePartidasWithZeroQuantity,
+    putSalida
 }

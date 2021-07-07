@@ -71,6 +71,7 @@ const Salida = Schema(
 		idClienteFiscal: Number,
 		idSucursal: Number,
 		idSucursal: Number,
+		isSinSalidaProgramada: { type: Boolean, default: false },
 		//CAMPOS AUXILIARES
 		statusPedido:{type:String, default: "SIN_ASIGNAR"},
 		//partidas : {}

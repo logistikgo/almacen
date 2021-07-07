@@ -6,11 +6,13 @@ const Producto = require('../Producto/Producto.model');
 const Entrada = require('../Entradas/Entrada.model');
 const MovimientoInventario = require('../MovimientosInventario/MovimientoInventario.controller');
 const Helper = require('../../services/utils/helpers');
+const { createNextId } = require('../../services/utils/helpers');
 const TiempoCargaDescarga = require("../TiempoCargaDescarga/TiempoCargaDescarga.controller");
 const SalidaBabelModel = require('../SalidasBabel/SalidasBabel.model');
 const ReenvioPedidosBitacora = require('../ReenvioPedidosBitacora/RenvioPedidosBitacora.model');
 const bodyMailTemplate = require('../../services/email/templateCreator');
 const mailer = require('../../services/email/mailer');
+
 
 function getNextID() {
 	return Helper.getNextID(Salida, "salida_id");
@@ -48,12 +50,13 @@ async function ingresarPedidoConModificacion(pedido){
 	})
 
 	
-	Salida.deleteOne({"referencia": pedidoAEliminar}, function(err){
+	await Salida.deleteOne({"referencia": pedidoAEliminar}, function(err){
 		if(err) return handleError(err);
 	   console.log("El pedido "+pedidoAEliminar+" ha sido eliminado, para remplazarlo")
 	});
 
 }
+
 
 async function saveSalidaBabel(req, res) {
 	console.log("----------------------------------------------------------------------start-HOLD------------------------------------------------------")
@@ -79,16 +82,24 @@ async function saveSalidaBabel(req, res) {
 
 		let pedidoAGuardar = req.body.Pedido[1].Pedido;
 		let pedidoCadena = req.body.Pedido[1].Pedido;
-		let validarModificacionDePedido = new RegExp("rev");
+		let validarModificacionDePedido = new RegExp("rev", "i");
+		let validarEliminarPedido = new RegExp("can", "i");
+		let pedidoABuscar = pedidoAGuardar.split(" ", 3);
+			pedidoCadena = pedidoABuscar.join(" ");
 
-		if(validarModificacionDePedido.test(pedidoAGuardar) && pedidoNuevo === true){
-			let pedidoABuscar = pedidoAGuardar.split(" ");
-			pedidoCadena = "";
-			for(let i = 0; i <= 2; i++){
-				pedidoCadena += pedidoABuscar[i]+" ";	
+		//Validar si el pedido tiene la nomenclatura, Numero pedido + CAN. El sistema da de baja el pedido del sistema Logistik GO	
+		if(validarEliminarPedido.test(pedidoAGuardar) && pedidoNuevo === true){
+			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim(), "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec();
+			if(countEntradas.length > 0){
+				await ingresarPedidoConModificacion(countEntradas);
+				pedidoNuevo = false;
+				return res.status(200).send({statusCode: 200, response: {message: `Se ha cancelado el pedido ${pedidoCadena} en sistema Logistik GO`}});
 			}
-			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim()}).exec();
+		}
 
+		//Validar si el pedido tiene la nomenclatura, Numero pedido + REV* El sistema elimina el pedido, para dar de alta la modificacion en el sistema Logistik GO
+		if(validarModificacionDePedido.test(pedidoAGuardar) && pedidoNuevo === true){
+			let countEntradas=await Salida.find({"referencia":pedidoCadena.trim(), "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec();
 			if(countEntradas.length > 0){
 				await ingresarPedidoConModificacion(countEntradas);
 				pedidoNuevo = false;
@@ -108,11 +119,10 @@ async function saveSalidaBabel(req, res) {
 				
 				
 
-				let countEntradas=await Salida.find({"po":pedidoAGuardar}).exec();			
+				let countEntradas=await Salida.find({"po":pedidoAGuardar, "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec();			
 
-				
 				console.log("total: "+countEntradas.length)
-		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido}).exec():countEntradas;
+		        countEntradas= countEntradas.length<1 ? await Salida.find({"referencia":req.body.Pedido[1].Pedido, "tipo": {$in: ["FORSHIPPING", "FORPICKING"]}}).exec():countEntradas;
 		        console.log("total2: "+countEntradas.length)
 				if(countEntradas.length>0){
 					console.log("Ya existe el pedido "+ req.body.Pedido[1].Pedido)
@@ -200,6 +210,7 @@ async function saveSalidaBabel(req, res) {
 										origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,
 										'clave':par.Clave,
 										'isEmpty':false,
+										"pedido": false,
 										 'embalajesxSalir.cajas': {$nin: [0]},
 										fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).sort({"posiciones.nivel": -1, "posiciones.pasillo": 1})
 									.exec();
@@ -366,11 +377,11 @@ async function saveSalidaBabel(req, res) {
 						
 							if(isPartidaPickeada && partidaSeleccionada !== undefined){
 								
-									console.log("Paso al pedido")
+									console.log("Paso al pedido")/* 
 									refPedidoDocument.referenciaPedido = refPedidoPartida;
 									refPedidoDocument.CajasPedidas = {cajas: cantidadPedida};
 									refPedidoDocument.pedido = true;
-									partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);	
+									partidaSeleccionada.referenciaPedidos.push(refPedidoDocument); */	
 							}
 
 						if(partidaSeleccionada !== undefined){
@@ -379,38 +390,43 @@ async function saveSalidaBabel(req, res) {
 							if((cantidadRestante >= cantidadPedida && partidaSeleccionada.embalajesxSalir.cajas >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS))
 							{	
 								//Prioridad buscar tarimas incompletas (Picking)
-	
+								let cantidadApartada;
 								console.log("Embalaje Cajas:",partidaSeleccionada.embalajesxSalir.cajas );
 								let numpedido=Math.floor(partidaSeleccionada.embalajesxSalir.cajas/cantidadPedida);
 									var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
 									//let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
 									
+									if(partidaaux.referenciaPedidos.length > 0){
+										cantidadApartada = partidaaux.referenciaPedidos.map(pedido => pedido.CajasPedidas.cajas)
+																					   .reduce((val, acc) => val += acc)
+									}
+
+									const referenciaPedidoDocument = crearReferenciaPedido(refPedidoPartida, cantidadPedida);
+
 									if(partidaaux.pedido==false)
 									{
 										
-										refPedidoDocument.referenciaPedido = refPedidoPartida;
-										refPedidoDocument.CajasPedidas = {cajas: cantidadPedida}
-										refPedidoDocument.pedido = true;
-										refPedidos.push(refPedidoDocument);
-										
+										refPedidos.push(referenciaPedidoDocument);
 										partidaaux.referenciaPedidos=refPedidos;//talves se cambie a info pedidos
 										partidaaux.CajasPedidas = {cajas: cantidadPedida};
 										partidaaux.pedido=true;
-										partidaaux.refpedido=refPedidoPartida;	
+										partidaaux.refpedido=refPedidoPartida;
+										partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+										partidaaux.statusPedido="COMPLETO";
+										await partidaaux.save();
+										parRes.push(partidaaux);
 									}
 									else{
-										if(isPartidaPickeada){
-											partidaaux.referenciaPedidos.push(refPedidoDocument);
+										if((partidaaux.embalajesxSalir.cajas - cantidadApartada) > 0){
+											partidaaux.referenciaPedidos.push(referenciaPedidoDocument);
+											partidaaux.refpedido=refPedidoPartida;	
+											partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+											partidaaux.statusPedido="COMPLETO";
+											await partidaaux.save();
+											parRes.push(partidaaux);
+											
 										}
 									}
-
-									partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
-
-							
-									partidaaux.statusPedido="COMPLETO";
-									await partidaaux.save();
-									parRes.push(partidaaux);
-									
 										//console.log(partidaaux);
 									console.log("--------------");
 									count++;
@@ -436,27 +452,34 @@ async function saveSalidaBabel(req, res) {
 				//console.log(parRes);
 				let entradas_id = parRes.map(x => x.entrada_id.toString()).filter(Helper.distinct);
 				let entradas = await Entrada.find({ "_id": { $in: entradas_id } });
+				let pedidoCadena = pedidoAGuardar.split(" ", 3).join(" ");
+				let idSalida = await createNextId()
 
 				if ((entradas && entradas.length > 0)) {
 					//Obtener referencia del detalle de la slaida de babel
-					pedidoDetalle.referencia.split("rev")[0].trim();
+					pedidoDetalle.referencia = pedidoCadena;
+
+					const salidaBabelDeleted = await SalidaBabelModel.findOneAndDelete({ referencia: pedidoCadena }).exec();
+
 					const salidaBabelModel = new SalidaBabelModel(pedidoDetalle);
 					let salidaBabel;
 					let salidaBabel_id;
-					salidaBabelModel.save(async function (err) {
-						if (err) return handleError(err);
-						// saved!
-						salidaBabel = await SalidaBabelModel.find({referencia: refitem}).exec();
-						salidaBabel_id = salidaBabel[0]._id.toString();
-					  });
+					await salidaBabelModel.save();
+					salidaBabel = await SalidaBabelModel.findOne({referencia: pedidoCadena}).exec();
+					salidaBabel_id = salidaBabel._id.toString();
 
-
+					let validarSalidaSinFechaProgramada = new RegExp("fr", "i");
+					
 					let nSalida = new Salida();
-					nSalida.salida_id = await getNextID();
+					//Verificar que el pedido este sin fecha prgramada para apartarlo en sistema, con un nuevo status
+					if(validarSalidaSinFechaProgramada.test(refitem)){
+						nSalida.isSinSalidaProgramada = true;
+					}
+					nSalida.salida_id = idSalida;
 					nSalida.fechaAlta = new Date(Date.now()-(5*3600000));
 					nSalida.fechaSalida = new Date(Date.now()-(5*3600000));
 					nSalida.nombreUsuario = "BABELSALIDA";
-					nSalida.folio = await getNextID();
+					nSalida.folio = idSalida;
 					//console.log(nSalida.folio);
 					nSalida.partidas = parRes.map(x => x._id);
 					nSalida.entrada_id = entradas_id;
@@ -466,8 +489,8 @@ async function saveSalidaBabel(req, res) {
 					nSalida.sucursal_id = IDSucursal;
 					//console.log(nSalida.clienteFiscal_id);
 					nSalida.destinatario=refDesti;
-					nSalida.referencia = refitem;
-					nSalida.item = refitem;
+					nSalida.referencia = pedidoCadena;
+					nSalida.item = pedidoCadena;
 					nSalida.tipo = "FORSHIPPING";//NORMAL
 					//console.log(nSalida);
 					nSalida.statusPedido="COMPLETO";
@@ -488,10 +511,8 @@ async function saveSalidaBabel(req, res) {
 						})
 					}
 					//saveSalida
-					
-					
 
-					nSalida.save(); //salida guarda 
+					await nSalida.save(); //salida guarda 
 				} else {
 					return res.status(400).send("Se trata de generar una salida sin entrada o esta vacia");
 				}
@@ -519,7 +540,7 @@ async function saveSalidaBabel(req, res) {
 			console.log(error);
 	};
 
-	return res.status(200).send({statusCode: 200, response: {message: `Se ha dado de alta el pedido en sistema`}});
+	return res.status(200).send({statusCode: 200, response: {message: `Se ha dado de alta el pedido ${pedidoDetalle.referencia} en sistema`}});
 }
 
 async function removefromSalidaId(req, res) {
@@ -807,13 +828,41 @@ async function saveDashboard(req, res) {
 async function reloadPedidosBabel(req, res){
 
 	let salidasActuales;
-
+	//let salidaAReenviar;
 	const referencia = req.query?.referencia ? req.query.referencia : null;
 
 	if(referencia !== null){
 		salidasActuales = await Salida.find({"referencia": referencia, tipo: "FORSHIPPING" }).exec();
+		
+		await PartidaModel.updateMany({"referenciaPedidos.pedido": true,
+		"referenciaPedidos.referenciaPedido": referencia},
+		{$set: {
+			"refpedido": "SIN_ASIGNAR", 
+			"statusPedido": "SIN_ASIGNAR",
+			"pedido": false, 
+			"referenciaPedidos": [],
+			"CajasPedidas.cajas": 0
+		}})
+
 	}else{
-		salidasActuales = await Salida.find({tipo: "FORSHIPPING" }).sort({fechaAlta: 1}).exec();
+		salidasActuales = await Salida.find({tipo: "FORSHIPPING" }).sort({fechaAlta: 1, isSinSalidaProgramada: 1}).exec();
+		//Dar prioridad a los pedidos que ya tienen pedidos programados
+		salidasActuales = salidasActuales.sort((a, b) => {
+			return a.isSinSalidaProgramada - b.isSinSalidaProgramada;
+		})
+		let referencias = salidasActuales.map(salida => salida.referencia);
+		
+		 await PartidaModel.updateMany({"referenciaPedidos.pedido": true,
+		"referenciaPedidos.referenciaPedido": {$in: referencias}},
+		{$set: {
+			"refpedido": "SIN_ASIGNAR", 
+			"statusPedido": "SIN_ASIGNAR",
+			"pedido": false, 
+			"referenciaPedidos": [],
+			"CajasPedidas.cajas": 0
+		}}) 
+
+
 	}
 
 	if(salidasActuales.length === 0){
@@ -827,11 +876,14 @@ async function reloadPedidosBabel(req, res){
 	await Helper.asyncForEach(salidasActuales, async function(salidaActual){
 			
 			detallePedidoTeplate = "";
-			let salidaAReenviar = await eliminarPedidoParaRenviar(salidaActual.referencia);
-	
+			//let salidaAReenviar = await eliminarPedidoParaRenviar(salidaActual.referencia);
+			let salidaAReenviar = await Salida.findOneAndUpdate({"referencia": salidaActual.referencia },
+															   {$set: {"partidas": [], "entrada_id": []}},
+															   { new: true }).exec();
+ 
 			referencias.push(salidaActual.referencia);
 	
-			let salidaBabel = await SalidaBabelModel.findById({_id: salidaAReenviar[0].salidaBabel_id}).exec();
+			let salidaBabel = await SalidaBabelModel.findById({_id: salidaAReenviar.salidaBabel_id}).exec();
 
 			salidaBabel.productosDetalle.forEach(productoDetalle => {
 
@@ -958,7 +1010,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 
 	let totalpartidas =0;
 	let refitem=salidaBabel.referencia.trim();
-	
+	console.log(refitem);
 	let hoy=new Date(Date.now()-(5*3600000));
 	let parRes=[];
 	var pedidoCompleto = true;
@@ -968,11 +1020,17 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 
 	await Helper.asyncForEach(salidaBabel.productosDetalle,async function (par) {
 		//console.log("----partida: "+par.Clave+ "----");
-		let producto =await Producto.findOne({'clave': par.Clave }).exec();
-		//console.log(producto.clave);
-		//console.log(par.Cantidad);
-		//console.log(producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia);
-		let equivalencia =producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia;
+		let producto;
+		let equivalencia;
+
+		try {
+			producto =await Producto.findOne({'clave': par.Clave }).exec();
+			equivalencia =producto.arrEquivalencias.length>=1 ? parseInt(producto.arrEquivalencias[0].cantidadEquivalencia): par.equivalencia;
+		
+		} catch (error) {
+			console.log(error);
+		}
+
 		
 		let needed=Math.round(par.Cantidad/equivalencia);
 		let isEstiba = producto.isEstiba;
@@ -1052,7 +1110,7 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 			}
 			partidas = Helper.deletePartidasWithNegativeExpireDays(partidas, producto, hoy);
 
-			partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']} ,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
+			partidas=partidas.length<1 ? await PartidaModel.find({'status':'ASIGNADA', origen:{$nin:['ALM-SIERRA','BABEL-SIERRA']},pedido: false,'clave':par.Clave,'embalajesxSalir.cajas': {$nin: [0]},'isEmpty':false,fechaCaducidad:{$gt:hoy}}).sort({ fechaCaducidad: 1 }).exec() : partidas;
 			
 
 			console.log("totalpartidas: "+partidas.length)
@@ -1187,13 +1245,17 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 					if(cantidadRestante >= cantidadPedida && partidaSeleccionada.embalajesxSalir.cajas >= cantidadPedida && partidaSeleccionada.fechaCaducidad.getTime() > hoy && Diasrestantes >= DIAS_ANTICIPADOS)
 					{	
 						//Prioridad buscar tarimas incompletas (Picking)
-
+						let cantidadApartada;
 						console.log("Embalaje Cajas:",partidaSeleccionada.embalajesxSalir.cajas );
 						let numpedido=Math.floor(partidaSeleccionada.embalajesxSalir.cajas/cantidadPedida);
 							var partidaaux=await PartidaModel.findOne({_id:partidaSeleccionada._id}).exec();
 							//let pedidoTotal=cantidadPedida*numpedido<=cantidadneeded ? cantidadPedida*numpedido : cantidadPedida
-							
-						
+								
+							if(partidaaux.referenciaPedidos.length > 0){
+								cantidadApartada = partidaaux.referenciaPedidos.map(pedido => pedido.CajasPedidas.cajas)
+																			   .reduce((val, acc) => val += acc)
+								
+							}
 							const referenciaPedidoDocument = crearReferenciaPedido(refPedidoPartida, cantidadPedida);
 							//partidaSeleccionada.referenciaPedidos.push(refPedidoDocument);
 
@@ -1205,17 +1267,26 @@ async function reasignarPartidasDisponiblesEnPedidos(salidaBabel){
 								partidaaux.CajasPedidas = {cajas: cantidadPedida};
 								partidaaux.pedido=true;
 								partidaaux.refpedido=refPedidoPartida;	
+
+								partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+								partidaaux.statusPedido="COMPLETO";
+								await partidaaux.save();
+								parRes.push(partidaaux);
 							}
 							else{
+								if((partidaaux.embalajesxSalir.cajas - cantidadApartada) > 0){
 									partidaaux.referenciaPedidos.push(referenciaPedidoDocument);
+									partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
+									partidaaux.statusPedido="COMPLETO";
+									await partidaaux.save();
+									parRes.push(partidaaux);
+									
+								}
+									
 							}
 							
-							partidaaux.CajasPedidas = partidaaux.referenciaPedidos[0].CajasPedidas;
-
-							partidaaux.statusPedido="COMPLETO";
-							await partidaaux.save();
-							parRes.push(partidaaux);
 							
+
 								//console.log(partidaaux);
 							console.log("--------------");
 							count++;
@@ -1259,7 +1330,13 @@ function desasiganarPedidoEnPartida(partida, referencia){
 
 
 	let referenciaPedidos = partida.referenciaPedidos.filter(pedido => pedido.referenciaPedido !== referencia);
-
+/* 
+	db.Partidas.updateMany({"referenciaPedidos.pedido": true, 
+                         "referenciaPedidos.referenciaPedido": {$in: pedido}},
+                         {$set: {"refpedido": "SIN_ASIGNAR", 
+                                 "statusPedido": "SIN_ASIGNAR", 
+                                  "referenciaPedidos": []}})
+                       */
 
 		if(referenciaPedidos.length > 0){
 			partida.refpedido = referenciaPedidos[0].referenciaPedido;
